@@ -1,0 +1,884 @@
+/**
+ * Block Dimensions Styles
+ * 
+ * WCAG 2.2 Accessibility Compliant
+ * Uses Bootstrap 4 conventions to match Moodle Boost theme.
+ * 
+ * @package    block_dimensions
+ * @copyright  2026 Anderson Blaine
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+/* ============================================
+   BLOCK HEADER - Heading + Search
+   ============================================ */
+.dims-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.dims-block-heading {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+/* Search input */
+.dims-block-search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 200px;
+    flex-shrink: 1;
+    margin-left: auto;
+}
+
+.dims-block-search-icon {
+    position: absolute;
+    left: 0.625rem;
+    color: #9aa0a6;
+    font-size: 0.75rem;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.dims-block-search-input {
+    width: 100%;
+    padding: 0.375rem 1.75rem 0.375rem 1.875rem;
+    border: 1px solid #e1e3e6;
+    border-radius: 999px;
+    background: #f8f9fa;
+    font-size: 0.8125rem;
+    color: #212529;
+    outline: none;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    line-height: 1.3;
+}
+
+.dims-block-search-input::placeholder {
+    color: #9aa0a6;
+}
+
+.dims-block-search-input:focus {
+    border-color: #1a73e8;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+}
+
+.dims-block-search-clear {
+    position: absolute;
+    right: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #5f6368;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.15s ease;
+}
+
+.dims-block-search-clear:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.dims-block-search-clear .fa {
+    font-size: 0.625rem;
+}
+
+/* Responsive — stack on mobile */
+@media (max-width: 575.98px) {
+    .dims-block-header {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+
+    .dims-block-search-wrapper {
+        max-width: 100%;
+        margin-left: 0;
+    }
+}
+
+/* Dark mode */
+.theme-dark .dims-block-search-input,
+body.dark .dims-block-search-input {
+    background: #3c4043;
+    border-color: #5f6368;
+    color: #e8eaed;
+}
+
+.theme-dark .dims-block-search-input::placeholder,
+body.dark .dims-block-search-input::placeholder {
+    color: #9aa0a6;
+}
+
+.theme-dark .dims-block-search-input:focus,
+body.dark .dims-block-search-input:focus {
+    background: #292a2d;
+    border-color: #8ab4f8;
+    box-shadow: 0 0 0 3px rgba(138, 180, 248, 0.2);
+}
+
+.theme-dark .dims-block-search-icon,
+body.dark .dims-block-search-icon {
+    color: #9aa0a6;
+}
+
+.theme-dark .dims-block-search-clear,
+body.dark .dims-block-search-clear {
+    color: #9aa0a6;
+}
+
+.theme-dark .dims-block-search-clear:hover,
+body.dark .dims-block-search-clear:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* ============================================
+   COMPETENCY CARD - Main Container
+   ============================================ */
+.competency-card {
+    display: flex;
+    flex-direction: column;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    background-color: #fff;
+}
+
+/* ============================================
+   CARD LINK - Clickable Area
+   ============================================ */
+.competency-card-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.competency-card-link:hover {
+    text-decoration: none;
+}
+
+.competency-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================
+   FOCUS STATES - WCAG 2.4.7 Focus Visible
+   Minimum 3:1 contrast ratio for focus indicator
+   ============================================ */
+.competency-card-link:focus {
+    outline: none;
+}
+
+.competency-card-link:focus-visible {
+    outline: none;
+}
+
+.competency-card:focus-within {
+    outline: 3px solid #005fcc;
+    /* High contrast blue */
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(0, 95, 204, 0.25);
+}
+
+/* Fallback for browsers without :focus-visible support */
+.competency-card-link:focus .competency-card,
+.competency-card:has(.competency-card-link:focus) {
+    outline: 3px solid #005fcc;
+    outline-offset: 2px;
+}
+
+/* ============================================
+   CARD IMAGE AREA
+   ============================================ */
+.competency-card-image {
+    width: 100%;
+    height: 120px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    flex-shrink: 0;
+}
+
+/* Gradient Fallback (decorative - hidden from AT) */
+.competency-card-gradient {
+    background: linear-gradient(135deg, #f5af19 0%, #f12711 50%, #ef4136 100%);
+}
+
+/* Halftone Pattern Overlay (decorative) */
+.competency-card-gradient::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(circle, rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+    background-size: 5px 5px;
+    pointer-events: none;
+}
+
+/* ============================================
+   CARD TITLE - WCAG 1.4.4 Resize Text
+   Text can resize up to 200% without loss
+   ============================================ */
+.competency-card .card-title {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    /* Ensure minimum touch target - WCAG 2.5.8 */
+    min-height: 2.8em;
+}
+
+/* ============================================
+   RESPONSIVE IMAGE HEIGHTS
+   ============================================ */
+@media (min-width: 992px) {
+    .competency-card-image {
+        height: 100px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .competency-card-image {
+        height: 140px;
+    }
+}
+
+/* ============================================
+   HIGH CONTRAST MODE - WCAG 1.4.11
+   ============================================ */
+@media (prefers-contrast: high) {
+    .competency-card {
+        border: 2px solid #000;
+    }
+
+    .competency-card:focus-within {
+        outline: 3px solid #000;
+        outline-offset: 2px;
+    }
+
+    .competency-card .card-title {
+        color: #000 !important;
+    }
+
+    .competency-card-gradient {
+        background: #666;
+    }
+}
+
+/* ============================================
+   REDUCED MOTION - WCAG 2.3.3
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    .competency-card {
+        transition: none;
+    }
+
+    .competency-card:hover {
+        transform: none;
+    }
+}
+
+/* ============================================
+   DARK MODE SUPPORT
+   ============================================ */
+.theme-dark .competency-card,
+body.dark .competency-card {
+    background-color: #343a40;
+    border-color: #495057;
+}
+
+.theme-dark .competency-card .card-title,
+body.dark .competency-card .card-title {
+    color: #f8f9fa !important;
+}
+
+.theme-dark .competency-card:focus-within,
+body.dark .competency-card:focus-within {
+    outline-color: #66b3ff;
+    box-shadow: 0 0 0 4px rgba(102, 179, 255, 0.25);
+}
+
+/* ============================================
+   PRINT STYLES - WCAG 1.4.10
+   ============================================ */
+@media print {
+    .competency-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+
+    .competency-card-gradient {
+        background: #ccc !important;
+    }
+}
+
+/* ============================================
+   PLAN CARD - Similar to Competency Card
+   ============================================ */
+.plan-card {
+    display: flex;
+    flex-direction: column;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    background-color: #fff;
+}
+
+.plan-card-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.plan-card-link:hover {
+    text-decoration: none;
+}
+
+.plan-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.plan-card:focus-within {
+    outline: 3px solid #005fcc;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(0, 95, 204, 0.25);
+}
+
+.plan-card-image {
+    width: 100%;
+    height: 120px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    flex-shrink: 0;
+}
+
+.plan-card-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.plan-card .card-title {
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* ============================================
+   COMPETENCY TRAIL - Horizontal Layout
+   ============================================ */
+.competency-trail {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+/*    border-top: 1px solid rgba(0, 0, 0, 0.1); */
+    overflow-x: auto;
+}
+
+.trail-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    min-width: 50px;
+    flex: 1;
+    text-align: center;
+}
+
+/* Horizontal connector line */
+.trail-item:not(.last)::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background-color: #e9ecef;
+    z-index: 0;
+}
+
+.trail-item.completed:not(.last)::after {
+    background-color: #28a745;
+}
+
+/* Trail marker */
+.trail-marker {
+    position: relative;
+    z-index: 1;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+}
+
+.trail-marker .fa-check-circle {
+    font-size: 18px;
+    color: #28a745;
+}
+
+.trail-marker .empty-circle {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #dee2e6;
+    border-radius: 50%;
+    background-color: #fff;
+}
+
+/* Trail label */
+.trail-label {
+    font-size: 0.65rem;
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60px;
+    color: #6c757d;
+}
+
+.trail-label.text-success {
+    color: #28a745 !important;
+    font-weight: 600;
+}
+
+/* Clickable trail items */
+.trail-item.clickable {
+    cursor: pointer;
+}
+
+.trail-item.clickable:hover .trail-marker {
+    transform: scale(1.2);
+    transition: transform 0.15s ease;
+}
+
+.trail-item.clickable:hover .trail-label {
+    text-decoration: underline;
+    color: #1a73e8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 575.98px) {
+    .competency-trail {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+
+    .trail-item {
+        min-width: 45px;
+    }
+
+    .trail-label {
+        font-size: 0.6rem;
+        max-width: 45px;
+    }
+}
+
+/* Dark mode for plan cards and trail */
+.theme-dark .plan-card,
+body.dark .plan-card {
+    background-color: #343a40;
+    border-color: #495057;
+}
+
+.theme-dark .plan-card .card-title,
+body.dark .plan-card .card-title {
+    color: #f8f9fa !important;
+}
+
+.theme-dark .competency-trail,
+body.dark .competency-trail {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.theme-dark .trail-marker,
+body.dark .trail-marker {
+    background-color: #343a40;
+}
+
+.theme-dark .trail-label,
+body.dark .trail-label {
+    color: #adb5bd;
+}
+
+.theme-dark .trail-marker .empty-circle,
+body.dark .trail-marker .empty-circle {
+    border-color: #6c757d;
+    background-color: #343a40;
+}
+
+.theme-dark .trail-item:not(.last)::after,
+body.dark .trail-item:not(.last)::after {
+    background-color: #495057;
+}
+
+/* ============================================
+   IMAGE WRAPPER - For tag positioning
+   ============================================ */
+.competency-card-image-wrapper,
+.plan-card-image-wrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
+/* ============================================
+   ACCESS / CONTINUE BUTTON - Top-right pill
+   ============================================ */
+.dims-card-access-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    background: #ffffff;
+    color: #1d1d1f;
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.3;
+    border-radius: 8px;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    pointer-events: none; /* decorative — parent <a> is the link */
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.dims-card-access-btn .fa {
+    font-size: 0.8rem;
+}
+
+/* Hover lift on parent link */
+.competency-card-link:hover .dims-card-access-btn,
+.plan-card-link:hover .dims-card-access-btn {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+    transform: translateY(-1px);
+}
+
+/* Focus-visible on parent link */
+.competency-card-link:focus-visible .dims-card-access-btn,
+.plan-card-link:focus-visible .dims-card-access-btn {
+    outline: 2px solid #0a58ca;
+    outline-offset: 2px;
+}
+
+/* High contrast */
+@media (prefers-contrast: high) {
+    .dims-card-access-btn {
+        border: 2px solid currentColor;
+        box-shadow: none;
+    }
+}
+
+/* Dark mode */
+.theme-dark .dims-card-access-btn,
+body.dark .dims-card-access-btn {
+    background: #2c2c2e;
+    color: #f5f5f7;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .dims-card-access-btn {
+        transition: none;
+    }
+}
+
+/* Print */
+@media print {
+    .dims-card-access-btn {
+        display: none;
+    }
+}
+
+/* ============================================
+   DIMENSION TAGS - Badge Styling
+   ============================================ */
+.dimension-tags {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    z-index: 1;
+}
+
+.dimension-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+    border-radius: 100px;
+    /* Pill shape */
+    white-space: nowrap;
+    /* Default colors - red background with white text */
+    background-color: var(--dimension-custombgcolor, #ef4136);
+    color: var(--dimension-customtextcolor, #ffffff);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Ensure tags inherit from parent card's CSS variables */
+.competency-card .dimension-tag,
+.plan-card .dimension-tag {
+    background-color: var(--dimension-custombgcolor, #ef4136);
+    color: var(--dimension-customtextcolor, #ffffff);
+}
+
+/* High contrast mode for tags */
+@media (prefers-contrast: high) {
+    .dimension-tag {
+        border: 2px solid currentColor;
+        box-shadow: none;
+    }
+}
+
+/* Dark mode for tags */
+.theme-dark .dimension-tag,
+body.dark .dimension-tag {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Print styles for tags */
+@media print {
+    .dimension-tags {
+        display: none;
+    }
+}
+
+/* ============================================
+   FILTER BAR - Container
+   ============================================ */
+.dims-filters-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+/* ============================================
+   FILTER TABS - Modern Pill Style
+   (Visual alignment with local_dimensions)
+   ============================================ */
+.block-dimensions-content .dims-filter-tabs-wrapper {
+    display: flex;
+    justify-content: flex-start;
+    width: auto;
+    margin-bottom: 0;
+}
+
+.block-dimensions-content .dims-filter-tabs {
+    display: inline-flex;
+    gap: 0;
+    background: #f1f3f4;
+    border-radius: 999px;
+    padding: 4px;
+}
+
+.block-dimensions-content .dims-filter-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    background: transparent;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #5f6368;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.block-dimensions-content .dims-filter-tab:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.block-dimensions-content .dims-filter-tab:focus {
+    outline: 2px solid #1a73e8;
+    outline-offset: 2px;
+}
+
+.block-dimensions-content .dims-filter-tab.active {
+    background: #fff;
+    color: #1a73e8;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+/* ============================================
+   FILTER DROPDOWN - Modern Select Style
+   ============================================ */
+.dims-filter-dropdown-wrapper {
+    display: inline-flex;
+    align-items: center;
+}
+
+.dims-filter-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding: 0.5rem 2rem 0.5rem 1rem;
+    border: 1px solid #dadce0;
+    border-radius: 999px;
+    background-color: #f1f3f4;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235f6368' d='M3.4 4.2L6 6.8l2.6-2.6.8.8L6 8.4 2.6 5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #5f6368;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 120px;
+}
+
+.dims-filter-select:hover {
+    background-color: #e8eaed;
+    border-color: #c6c8ca;
+}
+
+.dims-filter-select:focus {
+    outline: 2px solid #1a73e8;
+    outline-offset: 2px;
+    border-color: #1a73e8;
+}
+
+/* ============================================
+   FILTER - Responsive
+   ============================================ */
+@media (max-width: 575.98px) {
+    .dims-filters-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .block-dimensions-content .dims-filter-tabs-wrapper {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .block-dimensions-content .dims-filter-tabs {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .block-dimensions-content .dims-filter-tab {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+
+    .dims-filter-select {
+        width: 100%;
+    }
+}
+
+/* ============================================
+   FILTER - Dark Mode
+   ============================================ */
+.theme-dark .dims-filter-tabs,
+body.dark .dims-filter-tabs {
+    background: #3c4043;
+}
+
+.theme-dark .dims-filter-tab,
+body.dark .dims-filter-tab {
+    color: #9aa0a6;
+}
+
+.theme-dark .dims-filter-tab:hover,
+body.dark .dims-filter-tab:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.theme-dark .dims-filter-tab.active,
+body.dark .dims-filter-tab.active {
+    background: #5f6368;
+    color: #e8eaed;
+}
+
+.theme-dark .dims-filter-select,
+body.dark .dims-filter-select {
+    background-color: #3c4043;
+    border-color: #5f6368;
+    color: #e8eaed;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239aa0a6' d='M3.4 4.2L6 6.8l2.6-2.6.8.8L6 8.4 2.6 5z'/%3E%3C/svg%3E");
+}
+
+.theme-dark .dims-filter-select:hover,
+body.dark .dims-filter-select:hover {
+    background-color: #4a4d51;
+}
+
+/* ============================================
+   FILTER - High Contrast
+   ============================================ */
+@media (prefers-contrast: high) {
+    .dims-filter-tab {
+        border: 2px solid transparent;
+    }
+
+    .dims-filter-tab.active {
+        border-color: #1a73e8;
+    }
+
+    .dims-filter-select {
+        border: 2px solid #000;
+    }
+}
+
+/* ============================================
+   FILTER - Reduced Motion
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+
+    .dims-filter-tab,
+    .dims-filter-select {
+        transition: none;
+    }
+}
+
+/* ============================================
+   CARD VISIBILITY - Filter Hide/Show
+   ============================================ */
+.dims-card-hidden {
+    display: none !important;
+}
+
+/* ============================================
+   FILTER - Print
+   ============================================ */
+@media print {
+    .dims-filters-bar {
+        display: none;
+    }
+}

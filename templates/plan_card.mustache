@@ -1,0 +1,104 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    Plan card template for block_dimensions with competency trail.
+
+    WCAG 2.2 Accessibility Features:
+    - Semantic <article> element for card content
+    - aria-labelledby linking to the card title
+    - Trail with clear visual indicators for completed/pending competencies
+
+    Context variables required for this template:
+    * id - Plan ID
+    * name - Plan name
+    * url - Link to view-plan.php
+    * imageurl - Custom card image URL (optional)
+    * hasimage - Boolean indicating if image exists
+    * hastrail - Boolean indicating if trail data exists
+    * trail - Array of competencies for the trail
+    * bgcolor - Custom background color (optional)
+    * hasbgcolor - Boolean indicating if bgcolor exists
+    * textcolor - Custom text color (optional)
+    * hastextcolor - Boolean indicating if textcolor exists
+    * tag1 - First tag label (optional)
+    * hastag1 - Boolean indicating if tag1 exists
+    * tag2 - Second tag label (optional)
+    * trailclickable - Boolean indicating if trail items are clickable links
+}}
+<article class="card plan-card h-100" aria-labelledby="plan-title-{{id}}" style="{{#hasbgcolor}}--dimension-custombgcolor: {{bgcolor}};{{/hasbgcolor}}{{#hastextcolor}}--dimension-customtextcolor: {{textcolor}};{{/hastextcolor}}">
+    <a href="{{url}}" 
+       class="plan-card-link text-decoration-none d-flex flex-column h-100"
+       aria-describedby="plan-title-{{id}}">
+        <div class="plan-card-image-wrapper">
+            {{#hasimage}}
+            <div class="plan-card-image" 
+                 role="img" 
+                 aria-label="{{name}}"
+                 style="background-image: url('{{imageurl}}');"></div>
+            {{/hasimage}}
+            {{^hasimage}}
+            <div class="plan-card-image plan-card-gradient{{#hasbgcolor}} has-custom-bg{{/hasbgcolor}}" 
+                 role="presentation" 
+                 aria-hidden="true"
+                 style="{{#hasbgcolor}}background: var(--dimension-custombgcolor);{{/hasbgcolor}}"></div>
+            {{/hasimage}}
+            {{#hastag1}}{{#hastag2}}
+            <div class="dimension-tags" aria-hidden="true">
+                <span class="dimension-tag">{{tag1}}</span>
+                <span class="dimension-tag">{{tag2}}</span>
+            </div>
+            {{/hastag2}}{{/hastag1}}
+            {{#hastag1}}{{^hastag2}}
+            <div class="dimension-tags" aria-hidden="true">
+                <span class="dimension-tag">{{tag1}}</span>
+            </div>
+            {{/hastag2}}{{/hastag1}}
+            {{^hastag1}}{{#hastag2}}
+            <div class="dimension-tags" aria-hidden="true">
+                <span class="dimension-tag">{{tag2}}</span>
+            </div>
+            {{/hastag2}}{{/hastag1}}
+            <span class="dims-card-access-btn" aria-hidden="true">
+                {{buttonlabel}} <i class="fa fa-arrow-right" aria-hidden="true"></i>
+            </span>
+        </div>
+        <div class="card-body p-3">
+            <h6 class="card-title mb-2 font-weight-bold text-dark" id="plan-title-{{id}}">
+                {{name}}
+            </h6>
+            {{#hastrail}}
+            <div class="competency-trail" role="list" aria-label="{{#str}}competencytrail, block_dimensions{{/str}}">
+                {{#trail}}
+                <div class="trail-item {{#iscompleted}}completed{{/iscompleted}} {{#isfirst}}first{{/isfirst}} {{#islast}}last{{/islast}}{{#trailclickable}} clickable{{/trailclickable}}"
+                     role="listitem"
+                     {{#trailclickable}}data-href="{{url}}" title="{{shortname}}" onclick="event.preventDefault();event.stopPropagation();window.location.href=this.dataset.href;"{{/trailclickable}}>
+                    <div class="trail-marker" aria-hidden="true">
+                        {{#iscompleted}}
+                        <i class="fa fa-check-circle text-success"></i>
+                        {{/iscompleted}}
+                        {{^iscompleted}}
+                        <span class="empty-circle"></span>
+                        {{/iscompleted}}
+                    </div>
+                    <span class="trail-label {{#iscompleted}}text-success{{/iscompleted}}">{{shortname}}</span>
+                </div>
+                {{/trail}}
+            </div>
+            {{/hastrail}}
+        </div>
+    </a>
+</article>

@@ -1,0 +1,110 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    Summary template for block_dimensions.
+
+    WCAG 2.2 Accessibility Features:
+    - Semantic HTML with <nav> and <ul> for navigation structure
+    - ARIA landmarks and labels for screen readers
+    - Proper heading hierarchy
+    - Live region for dynamic content announcements
+
+    Context variables required for this template:
+    * hascompetencies
+    * competencycards
+    * hasplancards
+    * plancards
+}}
+<div class="block-dimensions-content" role="region" aria-label="{{#str}}mycompetencies, block_dimensions{{/str}}">
+    {{#hasactiveplans}}
+        <div class="dims-block-header">
+            {{#showheading}}
+            <h5 class="dims-block-heading" id="block-dimensions-heading">
+                {{#str}}mycompetencies, block_dimensions{{/str}}
+            </h5>
+            {{/showheading}}
+            {{#showsearch}}
+            <div class="dims-block-search-wrapper">
+                <i class="fa fa-search dims-block-search-icon" aria-hidden="true"></i>
+                <input type="text"
+                       class="dims-block-search-input"
+                       placeholder="{{#str}}search_placeholder, block_dimensions{{/str}}"
+                       aria-label="{{#str}}search_placeholder, block_dimensions{{/str}}"
+                       autocomplete="off" />
+                <button type="button" class="dims-block-search-clear" aria-label="{{#str}}clear, core{{/str}}" style="display:none;">
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            {{/showsearch}}
+        </div>
+        {{! Plan cards - when display mode is 'Plan Format' }}
+        {{#hasplancards}}
+            {{#hasplanfilters}}
+                {{#planfilterdata}}
+                {{> block_dimensions/filters }}
+                {{/planfilterdata}}
+            {{/hasplanfilters}}
+            <nav {{#showheading}}aria-labelledby="block-dimensions-heading"{{/showheading}}>
+                <ul class="row list-unstyled" role="list" data-cards-type="plan">
+                    {{#plancards}}
+                        <li class="col-12 col-sm-6 col-lg-4 mb-3 dims-card-item"
+                            data-plan-tag1="{{tag1}}"
+                            data-plan-tag2="{{tag2}}">
+                            {{> block_dimensions/plan_card }}
+                        </li>
+                    {{/plancards}}
+                </ul>
+            </nav>
+        {{/hasplancards}}
+        {{! Competency cards - default 'Competencies Format' }}
+        {{#hascompetencies}}
+            {{#hascompetencyfilters}}
+                {{#competencyfilterdata}}
+                {{> block_dimensions/filters }}
+                {{/competencyfilterdata}}
+            {{/hascompetencyfilters}}
+            <nav {{#showheading}}aria-labelledby="block-dimensions-heading"{{/showheading}}>
+                <ul class="row list-unstyled" role="list" data-cards-type="competency">
+                    {{#competencycards}}
+                        <li class="col-12 col-sm-6 col-lg-4 mb-3 dims-card-item"
+                            data-competency-tag1="{{tag1}}"
+                            data-competency-tag2="{{tag2}}">
+                            {{> block_dimensions/competency_card }}
+                        </li>
+                    {{/competencycards}}
+                </ul>
+            </nav>
+        {{/hascompetencies}}
+        {{^hascompetencies}}
+            {{^hasplancards}}
+                <p class="text-muted small" role="status">
+                    {{#str}}nocompetencies, block_dimensions{{/str}}
+                </p>
+            {{/hasplancards}}
+        {{/hascompetencies}}
+    {{/hasactiveplans}}
+    {{^hasactiveplans}}
+        <p class="text-muted small" role="status">
+            {{#str}}noactiveplans, block_dimensions{{/str}}
+        </p>
+    {{/hasactiveplans}}
+</div>
+{{#js}}
+require(['block_dimensions/filters'], function(Filters) {
+    Filters.init();
+});
+{{/js}}

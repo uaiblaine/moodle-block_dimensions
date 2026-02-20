@@ -1,0 +1,73 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    Filter bar template for block_dimensions.
+
+    Renders filter controls (tabs or dropdown) for tag1/tag2 custom fields.
+    Used for both competency and plan filters.
+
+    Context variables required for this template:
+    * filters - Array of filter configurations, each with:
+      * field - Filter field identifier (e.g. competency_tag1)
+      * tag - Tag name (tag1 or tag2)
+      * type - Type (competency or plan)
+      * label - Display label
+      * istabs - Boolean: render as pill-style tabs
+      * isdropdown - Boolean: render as dropdown select
+      * alllabel - Label for the "All" option
+      * options - Array of { value, label }
+}}
+<div class="dims-filters-bar" role="toolbar" aria-label="{{#str}}filterall, block_dimensions{{/str}}">
+    {{#filters}}
+        {{#istabs}}
+        <div class="dims-filter-tabs-wrapper" data-filter-group="{{field}}">
+            <div class="dims-filter-tabs" role="tablist">
+                <button type="button"
+                        class="dims-filter-tab active"
+                        role="tab"
+                        aria-selected="true"
+                        data-filter-field="{{field}}"
+                        data-filter-value="">
+                    {{alllabel}}
+                </button>
+                {{#options}}
+                <button type="button"
+                        class="dims-filter-tab"
+                        role="tab"
+                        aria-selected="false"
+                        data-filter-field="{{field}}"
+                        data-filter-value="{{value}}">
+                    {{label}}
+                </button>
+                {{/options}}
+            </div>
+        </div>
+        {{/istabs}}
+        {{#isdropdown}}
+        <div class="dims-filter-dropdown-wrapper" data-filter-group="{{field}}">
+            <select class="dims-filter-select"
+                    data-filter-field="{{field}}"
+                    aria-label="{{label}}">
+                <option value="">{{alllabel}}</option>
+                {{#options}}
+                <option value="{{value}}">{{label}}</option>
+                {{/options}}
+            </select>
+        </div>
+        {{/isdropdown}}
+    {{/filters}}
+</div>
