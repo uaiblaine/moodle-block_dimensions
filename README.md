@@ -104,7 +104,7 @@ Bug and problem reports / Support requests
 This plugin is carefully developed and thoroughly tested, but bugs and problems can always appear.
 
 Please report bugs and problems on Github:
-https://github.com/uaiblaine   /moodle-block_dimensions/issues
+https://github.com/uaiblaine/moodle-block_dimensions/issues
 
 We will do our best to solve your problems, but please note that due to limited resources we can't always provide per-case support.
 

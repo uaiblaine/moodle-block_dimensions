@@ -1,1 +1,2 @@
-Just for keep the file
+== 2026021800 ==
+* Initial release of the Dimensions block plugin.
