@@ -68,7 +68,6 @@ $string['planfiltersheading_desc'] = 'Enable and configure filters based on lear
 $string['pluginname'] = 'Dimensions';
 $string['privacy:metadata'] = 'The Dimensions block only shows data stored in other locations.';
 $string['search_placeholder'] = 'Search...';
-
 $string['show_heading'] = 'Show block heading';
 $string['show_heading_desc'] = 'When enabled, the heading "My Competencies" is displayed at the top of the block.';
 $string['viewmore'] = 'View more...';
