@@ -57,6 +57,8 @@ $string['enable_trail_links_desc'] = 'Quando habilitado, cada competência na tr
 $string['filterall'] = 'Todos';
 $string['hide_block_title'] = 'Ocultar título do bloco';
 $string['hide_block_title_desc'] = 'Quando habilitado, a barra de título do bloco ("Dimensões") é ocultada.';
+$string['javascriptrequired'] = 'JavaScript é necessário para carregar os cartões de competências neste bloco.';
+$string['loaderror'] = 'Não foi possível carregar os cartões de competências agora. Tente novamente.';
 $string['mycompetencies'] = 'Minhas competências';
 $string['noactiveplans'] = 'Nenhum plano ativo no momento.';
 $string['nocompetencies'] = 'Nenhuma competência em seus planos.';
@@ -74,6 +76,7 @@ $string['planfiltersheading'] = 'Filtros de planos de aprendizagem';
 $string['planfiltersheading_desc'] = 'Habilite e configure filtros baseados nos campos customizados de templates de planos de aprendizagem (tag1 e tag2). Estes filtros permitem ao usuário filtrar os cartões de planos dentro do bloco.';
 $string['pluginname'] = 'Dimensões';
 $string['privacy:metadata'] = 'O bloco de Dimensões apenas exibe dados armazenados em outros locais.';
+$string['retry'] = 'Tentar novamente';
 $string['search_placeholder'] = 'Pesquisar...';
 
 $string['show_heading'] = 'Exibir título do bloco';

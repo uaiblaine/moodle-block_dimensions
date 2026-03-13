@@ -29,10 +29,11 @@ use core_competency\plan;
 use renderable;
 use renderer_base;
 use templatable;
-use required_capability_exception;
 use moodle_url;
 use local_dimensions\picture_manager;
 use local_dimensions\constants;
+use local_dimensions\template_metadata_cache;
+use block_dimensions\local\dataset_provider;
 
 /**
  * Summary renderable class.
@@ -62,13 +63,6 @@ class summary implements renderable, templatable {
             $user = $USER;
         }
         $this->user = $user;
-
-        // Get the plans.
-        try {
-            $this->plans = api::list_user_plans($this->user->id);
-        } catch (required_capability_exception $e) {
-            $this->plans = [];
-        }
     }
 
     /**
@@ -133,106 +127,6 @@ class summary implements renderable, templatable {
         )->out();
     }
 
-    /**
-     * Get the card image URL for a learning plan template.
-     *
-     * @param int $templateid The template ID
-     * @return string|null The image URL or null if not found
-     */
-    protected function get_template_card_image(int $templateid): ?string {
-        // Built-in mode: try picture_manager first, fall back to external storage.
-        if (picture_manager::is_builtin_mode()) {
-            $url = picture_manager::get_image_url('lp', $templateid, 'cardimage');
-            if ($url) {
-                return $url;
-            }
-            // Fall through to check external storage for legacy images.
-        }
-
-        // External mode (or fallback): use customfield_picture component.
-        global $DB;
-
-        // Get the cached custom field definition for 'customcard' in the local_dimensions lp area.
-        $field = $this->get_field_definition(constants::CFIELD_CUSTOMCARD, 'lp');
-
-        if (!$field) {
-            return null;
-        }
-
-        // Get the custom field data for this template.
-        $data = $DB->get_record('customfield_data', [
-            'fieldid' => $field->id,
-            'instanceid' => $templateid,
-        ]);
-
-        if (!$data) {
-            return null;
-        }
-
-        // Get the file from storage (using customfield_picture component).
-        $fs = get_file_storage();
-        $files = $fs->get_area_files(
-            $data->contextid,
-            'customfield_picture',
-            'file',
-            $data->id,
-            '',
-            false
-        );
-
-        if (empty($files)) {
-            return null;
-        }
-
-        $file = reset($files);
-        return moodle_url::make_pluginfile_url(
-            $file->get_contextid(),
-            $file->get_component(),
-            $file->get_filearea(),
-            $file->get_itemid(),
-            $file->get_filepath(),
-            $file->get_filename()
-        )->out();
-    }
-
-    /**
-     * Get a custom field value for a learning plan template.
-     *
-     * @param int $templateid The template ID
-     * @param string $shortname The field shortname to retrieve
-     * @return string|null The field value or null if not found
-     */
-    protected function get_template_custom_field(int $templateid, string $shortname): ?string {
-        global $DB;
-
-        // Get the cached field definition.
-        $field = $this->get_field_definition($shortname, 'lp');
-
-        if (!$field) {
-            return null;
-        }
-
-        // Get the data for this instance.
-        $data = $DB->get_record('customfield_data', [
-            'fieldid' => $field->id,
-            'instanceid' => $templateid,
-        ]);
-
-        if (!$data || empty($data->value)) {
-            return null;
-        }
-
-        // Validate hex color.
-        $value = trim($data->value);
-        if (preg_match('/^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $value)) {
-            if ($value[0] !== '#') {
-                $value = '#' . $value;
-            }
-            return $value;
-        }
-
-        return null;
-    }
 
     /**
      * Get tag custom field values for a competency.
@@ -244,19 +138,6 @@ class summary implements renderable, templatable {
         return [
             'tag1' => $this->get_select_field_value($competencyid, constants::CFIELD_TAG1, 'competency'),
             'tag2' => $this->get_select_field_value($competencyid, constants::CFIELD_TAG2, 'competency'),
-        ];
-    }
-
-    /**
-     * Get tag custom field values for a learning plan template.
-     *
-     * @param int $templateid The template ID
-     * @return array Array with 'tag1', 'tag2' keys and their string values (null if not set)
-     */
-    protected function get_template_tags(int $templateid): array {
-        return [
-            'tag1' => $this->get_select_field_value($templateid, constants::CFIELD_TAG1, 'lp'),
-            'tag2' => $this->get_select_field_value($templateid, constants::CFIELD_TAG2, 'lp'),
         ];
     }
 
@@ -363,293 +244,17 @@ class summary implements renderable, templatable {
      * @return array
      */
     public function export_for_template(renderer_base $output) {
-        // Filter active plans.
-        $activeplans = [];
-        foreach ($this->plans as $plan) {
-            if ($plan->get('status') == plan::STATUS_ACTIVE) {
-                $activeplans[] = $plan;
-            }
-        }
+        $uiconfig = dataset_provider::get_ui_config();
 
-        // Build cards based on display mode.
-        $competencycards = [];
-        $plancards = [];
-        $seencompetencies = []; // Avoid duplicates across plans.
+        $containerid = 'block-dimensions-' . uniqid();
 
-        foreach ($activeplans as $plan) {
-            $planid = $plan->get('id');
-            $templateid = $plan->get('templateid');
-
-            // Get display mode based on template or default.
-            // Individual plans (no template) default to PLAN mode.
-            // Template-based plans use the template's configured display mode.
-            if ($templateid) {
-                $displaymode = \local_dimensions\helper::get_template_display_mode($templateid);
-            } else {
-                // Individual plan - default to PLAN mode.
-                $displaymode = \local_dimensions\constants::DISPLAYMODE_PLAN;
-            }
-
-            // If display mode is PLAN, add the plan as a card with competency trail.
-            if ($displaymode == \local_dimensions\constants::DISPLAYMODE_PLAN) {
-                // Build plan card.
-                $viewurl = new moodle_url('/local/dimensions/view-plan.php', [
-                    'id' => $planid,
-                ]);
-
-                // Build plan competency count text with optional custom suffix from template.
-                $competencytypesuffix = get_string('competency_count_suffix', 'block_dimensions');
-                if ($templateid) {
-                    $customtype = $this->get_select_field_value($templateid, 'local_dimensions_type', 'lp');
-                    if (!empty($customtype)) {
-                        $competencytypesuffix = format_string(trim($customtype));
-                    }
-                }
-                $totalcompetencies = 0;
-                $hasitemsbeforetrail = false;
-                $hasitemsaftertrail = false;
-
-                // Get template custom card image first, fallback to first competency.
-                $imageurl = null;
-                if ($templateid) {
-                    $imageurl = $this->get_template_card_image($templateid);
-                }
-
-                // Get template color custom fields.
-                $bgcolor = null;
-                $textcolor = null;
-                $tags = ['tag1' => null, 'tag2' => null];
-                if ($templateid) {
-                    $bgcolor = $this->get_template_custom_field($templateid, constants::CFIELD_CUSTOMBGCOLOR);
-                    $textcolor = $this->get_template_custom_field($templateid, constants::CFIELD_CUSTOMTEXTCOLOR);
-                    $tags = $this->get_template_tags($templateid);
-                }
-
-                // Get competencies with proficiency status.
-                $competencytrail = [];
-                try {
-                    $competencies = api::list_plan_competencies($plan);
-                    $totalcompetencies = count($competencies);
-                    if (!empty($competencies)) {
-                        // If no template image, use first competency's image as fallback.
-                        if (!$imageurl) {
-                            $firstcomp = reset($competencies);
-                            $imageurl = $this->get_competency_card_image($firstcomp->competency->get('id'));
-                        }
-
-                        // Build competency data with proficiency status.
-                        $competencydata = [];
-                        $lastcompletedindex = -1;
-                        $index = 0;
-
-                        foreach ($competencies as $compdata) {
-                            $competency = $compdata->competency;
-                            $competencyid = $competency->get('id');
-
-                            // Check user proficiency — data already in list_plan_competencies() result.
-                            $isproficient = false;
-                            if ($compdata->usercompetency && $compdata->usercompetency->get('proficiency')) {
-                                $isproficient = true;
-                                $lastcompletedindex = $index;
-                            }
-
-                            $competencydata[] = [
-                                'id' => $competencyid,
-                                'shortname' => format_string($competency->get('shortname')),
-                                'iscompleted' => $isproficient,
-                                'index' => $index,
-                                'url' => (new moodle_url('/local/dimensions/view-plan.php', [
-                                    'id' => $planid,
-                                    'competencyid' => $competencyid,
-                                ]))->out(false),
-                            ];
-                            $index++;
-                        }
-
-                        $trailstartindex = $this->get_trail_start_index(count($competencydata), $lastcompletedindex);
-
-                        // Select 5 competencies centered on last completed.
-                        $competencytrail = $this->select_trail_competencies(
-                            $competencydata,
-                            $lastcompletedindex
-                        );
-
-                        $hasitemsbeforetrail = ($trailstartindex > 0);
-                        $hasitemsaftertrail = (($trailstartindex + count($competencytrail)) < count($competencydata));
-                    }
-                } catch (\Exception $e) {
-                    // Ignore competency errors.
-                    debugging('Error processing competencies for trail: ' . $e->getMessage(), DEBUG_DEVELOPER);
-                }
-
-                $competencycounttext = $totalcompetencies . ' ' . $competencytypesuffix;
-
-                // Check if trail competencies should be clickable.
-                $trailclickable = (bool) get_config('block_dimensions', 'enable_trail_links');
-
-                // Determine access button label: "Continue" if partial progress, "Access" otherwise.
-                $haspartialtrail = false;
-                if (!empty($competencytrail)) {
-                    $completedcount = 0;
-                    foreach ($competencytrail as $item) {
-                        if (!empty($item['iscompleted'])) {
-                            $completedcount++;
-                        }
-                    }
-                    $totaltrail = count($competencytrail);
-                    if ($completedcount > 0 && $completedcount < $totaltrail) {
-                        $haspartialtrail = true;
-                    }
-                }
-
-                $planname = format_string($plan->get('name'));
-                if ($haspartialtrail) {
-                    $buttonlabel = get_string('continuecard', 'block_dimensions');
-                    $buttonarialabel = get_string('continuecardaria', 'block_dimensions', $planname);
-                } else {
-                    $buttonlabel = get_string('accesscard', 'block_dimensions');
-                    $buttonarialabel = get_string('accesscardaria', 'block_dimensions', $planname);
-                }
-
-                $layoutmode = get_config('block_dimensions', 'plancard_layout') ?: 'vertical';
-
-                $plancards[] = [
-                    'id' => $planid,
-                    'name' => $planname,
-                    'url' => $viewurl->out(false),
-                    'imageurl' => $imageurl,
-                    'hasimage' => !empty($imageurl),
-                    'hastrail' => !empty($competencytrail),
-                    'trail' => $competencytrail,
-                    'trailclickable' => $trailclickable,
-                    'competencycounttext' => $competencycounttext,
-                    'hasitemsbeforetrail' => $hasitemsbeforetrail,
-                    'hasitemsaftertrail' => $hasitemsaftertrail,
-                    'bgcolor' => $bgcolor,
-                    'hasbgcolor' => !empty($bgcolor),
-                    'textcolor' => $textcolor,
-                    'hastextcolor' => !empty($textcolor),
-                    'tag1' => $tags['tag1'],
-                    'hastag1' => !empty($tags['tag1']),
-                    'tag2' => $tags['tag2'],
-                    'hastag2' => !empty($tags['tag2']),
-                    'showcardtitle' => true,
-                    'buttonlabel' => $buttonlabel,
-                    'buttonarialabel' => $buttonarialabel,
-                    'ishorizontal' => ($layoutmode === 'horizontal'),
-                    'isvertical' => ($layoutmode !== 'horizontal'),
-                ];
-                continue;
-            }
-
-            // Default: Display mode is COMPETENCIES.
-            try {
-                $competencies = api::list_plan_competencies($plan);
-            } catch (\Exception $e) {
-                continue;
-            }
-
-            // Pre-fetch which competencies have visible linked courses (single query).
-            $allcompids = array_map(fn($c) => $c->competency->get('id'), $competencies);
-            $competencieswithcourses = $this->get_competencies_with_courses($allcompids);
-
-            foreach ($competencies as $compdata) {
-                $competency = $compdata->competency;
-                $competencyid = $competency->get('id');
-
-                // Skip if we've already seen this competency.
-                if (isset($seencompetencies[$competencyid])) {
-                    continue;
-                }
-
-                // Skip competencies without linked courses.
-                if (!isset($competencieswithcourses[$competencyid])) {
-                    $seencompetencies[$competencyid] = true;
-                    continue;
-                }
-
-                $seencompetencies[$competencyid] = true;
-
-                // Build the view URL.
-                $viewurl = new moodle_url('/local/dimensions/view-plan.php', [
-                    'id' => $planid,
-                    'competencyid' => $competencyid,
-                ]);
-
-                // Get the card image.
-                $imageurl = $this->get_competency_card_image($competencyid);
-
-                // Get tags for this competency.
-                $tags = $this->get_competency_tags($competencyid);
-
-                $compname = format_string($competency->get('shortname'));
-                $competencycards[] = [
-                    'id' => $competencyid,
-                    'name' => $compname,
-                    'url' => $viewurl->out(false),
-                    'imageurl' => $imageurl,
-                    'hasimage' => !empty($imageurl),
-                    'tag1' => $tags['tag1'],
-                    'hastag1' => !empty($tags['tag1']),
-                    'tag2' => $tags['tag2'],
-                    'hastag2' => !empty($tags['tag2']),
-                    'showcardtitle' => true,
-                    'buttonlabel' => get_string('accesscard', 'block_dimensions'),
-                    'buttonarialabel' => get_string('accesscardaria', 'block_dimensions', $compname),
-                ];
-            }
-        }
-
-        // Read admin settings for display visibility.
-        $showheading = (bool) get_config('block_dimensions', 'show_heading');
-        $showsearch = (bool) get_config('block_dimensions', 'enable_search');
-
-        // If show_heading has never been set (null), default to true.
-        if (get_config('block_dimensions', 'show_heading') === false) {
-            $showheading = true;
-        }
-
-        // Build filter configuration for the template.
-        $competencyfilters = [];
-        $planfilters = [];
-
-        // Competency filters — only if there are competency cards.
-        if (!empty($competencycards)) {
-            $competencyfilters = $this->build_filter_config(
-                $competencycards,
-                'competency',
-                'block_dimensions'
-            );
-        }
-
-        // Plan filters — only if there are plan cards.
-        if (!empty($plancards)) {
-            $planfilters = $this->build_filter_config(
-                $plancards,
-                'plan',
-                'block_dimensions'
-            );
-        }
-
-        $hascompetencyfilters = !empty($competencyfilters);
-        $hasplanfilters = !empty($planfilters);
-
-        $data = [
-            'hascompetencies' => !empty($competencycards),
-            'competencycards' => $competencycards,
-            'hasplans' => !empty($this->plans),
-            'hasactiveplans' => !empty($activeplans),
-            'hasplancards' => !empty($plancards),
-            'plancards' => $plancards,
-            'showheading' => $showheading,
-            'showsearch' => $showsearch,
-            'hascompetencyfilters' => $hascompetencyfilters,
-            'competencyfilterdata' => ['filters' => $competencyfilters],
-            'hasplanfilters' => $hasplanfilters,
-            'planfilterdata' => ['filters' => $planfilters],
+        return [
+            'containerid' => $containerid,
+            'showheading' => $uiconfig['showheading'],
+            'showsearch' => $uiconfig['showsearch'],
+            'endpointmethod' => 'block_dimensions_get_block_dataset',
+            'filtersettingsjson' => json_encode($uiconfig['filtersettings']),
         ];
-
-        return $data;
     }
 
     /**
@@ -725,13 +330,8 @@ class summary implements renderable, templatable {
      * @return boolean
      */
     public function has_content() {
-        // Check if user has any active plans.
-        foreach ($this->plans as $plan) {
-            if ($plan->get('status') == plan::STATUS_ACTIVE) {
-                return true;
-            }
-        }
-        return false;
+        $provider = new dataset_provider((int)$this->user->id);
+        return $provider->has_active_plans();
     }
 
     /**

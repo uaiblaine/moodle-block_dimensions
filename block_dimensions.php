@@ -78,10 +78,6 @@ class block_dimensions extends block_base {
         // Block needs a valid, non-guest user to be logged-in in order to display the user's learning plans.
         if (isloggedin() && !isguestuser()) {
             $summary = new \block_dimensions\output\summary();
-            if (!$summary->has_content()) {
-                return $this->content;
-            }
-
             $renderer = $this->page->get_renderer('block_dimensions');
             $this->content->text = $renderer->render($summary);
             $this->content->footer = '';

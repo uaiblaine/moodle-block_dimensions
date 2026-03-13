@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Block Dimensions version file.
+ * External services definition for block_dimensions.
  *
  * @package    block_dimensions
  * @copyright  2026 Anderson Blaine
@@ -24,11 +24,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2026031300;
-$plugin->requires = 2024100702;
-$plugin->supported = [405, 502];
-$plugin->component = 'block_dimensions';
-$plugin->dependencies = [
-    'tool_lp' => ANY_VERSION,
-    'local_dimensions' => ANY_VERSION,
+$functions = [
+    'block_dimensions_get_block_dataset' => [
+        'classname' => 'block_dimensions\\external\\get_block_dataset',
+        'methodname' => 'execute',
+        'description' => 'Returns the complete non-paginated dataset for block_dimensions cards and filters.',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => '',
+    ],
 ];
