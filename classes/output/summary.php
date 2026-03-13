@@ -32,6 +32,7 @@ use templatable;
 use required_capability_exception;
 use moodle_url;
 use local_dimensions\picture_manager;
+use local_dimensions\constants;
 
 /**
  * Summary renderable class.
@@ -90,7 +91,7 @@ class summary implements renderable, templatable {
         global $DB;
 
         // Get the cached custom field definition for 'customcard' in the local_dimensions competency area.
-        $field = $this->get_field_definition('customcard', 'competency');
+        $field = $this->get_field_definition(constants::CFIELD_CUSTOMCARD, 'competency');
 
         if (!$field) {
             return null;
@@ -152,7 +153,7 @@ class summary implements renderable, templatable {
         global $DB;
 
         // Get the cached custom field definition for 'customcard' in the local_dimensions lp area.
-        $field = $this->get_field_definition('customcard', 'lp');
+        $field = $this->get_field_definition(constants::CFIELD_CUSTOMCARD, 'lp');
 
         if (!$field) {
             return null;
@@ -241,8 +242,8 @@ class summary implements renderable, templatable {
      */
     protected function get_competency_tags(int $competencyid): array {
         return [
-            'tag1' => $this->get_select_field_value($competencyid, 'tag1', 'competency'),
-            'tag2' => $this->get_select_field_value($competencyid, 'tag2', 'competency'),
+            'tag1' => $this->get_select_field_value($competencyid, constants::CFIELD_TAG1, 'competency'),
+            'tag2' => $this->get_select_field_value($competencyid, constants::CFIELD_TAG2, 'competency'),
         ];
     }
 
@@ -254,8 +255,8 @@ class summary implements renderable, templatable {
      */
     protected function get_template_tags(int $templateid): array {
         return [
-            'tag1' => $this->get_select_field_value($templateid, 'tag1', 'lp'),
-            'tag2' => $this->get_select_field_value($templateid, 'tag2', 'lp'),
+            'tag1' => $this->get_select_field_value($templateid, constants::CFIELD_TAG1, 'lp'),
+            'tag2' => $this->get_select_field_value($templateid, constants::CFIELD_TAG2, 'lp'),
         ];
     }
 
@@ -396,6 +397,18 @@ class summary implements renderable, templatable {
                     'id' => $planid,
                 ]);
 
+                // Build plan competency count text with optional custom suffix from template.
+                $competencytypesuffix = get_string('competency_count_suffix', 'block_dimensions');
+                if ($templateid) {
+                    $customtype = $this->get_select_field_value($templateid, 'local_dimensions_type', 'lp');
+                    if (!empty($customtype)) {
+                        $competencytypesuffix = format_string(trim($customtype));
+                    }
+                }
+                $totalcompetencies = 0;
+                $hasitemsbeforetrail = false;
+                $hasitemsaftertrail = false;
+
                 // Get template custom card image first, fallback to first competency.
                 $imageurl = null;
                 if ($templateid) {
@@ -407,8 +420,8 @@ class summary implements renderable, templatable {
                 $textcolor = null;
                 $tags = ['tag1' => null, 'tag2' => null];
                 if ($templateid) {
-                    $bgcolor = $this->get_template_custom_field($templateid, 'custombgcolor');
-                    $textcolor = $this->get_template_custom_field($templateid, 'customtextcolor');
+                    $bgcolor = $this->get_template_custom_field($templateid, constants::CFIELD_CUSTOMBGCOLOR);
+                    $textcolor = $this->get_template_custom_field($templateid, constants::CFIELD_CUSTOMTEXTCOLOR);
                     $tags = $this->get_template_tags($templateid);
                 }
 
@@ -416,6 +429,7 @@ class summary implements renderable, templatable {
                 $competencytrail = [];
                 try {
                     $competencies = api::list_plan_competencies($plan);
+                    $totalcompetencies = count($competencies);
                     if (!empty($competencies)) {
                         // If no template image, use first competency's image as fallback.
                         if (!$imageurl) {
@@ -452,16 +466,23 @@ class summary implements renderable, templatable {
                             $index++;
                         }
 
+                        $trailstartindex = $this->get_trail_start_index(count($competencydata), $lastcompletedindex);
+
                         // Select 5 competencies centered on last completed.
                         $competencytrail = $this->select_trail_competencies(
                             $competencydata,
                             $lastcompletedindex
                         );
+
+                        $hasitemsbeforetrail = ($trailstartindex > 0);
+                        $hasitemsaftertrail = (($trailstartindex + count($competencytrail)) < count($competencydata));
                     }
                 } catch (\Exception $e) {
                     // Ignore competency errors.
                     debugging('Error processing competencies for trail: ' . $e->getMessage(), DEBUG_DEVELOPER);
                 }
+
+                $competencycounttext = $totalcompetencies . ' ' . $competencytypesuffix;
 
                 // Check if trail competencies should be clickable.
                 $trailclickable = (bool) get_config('block_dimensions', 'enable_trail_links');
@@ -490,6 +511,8 @@ class summary implements renderable, templatable {
                     $buttonarialabel = get_string('accesscardaria', 'block_dimensions', $planname);
                 }
 
+                $layoutmode = get_config('block_dimensions', 'plancard_layout') ?: 'vertical';
+
                 $plancards[] = [
                     'id' => $planid,
                     'name' => $planname,
@@ -499,6 +522,9 @@ class summary implements renderable, templatable {
                     'hastrail' => !empty($competencytrail),
                     'trail' => $competencytrail,
                     'trailclickable' => $trailclickable,
+                    'competencycounttext' => $competencycounttext,
+                    'hasitemsbeforetrail' => $hasitemsbeforetrail,
+                    'hasitemsaftertrail' => $hasitemsaftertrail,
                     'bgcolor' => $bgcolor,
                     'hasbgcolor' => !empty($bgcolor),
                     'textcolor' => $textcolor,
@@ -510,6 +536,8 @@ class summary implements renderable, templatable {
                     'showcardtitle' => true,
                     'buttonlabel' => $buttonlabel,
                     'buttonarialabel' => $buttonarialabel,
+                    'ishorizontal' => ($layoutmode === 'horizontal'),
+                    'isvertical' => ($layoutmode !== 'horizontal'),
                 ];
                 continue;
             }
@@ -727,27 +755,42 @@ class summary implements renderable, templatable {
             return $this->add_trail_positions($competencies);
         }
 
-        // Determine center position.
-        if ($lastcompletedindex < 0) {
-            // No completed: show first 5.
-            $start = 0;
-        } else if ($lastcompletedindex >= $total - 1) {
-            // Last or beyond: show last 5.
-            $start = $total - $maxitems;
-        } else {
-            // Center on last completed.
-            $center = $lastcompletedindex;
-            $halfwindow = floor($maxitems / 2);
-            $start = max(0, $center - $halfwindow);
-
-            // Adjust if window extends beyond end.
-            if ($start + $maxitems > $total) {
-                $start = $total - $maxitems;
-            }
-        }
+        $start = $this->get_trail_start_index($total, $lastcompletedindex, $maxitems);
 
         $selected = array_slice($competencies, $start, $maxitems);
         return $this->add_trail_positions($selected);
+    }
+
+    /**
+     * Get the start index for the competency trail window.
+     *
+     * @param int $total Total number of competencies
+     * @param int $lastcompletedindex Index of last completed (-1 if none)
+     * @param int $maxitems Max competencies to display in the trail
+     * @return int Start index for array_slice
+     */
+    protected function get_trail_start_index(int $total, int $lastcompletedindex, int $maxitems = 5): int {
+        if ($total <= $maxitems) {
+            return 0;
+        }
+
+        if ($lastcompletedindex < 0) {
+            return 0;
+        }
+
+        if ($lastcompletedindex >= $total - 1) {
+            return $total - $maxitems;
+        }
+
+        $halfwindow = floor($maxitems / 2);
+        $start = max(0, $lastcompletedindex - $halfwindow);
+
+        // Adjust if window extends beyond end.
+        if ($start + $maxitems > $total) {
+            $start = $total - $maxitems;
+        }
+
+        return $start;
     }
 
     /**

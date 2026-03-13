@@ -387,6 +387,14 @@ body.dark .block_dimensions .competency-card:focus-within {
     line-height: 1.4;
 }
 
+.block_dimensions .competency-count-text {
+    margin: 0;
+    font-size: 0.82rem;
+    line-height: 1.3;
+    color: #6c757d;
+    font-weight: 600;
+}
+
 /* ============================================
    COMPETENCY TRAIL - Horizontal Layout
    ============================================ */
@@ -410,8 +418,34 @@ body.dark .block_dimensions .competency-card:focus-within {
     text-align: center;
 }
 
+.block_dimensions .competency-trail:not(.competency-trail-vertical).has-before .trail-item.first::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    right: 50%;
+    width: 34px;
+    height: 2px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 2' preserveAspectRatio='none'%3E%3Cpath d='M1 1H8M13 1H20M25 1H32' stroke='%23ced4da' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: 34px 2px;
+    z-index: 0;
+}
+
+.block_dimensions .competency-trail:not(.competency-trail-vertical).has-after .trail-item.last::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    width: 34px;
+    height: 2px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 2' preserveAspectRatio='none'%3E%3Cpath d='M1 1H8M13 1H20M25 1H32' stroke='%23ced4da' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: 34px 2px;
+    z-index: 0;
+}
+
 /* Horizontal connector line */
-.block_dimensions .trail-item:not(.last)::after {
+.block_dimensions .competency-trail:not(.competency-trail-vertical) .trail-item:not(.last)::after {
     content: '';
     position: absolute;
     top: 10px;
@@ -422,7 +456,7 @@ body.dark .block_dimensions .competency-card:focus-within {
     z-index: 0;
 }
 
-.block_dimensions .trail-item.completed:not(.last)::after {
+.block_dimensions .competency-trail:not(.competency-trail-vertical) .trail-item.completed:not(.last)::after {
     background-color: #28a745;
 }
 
@@ -482,6 +516,189 @@ body.dark .block_dimensions .competency-card:focus-within {
     color: #1a73e8;
 }
 
+/* ============================================
+   PLAN CARD - Horizontal Layout
+   ============================================ */
+.block_dimensions .plan-card-horizontal {
+    flex-direction: row;
+}
+
+.block_dimensions .plan-card-horizontal .plan-card-link {
+    flex-direction: row;
+    width: 100%;
+}
+
+.block_dimensions .plan-card-image-wrapper-horizontal {
+    flex: 0 0 180px;
+    position: relative;
+    overflow: hidden;
+}
+
+.block_dimensions .plan-card-image-horizontal {
+    width: 100%;
+    height: 100%;
+    min-height: 180px;
+    background-size: cover;
+    background-position: center;
+}
+
+.block_dimensions .plan-card-body-horizontal {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.block_dimensions .plan-card-horizontal .card-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Access button overlay on horizontal card image — top-left */
+.block_dimensions .dims-card-access-btn-horizontal {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: auto;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    background: #ffffff;
+    color: #1d1d1f;
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.3;
+    border-radius: 8px;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    width: fit-content;
+}
+
+.block_dimensions .dims-card-access-btn-horizontal .fa {
+    font-size: 0.8rem;
+}
+
+.block_dimensions .plan-card-link:hover .dims-card-access-btn-horizontal {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+    transform: translateY(-1px);
+}
+
+/* ============================================
+   VERTICAL TRAIL - For Horizontal Card
+   ============================================ */
+.block_dimensions .competency-trail-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    overflow-x: visible;
+    overflow-y: visible;
+}
+
+.block_dimensions .trail-item-vertical {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    position: relative;
+    min-width: 0;
+    flex: none;
+    text-align: left;
+    padding: 8px 0;
+}
+
+/* Vertical connector line */
+.block_dimensions .trail-item-vertical:not(.last)::after {
+    content: '';
+    position: absolute;
+    left: 9px;
+    top: calc(50% + 10px);
+    width: 2px;
+    height: calc(100% - 10px);
+    background-color: #e9ecef;
+    z-index: 0;
+}
+
+.block_dimensions .trail-item-vertical.completed:not(.last)::after {
+    background-color: #28a745;
+}
+
+.block_dimensions .trail-item-vertical .trail-marker {
+    flex-shrink: 0;
+    margin-right: 8px;
+}
+
+.block_dimensions .trail-item-vertical .trail-label {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-width: none;
+    font-size: 0.72rem;
+    margin-top: 0;
+}
+
+/* Vertical trail continuation indicators */
+.block_dimensions .competency-trail-vertical.has-before .trail-item-vertical.first::before {
+    content: '';
+    position: absolute;
+    left: 9px;
+    bottom: 50%;
+    width: 2px;
+    height: 20px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 2 2 20' preserveAspectRatio='none'%3E%3Cpath d='M1 1V6M1 10V15M1 19V24' stroke='%23ced4da' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: 2px 20px;
+    z-index: 0;
+}
+
+.block_dimensions .competency-trail-vertical.has-after .trail-item-vertical.last::after {
+    content: '';
+    position: absolute;
+    left: 9px;
+    top: 50%;
+    width: 2px;
+    height: 20px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 2 2 20' preserveAspectRatio='none'%3E%3Cpath d='M1 1V6M1 10V15M1 19V24' stroke='%23ced4da' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: 2px 20px;
+    z-index: 0;
+}
+
+/* Responsive — horizontal card stacks on mobile */
+@media (max-width: 575.98px) {
+    .block_dimensions .plan-card-horizontal,
+    .block_dimensions .plan-card-horizontal .plan-card-link {
+        flex-direction: column;
+    }
+
+    .block_dimensions .plan-card-image-wrapper-horizontal {
+        flex: none;
+        width: 100%;
+    }
+
+    .block_dimensions .plan-card-image-horizontal {
+        height: 160px;
+        min-height: auto;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .block_dimensions .dims-card-access-btn-horizontal {
+        transition: none;
+    }
+}
+
 /* Responsive adjustments */
 @media (max-width: 575.98px) {
     .block_dimensions .competency-trail {
@@ -526,6 +743,11 @@ body.dark .block_dimensions .trail-label {
     color: #adb5bd;
 }
 
+.theme-dark .block_dimensions .competency-count-text,
+body.dark .block_dimensions .competency-count-text {
+    color: #adb5bd;
+}
+
 .theme-dark .block_dimensions .trail-marker .empty-circle,
 body.dark .block_dimensions .trail-marker .empty-circle {
     border-color: #6c757d;
@@ -535,6 +757,33 @@ body.dark .block_dimensions .trail-marker .empty-circle {
 .theme-dark .block_dimensions .trail-item:not(.last)::after,
 body.dark .block_dimensions .trail-item:not(.last)::after {
     background-color: #495057;
+}
+
+.theme-dark .block_dimensions .competency-trail:not(.competency-trail-vertical).has-before .trail-item.first::before,
+body.dark .block_dimensions .competency-trail:not(.competency-trail-vertical).has-before .trail-item.first::before,
+.theme-dark .block_dimensions .competency-trail:not(.competency-trail-vertical).has-after .trail-item.last::after,
+body.dark .block_dimensions .competency-trail:not(.competency-trail-vertical).has-after .trail-item.last::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 2' preserveAspectRatio='none'%3E%3Cpath d='M1 1H8M13 1H20M25 1H32' stroke='%23495057' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+/* Dark mode — Horizontal card button */
+.theme-dark .block_dimensions .dims-card-access-btn-horizontal,
+body.dark .block_dimensions .dims-card-access-btn-horizontal {
+    background: #2c2c2e;
+    color: #f5f5f7;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.theme-dark .block_dimensions .trail-item-vertical:not(.last)::after,
+body.dark .block_dimensions .trail-item-vertical:not(.last)::after {
+    background-color: #495057;
+}
+
+.theme-dark .block_dimensions .competency-trail-vertical.has-before .trail-item-vertical.first::before,
+body.dark .block_dimensions .competency-trail-vertical.has-before .trail-item-vertical.first::before,
+.theme-dark .block_dimensions .competency-trail-vertical.has-after .trail-item-vertical.last::after,
+body.dark .block_dimensions .competency-trail-vertical.has-after .trail-item-vertical.last::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 2 2 20' preserveAspectRatio='none'%3E%3Cpath d='M1 1V6M1 10V15M1 19V24' stroke='%23495057' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 
 /* ============================================
@@ -590,7 +839,8 @@ body.dark .block_dimensions .trail-item:not(.last)::after {
 
 /* High contrast */
 @media (prefers-contrast: high) {
-    .block_dimensions .dims-card-access-btn {
+    .block_dimensions .dims-card-access-btn,
+    .block_dimensions .dims-card-access-btn-horizontal {
         border: 2px solid currentColor;
         box-shadow: none;
     }
@@ -606,14 +856,16 @@ body.dark .block_dimensions .dims-card-access-btn {
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-    .block_dimensions .dims-card-access-btn {
+    .block_dimensions .dims-card-access-btn,
+    .block_dimensions .dims-card-access-btn-horizontal {
         transition: none;
     }
 }
 
 /* Print */
 @media print {
-    .block_dimensions .dims-card-access-btn {
+    .block_dimensions .dims-card-access-btn,
+    .block_dimensions .dims-card-access-btn-horizontal {
         display: none;
     }
 }

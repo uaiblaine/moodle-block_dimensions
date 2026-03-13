@@ -157,4 +157,26 @@ if ($ADMIN->fulltree) {
         'tabs',
         $displaymodeoptions
     ));
+
+    // -----------------------------------------------------------------------
+    // 4. Plan Card Layout.
+    // -----------------------------------------------------------------------
+    $settings->add(new admin_setting_heading(
+        'block_dimensions/plancardlayoutheading',
+        get_string('plancardlayoutheading', 'block_dimensions'),
+        get_string('plancardlayoutheading_desc', 'block_dimensions')
+    ));
+
+    // Plan card layout mode.
+    $layoutoptions = [
+        'vertical' => get_string('plancard_layout_vertical', 'block_dimensions'),
+        'horizontal' => get_string('plancard_layout_horizontal', 'block_dimensions'),
+    ];
+    $settings->add(new admin_setting_configselect(
+        'block_dimensions/plancard_layout',
+        get_string('plancard_layout', 'block_dimensions'),
+        get_string('plancard_layout_desc', 'block_dimensions'),
+        'vertical',
+        $layoutoptions
+    ));
 }

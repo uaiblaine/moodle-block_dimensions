@@ -58,10 +58,10 @@
                 {{> block_dimensions/filters }}
                 {{/planfilterdata}}
             {{/hasplanfilters}}
-            <nav {{#showheading}}aria-labelledby="block-dimensions-heading"{{/showheading}}>
-                <ul class="row list-unstyled" role="list" data-cards-type="plan">
+            <nav {{#showheading}} aria-labelledby="block-dimensions-heading"{{/showheading}}>
+                <ul class="row list-unstyled dims-plan-grid" role="list" data-cards-type="plan">
                     {{#plancards}}
-                        <li class="col-12 col-sm-6 col-lg-4 mb-3 dims-card-item"
+                        <li class="dims-plan-item {{#ishorizontal}}dims-plan-item-horizontal col-12 col-lg-6 col-xl-4{{/ishorizontal}}{{#isvertical}}dims-plan-item-vertical col-12 col-sm-6 col-lg-4{{/isvertical}} mb-3 dims-card-item"
                             data-plan-tag1="{{tag1}}"
                             data-plan-tag2="{{tag2}}">
                             {{> block_dimensions/plan_card }}
@@ -77,7 +77,7 @@
                 {{> block_dimensions/filters }}
                 {{/competencyfilterdata}}
             {{/hascompetencyfilters}}
-            <nav {{#showheading}}aria-labelledby="block-dimensions-heading"{{/showheading}}>
+            <nav {{#showheading}} aria-labelledby="block-dimensions-heading"{{/showheading}}>
                 <ul class="row list-unstyled" role="list" data-cards-type="competency">
                     {{#competencycards}}
                         <li class="col-12 col-sm-6 col-lg-4 mb-3 dims-card-item"
