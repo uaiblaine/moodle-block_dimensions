@@ -29,6 +29,8 @@ use core_competency\plan;
 use local_dimensions\constants;
 use local_dimensions\picture_manager;
 use local_dimensions\template_metadata_cache;
+use local_dimensions\competency_metadata_cache;
+use local_dimensions\plan_trail_cache;
 use moodle_url;
 use required_capability_exception;
 
@@ -100,14 +102,17 @@ class dataset_provider {
             $planid = $plan->get('id');
             $templateid = $plan->get('templateid');
 
+            // Fetch template metadata once — used for displaymode decision and plan card building.
+            $templatemetadata = [];
             if ($templateid) {
-                $displaymode = \local_dimensions\helper::get_template_display_mode($templateid);
+                $templatemetadata = template_metadata_cache::get_template_metadata($templateid);
+                $displaymode = $templatemetadata['displaymode'] ?? constants::DISPLAYMODE_COMPETENCIES;
             } else {
                 $displaymode = constants::DISPLAYMODE_PLAN;
             }
 
             if ($displaymode == constants::DISPLAYMODE_PLAN) {
-                $plancards[] = $this->build_plan_card($plan, $templateid, $planid);
+                $plancards[] = $this->build_plan_card($plan, $templateid, $planid, $templatemetadata);
                 continue;
             }
 
@@ -119,6 +124,16 @@ class dataset_provider {
 
             $allcompids = array_map(fn($c) => $c->competency->get('id'), $competencies);
             $competencieswithcourses = $this->get_competencies_with_courses($allcompids);
+
+            // Collect eligible competency IDs for bulk cache pre-fetch.
+            $eligibleids = [];
+            foreach ($competencies as $compdata) {
+                $cid = $compdata->competency->get('id');
+                if (!isset($seencompetencies[$cid]) && isset($competencieswithcourses[$cid])) {
+                    $eligibleids[] = $cid;
+                }
+            }
+            $bulkmetadata = competency_metadata_cache::get_many($eligibleids);
 
             foreach ($competencies as $compdata) {
                 $competency = $compdata->competency;
@@ -134,7 +149,8 @@ class dataset_provider {
                 }
 
                 $seencompetencies[$competencyid] = true;
-                $competencycards[] = $this->build_competency_card($planid, $competencyid, $competency);
+                $metadata = $bulkmetadata[$competencyid] ?? null;
+                $competencycards[] = $this->build_competency_card($planid, $competencyid, $competency, $metadata);
             }
         }
 
@@ -186,16 +202,20 @@ class dataset_provider {
      * @param \core_competency\plan $plan Plan object.
      * @param int|null $templateid Template id.
      * @param int $planid Plan id.
+     * @param array<string, mixed> $templatemetadata Pre-fetched template metadata from cache.
      * @return array<string, mixed>
      */
-    protected function build_plan_card(\core_competency\plan $plan, ?int $templateid, int $planid): array {
+    protected function build_plan_card(
+        \core_competency\plan $plan,
+        ?int $templateid,
+        int $planid,
+        array $templatemetadata = []
+    ): array {
         $viewurl = new moodle_url('/local/dimensions/view-plan.php', ['id' => $planid]);
 
         $competencytypesuffix = get_string('competency_count_suffix', 'block_dimensions');
-        $templatemetadata = [];
 
         if ($templateid) {
-            $templatemetadata = template_metadata_cache::get_template_metadata($templateid);
             $customtype = $templatemetadata['type'] ?? null;
             if (!empty($customtype)) {
                 $competencytypesuffix = format_string(trim($customtype));
@@ -216,32 +236,32 @@ class dataset_provider {
         $competencytrail = [];
 
         try {
-            $competencies = api::list_plan_competencies($plan);
-            $totalcompetencies = count($competencies);
+            $traildata = plan_trail_cache::get_trail_data($planid, $this->userid, $templateid);
+            $totalcompetencies = $traildata['total'];
 
-            if (!empty($competencies)) {
+            if ($totalcompetencies > 0) {
+                // Image fallback: use first competency's cached image if template has none.
                 if (!$imageurl) {
-                    $firstcomp = reset($competencies);
-                    $imageurl = $this->get_competency_card_image($firstcomp->competency->get('id'));
+                    $firstcompid = (int)$traildata['competencies'][0]['id'];
+                    $firstmeta = competency_metadata_cache::get_competency_metadata($firstcompid);
+                    $imageurl = $firstmeta['cardimageurl'] ?? null;
                 }
 
                 $competencydata = [];
                 $lastcompletedindex = -1;
                 $index = 0;
 
-                foreach ($competencies as $compdata) {
-                    $competency = $compdata->competency;
-                    $competencyid = $competency->get('id');
+                foreach ($traildata['competencies'] as $row) {
+                    $competencyid = (int)$row['id'];
+                    $isproficient = !empty($row['proficiency']);
 
-                    $isproficient = false;
-                    if ($compdata->usercompetency && $compdata->usercompetency->get('proficiency')) {
-                        $isproficient = true;
+                    if ($isproficient) {
                         $lastcompletedindex = $index;
                     }
 
                     $competencydata[] = [
                         'id' => $competencyid,
-                        'shortname' => format_string($competency->get('shortname')),
+                        'shortname' => format_string($row['shortname']),
                         'iscompleted' => $isproficient,
                         'index' => $index,
                         'url' => (new moodle_url('/local/dimensions/view-plan.php', [
@@ -321,16 +341,27 @@ class dataset_provider {
      * @param int $planid Plan id.
      * @param int $competencyid Competency id.
      * @param \core_competency\competency $competency Competency object.
+     * @param array<string, mixed>|null $metadata Pre-fetched cached metadata, or null to fetch on demand.
      * @return array<string, mixed>
      */
-    protected function build_competency_card(int $planid, int $competencyid, \core_competency\competency $competency): array {
+    protected function build_competency_card(
+        int $planid,
+        int $competencyid,
+        \core_competency\competency $competency,
+        ?array $metadata = null
+    ): array {
         $viewurl = new moodle_url('/local/dimensions/view-plan.php', [
             'id' => $planid,
             'competencyid' => $competencyid,
         ]);
 
-        $imageurl = $this->get_competency_card_image($competencyid);
-        $tags = $this->get_competency_tags($competencyid);
+        if ($metadata === null) {
+            $metadata = competency_metadata_cache::get_competency_metadata($competencyid);
+        }
+
+        $imageurl = $metadata['cardimageurl'] ?? null;
+        $tag1 = $metadata['tag1'] ?? null;
+        $tag2 = $metadata['tag2'] ?? null;
 
         $compname = format_string($competency->get('shortname'));
 
@@ -340,10 +371,10 @@ class dataset_provider {
             'url' => $viewurl->out(false),
             'imageurl' => $imageurl,
             'hasimage' => !empty($imageurl),
-            'tag1' => $tags['tag1'],
-            'hastag1' => !empty($tags['tag1']),
-            'tag2' => $tags['tag2'],
-            'hastag2' => !empty($tags['tag2']),
+            'tag1' => $tag1,
+            'hastag1' => !empty($tag1),
+            'tag2' => $tag2,
+            'hastag2' => !empty($tag2),
             'showcardtitle' => true,
             'buttonlabel' => get_string('accesscard', 'block_dimensions'),
             'buttonarialabel' => get_string('accesscardaria', 'block_dimensions', $compname),
