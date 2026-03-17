@@ -362,6 +362,8 @@ class dataset_provider {
         $imageurl = $metadata['cardimageurl'] ?? null;
         $tag1 = $metadata['tag1'] ?? null;
         $tag2 = $metadata['tag2'] ?? null;
+        $bgcolor = $metadata['bgcolor'] ?? null;
+        $textcolor = $metadata['textcolor'] ?? null;
 
         $compname = format_string($competency->get('shortname'));
 
@@ -375,6 +377,10 @@ class dataset_provider {
             'hastag1' => !empty($tag1),
             'tag2' => $tag2,
             'hastag2' => !empty($tag2),
+            'bgcolor' => $bgcolor,
+            'hasbgcolor' => !empty($bgcolor),
+            'textcolor' => $textcolor,
+            'hastextcolor' => !empty($textcolor),
             'showcardtitle' => true,
             'buttonlabel' => get_string('accesscard', 'block_dimensions'),
             'buttonarialabel' => get_string('accesscardaria', 'block_dimensions', $compname),

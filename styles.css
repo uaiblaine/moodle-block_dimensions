@@ -892,15 +892,17 @@ body.dark .block_dimensions .dims-card-access-btn {
     border-radius: 100px;
     /* Pill shape */
     white-space: nowrap;
-    /* Default colors - red background with white text */
-    background-color: var(--dimension-custombgcolor, #ef4136);
-    color: var(--dimension-customtextcolor, #ffffff);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-/* Ensure tags inherit from parent card's CSS variables */
-.block_dimensions .competency-card .dimension-tag,
-.block_dimensions .plan-card .dimension-tag {
+/* Competency card tags — inherit custom colors from .competency-card CSS variables */
+.block_dimensions .competency-card .dimension-tag.cm-tag {
+    background-color: var(--dimension-custombgcolor, #ef4136);
+    color: var(--dimension-customtextcolor, #ffffff);
+}
+
+/* Plan card tags — inherit custom colors from .plan-card CSS variables */
+.block_dimensions .plan-card .dimension-tag.plan-tag {
     background-color: var(--dimension-custombgcolor, #ef4136);
     color: var(--dimension-customtextcolor, #ffffff);
 }

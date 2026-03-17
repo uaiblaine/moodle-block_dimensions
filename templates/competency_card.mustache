@@ -34,8 +34,12 @@
     * hastag1 - Boolean indicating if tag1 exists
     * tag2 - Second tag label (optional)
     * hastag2 - Boolean indicating if tag2 exists
+    * bgcolor - Custom background color (optional)
+    * hasbgcolor - Boolean indicating if bgcolor exists
+    * textcolor - Custom text color (optional)
+    * hastextcolor - Boolean indicating if textcolor exists
 }}
-<article class="card competency-card h-100" aria-labelledby="competency-title-{{id}}">
+<article class="card competency-card h-100" aria-labelledby="competency-title-{{id}}" style="{{#hasbgcolor}}--dimension-custombgcolor: {{bgcolor}};{{/hasbgcolor}}{{#hastextcolor}}--dimension-customtextcolor: {{textcolor}};{{/hastextcolor}}">
     <a href="{{url}}" 
        class="competency-card-link text-decoration-none d-flex flex-column h-100"
        aria-describedby="competency-title-{{id}}">
@@ -48,25 +52,26 @@
             </div>
             {{/hasimage}}
             {{^hasimage}}
-            <div class="competency-card-image competency-card-gradient" 
+            <div class="competency-card-image competency-card-gradient{{#hasbgcolor}} has-custom-bg{{/hasbgcolor}}" 
                  role="presentation" 
-                 aria-hidden="true">
+                 aria-hidden="true"
+                 style="{{#hasbgcolor}}background: var(--dimension-custombgcolor);{{/hasbgcolor}}">
             </div>
             {{/hasimage}}
             {{#hastag1}}{{#hastag2}}
             <div class="dimension-tags" aria-hidden="true">
-                <span class="dimension-tag">{{tag1}}</span>
-                <span class="dimension-tag">{{tag2}}</span>
+                <span class="dimension-tag cm-tag">{{tag1}}</span>
+                <span class="dimension-tag cm-tag">{{tag2}}</span>
             </div>
             {{/hastag2}}{{/hastag1}}
             {{#hastag1}}{{^hastag2}}
             <div class="dimension-tags" aria-hidden="true">
-                <span class="dimension-tag">{{tag1}}</span>
+                <span class="dimension-tag cm-tag">{{tag1}}</span>
             </div>
             {{/hastag2}}{{/hastag1}}
             {{^hastag1}}{{#hastag2}}
             <div class="dimension-tags" aria-hidden="true">
-                <span class="dimension-tag">{{tag2}}</span>
+                <span class="dimension-tag cm-tag">{{tag2}}</span>
             </div>
             {{/hastag2}}{{/hastag1}}
             <span class="dims-card-access-btn" aria-hidden="true">
