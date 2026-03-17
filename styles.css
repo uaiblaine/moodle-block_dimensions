@@ -229,9 +229,10 @@ body.dark .block_dimensions .dims-block-search-clear:hover {
     left: 0;
     right: 0;
     bottom: 0;
-    background-image: radial-gradient(circle, rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+    background-image: radial-gradient(circle, var(--dimension-customtextcolor, #00000082) 0px, transparent 1px);
     background-size: 5px 5px;
     pointer-events: none;
+    filter: opacity(0.5);
 }
 
 /* ============================================
