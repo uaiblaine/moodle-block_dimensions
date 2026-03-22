@@ -72,6 +72,14 @@ if ($ADMIN->fulltree) {
         0
     ));
 
+    // Enable favourites (star icon on cards + filter).
+    $settings->add(new admin_setting_configcheckbox(
+        'block_dimensions/enable_favourites',
+        get_string('enable_favourites', 'block_dimensions'),
+        get_string('enable_favourites_desc', 'block_dimensions'),
+        1
+    ));
+
     // -----------------------------------------------------------------------
     // 2. Competency Filters.
     // -----------------------------------------------------------------------

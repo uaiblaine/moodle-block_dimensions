@@ -254,6 +254,7 @@ class summary implements renderable, templatable {
             'showsearch' => $uiconfig['showsearch'],
             'endpointmethod' => 'block_dimensions_get_block_dataset',
             'filtersettingsjson' => json_encode($uiconfig['filtersettings']),
+            'favouritesenabled' => $uiconfig['favouritesenabled'] ? 'true' : 'false',
         ];
     }
 

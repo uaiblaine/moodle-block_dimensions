@@ -38,6 +38,7 @@
     * hasbgcolor - Boolean indicating if bgcolor exists
     * textcolor - Custom text color (optional)
     * hastextcolor - Boolean indicating if textcolor exists
+    * isfavourite - Boolean indicating if the competency is a favourite
 }}
 <article class="card competency-card h-100" aria-labelledby="competency-title-{{id}}" style="{{#hasbgcolor}}--dimension-custombgcolor: {{bgcolor}};{{/hasbgcolor}}{{#hastextcolor}}--dimension-customtextcolor: {{textcolor}};{{/hastextcolor}}">
     <a href="{{url}}" 
@@ -77,6 +78,19 @@
             <span class="dims-card-access-btn" aria-hidden="true">
                 {{buttonlabel}} <i class="fa fa-arrow-right" aria-hidden="true"></i>
             </span>
+            <button type="button"
+                    class="dims-fav-btn"
+                    data-fav-type="competency"
+                    data-fav-id="{{id}}"
+                    aria-label="{{#isfavourite}}{{#str}}removefromfavourites, block_dimensions{{/str}}{{/isfavourite}}{{^isfavourite}}{{#str}}addtofavourites, block_dimensions{{/str}}{{/isfavourite}}"
+                    title="{{#isfavourite}}{{#str}}removefromfavourites, block_dimensions{{/str}}{{/isfavourite}}{{^isfavourite}}{{#str}}addtofavourites, block_dimensions{{/str}}{{/isfavourite}}">
+                {{#isfavourite}}
+                <i class="fa fa-star dims-fav-icon-filled" aria-hidden="true"></i>
+                {{/isfavourite}}
+                {{^isfavourite}}
+                <i class="fa fa-star-o dims-fav-icon-empty" aria-hidden="true"></i>
+                {{/isfavourite}}
+            </button>
         </div>
         <div class="card-body p-3">
             <h6 class="card-title mb-0 font-weight-bold text-dark" id="competency-title-{{id}}">

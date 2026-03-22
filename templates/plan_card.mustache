@@ -43,6 +43,7 @@
     * trailclickable - Boolean indicating if trail items are clickable links
     * ishorizontal - Boolean indicating horizontal layout mode
     * isvertical - Boolean indicating vertical layout mode
+    * isfavourite - Boolean indicating if the plan is a favourite
 }}
 {{#isvertical}}
 <article class="card plan-card h-100" aria-labelledby="plan-title-{{id}}" style="{{#hasbgcolor}}--dimension-custombgcolor: {{bgcolor}};{{/hasbgcolor}}{{#hastextcolor}}--dimension-customtextcolor: {{textcolor}};{{/hastextcolor}}">
@@ -81,6 +82,19 @@
             <span class="dims-card-access-btn" aria-hidden="true">
                 {{buttonlabel}} <i class="fa fa-arrow-right" aria-hidden="true"></i>
             </span>
+            <button type="button"
+                    class="dims-fav-btn"
+                    data-fav-type="plan"
+                    data-fav-id="{{id}}"
+                    aria-label="{{#isfavourite}}{{#str}}removefromfavourites, block_dimensions{{/str}}{{/isfavourite}}{{^isfavourite}}{{#str}}addtofavourites, block_dimensions{{/str}}{{/isfavourite}}"
+                    title="{{#isfavourite}}{{#str}}removefromfavourites, block_dimensions{{/str}}{{/isfavourite}}{{^isfavourite}}{{#str}}addtofavourites, block_dimensions{{/str}}{{/isfavourite}}">
+                {{#isfavourite}}
+                <i class="fa fa-star dims-fav-icon-filled" aria-hidden="true"></i>
+                {{/isfavourite}}
+                {{^isfavourite}}
+                <i class="fa fa-star-o dims-fav-icon-empty" aria-hidden="true"></i>
+                {{/isfavourite}}
+            </button>
         </div>
         <div class="card-body p-3">
             <h6 class="card-title mb-2 font-weight-bold text-dark" id="plan-title-{{id}}">
@@ -147,6 +161,19 @@
                 <span class="dimension-tag plan-tag">{{tag2}}</span>
             </div>
             {{/hastag2}}{{/hastag1}}
+            <button type="button"
+                    class="dims-fav-btn"
+                    data-fav-type="plan"
+                    data-fav-id="{{id}}"
+                    aria-label="{{#isfavourite}}{{#str}}removefromfavourites, block_dimensions{{/str}}{{/isfavourite}}{{^isfavourite}}{{#str}}addtofavourites, block_dimensions{{/str}}{{/isfavourite}}"
+                    title="{{#isfavourite}}{{#str}}removefromfavourites, block_dimensions{{/str}}{{/isfavourite}}{{^isfavourite}}{{#str}}addtofavourites, block_dimensions{{/str}}{{/isfavourite}}">
+                {{#isfavourite}}
+                <i class="fa fa-star dims-fav-icon-filled" aria-hidden="true"></i>
+                {{/isfavourite}}
+                {{^isfavourite}}
+                <i class="fa fa-star-o dims-fav-icon-empty" aria-hidden="true"></i>
+                {{/isfavourite}}
+            </button>
         </div>
         <div class="card-body plan-card-body-horizontal p-3">
             <h6 class="card-title mb-1 font-weight-bold text-dark" id="plan-title-{{id}}">

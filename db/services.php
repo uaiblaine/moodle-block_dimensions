@@ -33,4 +33,12 @@ $functions = [
         'ajax' => true,
         'capabilities' => '',
     ],
+    'block_dimensions_toggle_favourite' => [
+        'classname' => 'block_dimensions\\external\\toggle_favourite',
+        'methodname' => 'execute',
+        'description' => 'Toggles a plan or competency as a favourite for the current user.',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => '',
+    ],
 ];

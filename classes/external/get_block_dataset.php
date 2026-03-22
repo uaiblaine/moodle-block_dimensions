@@ -45,7 +45,11 @@ class get_block_dataset extends external_api {
      * @return external_function_parameters
      */
     public static function execute_parameters() {
-        return new external_function_parameters([]);
+        return new external_function_parameters([
+            'favouritesonly' => new external_value(
+                PARAM_BOOL, 'If true, only return favourited items', VALUE_DEFAULT, false
+            ),
+        ]);
     }
 
     /**
@@ -53,15 +57,20 @@ class get_block_dataset extends external_api {
      *
      * @return array<string, mixed>
      */
-    public static function execute() {
+    public static function execute(bool $favouritesonly = false) {
         global $USER;
 
-        self::validate_parameters(self::execute_parameters(), []);
+        $params = self::validate_parameters(self::execute_parameters(), [
+            'favouritesonly' => $favouritesonly,
+        ]);
+        $favouritesonly = (bool) $params['favouritesonly'];
 
         require_login();
         if (isguestuser()) {
             throw new \moodle_exception('noguest');
         }
+
+        $uiconfig = dataset_provider::get_ui_config();
 
         if (!get_config('core_competency', 'enabled')) {
             return [
@@ -70,7 +79,11 @@ class get_block_dataset extends external_api {
                 'hascompetencies' => false,
                 'plancards' => [],
                 'competencycards' => [],
-                'filtersettings' => dataset_provider::get_ui_config()['filtersettings'],
+                'filtersettings' => $uiconfig['filtersettings'],
+                'favouritesenabled' => $uiconfig['favouritesenabled'],
+                'totalplans' => 0,
+                'totalcompetencies' => 0,
+                'hasnonfavourites' => false,
             ];
         }
 
@@ -78,7 +91,7 @@ class get_block_dataset extends external_api {
         self::validate_context($usercontext);
 
         $provider = new dataset_provider((int)$USER->id);
-        $dataset = $provider->get_dataset();
+        $dataset = $provider->get_dataset($favouritesonly);
 
         return [
             'hasactiveplans' => $dataset['hasactiveplans'],
@@ -86,7 +99,11 @@ class get_block_dataset extends external_api {
             'hascompetencies' => $dataset['hascompetencies'],
             'plancards' => $dataset['plancards'],
             'competencycards' => $dataset['competencycards'],
-            'filtersettings' => dataset_provider::get_ui_config()['filtersettings'],
+            'filtersettings' => $uiconfig['filtersettings'],
+            'favouritesenabled' => $uiconfig['favouritesenabled'],
+            'totalplans' => $dataset['totalplans'],
+            'totalcompetencies' => $dataset['totalcompetencies'],
+            'hasnonfavourites' => $dataset['hasnonfavourites'],
         ];
     }
 
@@ -131,6 +148,7 @@ class get_block_dataset extends external_api {
             'buttonarialabel' => new external_value(PARAM_TEXT, 'Button aria label'),
             'ishorizontal' => new external_value(PARAM_BOOL, 'Is horizontal'),
             'isvertical' => new external_value(PARAM_BOOL, 'Is vertical'),
+            'isfavourite' => new external_value(PARAM_BOOL, 'Is favourite'),
         ]);
 
         $competencycard = new external_single_structure([
@@ -150,6 +168,7 @@ class get_block_dataset extends external_api {
             'showcardtitle' => new external_value(PARAM_BOOL, 'Show card title'),
             'buttonlabel' => new external_value(PARAM_TEXT, 'Button label'),
             'buttonarialabel' => new external_value(PARAM_TEXT, 'Button aria label'),
+            'isfavourite' => new external_value(PARAM_BOOL, 'Is favourite'),
         ]);
 
         $filtersettings = new external_single_structure([
@@ -174,6 +193,10 @@ class get_block_dataset extends external_api {
             'plancards' => new external_multiple_structure($plancard, 'Plan cards'),
             'competencycards' => new external_multiple_structure($competencycard, 'Competency cards'),
             'filtersettings' => $filtersettings,
+            'favouritesenabled' => new external_value(PARAM_BOOL, 'Whether favourites feature is enabled'),
+            'totalplans' => new external_value(PARAM_INT, 'Total number of plan cards (including non-favourites)'),
+            'totalcompetencies' => new external_value(PARAM_INT, 'Total number of competency cards (including non-favourites)'),
+            'hasnonfavourites' => new external_value(PARAM_BOOL, 'Whether there are non-favourite items not returned'),
         ]);
     }
 }

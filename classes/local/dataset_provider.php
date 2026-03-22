@@ -82,11 +82,18 @@ class dataset_provider {
     }
 
     /**
-     * Build the full non-paginated dataset for frontend rendering.
+     * Build the dataset for frontend rendering.
      *
+     * When $favouritesonly is true, only cards that are in the user's favourites
+     * are fully built, but totals are always counted so the frontend can display
+     * accurate pill counts and decide when to load the full dataset.
+     *
+     * @param bool $favouritesonly If true, only return favourited cards.
      * @return array<string, mixed>
      */
-    public function get_dataset(): array {
+    public function get_dataset(bool $favouritesonly = false): array {
+        global $USER;
+
         $activeplans = [];
         foreach ($this->plans as $plan) {
             if ($plan->get('status') == plan::STATUS_ACTIVE) {
@@ -94,9 +101,28 @@ class dataset_provider {
             }
         }
 
+        // Pre-load favourite IDs if the feature is enabled.
+        $favouritesenabled = self::is_favourites_enabled();
+        $planfavids = [];
+        $compfavids = [];
+        if ($favouritesenabled) {
+            $usercontext = \context_user::instance($USER->id);
+            $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
+            $planfavs = $ufservice->find_favourites_by_type('block_dimensions', 'plan');
+            foreach ($planfavs as $fav) {
+                $planfavids[$fav->itemid] = true;
+            }
+            $compfavs = $ufservice->find_favourites_by_type('block_dimensions', 'competency');
+            foreach ($compfavs as $fav) {
+                $compfavids[$fav->itemid] = true;
+            }
+        }
+
         $competencycards = [];
         $plancards = [];
         $seencompetencies = [];
+        $totalplans = 0;
+        $totalcompetencies = 0;
 
         foreach ($activeplans as $plan) {
             $planid = $plan->get('id');
@@ -112,7 +138,16 @@ class dataset_provider {
             }
 
             if ($displaymode == constants::DISPLAYMODE_PLAN) {
-                $plancards[] = $this->build_plan_card($plan, $templateid, $planid, $templatemetadata);
+                $totalplans++;
+
+                // In favourites-only mode, skip non-favourite plans.
+                if ($favouritesonly && !isset($planfavids[$planid])) {
+                    continue;
+                }
+
+                $card = $this->build_plan_card($plan, $templateid, $planid, $templatemetadata);
+                $card['isfavourite'] = isset($planfavids[$planid]);
+                $plancards[] = $card;
                 continue;
             }
 
@@ -125,7 +160,7 @@ class dataset_provider {
             $allcompids = array_map(fn($c) => $c->competency->get('id'), $competencies);
             $competencieswithcourses = $this->get_competencies_with_courses($allcompids);
 
-            // Collect eligible competency IDs for bulk cache pre-fetch.
+            // Count eligible competencies and collect IDs to process.
             $eligibleids = [];
             foreach ($competencies as $compdata) {
                 $cid = $compdata->competency->get('id');
@@ -133,7 +168,15 @@ class dataset_provider {
                     $eligibleids[] = $cid;
                 }
             }
-            $bulkmetadata = competency_metadata_cache::get_many($eligibleids);
+
+            // In favourites-only mode, determine which eligible IDs to fully process.
+            $idstoprocess = $eligibleids;
+            if ($favouritesonly) {
+                $idstoprocess = array_filter($eligibleids, fn($id) => isset($compfavids[$id]));
+            }
+
+            // Only pre-fetch metadata for IDs we will fully process.
+            $bulkmetadata = !empty($idstoprocess) ? competency_metadata_cache::get_many($idstoprocess) : [];
 
             foreach ($competencies as $compdata) {
                 $competency = $compdata->competency;
@@ -149,10 +192,22 @@ class dataset_provider {
                 }
 
                 $seencompetencies[$competencyid] = true;
+                $totalcompetencies++;
+
+                // In favourites-only mode, skip non-favourite competencies.
+                if ($favouritesonly && !isset($compfavids[$competencyid])) {
+                    continue;
+                }
+
                 $metadata = $bulkmetadata[$competencyid] ?? null;
-                $competencycards[] = $this->build_competency_card($planid, $competencyid, $competency, $metadata);
+                $card = $this->build_competency_card($planid, $competencyid, $competency, $metadata);
+                $card['isfavourite'] = isset($compfavids[$competencyid]);
+                $competencycards[] = $card;
             }
         }
+
+        $totalitems = $totalplans + $totalcompetencies;
+        $favitems = count($plancards) + count($competencycards);
 
         return [
             'hasactiveplans' => !empty($activeplans),
@@ -160,7 +215,21 @@ class dataset_provider {
             'hascompetencies' => !empty($competencycards),
             'plancards' => $plancards,
             'competencycards' => $competencycards,
+            'totalplans' => $totalplans,
+            'totalcompetencies' => $totalcompetencies,
+            'hasnonfavourites' => ($favouritesonly && $favitems < $totalitems),
         ];
+    }
+
+    /**
+     * Check whether the favourites feature is enabled.
+     *
+     * @return bool
+     */
+    public static function is_favourites_enabled(): bool {
+        $val = get_config('block_dimensions', 'enable_favourites');
+        // Default to true when the config has never been set.
+        return ($val === false) ? true : (bool) $val;
     }
 
     /**
@@ -178,6 +247,7 @@ class dataset_provider {
             'showheading' => $showheading,
             'showsearch' => (bool) get_config('block_dimensions', 'enable_search'),
             'trailclickable' => (bool) get_config('block_dimensions', 'enable_trail_links'),
+            'favouritesenabled' => self::is_favourites_enabled(),
             'plancardlayout' => get_config('block_dimensions', 'plancard_layout') ?: 'vertical',
             'filtersettings' => [
                 'plan' => [

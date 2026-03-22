@@ -24,20 +24,29 @@
 
 namespace block_dimensions\privacy;
 
+use core_privacy\local\metadata\collection;
+
 /**
- * Privacy Subsystem for block_dimensions implementing null_provider.
+ * Privacy Subsystem for block_dimensions implementing metadata provider.
+ *
+ * This plugin stores user favourites via core_favourites subsystem.
  *
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class provider implements \core_privacy\local\metadata\null_provider {
+class provider implements \core_privacy\local\metadata\provider {
     /**
-     * Get the language string identifier with the component's language
-     * file to explain why this plugin stores no data.
+     * Returns meta data about this system.
      *
-     * @return  string
+     * @param collection $collection The initialised collection to add items to.
+     * @return collection A listing of user data stored through this system.
      */
-    public static function get_reason(): string {
-        return 'privacy:metadata';
+    public static function get_metadata(collection $collection): collection {
+        $collection->add_subsystem_link(
+            'core_favourites',
+            [],
+            'privacy:metadata:favourites'
+        );
+        return $collection;
     }
 }

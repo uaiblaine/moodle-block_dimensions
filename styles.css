@@ -1137,3 +1137,319 @@ body.dark .block_dimensions .dims-filter-select:hover {
         display: none;
     }
 }
+
+/* ============================================
+   FAVOURITE STAR BUTTON - Card Overlay
+   ============================================ */
+.block_dimensions .dims-fav-btn {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.85);
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.2s ease, transform 0.15s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+    pointer-events: auto;
+}
+
+/* Horizontal plan card: access button is top-left, so star goes top-right */
+.block_dimensions .plan-card-image-wrapper-horizontal .dims-fav-btn {
+    left: auto;
+    right: 8px;
+}
+
+.block_dimensions .dims-fav-btn:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: scale(1.1);
+}
+
+.block_dimensions .dims-fav-btn:focus {
+    outline: 2px solid #1a73e8;
+    outline-offset: 2px;
+}
+
+.block_dimensions .dims-fav-btn:active {
+    transform: scale(0.95);
+}
+
+/* Favourite star icons */
+.block_dimensions .dims-fav-icon-filled {
+    font-size: 1rem;
+    color: #f5c518;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
+}
+
+.block_dimensions .dims-fav-icon-empty {
+    font-size: 1rem;
+    color: #5f6368;
+}
+
+.block_dimensions .dims-fav-btn:hover .dims-fav-icon-empty {
+    color: #f5c518;
+}
+
+/* Dark mode */
+.theme-dark .block_dimensions .dims-fav-btn,
+body.dark .block_dimensions .dims-fav-btn {
+    background: rgba(50, 50, 50, 0.85);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.theme-dark .block_dimensions .dims-fav-btn:hover,
+body.dark .block_dimensions .dims-fav-btn:hover {
+    background: rgba(70, 70, 70, 1);
+}
+
+.theme-dark .block_dimensions .dims-fav-icon-empty,
+body.dark .block_dimensions .dims-fav-icon-empty {
+    color: #adb5bd;
+}
+
+.theme-dark .block_dimensions .dims-fav-btn:hover .dims-fav-icon-empty,
+body.dark .block_dimensions .dims-fav-btn:hover .dims-fav-icon-empty {
+    color: #f5c518;
+}
+
+/* High contrast */
+@media (prefers-contrast: high) {
+    .block_dimensions .dims-fav-btn {
+        border: 2px solid currentColor;
+        box-shadow: none;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .block_dimensions .dims-fav-btn {
+        transition: none;
+    }
+
+    .block_dimensions .dims-fav-btn:hover,
+    .block_dimensions .dims-fav-btn:active {
+        transform: none;
+    }
+}
+
+/* Print */
+@media print {
+    .block_dimensions .dims-fav-btn {
+        display: none;
+    }
+}
+
+/* ============================================
+   FAVOURITE FILTER BUTTON - In Filter Bar
+   ============================================ */
+.block_dimensions .block-dimensions-content .dims-fav-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.block_dimensions .block-dimensions-content .dims-fav-filter-btn.active {
+    background: #1a73e8;
+    color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.block_dimensions .block-dimensions-content .dims-fav-filter-btn.active:hover {
+    background: #1765cc;
+}
+
+.block_dimensions .dims-fav-filter-icon {
+    font-size: 0.8rem;
+}
+
+.block_dimensions .block-dimensions-content .dims-fav-filter-btn.active .dims-fav-filter-icon {
+    color: #fff;
+}
+
+/* Dark mode */
+.theme-dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active,
+body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active {
+    background: #8ab4f8;
+    color: #1d1d1f;
+}
+
+.theme-dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active:hover,
+body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active:hover {
+    background: #aecbfa;
+}
+
+.theme-dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active .dims-fav-filter-icon,
+body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active .dims-fav-filter-icon {
+    color: #1d1d1f;
+}
+
+/* High contrast */
+@media (prefers-contrast: high) {
+    .block_dimensions .dims-fav-filter-btn.active {
+        border: 2px solid #000;
+    }
+}
+
+/* ============================================
+   FILTER COUNT BADGE - (N) inside pills
+   ============================================ */
+.block_dimensions .dims-filter-count {
+    font-weight: 600;
+    opacity: 0.75;
+    margin-left: 0.15rem;
+}
+
+.block_dimensions .dims-fav-filter-btn.active .dims-filter-count {
+    opacity: 1;
+}
+
+/* ============================================
+   GHOST CARD - "Show all (N)"
+   ============================================ */
+.block_dimensions .dims-ghost-card {
+    display: flex;
+}
+
+.block_dimensions .dims-ghost-card-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 260px;
+    border: 2px dashed #ced4da;
+    border-radius: 12px;
+    background: transparent;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+    padding: 2rem 1.5rem;
+    gap: 0.75rem;
+}
+
+.block_dimensions .dims-ghost-card-inner:hover {
+    border-color: #1a73e8;
+    background: rgba(26, 115, 232, 0.04);
+    transform: translateY(-2px);
+}
+
+.block_dimensions .dims-ghost-card-inner:focus {
+    outline: 2px solid #1a73e8;
+    outline-offset: 2px;
+}
+
+.block_dimensions .dims-ghost-card-inner:active {
+    transform: translateY(0);
+}
+
+/* Dimmed circle with + icon */
+.block_dimensions .dims-ghost-icon-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border: 2px solid #d1d5db;
+    border-radius: 50%;
+    color: #b0b5bd;
+    font-size: 1.5rem;
+    transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.block_dimensions .dims-ghost-card-inner:hover .dims-ghost-icon-circle {
+    border-color: #1a73e8;
+    color: #1a73e8;
+}
+
+/* Title: "Mostrar tudo (N)" */
+.block_dimensions .dims-ghost-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #b0b5bd;
+    text-align: center;
+    transition: color 0.2s ease;
+}
+
+.block_dimensions .dims-ghost-card-inner:hover .dims-ghost-card-title {
+    color: #1a73e8;
+}
+
+/* Subtitle: "Explore além dos favoritos." */
+.block_dimensions .dims-ghost-card-subtitle {
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: #b0b5bd;
+    text-align: center;
+}
+
+/* Dark mode */
+.theme-dark .block_dimensions .dims-ghost-card-inner,
+body.dark .block_dimensions .dims-ghost-card-inner {
+    border-color: #5f6368;
+}
+
+.theme-dark .block_dimensions .dims-ghost-card-inner:hover,
+body.dark .block_dimensions .dims-ghost-card-inner:hover {
+    border-color: #8ab4f8;
+    background: rgba(138, 180, 248, 0.08);
+}
+
+.theme-dark .block_dimensions .dims-ghost-icon-circle,
+body.dark .block_dimensions .dims-ghost-icon-circle {
+    border-color: #5f6368;
+    color: #6c757d;
+}
+
+.theme-dark .block_dimensions .dims-ghost-card-inner:hover .dims-ghost-icon-circle,
+body.dark .block_dimensions .dims-ghost-card-inner:hover .dims-ghost-icon-circle {
+    border-color: #8ab4f8;
+    color: #8ab4f8;
+}
+
+.theme-dark .block_dimensions .dims-ghost-card-title,
+body.dark .block_dimensions .dims-ghost-card-title {
+    color: #6c757d;
+}
+
+.theme-dark .block_dimensions .dims-ghost-card-inner:hover .dims-ghost-card-title,
+body.dark .block_dimensions .dims-ghost-card-inner:hover .dims-ghost-card-title {
+    color: #8ab4f8;
+}
+
+.theme-dark .block_dimensions .dims-ghost-card-subtitle,
+body.dark .block_dimensions .dims-ghost-card-subtitle {
+    color: #6c757d;
+}
+
+/* High contrast */
+@media (prefers-contrast: high) {
+    .block_dimensions .dims-ghost-card-inner {
+        border-width: 3px;
+        border-color: currentColor;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .block_dimensions .dims-ghost-card-inner {
+        transition: none;
+    }
+
+    .block_dimensions .dims-ghost-card-inner:hover,
+    .block_dimensions .dims-ghost-card-inner:active {
+        transform: none;
+    }
+}
+
+/* Print */
+@media print {
+    .block_dimensions .dims-ghost-card {
+        display: none;
+    }
+}

@@ -16,6 +16,10 @@
 /**
  * Client-side state-driven rendering for block_dimensions.
  *
+ * Supports two-phase loading: favourites are loaded first for a fast initial
+ * render, then the full dataset is fetched on demand (search, "All items" pill,
+ * or ghost-card click).
+ *
  * @module     block_dimensions/filters
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -57,18 +61,30 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
                 competency_tag1: '',
                 competency_tag2: ''
             },
+            favouriteFilterActive: {
+                plan: false,
+                competency: false
+            },
+            favouritesEnabled: !!options.favouritesenabled,
             filterSettings: options.filtersettings || {},
             renderToken: 0,
             filtersRendered: false,
             cardsRendered: {
                 plan: false,
                 competency: false
-            }
+            },
+            // Two-phase loading state.
+            fullDatasetLoaded: false,
+            hasnonfavourites: false,
+            totalplans: 0,
+            totalcompetencies: 0,
+            favouriteCountPlan: 0,
+            favouriteCountCompetency: 0
         };
     }
 
-    function fetchDataset(methodname) {
-        return Ajax.call([{methodname: methodname, args: {}}])[0];
+    function fetchDataset(methodname, args) {
+        return Ajax.call([{methodname: methodname, args: args || {}}])[0];
     }
 
     function getUniqueTagValues(cards, tag) {
@@ -79,6 +95,13 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
             }
         });
         return Object.keys(values).sort((a, b) => a.localeCompare(b));
+    }
+
+    /**
+     * Append a count to a label, e.g. "Show all" + 15 → "Show all (15)".
+     */
+    function labelWithCount(label, count) {
+        return label + ' (' + count + ')';
     }
 
     function renderFilterControls(container, type, cards, state, labels) {
@@ -92,6 +115,38 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
         let hasAnyFilter = false;
 
         html.push('<div class="dims-filters-bar" role="toolbar" aria-label="' + labels.filterall + '">');
+
+        // Favourite / All pills (always first, if enabled).
+        // Counts are per-type: plan pills show plan counts, competency pills show competency counts.
+        if (state.favouritesEnabled) {
+            const typeFavCount = type === 'plan' ? state.favouriteCountPlan : state.favouriteCountCompetency;
+            const typeTotal = type === 'plan' ? state.totalplans : state.totalcompetencies;
+            const isFavActive = state.favouriteFilterActive[type];
+
+            if (typeFavCount > 0) {
+                hasAnyFilter = true;
+                html.push('<div class="dims-filter-tabs-wrapper" data-filter-group="fav_' + type + '">');
+                html.push('<div class="dims-filter-tabs" role="tablist">');
+
+                // "My Favourites (N)" pill — count is per-type.
+                html.push('<button type="button" class="dims-filter-tab dims-fav-filter-btn'
+                    + (isFavActive ? ' active' : '') + '" role="tab" aria-selected="'
+                    + (isFavActive ? 'true' : 'false') + '" data-fav-filter-type="' + type + '">'
+                    + '<i class="fa fa-star dims-fav-filter-icon" aria-hidden="true"></i> '
+                    + escapeHtml(labels.myfavourites)
+                    + ' <span class="dims-filter-count">(' + typeFavCount + ')</span>'
+                    + '</button>');
+
+                // "Show all (N)" pill — count is per-type total.
+                html.push('<button type="button" class="dims-filter-tab dims-all-filter-btn'
+                    + (!isFavActive ? ' active' : '') + '" role="tab" aria-selected="'
+                    + (!isFavActive ? 'true' : 'false') + '" data-all-filter-type="' + type + '">'
+                    + escapeHtml(labelWithCount(labels.showallitems, typeTotal))
+                    + '</button>');
+
+                html.push('</div></div>');
+            }
+        }
 
         ['tag1', 'tag2'].forEach((tag) => {
             const enabledKey = tag + 'enabled';
@@ -136,7 +191,7 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
     }
 
     function syncFilterActiveState(container, state) {
-        container.querySelectorAll('.dims-filter-tab').forEach(function(tab) {
+        container.querySelectorAll('.dims-filter-tab:not(.dims-fav-filter-btn):not(.dims-all-filter-btn)').forEach(function(tab) {
             var field = tab.dataset.filterField;
             var value = tab.dataset.filterValue || '';
             var isActive = (state.activeFilters[field] || '') === value;
@@ -148,9 +203,28 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
             var field = select.dataset.filterField;
             select.value = state.activeFilters[field] || '';
         });
+
+        // Sync favourite / all pills.
+        container.querySelectorAll('.dims-fav-filter-btn').forEach(function(btn) {
+            var favType = btn.dataset.favFilterType;
+            var isActive = state.favouriteFilterActive[favType];
+            btn.classList.toggle('active', isActive);
+            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+        container.querySelectorAll('.dims-all-filter-btn').forEach(function(btn) {
+            var allType = btn.dataset.allFilterType;
+            var isActive = !state.favouriteFilterActive[allType];
+            btn.classList.toggle('active', isActive);
+            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
     }
 
     function isCardVisible(card, state, type) {
+        // Favourite filter check.
+        if (state.favouriteFilterActive[type] && !card.isfavourite) {
+            return false;
+        }
+
         const tag1filter = state.activeFilters[type + '_tag1'];
         const tag2filter = state.activeFilters[type + '_tag2'];
 
@@ -255,6 +329,61 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
         });
     }
 
+    /**
+     * Render or remove ghost cards that invite the user to load all items.
+     * One ghost card per block type (plan/competency), each with its own count.
+     */
+    function renderGhostCards(container, state, labels) {
+        // Remove any existing ghost cards.
+        container.querySelectorAll('.dims-ghost-card').forEach(el => el.remove());
+
+        // Only show ghost cards if we are in favourites-only mode and there are more items.
+        if (!state.favouritesEnabled || state.fullDatasetLoaded || !state.hasnonfavourites) {
+            return;
+        }
+
+        const favPlans = state.rawDataset.plancards.length;
+        const favComps = state.rawDataset.competencycards.length;
+
+        // Ghost card for plans block.
+        const planRemaining = state.totalplans - favPlans;
+        if (planRemaining > 0) {
+            const planList = container.querySelector('[data-cards-type="plan"]');
+            if (planList) {
+                appendGhostCardTo(planList, planRemaining, labels, 'plan');
+            }
+        }
+
+        // Ghost card for competencies block.
+        const compRemaining = state.totalcompetencies - favComps;
+        if (compRemaining > 0) {
+            const compList = container.querySelector('[data-cards-type="competency"]');
+            if (compList) {
+                appendGhostCardTo(compList, compRemaining, labels, 'competency');
+            }
+        }
+    }
+
+    function appendGhostCardTo(list, remainingCount, labels, type) {
+        const ghostLabel = labelWithCount(labels.showallitems, remainingCount);
+        const li = document.createElement('li');
+        li.className = 'col-12 col-sm-6 col-lg-4 mb-3 dims-card-item dims-ghost-card';
+        li.dataset.ghostType = type;
+        li.innerHTML = '<button type="button" class="dims-ghost-card-inner" aria-label="'
+            + escapeHtml(ghostLabel) + '">'
+            + '<span class="dims-ghost-icon-circle" aria-hidden="true">'
+            + '<i class="fa fa-plus"></i>'
+            + '</span>'
+            + '<span class="dims-ghost-card-title">'
+            + escapeHtml(ghostLabel)
+            + '</span>'
+            + '<span class="dims-ghost-card-subtitle">'
+            + escapeHtml(labels.ghostcardsubtitle || '')
+            + '</span>'
+            + '</button>';
+        list.appendChild(li);
+    }
+
     function applyVisibility(container, type, filteredCards) {
         const list = container.querySelector('[data-cards-type="' + type + '"]');
         if (!list) {
@@ -266,7 +395,7 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
             visibleIds[String(card.id)] = true;
         });
 
-        list.querySelectorAll('.dims-card-item').forEach((item) => {
+        list.querySelectorAll('.dims-card-item:not(.dims-ghost-card)').forEach((item) => {
             const visible = !!visibleIds[item.dataset.cardId || ''];
             item.classList.toggle('dims-card-hidden', !visible);
             item.style.display = visible ? '' : 'none';
@@ -288,6 +417,11 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
         }
 
         if (!state.filteredDataset.plancards.length && !state.filteredDataset.competencycards.length) {
+            // Don't show "no items" if ghost card is visible (there are more items to load).
+            const ghostCard = container.querySelector('.dims-ghost-card');
+            if (ghostCard && ghostCard.style.display !== 'none') {
+                return;
+            }
             empty.textContent = labels.nocompetencies;
             empty.style.display = '';
         }
@@ -319,6 +453,95 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
         errorBox.style.display = '';
     }
 
+    /**
+     * Toggle favourite state for a card via AJAX.
+     *
+     * @param {HTMLElement} btn The favourite button that was clicked.
+     * @param {HTMLElement} container Block container element.
+     * @param {Object} state Application state.
+     * @param {Object} options Init options with labels.
+     */
+    function toggleFavourite(btn, container, state, options) {
+        const itemtype = btn.dataset.favType;
+        const itemid = parseInt(btn.dataset.favId, 10);
+
+        if (!itemtype || isNaN(itemid)) {
+            return;
+        }
+
+        // Prevent double-click.
+        if (btn.dataset.favPending) {
+            return;
+        }
+        btn.dataset.favPending = '1';
+
+        Ajax.call([{
+            methodname: 'block_dimensions_toggle_favourite',
+            args: {itemtype: itemtype, itemid: itemid}
+        }])[0].then(function(result) {
+            delete btn.dataset.favPending;
+
+            const nowFav = !!result.isfavourite;
+
+            // Update the icon.
+            const icon = btn.querySelector('i');
+            if (icon) {
+                if (nowFav) {
+                    icon.className = 'fa fa-star dims-fav-icon-filled';
+                } else {
+                    icon.className = 'fa fa-star-o dims-fav-icon-empty';
+                }
+            }
+
+            // Update aria-label and title.
+            const label = nowFav ? options.labels.removefromfavourites : options.labels.addtofavourites;
+            btn.setAttribute('aria-label', label);
+            btn.setAttribute('title', label);
+
+            // Update the card data in raw dataset.
+            const cards = itemtype === 'plan' ? state.rawDataset.plancards : state.rawDataset.competencycards;
+            for (let i = 0; i < cards.length; i++) {
+                if (cards[i].id === itemid) {
+                    cards[i].isfavourite = nowFav;
+                    break;
+                }
+            }
+
+            // Update favourite counts.
+            updateFavouriteCounts(state);
+
+            // Re-render filters to update pill counts.
+            state.filtersRendered = false;
+
+            // If favourite filter is active and count dropped to 0, deactivate and load all.
+            const typeFavCount = itemtype === 'plan' ? state.favouriteCountPlan : state.favouriteCountCompetency;
+            if (state.favouriteFilterActive[itemtype] && typeFavCount === 0) {
+                state.favouriteFilterActive[itemtype] = false;
+                if (!state.fullDatasetLoaded && state.hasnonfavourites) {
+                    loadFullDataset(container, state, options);
+                    return;
+                }
+            }
+
+            // If favourite filter is active, re-apply visibility.
+            if (state.favouriteFilterActive[itemtype]) {
+                applyFilters(state);
+                applyVisibility(container, itemtype,
+                    itemtype === 'plan' ? state.filteredDataset.plancards : state.filteredDataset.competencycards);
+                updateEmptyState(container, state, options.labels);
+            }
+
+            rerender(container, state, options);
+        }).catch(function() {
+            delete btn.dataset.favPending;
+        });
+    }
+
+    function updateFavouriteCounts(state) {
+        state.favouriteCountPlan = state.rawDataset.plancards.filter(c => c.isfavourite).length;
+        state.favouriteCountCompetency = state.rawDataset.competencycards.filter(c => c.isfavourite).length;
+    }
+
     function rerender(container, state, options) {
         applyFilters(state);
 
@@ -339,10 +562,77 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
         ]).then(() => {
             applyVisibility(container, 'plan', state.filteredDataset.plancards);
             applyVisibility(container, 'competency', state.filteredDataset.competencycards);
+            renderGhostCards(container, state, options.labels);
             updateEmptyState(container, state, options.labels);
         }).catch(() => {
             showError(container, options.labels.loaderror);
         });
+    }
+
+    /**
+     * Load the full dataset (Phase 2). Called when user wants all items.
+     */
+    function loadFullDataset(container, state, options) {
+        if (state.fullDatasetLoaded) {
+            return Promise.resolve();
+        }
+
+        showLoading(container, true);
+
+        return fetchDataset(options.endpointmethod, {favouritesonly: false})
+            .then((dataset) => {
+                state.rawDataset = {
+                    hasactiveplans: !!dataset.hasactiveplans,
+                    hasplancards: !!dataset.hasplancards,
+                    hascompetencies: !!dataset.hascompetencies,
+                    plancards: dataset.plancards || [],
+                    competencycards: dataset.competencycards || []
+                };
+
+                if (dataset.filtersettings) {
+                    state.filterSettings = dataset.filtersettings;
+                }
+
+                if (typeof dataset.favouritesenabled !== 'undefined') {
+                    state.favouritesEnabled = !!dataset.favouritesenabled;
+                }
+
+                state.totalplans = dataset.totalplans || 0;
+                state.totalcompetencies = dataset.totalcompetencies || 0;
+                state.hasnonfavourites = false;
+                state.fullDatasetLoaded = true;
+                updateFavouriteCounts(state);
+
+                resetRenderedState(container, state);
+                rerender(container, state, options);
+                showLoading(container, false);
+            })
+            .catch(() => {
+                showLoading(container, false);
+                showError(container, options.labels.loaderror);
+            });
+    }
+
+    /**
+     * Trigger full dataset load and then switch to showing all items.
+     * @param {string|null} type If null, deactivate fav filter for all types.
+     */
+    function showAllItems(container, state, options, type) {
+        if (type) {
+            state.favouriteFilterActive[type] = false;
+        } else {
+            state.favouriteFilterActive.plan = false;
+            state.favouriteFilterActive.competency = false;
+        }
+
+        state.filtersRendered = false;
+
+        if (state.fullDatasetLoaded) {
+            rerender(container, state, options);
+            return;
+        }
+
+        loadFullDataset(container, state, options);
     }
 
     function bindEvents(container, state, options) {
@@ -360,7 +650,24 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
                 debounceTimer = setTimeout(() => {
                     state.searchTerm = searchInput.value.trim();
                     state.normalizedSearch = normalizeText(state.searchTerm);
-                    rerender(container, state, options);
+
+                    // Search always deactivates favourite filter to search across all items.
+                    if (state.normalizedSearch) {
+                        state.favouriteFilterActive.plan = false;
+                        state.favouriteFilterActive.competency = false;
+                        state.filtersRendered = false;
+                    }
+
+                    // If full dataset not yet loaded, fetch it first.
+                    if (state.normalizedSearch && !state.fullDatasetLoaded && state.hasnonfavourites) {
+                        loadFullDataset(container, state, options).then(() => {
+                            state.searchTerm = searchInput.value.trim();
+                            state.normalizedSearch = normalizeText(state.searchTerm);
+                            rerender(container, state, options);
+                        });
+                    } else {
+                        rerender(container, state, options);
+                    }
                 }, 120);
             });
         }
@@ -379,8 +686,57 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
         }
 
         container.addEventListener('click', (e) => {
+            // Handle favourite toggle button clicks.
+            const favBtn = e.target.closest('.dims-fav-btn');
+            if (favBtn && state.favouritesEnabled) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleFavourite(favBtn, container, state, options);
+                return;
+            }
+
+            // Handle ghost card click — load all items for that block's type.
+            const ghostCard = e.target.closest('.dims-ghost-card');
+            if (ghostCard) {
+                e.preventDefault();
+                const ghostType = ghostCard.dataset.ghostType || null;
+                showAllItems(container, state, options, ghostType);
+                return;
+            }
+
+            // Handle "All items" pill click.
+            const allFilterBtn = e.target.closest('.dims-all-filter-btn');
+            if (allFilterBtn) {
+                e.preventDefault();
+                const allType = allFilterBtn.dataset.allFilterType;
+                showAllItems(container, state, options, allType);
+                return;
+            }
+
+            // Handle favourite filter button clicks.
+            const favFilterBtn = e.target.closest('.dims-fav-filter-btn');
+            if (favFilterBtn) {
+                e.preventDefault();
+                const favType = favFilterBtn.dataset.favFilterType;
+                state.favouriteFilterActive[favType] = !state.favouriteFilterActive[favType];
+
+                if (!state.favouriteFilterActive[favType] && !state.fullDatasetLoaded && state.hasnonfavourites) {
+                    // Deactivating favourite filter: need full dataset.
+                    showAllItems(container, state, options, favType);
+                    return;
+                }
+
+                syncFilterActiveState(container, state);
+                applyFilters(state);
+                applyVisibility(container, favType,
+                    favType === 'plan' ? state.filteredDataset.plancards : state.filteredDataset.competencycards);
+                updateEmptyState(container, state, options.labels);
+                return;
+            }
+
+            // Handle tag filter tab clicks.
             const tab = e.target.closest('.dims-filter-tab');
-            if (!tab) {
+            if (!tab || tab.classList.contains('dims-fav-filter-btn') || tab.classList.contains('dims-all-filter-btn')) {
                 return;
             }
 
@@ -425,7 +781,11 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
         clearError(container);
         showLoading(container, true);
 
-        return fetchDataset(options.endpointmethod)
+        // Phase 1: if favourites are enabled, load only favourites first.
+        const useFavouritesFirst = state.favouritesEnabled;
+        const fetchArgs = useFavouritesFirst ? {favouritesonly: true} : {};
+
+        return fetchDataset(options.endpointmethod, fetchArgs)
             .then((dataset) => {
                 state.rawDataset = {
                     hasactiveplans: !!dataset.hasactiveplans,
@@ -437,6 +797,34 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
 
                 if (dataset.filtersettings) {
                     state.filterSettings = dataset.filtersettings;
+                }
+
+                // Update favourites enabled from server response.
+                if (typeof dataset.favouritesenabled !== 'undefined') {
+                    state.favouritesEnabled = !!dataset.favouritesenabled;
+                }
+
+                // Store totals for pill counts.
+                state.totalplans = dataset.totalplans || 0;
+                state.totalcompetencies = dataset.totalcompetencies || 0;
+                state.hasnonfavourites = !!dataset.hasnonfavourites;
+                updateFavouriteCounts(state);
+
+                const favCards = state.rawDataset.plancards.length + state.rawDataset.competencycards.length;
+
+                if (useFavouritesFirst && state.hasnonfavourites && favCards > 0) {
+                    // Phase 1: we got only favourites, there are more items.
+                    state.fullDatasetLoaded = false;
+                    // Activate favourite filter only for types that have favourites.
+                    state.favouriteFilterActive.plan = state.favouriteCountPlan > 0;
+                    state.favouriteFilterActive.competency = state.favouriteCountCompetency > 0;
+                } else if (useFavouritesFirst && state.hasnonfavourites && favCards === 0) {
+                    // No favourites exist — load full dataset immediately.
+                    return loadFullDataset(container, state, options);
+                } else {
+                    // Either favourites are disabled, no favourites exist, or
+                    // all items are favourites — we already have everything.
+                    state.fullDatasetLoaded = true;
                 }
 
                 resetRenderedState(container, state);
