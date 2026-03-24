@@ -206,9 +206,6 @@ class dataset_provider {
             }
         }
 
-        $totalitems = $totalplans + $totalcompetencies;
-        $favitems = count($plancards) + count($competencycards);
-
         return [
             'hasactiveplans' => !empty($activeplans),
             'hasplancards' => !empty($plancards),
@@ -217,7 +214,8 @@ class dataset_provider {
             'competencycards' => $competencycards,
             'totalplans' => $totalplans,
             'totalcompetencies' => $totalcompetencies,
-            'hasnonfavourites' => ($favouritesonly && $favitems < $totalitems),
+            'hasnonfavouriteplans' => ($favouritesonly && count($plancards) < $totalplans),
+            'hasnonfavouritecompetencies' => ($favouritesonly && count($competencycards) < $totalcompetencies),
         ];
     }
 

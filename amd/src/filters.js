@@ -75,7 +75,8 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
             },
             // Two-phase loading state.
             fullDatasetLoaded: false,
-            hasnonfavourites: false,
+            hasnonfavouriteplans: false,
+            hasnonfavouritecompetencies: false,
             totalplans: 0,
             totalcompetencies: 0,
             favouriteCountPlan: 0,
@@ -337,29 +338,41 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
         // Remove any existing ghost cards.
         container.querySelectorAll('.dims-ghost-card').forEach(el => el.remove());
 
-        // Only show ghost cards if we are in favourites-only mode and there are more items.
-        if (!state.favouritesEnabled || state.fullDatasetLoaded || !state.hasnonfavourites) {
+        if (!state.favouritesEnabled) {
             return;
         }
 
-        const favPlans = state.rawDataset.plancards.length;
-        const favComps = state.rawDataset.competencycards.length;
-
-        // Ghost card for plans block.
-        const planRemaining = state.totalplans - favPlans;
-        if (planRemaining > 0) {
-            const planList = container.querySelector('[data-cards-type="plan"]');
-            if (planList) {
-                appendGhostCardTo(planList, planRemaining, labels, 'plan');
+        // Ghost card for plans — show when fav filter is active and there are hidden items.
+        if (state.favouriteFilterActive.plan) {
+            let planRemaining;
+            if (!state.fullDatasetLoaded && state.hasnonfavouriteplans) {
+                // Phase-1: not all data loaded yet.
+                planRemaining = state.totalplans - state.rawDataset.plancards.length;
+            } else {
+                // Full dataset loaded: count non-favourite plans hidden by fav filter.
+                planRemaining = state.totalplans - state.favouriteCountPlan;
+            }
+            if (planRemaining > 0) {
+                const planList = container.querySelector('[data-cards-type="plan"]');
+                if (planList) {
+                    appendGhostCardTo(planList, planRemaining, labels, 'plan');
+                }
             }
         }
 
-        // Ghost card for competencies block.
-        const compRemaining = state.totalcompetencies - favComps;
-        if (compRemaining > 0) {
-            const compList = container.querySelector('[data-cards-type="competency"]');
-            if (compList) {
-                appendGhostCardTo(compList, compRemaining, labels, 'competency');
+        // Ghost card for competencies — same logic.
+        if (state.favouriteFilterActive.competency) {
+            let compRemaining;
+            if (!state.fullDatasetLoaded && state.hasnonfavouritecompetencies) {
+                compRemaining = state.totalcompetencies - state.rawDataset.competencycards.length;
+            } else {
+                compRemaining = state.totalcompetencies - state.favouriteCountCompetency;
+            }
+            if (compRemaining > 0) {
+                const compList = container.querySelector('[data-cards-type="competency"]');
+                if (compList) {
+                    appendGhostCardTo(compList, compRemaining, labels, 'competency');
+                }
             }
         }
     }
@@ -515,9 +528,10 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
 
             // If favourite filter is active and count dropped to 0, deactivate and load all.
             const typeFavCount = itemtype === 'plan' ? state.favouriteCountPlan : state.favouriteCountCompetency;
+            const typeHasNonFavs = itemtype === 'plan' ? state.hasnonfavouriteplans : state.hasnonfavouritecompetencies;
             if (state.favouriteFilterActive[itemtype] && typeFavCount === 0) {
                 state.favouriteFilterActive[itemtype] = false;
-                if (!state.fullDatasetLoaded && state.hasnonfavourites) {
+                if (!state.fullDatasetLoaded && typeHasNonFavs) {
                     loadFullDataset(container, state, options);
                     return;
                 }
@@ -599,7 +613,8 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
 
                 state.totalplans = dataset.totalplans || 0;
                 state.totalcompetencies = dataset.totalcompetencies || 0;
-                state.hasnonfavourites = false;
+                state.hasnonfavouriteplans = false;
+                state.hasnonfavouritecompetencies = false;
                 state.fullDatasetLoaded = true;
                 updateFavouriteCounts(state);
 
@@ -627,7 +642,11 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
 
         state.filtersRendered = false;
 
-        if (state.fullDatasetLoaded) {
+        // Check if full dataset load is needed based on per-group flags.
+        const needsLoad = !state.fullDatasetLoaded
+            && (state.hasnonfavouriteplans || state.hasnonfavouritecompetencies);
+
+        if (!needsLoad) {
             rerender(container, state, options);
             return;
         }
@@ -659,7 +678,9 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
                     }
 
                     // If full dataset not yet loaded, fetch it first.
-                    if (state.normalizedSearch && !state.fullDatasetLoaded && state.hasnonfavourites) {
+                    const searchNeedsLoad = state.normalizedSearch && !state.fullDatasetLoaded
+                        && (state.hasnonfavouriteplans || state.hasnonfavouritecompetencies);
+                    if (searchNeedsLoad) {
                         loadFullDataset(container, state, options).then(() => {
                             state.searchTerm = searchInput.value.trim();
                             state.normalizedSearch = normalizeText(state.searchTerm);
@@ -720,7 +741,9 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
                 const favType = favFilterBtn.dataset.favFilterType;
                 state.favouriteFilterActive[favType] = !state.favouriteFilterActive[favType];
 
-                if (!state.favouriteFilterActive[favType] && !state.fullDatasetLoaded && state.hasnonfavourites) {
+                const favTypeHasNonFavs = favType === 'plan'
+                    ? state.hasnonfavouriteplans : state.hasnonfavouritecompetencies;
+                if (!state.favouriteFilterActive[favType] && !state.fullDatasetLoaded && favTypeHasNonFavs) {
                     // Deactivating favourite filter: need full dataset.
                     showAllItems(container, state, options, favType);
                     return;
@@ -804,21 +827,34 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
                     state.favouritesEnabled = !!dataset.favouritesenabled;
                 }
 
-                // Store totals for pill counts.
+                // Store totals and per-group non-favourite flags.
                 state.totalplans = dataset.totalplans || 0;
                 state.totalcompetencies = dataset.totalcompetencies || 0;
-                state.hasnonfavourites = !!dataset.hasnonfavourites;
+                state.hasnonfavouriteplans = !!dataset.hasnonfavouriteplans;
+                state.hasnonfavouritecompetencies = !!dataset.hasnonfavouritecompetencies;
                 updateFavouriteCounts(state);
 
+                const hasAnyNonFavourites = state.hasnonfavouriteplans || state.hasnonfavouritecompetencies;
                 const favCards = state.rawDataset.plancards.length + state.rawDataset.competencycards.length;
 
-                if (useFavouritesFirst && state.hasnonfavourites && favCards > 0) {
-                    // Phase 1: we got only favourites, there are more items.
+                if (useFavouritesFirst && hasAnyNonFavourites && favCards > 0) {
+                    // Check if any group with items has zero favourites — phase-1 gave us
+                    // no cards for that group, so we must load the full dataset immediately.
+                    const planHasItemsNoFavs = state.totalplans > 0 && state.favouriteCountPlan === 0;
+                    const compHasItemsNoFavs = state.totalcompetencies > 0 && state.favouriteCountCompetency === 0;
+
+                    // Pre-set fav filter for the group that HAS favourites.
+                    state.favouriteFilterActive.plan = state.favouriteCountPlan > 0 && state.hasnonfavouriteplans;
+                    state.favouriteFilterActive.competency = state.favouriteCountCompetency > 0 && state.hasnonfavouritecompetencies;
+
+                    if (planHasItemsNoFavs || compHasItemsNoFavs) {
+                        // One group is entirely empty — load all data now.
+                        return loadFullDataset(container, state, options);
+                    }
+
+                    // Both groups have some favourites — stay in phase-1 mode.
                     state.fullDatasetLoaded = false;
-                    // Activate favourite filter only for types that have favourites.
-                    state.favouriteFilterActive.plan = state.favouriteCountPlan > 0;
-                    state.favouriteFilterActive.competency = state.favouriteCountCompetency > 0;
-                } else if (useFavouritesFirst && state.hasnonfavourites && favCards === 0) {
+                } else if (useFavouritesFirst && hasAnyNonFavourites && favCards === 0) {
                     // No favourites exist — load full dataset immediately.
                     return loadFullDataset(container, state, options);
                 } else {

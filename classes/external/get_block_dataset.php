@@ -83,7 +83,8 @@ class get_block_dataset extends external_api {
                 'favouritesenabled' => $uiconfig['favouritesenabled'],
                 'totalplans' => 0,
                 'totalcompetencies' => 0,
-                'hasnonfavourites' => false,
+                'hasnonfavouriteplans' => false,
+                'hasnonfavouritecompetencies' => false,
             ];
         }
 
@@ -103,7 +104,8 @@ class get_block_dataset extends external_api {
             'favouritesenabled' => $uiconfig['favouritesenabled'],
             'totalplans' => $dataset['totalplans'],
             'totalcompetencies' => $dataset['totalcompetencies'],
-            'hasnonfavourites' => $dataset['hasnonfavourites'],
+            'hasnonfavouriteplans' => $dataset['hasnonfavouriteplans'],
+            'hasnonfavouritecompetencies' => $dataset['hasnonfavouritecompetencies'],
         ];
     }
 
@@ -196,7 +198,8 @@ class get_block_dataset extends external_api {
             'favouritesenabled' => new external_value(PARAM_BOOL, 'Whether favourites feature is enabled'),
             'totalplans' => new external_value(PARAM_INT, 'Total number of plan cards (including non-favourites)'),
             'totalcompetencies' => new external_value(PARAM_INT, 'Total number of competency cards (including non-favourites)'),
-            'hasnonfavourites' => new external_value(PARAM_BOOL, 'Whether there are non-favourite items not returned'),
+            'hasnonfavouriteplans' => new external_value(PARAM_BOOL, 'Whether there are non-favourite plans not returned'),
+            'hasnonfavouritecompetencies' => new external_value(PARAM_BOOL, 'Whether there are non-favourite competencies not returned'),
         ]);
     }
 }
