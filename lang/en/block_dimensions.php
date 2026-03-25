@@ -89,5 +89,6 @@ $string['show_heading'] = 'Show block heading';
 $string['show_heading_desc'] = 'When enabled, the heading "My Competencies" is displayed at the top of the block.';
 $string['ghostcardsubtitle'] = 'Explore beyond favourites.';
 $string['showallitems'] = 'Show all';
+$string['ghostcardtitle'] = 'View more items';
 $string['viewmore'] = 'View more...';
 $string['viewotherplans'] = 'View other plans...';

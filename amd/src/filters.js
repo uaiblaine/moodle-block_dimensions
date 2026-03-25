@@ -135,14 +135,14 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
                     + (isFavActive ? 'true' : 'false') + '" data-fav-filter-type="' + type + '">'
                     + '<i class="fa fa-star dims-fav-filter-icon" aria-hidden="true"></i> '
                     + escapeHtml(labels.myfavourites)
-                    + ' <span class="dims-filter-count">(' + typeFavCount + ')</span>'
+                    + ' <span class="dims-filter-count">' + typeFavCount + '</span>'
                     + '</button>');
 
                 // "Show all (N)" pill — count is per-type total.
                 html.push('<button type="button" class="dims-filter-tab dims-all-filter-btn'
                     + (!isFavActive ? ' active' : '') + '" role="tab" aria-selected="'
                     + (!isFavActive ? 'true' : 'false') + '" data-all-filter-type="' + type + '">'
-                    + escapeHtml(labelWithCount(labels.showallitems, typeTotal))
+                    + escapeHtml(labels.showallitems) + ' <span class="dims-filter-count">' + typeTotal + '</span>'
                     + '</button>');
 
                 html.push('</div></div>');
@@ -378,7 +378,7 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
     }
 
     function appendGhostCardTo(list, remainingCount, labels, type) {
-        const ghostLabel = labelWithCount(labels.showallitems, remainingCount);
+        const ghostLabel = labelWithCount(labels.ghostcardtitle, remainingCount);
         const li = document.createElement('li');
         li.className = 'col-12 col-sm-6 col-lg-4 mb-3 dims-card-item dims-ghost-card';
         li.dataset.ghostType = type;

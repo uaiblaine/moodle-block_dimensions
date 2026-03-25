@@ -1298,16 +1298,27 @@ body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.activ
 }
 
 /* ============================================
-   FILTER COUNT BADGE - (N) inside pills
+   FILTER COUNT BADGE - N inside pills
    ============================================ */
 .block_dimensions .dims-filter-count {
     font-weight: 600;
-    opacity: 0.75;
     margin-left: 0.15rem;
+    background: #e8eaed;
+    color: #5f6368;
+    border-radius: 999px;
+    padding: 0 6px;
+    font-size: 0.75rem;
 }
 
-.block_dimensions .dims-fav-filter-btn.active .dims-filter-count {
+.block_dimensions .dims-fav-filter-btn.active .dims-filter-count,
+.block_dimensions .dims-all-filter-btn.active .dims-filter-count {
     opacity: 1;
+    background: #e8f0fe;
+    color: #1765cc;
+    border-radius: 999px;
+    padding: 0 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
 }
 
 /* ============================================
@@ -1323,7 +1334,6 @@ body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.activ
     align-items: center;
     justify-content: center;
     width: 100%;
-    min-height: 260px;
     border: 2px dashed #ced4da;
     border-radius: 12px;
     background: transparent;
@@ -1353,12 +1363,12 @@ body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.activ
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 64px;
-    height: 64px;
+    width: 50px;
+    height: 50px;
     border: 2px solid #d1d5db;
     border-radius: 50%;
     color: #b0b5bd;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     transition: border-color 0.2s ease, color 0.2s ease;
 }
 

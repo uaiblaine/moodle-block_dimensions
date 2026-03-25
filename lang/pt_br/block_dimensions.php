@@ -90,5 +90,6 @@ $string['show_heading'] = 'Exibir título do bloco';
 $string['show_heading_desc'] = 'Quando habilitado, o título "Minhas Competências" é exibido no topo do bloco.';
 $string['ghostcardsubtitle'] = 'Explore além dos favoritos.';
 $string['showallitems'] = 'Mostrar tudo';
+$string['ghostcardtitle'] = 'Ver mais itens';
 $string['viewmore'] = 'Ver mais...';
 $string['viewotherplans'] = 'Ver outros planos...';
