@@ -25,7 +25,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
+define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav'], function(Ajax, Templates, FilterTabsNav) {
     const BATCH_SIZE = 24;
 
     const normalizeText = (str) => (str || '')
@@ -189,8 +189,13 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
 
         html.push('</div>');
         if (hasAnyFilter) {
+            // Destroy existing tab nav instances before replacing HTML.
+            FilterTabsNav.destroyAll(host);
             host.innerHTML = '<div class="dims-filters-panel-inner">' + html.join('') + '</div>';
+            // Initialize horizontal-scrolling tab navigation.
+            FilterTabsNav.initAll(host);
         } else {
+            FilterTabsNav.destroyAll(host);
             host.innerHTML = '';
         }
     }
@@ -222,6 +227,9 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
             btn.classList.toggle('active', isActive);
             btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
         });
+
+        // Update the animated indicator position in all tab nav instances.
+        FilterTabsNav.updateAll(container);
     }
 
     function isCardVisible(card, state, type) {
@@ -264,7 +272,7 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
                 li.dataset.planTag1 = card.tag1 || '';
                 li.dataset.planTag2 = card.tag2 || '';
             } else {
-                li.className = 'col-12 col-sm-6 col-lg-4 mb-3 dims-card-item';
+                li.className = 'mb-3 dims-card-item dims-competency-item';
                 li.dataset.competencyTag1 = card.tag1 || '';
                 li.dataset.competencyTag2 = card.tag2 || '';
             }
@@ -582,6 +590,16 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
             applyVisibility(container, 'competency', state.filteredDataset.competencycards);
             renderGhostCards(container, state, options.labels);
             updateEmptyState(container, state, options.labels);
+
+            // Show section headers based on raw dataset (not filtered).
+            // Headers stay visible even when filters yield zero cards.
+            container.querySelectorAll('.dims-section-header').forEach(function(header) {
+                var sectionType = header.dataset.sectionHeader;
+                var hasCards = sectionType === 'plan'
+                    ? state.rawDataset.hasplancards
+                    : state.rawDataset.hascompetencies;
+                header.style.display = hasCards ? '' : 'none';
+            });
         }).catch(() => {
             showError(container, options.labels.loaderror);
         });
@@ -678,6 +696,11 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
                     if (state.normalizedSearch) {
                         state.favouriteFilterActive.plan = false;
                         state.favouriteFilterActive.competency = false;
+                        // Reset all tag filters so search shows everything.
+                        state.activeFilters.plan_tag1 = '';
+                        state.activeFilters.plan_tag2 = '';
+                        state.activeFilters.competency_tag1 = '';
+                        state.activeFilters.competency_tag2 = '';
                         state.filtersRendered = false;
                     }
 

@@ -244,6 +244,7 @@ class dataset_provider {
         return [
             'showheading' => $showheading,
             'showsearch' => (bool) get_config('block_dimensions', 'enable_search'),
+            'showsectionheaders' => (bool) get_config('block_dimensions', 'enable_section_headers'),
             'trailclickable' => (bool) get_config('block_dimensions', 'enable_trail_links'),
             'favouritesenabled' => self::is_favourites_enabled(),
             'plancardlayout' => get_config('block_dimensions', 'plancard_layout') ?: 'vertical',

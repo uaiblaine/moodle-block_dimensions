@@ -136,6 +136,7 @@
 
 /* Dark mode */
 @media (max-width: 575.98px) {
+
     .theme-dark .block_dimensions .dims-block-header,
     body.dark .block_dimensions .dims-block-header {
         background: rgba(32, 33, 36, 0.97);
@@ -385,7 +386,7 @@ body.dark .block_dimensions .competency-card:focus-within {
 }
 
 /* Override col-* Bootstrap nos itens: container para @container queries */
-.block_dimensions [data-cards-type] > li {
+.block_dimensions [data-cards-type]>li {
     container-type: inline-size;
     container-name: dims-card-cell;
     width: 100%;
@@ -393,7 +394,8 @@ body.dark .block_dimensions .competency-card:focus-within {
     flex: none;
     padding-left: 0;
     padding-right: 0;
-    margin-bottom: 0; /* gap do grid substitui mb-3 */
+    margin-bottom: 0;
+    /* gap do grid substitui mb-3 */
 }
 
 /* ============================================
@@ -406,8 +408,8 @@ body.dark .block_dimensions .competency-card:focus-within {
     overflow: hidden;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-    border: 1px solid rgba(0, 0, 0, 0.125);
-    background-color: #fff;
+    border: 1px solid rgb(228, 228, 228, 0.44);
+    background-color: #FFFEFC;
 }
 
 .block_dimensions .plan-card-link {
@@ -530,7 +532,6 @@ body.dark .block_dimensions .competency-card:focus-within {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #fff;
 }
 
 .block_dimensions .trail-marker .fa-check-circle {
@@ -737,6 +738,7 @@ body.dark .block_dimensions .competency-card:focus-within {
 
 /* Responsive — horizontal card stacks on mobile */
 @media (max-width: 575.98px) {
+
     .block_dimensions .plan-card-horizontal,
     .block_dimensions .plan-card-horizontal .plan-card-link {
         flex-direction: column;
@@ -756,6 +758,7 @@ body.dark .block_dimensions .competency-card:focus-within {
 /* Container query: card horizontal empilha quando a célula é estreita.
    Complementa o @media acima para containers Moodle narrow (viewport largo, bloco estreito) */
 @container dims-card-cell (max-width: 360px) {
+
     .block_dimensions .plan-card-horizontal,
     .block_dimensions .plan-card-horizontal .plan-card-link {
         flex-direction: column;
@@ -895,7 +898,8 @@ body.dark .block_dimensions .competency-trail-vertical.has-after .trail-item-ver
     border-radius: 8px;
     white-space: nowrap;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    pointer-events: none; /* decorative — parent <a> is the link */
+    pointer-events: none;
+    /* decorative — parent <a> is the link */
     transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
@@ -919,6 +923,7 @@ body.dark .block_dimensions .competency-trail-vertical.has-after .trail-item-ver
 
 /* High contrast */
 @media (prefers-contrast: high) {
+
     .block_dimensions .dims-card-access-btn,
     .block_dimensions .dims-card-access-btn-horizontal {
         border: 2px solid currentColor;
@@ -936,6 +941,7 @@ body.dark .block_dimensions .dims-card-access-btn {
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
+
     .block_dimensions .dims-card-access-btn,
     .block_dimensions .dims-card-access-btn-horizontal {
         transition: none;
@@ -944,6 +950,7 @@ body.dark .block_dimensions .dims-card-access-btn {
 
 /* Print */
 @media print {
+
     .block_dimensions .dims-card-access-btn,
     .block_dimensions .dims-card-access-btn-horizontal {
         display: none;
@@ -1020,24 +1027,123 @@ body.dark .block_dimensions .dimension-tag {
 }
 
 /* ============================================
-   FILTER TABS - Modern Pill Style
-   (Visual alignment with local_dimensions)
+   FILTER TABS - Horizontal Scrolling Pill Style
+   Adapted from Apple MacBook Neo tabnav-pill.
    ============================================ */
+
+/* --- Wrapper: enforces max-width on desktop --- */
 .block_dimensions .block-dimensions-content .dims-filter-tabs-wrapper {
     display: flex;
     justify-content: flex-start;
-    width: auto;
+    max-width: 600px;
     margin-bottom: 0;
 }
 
-.block_dimensions .block-dimensions-content .dims-filter-tabs {
-    display: inline-flex;
-    gap: 0;
-    background: #f1f3f4;
-    border-radius: 999px;
-    padding: 4px;
+/* Favourites pill wrapper shrinks to content so it shares a row with the next tag */
+.block_dimensions .block-dimensions-content .dims-filter-tabs-wrapper[data-filter-group^="fav_"] {
+    width: auto;
+    max-width: none;
+    flex-shrink: 0;
 }
 
+/* --- Platter: rounded pill shell with background --- */
+.block_dimensions .block-dimensions-content .dims-filter-tabs {
+    --dims-tabs-height: 44px;
+    --dims-tabs-inner-height: 36px;
+    --dims-tabs-platter-padding: 4px;
+    --dims-tabs-platter-bg: #f1f3f4;
+    --dims-tabs-indicator-bg: #fff;
+    --dims-tabs-indicator-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    --dims-tabs-item-color: #5f6368;
+    --dims-tabs-item-color-active: #1a73e8;
+    --dims-tabs-paddle-color: rgba(0, 0, 0, 0.56);
+    --dims-tabs-paddle-color-hover: rgba(0, 0, 0, 0.72);
+    --dims-tabs-paddle-icon-opacity-disabled: 0.42;
+    --dims-tabs-scroll-duration: 320ms;
+    --dims-tabs-indicator-duration: 320ms;
+    --dims-tabs-mask-gradient-width: 22px;
+    --dims-tabs-paddle-width: calc(var(--dims-tabs-inner-height) + var(--dims-tabs-platter-padding));
+    --dims-tabs-mask-opaque-width: calc(var(--dims-tabs-paddle-width) - var(--dims-tabs-platter-padding));
+    --dims-tabs-mask-color-left: transparent;
+    --dims-tabs-mask-color-right: transparent;
+    --dims-tabs-indicator-start: var(--dims-tabs-platter-padding);
+    --dims-tabs-indicator-width: 0px;
+
+    position: relative;
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+    height: calc(var(--dims-tabs-height));
+    padding: var(--dims-tabs-platter-padding);
+    background: var(--dims-tabs-platter-bg);
+    border-radius: 999px;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* When left paddle is hidden, unmask the left edge */
+.block_dimensions .dims-filter-tabs:has(.dims-filter-tabs-paddle-left.dims-filter-tabs-paddle-hidden) {
+    --dims-tabs-mask-color-left: black;
+}
+
+/* When right paddle is hidden, unmask the right edge */
+.block_dimensions .dims-filter-tabs:has(.dims-filter-tabs-paddle-right.dims-filter-tabs-paddle-hidden) {
+    --dims-tabs-mask-color-right: black;
+}
+
+/* Disable all transitions when class is applied (resize, init) */
+.block_dimensions .dims-filter-tabs.dims-filter-tabs-no-transition,
+.block_dimensions .dims-filter-tabs.dims-filter-tabs-no-transition * {
+    transition: none !important;
+}
+
+/* --- Mask: clipping layer with edge fade gradients --- */
+.block_dimensions .dims-filter-tabs-mask {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    overflow-x: hidden;
+    overscroll-behavior: none;
+    -webkit-mask-image:
+        linear-gradient(90deg,
+            var(--dims-tabs-mask-color-left) 0,
+            var(--dims-tabs-mask-color-left) var(--dims-tabs-mask-opaque-width),
+            black calc(var(--dims-tabs-mask-opaque-width) + var(--dims-tabs-mask-gradient-width)),
+            black calc(100% - var(--dims-tabs-mask-opaque-width) - var(--dims-tabs-mask-gradient-width)),
+            var(--dims-tabs-mask-color-right) calc(100% - var(--dims-tabs-mask-opaque-width)),
+            var(--dims-tabs-mask-color-right));
+    mask-image:
+        linear-gradient(90deg,
+            var(--dims-tabs-mask-color-left) 0,
+            var(--dims-tabs-mask-color-left) var(--dims-tabs-mask-opaque-width),
+            black calc(var(--dims-tabs-mask-opaque-width) + var(--dims-tabs-mask-gradient-width)),
+            black calc(100% - var(--dims-tabs-mask-opaque-width) - var(--dims-tabs-mask-gradient-width)),
+            var(--dims-tabs-mask-color-right) calc(100% - var(--dims-tabs-mask-opaque-width)),
+            var(--dims-tabs-mask-color-right));
+}
+
+/* When no scroll needed, remove mask and display as normal */
+.block_dimensions .dims-filter-tabs-mask.dims-filter-tabs-mask-noscroll {
+    display: contents;
+    -webkit-mask-image: none;
+    mask-image: none;
+}
+
+/* --- Items: flex row containing all tab buttons --- */
+.block_dimensions .dims-filter-tabs-items {
+    display: flex;
+    align-items: center;
+    width: fit-content;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+    position: relative;
+    z-index: 1;
+}
+
+/* --- Tab button: individual pill item --- */
 .block_dimensions .block-dimensions-content .dims-filter-tab {
     display: inline-flex;
     align-items: center;
@@ -1048,24 +1154,117 @@ body.dark .block_dimensions .dimension-tag {
     border-radius: 999px;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #5f6368;
+    color: var(--dims-tabs-item-color, #5f6368);
     cursor: pointer;
-    transition: all 0.2s ease;
+    white-space: nowrap;
+    position: relative;
+    z-index: 2;
+    transition: color 120ms ease-out, opacity 100ms ease-in-out;
+    opacity: 0.8;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .block_dimensions .block-dimensions-content .dims-filter-tab:hover {
-    background: rgba(0, 0, 0, 0.04);
+    opacity: 1;
 }
 
 .block_dimensions .block-dimensions-content .dims-filter-tab:focus {
-    outline: 2px solid #1a73e8;
-    outline-offset: 2px;
+    outline: none;
+}
+
+.block_dimensions .block-dimensions-content .dims-filter-tab:focus-visible {
+    box-shadow: inset 0 0 0 2px #1a73e8;
+    outline: none;
 }
 
 .block_dimensions .block-dimensions-content .dims-filter-tab.active {
-    background: #fff;
-    color: #1a73e8;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    background: transparent;
+    color: var(--dims-tabs-item-color-active, #1a73e8);
+    opacity: 1;
+    cursor: default;
+}
+
+/* --- Indicator: animated pill background following active tab --- */
+.block_dimensions .dims-filter-tabs-indicator {
+    position: absolute;
+    top: var(--dims-tabs-platter-padding);
+    left: var(--dims-tabs-indicator-start);
+    bottom: var(--dims-tabs-platter-padding);
+    width: var(--dims-tabs-indicator-width);
+    height: calc(100% - var(--dims-tabs-platter-padding) * 2);
+    border-radius: 999px;
+    background-color: var(--dims-tabs-indicator-bg, #fff);
+    box-shadow: var(--dims-tabs-indicator-shadow);
+    pointer-events: none;
+    z-index: 0;
+    transition:
+        left var(--dims-tabs-indicator-duration) ease-out,
+        width var(--dims-tabs-indicator-duration) ease-out;
+}
+
+/* --- Paddles: left/right arrow buttons --- */
+.block_dimensions .dims-filter-tabs-paddles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.block_dimensions .dims-filter-tabs-paddle {
+    position: absolute;
+    top: var(--dims-tabs-platter-padding);
+    bottom: var(--dims-tabs-platter-padding);
+    width: var(--dims-tabs-paddle-width);
+    min-height: var(--dims-tabs-inner-height);
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--dims-tabs-paddle-color);
+    cursor: pointer;
+    pointer-events: auto;
+    padding: 0;
+    transition:
+        color 100ms ease-in-out,
+        opacity 80ms ease-out 40ms,
+        visibility 80ms step-start 40ms;
+}
+
+.block_dimensions .dims-filter-tabs-paddle:hover {
+    color: var(--dims-tabs-paddle-color-hover);
+}
+
+.block_dimensions .dims-filter-tabs-paddle svg {
+    pointer-events: none;
+    width: 8px;
+    height: 14px;
+}
+
+.block_dimensions .dims-filter-tabs-paddle-left {
+    left: 0;
+}
+
+.block_dimensions .dims-filter-tabs-paddle-right {
+    right: 0;
+}
+
+.block_dimensions .dims-filter-tabs-paddle.dims-filter-tabs-paddle-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity 80ms ease-out 200ms,
+        visibility 80ms step-end 200ms;
+}
+
+.block_dimensions .dims-filter-tabs-paddle:disabled:not(.dims-filter-tabs-paddle-hidden) svg {
+    opacity: var(--dims-tabs-paddle-icon-opacity-disabled, 0.42);
 }
 
 /* ============================================
@@ -1148,6 +1347,7 @@ body.dark .block_dimensions .dimension-tag {
    FILTER - Responsive
    ============================================ */
 @media (max-width: 575.98px) {
+
     /* Collapsed by default; expanded via .dims-filters-open on the container */
     .block_dimensions .dims-filters-host {
         display: grid;
@@ -1181,23 +1381,24 @@ body.dark .block_dimensions .dimension-tag {
    ============================================ */
 .theme-dark .block_dimensions .dims-filter-tabs,
 body.dark .block_dimensions .dims-filter-tabs {
-    background: #3c4043;
+    --dims-tabs-platter-bg: #3c4043;
+    --dims-tabs-item-color: #9aa0a6;
+    --dims-tabs-item-color-active: #e8eaed;
+    --dims-tabs-indicator-bg: #5f6368;
+    --dims-tabs-indicator-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --dims-tabs-paddle-color: rgba(255, 255, 255, 0.64);
+    --dims-tabs-paddle-color-hover: rgba(255, 255, 255, 0.88);
+    background: var(--dims-tabs-platter-bg);
 }
 
 .theme-dark .block_dimensions .dims-filter-tab,
 body.dark .block_dimensions .dims-filter-tab {
-    color: #9aa0a6;
-}
-
-.theme-dark .block_dimensions .dims-filter-tab:hover,
-body.dark .block_dimensions .dims-filter-tab:hover {
-    background: rgba(255, 255, 255, 0.08);
+    color: var(--dims-tabs-item-color, #9aa0a6);
 }
 
 .theme-dark .block_dimensions .dims-filter-tab.active,
 body.dark .block_dimensions .dims-filter-tab.active {
-    background: #5f6368;
-    color: #e8eaed;
+    color: var(--dims-tabs-item-color-active, #e8eaed);
 }
 
 .theme-dark .block_dimensions .dims-filter-select,
@@ -1225,6 +1426,11 @@ body.dark .block_dimensions .dims-filter-select:hover {
         border-color: #1a73e8;
     }
 
+    .block_dimensions .dims-filter-tabs-indicator {
+        outline: 2px solid #1a73e8;
+        outline-offset: -2px;
+    }
+
     .block_dimensions .dims-filter-select {
         border: 2px solid #000;
     }
@@ -1239,6 +1445,45 @@ body.dark .block_dimensions .dims-filter-select:hover {
     .block_dimensions .dims-filter-select {
         transition: none;
     }
+
+    .block_dimensions .dims-filter-tabs-indicator {
+        transition: none;
+    }
+
+    .block_dimensions .dims-filter-tabs-paddle {
+        transition: none;
+    }
+}
+
+/* ============================================
+   SECTION HEADERS - Card Group Titles
+   ============================================ */
+.block_dimensions .dims-section-header {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin: 0 0 1.5rem;
+    padding: 0;
+    line-height: 1.3;
+    background-image: linear-gradient(180deg, #004C94 45%, #297BC4 90%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Independent classes for per-section styling overrides.
+   Use dims-section-header-plan and dims-section-header-competency
+   to target each header independently. */
+
+.theme-dark .block_dimensions .dims-section-header,
+body.dark .block_dimensions .dims-section-header {
+    color: #e8eaed;
+}
+
+@media print {
+    .block_dimensions .dims-section-header {
+        color: #000;
+    }
 }
 
 /* ============================================
@@ -1246,6 +1491,22 @@ body.dark .block_dimensions .dims-filter-select:hover {
    ============================================ */
 .block_dimensions .dims-card-hidden {
     display: none !important;
+}
+
+/* ============================================
+   COMPETENCY CARD GRID - Auto-fill columns
+   ============================================ */
+.block_dimensions [data-cards-type="competency"] {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 1rem;
+}
+
+.block_dimensions .dims-competency-item {
+    max-width: none;
+    width: 100%;
+    padding: 0;
+    flex: none;
 }
 
 /* ============================================

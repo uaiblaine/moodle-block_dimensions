@@ -64,6 +64,14 @@ if ($ADMIN->fulltree) {
         0
     ));
 
+    // Show section headers above card groups.
+    $settings->add(new admin_setting_configcheckbox(
+        'block_dimensions/enable_section_headers',
+        get_string('enable_section_headers', 'block_dimensions'),
+        get_string('enable_section_headers_desc', 'block_dimensions'),
+        0
+    ));
+
     // Enable clickable trail competencies in plan cards.
     $settings->add(new admin_setting_configcheckbox(
         'block_dimensions/enable_trail_links',

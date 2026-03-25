@@ -252,6 +252,7 @@ class summary implements renderable, templatable {
             'containerid' => $containerid,
             'showheading' => $uiconfig['showheading'],
             'showsearch' => $uiconfig['showsearch'],
+            'showsectionheaders' => $uiconfig['showsectionheaders'],
             'endpointmethod' => 'block_dimensions_get_block_dataset',
             'filtersettingsjson' => json_encode($uiconfig['filtersettings']),
             'favouritesenabled' => $uiconfig['favouritesenabled'] ? 'true' : 'false',

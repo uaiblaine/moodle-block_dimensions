@@ -54,6 +54,8 @@ $string['enable_plan_tag2_filter'] = 'Habilitar filtro tag2 de plano (Categoria)
 $string['enable_plan_tag2_filter_desc'] = 'Quando habilitado, um filtro para o campo customizado "tag2" será exibido acima dos cartões de planos, permitindo ao usuário filtrar por categoria.';
 $string['enable_search'] = 'Habilitar pesquisa';
 $string['enable_search_desc'] = 'Quando habilitado, um campo de pesquisa é exibido no cabeçalho do bloco para filtrar cartões pelo título.';
+$string['enable_section_headers'] = 'Exibir títulos das seções';
+$string['enable_section_headers_desc'] = 'Quando habilitado, um título é exibido acima de cada conjunto de cartões (planos e competências). O texto pode ser personalizado na tradução das strings de idioma em Administração do site > Idioma > Personalização de idioma.';
 $string['enable_trail_links'] = 'Habilitar links na trilha de competências';
 $string['enable_trail_links_desc'] = 'Quando habilitado, cada competência na trilha do cartão de plano se torna um link clicável para sua página de detalhes.';
 $string['favouritesdisabled'] = 'A funcionalidade de favoritos está desabilitada no momento.';
@@ -85,6 +87,8 @@ $string['privacy:metadata'] = 'O bloco de Dimensões apenas exibe dados armazena
 $string['privacy:metadata:favourites'] = 'Armazena quais planos e competências o usuário marcou como favoritos.';
 $string['retry'] = 'Tentar novamente';
 $string['search_placeholder'] = 'Pesquisar...';
+$string['sectionheader_competency'] = 'Encontre cursos <br> para cada competência';
+$string['sectionheader_plan'] = 'Avance em seus <br> planos de aprendizagem';
 
 $string['show_heading'] = 'Exibir título do bloco';
 $string['show_heading_desc'] = 'Quando habilitado, o título "Minhas Competências" é exibido no topo do bloco.';

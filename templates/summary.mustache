@@ -61,11 +61,21 @@
         </button>
     </div>
 
+    {{#showsectionheaders}}
+    <h6 class="dims-section-header dims-section-header-plan" data-section-header="plan" style="display:none">
+        {{#str}}sectionheader_plan, block_dimensions{{/str}}
+    </h6>
+    {{/showsectionheaders}}
     <div class="dims-filters-host" data-filters-type="plan"></div>
     <nav {{#showheading}} aria-labelledby="block-dimensions-heading-{{containerid}}"{{/showheading}}>
         <ul class="row list-unstyled dims-plan-grid" role="list" data-cards-type="plan"></ul>
     </nav>
 
+    {{#showsectionheaders}}
+    <h6 class="dims-section-header dims-section-header-competency" data-section-header="competency" style="display:none">
+        {{#str}}sectionheader_competency, block_dimensions{{/str}}
+    </h6>
+    {{/showsectionheaders}}
     <div class="dims-filters-host" data-filters-type="competency"></div>
     <nav {{#showheading}} aria-labelledby="block-dimensions-heading-{{containerid}}"{{/showheading}}>
         <ul class="row list-unstyled" role="list" data-cards-type="competency"></ul>
