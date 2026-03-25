@@ -26,6 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['accesscard'] = 'Access';
 $string['accesscardaria'] = 'Access {$a}';
+$string['clearfilters'] = 'Clear filters';
 $string['competency_tag1_displaymode'] = 'Competency tag1 display mode';
 $string['competency_tag1_displaymode_desc'] = 'Choose how the competency tag1 (Year) filter is displayed: as a dropdown select or as pill-style tabs.';
 $string['competency_tag2_displaymode'] = 'Competency tag2 display mode';

@@ -187,6 +187,15 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav'], func
             }
         });
 
+        // "Clear filters" button — rendered inside the bar, shown/hidden dynamically.
+        if (hasAnyFilter) {
+            html.push('<button type="button" class="dims-clear-filters-btn" data-clear-type="'
+                + type + '" style="display:none" aria-label="' + escapeHtml(labels.clearfilters || 'Clear filters') + '">'
+                + '<i class="fa fa-eraser" aria-hidden="true"></i> '
+                + escapeHtml(labels.clearfilters || 'Clear filters')
+                + '</button>');
+        }
+
         html.push('</div>');
         if (hasAnyFilter) {
             // Destroy existing tab nav instances before replacing HTML.
@@ -257,6 +266,35 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav'], func
     function applyFilters(state) {
         state.filteredDataset.plancards = state.rawDataset.plancards.filter((card) => isCardVisible(card, state, 'plan'));
         state.filteredDataset.competencycards = state.rawDataset.competencycards.filter((card) => isCardVisible(card, state, 'competency'));
+    }
+
+    /**
+     * Check whether the given type has any non-default filter active.
+     * @param {Object} state Application state.
+     * @param {string} type 'plan' or 'competency'.
+     * @return {boolean}
+     */
+    function hasActiveFiltersForType(state, type) {
+        if (state.favouriteFilterActive[type]) {
+            return true;
+        }
+        if (state.activeFilters[type + '_tag1']) {
+            return true;
+        }
+        if (state.activeFilters[type + '_tag2']) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Show or hide the "Clear filters" button for each type based on active state.
+     */
+    function updateClearFilterButtons(container, state) {
+        container.querySelectorAll('.dims-clear-filters-btn').forEach(function(btn) {
+            var clearType = btn.dataset.clearType;
+            btn.style.display = hasActiveFiltersForType(state, clearType) ? '' : 'none';
+        });
     }
 
     function renderCardItem(type, card) {
@@ -578,6 +616,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav'], func
         }
 
         syncFilterActiveState(container, state);
+        updateClearFilterButtons(container, state);
 
         const token = String(++state.renderToken);
         container.dataset.renderToken = token;
@@ -734,6 +773,27 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav'], func
         }
 
         container.addEventListener('click', (e) => {
+            // Handle "Clear filters" button click (scoped to one section).
+            const clearBtn = e.target.closest('.dims-clear-filters-btn');
+            if (clearBtn) {
+                e.preventDefault();
+                const clearType = clearBtn.dataset.clearType;
+                state.activeFilters[clearType + '_tag1'] = '';
+                state.activeFilters[clearType + '_tag2'] = '';
+                state.favouriteFilterActive[clearType] = false;
+                state.filtersRendered = false;
+
+                // If full dataset not loaded and needed, load it.
+                const typeHasNonFavs = clearType === 'plan'
+                    ? state.hasnonfavouriteplans : state.hasnonfavouritecompetencies;
+                if (!state.fullDatasetLoaded && typeHasNonFavs) {
+                    loadFullDataset(container, state, options);
+                    return;
+                }
+                rerender(container, state, options);
+                return;
+            }
+
             // Handle favourite toggle button clicks.
             const favBtn = e.target.closest('.dims-fav-btn');
             if (favBtn && state.favouritesEnabled) {

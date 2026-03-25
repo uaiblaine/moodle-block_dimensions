@@ -26,6 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['accesscard'] = 'Acessar';
 $string['accesscardaria'] = 'Acessar {$a}';
+$string['clearfilters'] = 'Limpar filtros';
 $string['competency_tag1_displaymode'] = 'Modo de exibição tag1 (competência)';
 $string['competency_tag1_displaymode_desc'] = 'Escolha como o filtro tag1 de competências é exibido: como menu dropdown ou como abas estilo pills.';
 $string['competency_tag2_displaymode'] = 'Modo de exibição tag2 (competência)';

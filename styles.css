@@ -1027,6 +1027,43 @@ body.dark .block_dimensions .dimension-tag {
 }
 
 /* ============================================
+   CLEAR FILTERS BUTTON - Inline Reset Action
+   ============================================ */
+.block_dimensions .dims-clear-filters-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid #dadce0;
+    border-radius: 999px;
+    background: transparent;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #5f6368;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    -webkit-user-select: none;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.block_dimensions .dims-clear-filters-btn:hover {
+    color: #d93025;
+    border-color: #d93025;
+    background: rgba(217, 48, 37, 0.06);
+}
+
+.block_dimensions .dims-clear-filters-btn:focus-visible {
+    outline: 2px solid #1a73e8;
+    outline-offset: 2px;
+}
+
+.block_dimensions .dims-clear-filters-btn .fa {
+    font-size: 0.8rem;
+}
+
+/* ============================================
    FILTER TABS - Horizontal Scrolling Pill Style
    Adapted from Apple MacBook Neo tabnav-pill.
    ============================================ */
@@ -1414,6 +1451,19 @@ body.dark .block_dimensions .dims-filter-select:hover {
     background-color: #4a4d51;
 }
 
+.theme-dark .block_dimensions .dims-clear-filters-btn,
+body.dark .block_dimensions .dims-clear-filters-btn {
+    color: #9aa0a6;
+    border-color: #5f6368;
+}
+
+.theme-dark .block_dimensions .dims-clear-filters-btn:hover,
+body.dark .block_dimensions .dims-clear-filters-btn:hover {
+    color: #ea8685;
+    border-color: #ea8685;
+    background: rgba(234, 134, 133, 0.1);
+}
+
 /* ============================================
    FILTER - High Contrast
    ============================================ */
@@ -1434,6 +1484,10 @@ body.dark .block_dimensions .dims-filter-select:hover {
     .block_dimensions .dims-filter-select {
         border: 2px solid #000;
     }
+
+    .block_dimensions .dims-clear-filters-btn {
+        border: 2px solid currentColor;
+    }
 }
 
 /* ============================================
@@ -1451,6 +1505,10 @@ body.dark .block_dimensions .dims-filter-select:hover {
     }
 
     .block_dimensions .dims-filter-tabs-paddle {
+        transition: none;
+    }
+
+    .block_dimensions .dims-clear-filters-btn {
         transition: none;
     }
 }
