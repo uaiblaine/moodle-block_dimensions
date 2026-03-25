@@ -840,6 +840,8 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav'], func
                 applyFilters(state);
                 applyVisibility(container, favType,
                     favType === 'plan' ? state.filteredDataset.plancards : state.filteredDataset.competencycards);
+                updateClearFilterButtons(container, state);
+                renderGhostCards(container, state, options.labels);
                 updateEmptyState(container, state, options.labels);
                 return;
             }

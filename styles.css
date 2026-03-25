@@ -74,7 +74,7 @@
 }
 
 .block_dimensions .dims-block-search-input::placeholder {
-    color: #9aa0a6;
+    color: #5f6368;
 }
 
 .block_dimensions .dims-block-search-input:focus {
@@ -152,7 +152,7 @@ body.dark .block_dimensions .dims-block-search-input {
 
 .theme-dark .block_dimensions .dims-block-search-input::placeholder,
 body.dark .block_dimensions .dims-block-search-input::placeholder {
-    color: #9aa0a6;
+    color: #adb5bd;
 }
 
 .theme-dark .block_dimensions .dims-block-search-input:focus,
@@ -559,7 +559,7 @@ body.dark .block_dimensions .competency-card:focus-within {
 }
 
 .block_dimensions .trail-label.text-success {
-    color: #28a745 !important;
+    color: #1a7431 !important;
     font-weight: 600;
 }
 
@@ -824,6 +824,11 @@ body.dark .block_dimensions .trail-marker {
 .theme-dark .block_dimensions .trail-label,
 body.dark .block_dimensions .trail-label {
     color: #adb5bd;
+}
+
+.theme-dark .block_dimensions .trail-label.text-success,
+body.dark .block_dimensions .trail-label.text-success {
+    color: #4dba6a !important;
 }
 
 .theme-dark .block_dimensions .competency-count-text,
@@ -1818,7 +1823,7 @@ body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.activ
 .block_dimensions .dims-ghost-card-title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #b0b5bd;
+    color: #666b72;
     text-align: center;
     transition: color 0.2s ease;
 }
@@ -1831,13 +1836,14 @@ body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.activ
 .block_dimensions .dims-ghost-card-subtitle {
     font-size: 0.85rem;
     font-weight: 400;
-    color: #b0b5bd;
+    color: #666b72;
     text-align: center;
 }
 
 /* Dark mode */
 .theme-dark .block_dimensions .dims-ghost-card-inner,
 body.dark .block_dimensions .dims-ghost-card-inner {
+    background: #3c4043;
     border-color: #5f6368;
 }
 
@@ -1861,7 +1867,7 @@ body.dark .block_dimensions .dims-ghost-card-inner:hover .dims-ghost-icon-circle
 
 .theme-dark .block_dimensions .dims-ghost-card-title,
 body.dark .block_dimensions .dims-ghost-card-title {
-    color: #6c757d;
+    color: #adb5bd;
 }
 
 .theme-dark .block_dimensions .dims-ghost-card-inner:hover .dims-ghost-card-title,
@@ -1871,7 +1877,7 @@ body.dark .block_dimensions .dims-ghost-card-inner:hover .dims-ghost-card-title 
 
 .theme-dark .block_dimensions .dims-ghost-card-subtitle,
 body.dark .block_dimensions .dims-ghost-card-subtitle {
-    color: #6c757d;
+    color: #adb5bd;
 }
 
 /* High contrast */

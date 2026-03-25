@@ -122,6 +122,7 @@ define([], function() {
         paddleLeft.type = 'button';
         paddleLeft.className = 'dims-filter-tabs-paddle dims-filter-tabs-paddle-left dims-filter-tabs-paddle-hidden';
         paddleLeft.setAttribute('aria-hidden', 'true');
+        paddleLeft.setAttribute('aria-label', 'Scroll filters left');
         paddleLeft.tabIndex = -1;
         paddleLeft.innerHTML = PADDLE_LEFT_SVG;
 
@@ -129,6 +130,7 @@ define([], function() {
         paddleRight.type = 'button';
         paddleRight.className = 'dims-filter-tabs-paddle dims-filter-tabs-paddle-right dims-filter-tabs-paddle-hidden';
         paddleRight.setAttribute('aria-hidden', 'true');
+        paddleRight.setAttribute('aria-label', 'Scroll filters right');
         paddleRight.tabIndex = -1;
         paddleRight.innerHTML = PADDLE_RIGHT_SVG;
 
