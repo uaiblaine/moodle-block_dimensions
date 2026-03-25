@@ -28,15 +28,23 @@
         </h5>
         {{/showheading}}
         {{#showsearch}}
-        <div class="dims-block-search-wrapper">
-            <i class="fa fa-search dims-block-search-icon" aria-hidden="true"></i>
-            <input type="text"
-                   class="dims-block-search-input"
-                   placeholder="{{#str}}search_placeholder, block_dimensions{{/str}}"
-                   aria-label="{{#str}}search_placeholder, block_dimensions{{/str}}"
-                   autocomplete="off" />
-            <button type="button" class="dims-block-search-clear" aria-label="{{#str}}clear, core{{/str}}" style="display:none;">
-                <i class="fa fa-times" aria-hidden="true"></i>
+        <div class="dims-search-row">
+            <div class="dims-block-search-wrapper">
+                <i class="fa fa-search dims-block-search-icon" aria-hidden="true"></i>
+                <input type="text"
+                       class="dims-block-search-input"
+                       placeholder="{{#str}}search_placeholder, block_dimensions{{/str}}"
+                       aria-label="{{#str}}search_placeholder, block_dimensions{{/str}}"
+                       autocomplete="off" />
+                <button type="button" class="dims-block-search-clear" aria-label="{{#str}}clear, core{{/str}}" style="display:none;">
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <button type="button"
+                    class="dims-filter-toggle-btn"
+                    aria-expanded="false"
+                    aria-label="{{#str}}togglefilters, block_dimensions{{/str}}">
+                <i class="fa fa-sliders" aria-hidden="true"></i>
             </button>
         </div>
         {{/showsearch}}
@@ -86,7 +94,8 @@ require(['block_dimensions/filters'], function(Filters) {
             removefromfavourites: '{{#str}}removefromfavourites, block_dimensions{{/str}}',
             showallitems: '{{#str}}showallitems, block_dimensions{{/str}}',
             ghostcardsubtitle: '{{#str}}ghostcardsubtitle, block_dimensions{{/str}}',
-            ghostcardtitle: '{{#str}}ghostcardtitle, block_dimensions{{/str}}'
+            ghostcardtitle: '{{#str}}ghostcardtitle, block_dimensions{{/str}}',
+            togglefilters: '{{#str}}togglefilters, block_dimensions{{/str}}'
         }
     });
 });

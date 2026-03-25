@@ -90,5 +90,6 @@ $string['show_heading_desc'] = 'When enabled, the heading "My Competencies" is d
 $string['ghostcardsubtitle'] = 'Explore beyond favourites.';
 $string['showallitems'] = 'Show all';
 $string['ghostcardtitle'] = 'View more items';
+$string['togglefilters'] = 'Filters';
 $string['viewmore'] = 'View more...';
 $string['viewotherplans'] = 'View other plans...';

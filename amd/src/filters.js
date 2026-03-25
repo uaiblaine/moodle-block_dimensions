@@ -188,7 +188,11 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
         });
 
         html.push('</div>');
-        host.innerHTML = hasAnyFilter ? html.join('') : '';
+        if (hasAnyFilter) {
+            host.innerHTML = '<div class="dims-filters-panel-inner">' + html.join('') + '</div>';
+        } else {
+            host.innerHTML = '';
+        }
     }
 
     function syncFilterActiveState(container, state) {
@@ -781,6 +785,24 @@ define(['core/ajax', 'core/templates'], function(Ajax, Templates) {
         if (retryButton) {
             retryButton.addEventListener('click', () => {
                 loadData(container, state, options);
+            });
+        }
+
+        // Filter toggle button (mobile only — desktop keeps filters always visible via CSS).
+        const toggleBtn = container.querySelector('.dims-filter-toggle-btn');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                const isOpen = container.classList.toggle('dims-filters-open');
+                toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            });
+
+            // On resize to desktop width: collapse the panel and reset button state.
+            const mq = globalThis.matchMedia('(max-width: 575.98px)');
+            mq.addEventListener('change', function(e) {
+                if (!e.matches) {
+                    container.classList.remove('dims-filters-open');
+                    toggleBtn.setAttribute('aria-expanded', 'false');
+                }
             });
         }
     }

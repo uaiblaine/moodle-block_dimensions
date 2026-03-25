@@ -91,5 +91,6 @@ $string['show_heading_desc'] = 'Quando habilitado, o título "Minhas Competênci
 $string['ghostcardsubtitle'] = 'Explore além dos favoritos.';
 $string['showallitems'] = 'Mostrar tudo';
 $string['ghostcardtitle'] = 'Ver mais itens';
+$string['togglefilters'] = 'Filtros';
 $string['viewmore'] = 'Ver mais...';
 $string['viewotherplans'] = 'Ver outros planos...';
