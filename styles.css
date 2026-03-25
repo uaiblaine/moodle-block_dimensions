@@ -122,10 +122,10 @@
         -webkit-backdrop-filter: blur(8px);
         padding-bottom: 1rem;
         margin-bottom: 10px;
-        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
         border-radius: 10px;
         padding-left: 10px;
         padding-right: 10px;
+        padding-top: 10px;
     }
 
     .block_dimensions .dims-search-row {
@@ -364,6 +364,36 @@ body.dark .block_dimensions .competency-card:focus-within {
     .block_dimensions .competency-card-gradient {
         background: #ccc !important;
     }
+}
+
+/* ============================================
+   CARD GRID — Layout adaptativo ao container
+   Substitui colunas Bootstrap (col-sm-6 col-lg-4) que respondem
+   ao viewport. CSS Grid responde à largura real do container.
+   clamp(240px, 30%, 400px): mínimo cresce ~1/3 do container,
+   limitando naturalmente a 3 colunas em containers típicos do Moodle.
+   ============================================ */
+
+/* Override Bootstrap .row: CSS Grid em vez de flex */
+.block_dimensions [data-cards-type] {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(clamp(240px, 30%, 500px), 1fr));
+    gap: 1rem;
+    /* Remove margens negativas do Bootstrap .row */
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* Override col-* Bootstrap nos itens: container para @container queries */
+.block_dimensions [data-cards-type] > li {
+    container-type: inline-size;
+    container-name: dims-card-cell;
+    width: 100%;
+    max-width: 100%;
+    flex: none;
+    padding-left: 0;
+    padding-right: 0;
+    margin-bottom: 0; /* gap do grid substitui mb-3 */
 }
 
 /* ============================================
@@ -707,6 +737,25 @@ body.dark .block_dimensions .competency-card:focus-within {
 
 /* Responsive — horizontal card stacks on mobile */
 @media (max-width: 575.98px) {
+    .block_dimensions .plan-card-horizontal,
+    .block_dimensions .plan-card-horizontal .plan-card-link {
+        flex-direction: column;
+    }
+
+    .block_dimensions .plan-card-image-wrapper-horizontal {
+        flex: none;
+        width: 100%;
+    }
+
+    .block_dimensions .plan-card-image-horizontal {
+        height: 160px;
+        min-height: auto;
+    }
+}
+
+/* Container query: card horizontal empilha quando a célula é estreita.
+   Complementa o @media acima para containers Moodle narrow (viewport largo, bloco estreito) */
+@container dims-card-cell (max-width: 360px) {
     .block_dimensions .plan-card-horizontal,
     .block_dimensions .plan-card-horizontal .plan-card-link {
         flex-direction: column;
@@ -1254,8 +1303,7 @@ body.dark .block_dimensions .dims-filter-select:hover {
 /* Favourite star icons */
 .block_dimensions .dims-fav-icon-filled {
     font-size: 1rem;
-    color: #f5c518;
-    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
+    color: #ffb100;
 }
 
 .block_dimensions .dims-fav-icon-empty {
@@ -1264,7 +1312,7 @@ body.dark .block_dimensions .dims-filter-select:hover {
 }
 
 .block_dimensions .dims-fav-btn:hover .dims-fav-icon-empty {
-    color: #f5c518;
+    color: #ffb100;
 }
 
 /* Dark mode */
@@ -1286,7 +1334,7 @@ body.dark .block_dimensions .dims-fav-icon-empty {
 
 .theme-dark .block_dimensions .dims-fav-btn:hover .dims-fav-icon-empty,
 body.dark .block_dimensions .dims-fav-btn:hover .dims-fav-icon-empty {
-    color: #f5c518;
+    color: #ffb100;
 }
 
 /* High contrast */
