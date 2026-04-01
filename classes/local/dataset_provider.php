@@ -244,7 +244,12 @@ class dataset_provider {
         }
 
         $card = $this->build_plan_card($plan, $templateid, $planid, $templatemetadata);
-        $card['isfavourite'] = isset($planfavids[$planid]);
+        $isfavourite = isset($planfavids[$planid]);
+        $card['isfavourite'] = $isfavourite;
+        $card['favouritearialabel'] = $isfavourite
+            ? get_string('removefromfavourites', 'block_dimensions')
+            : get_string('addtofavourites', 'block_dimensions');
+        $card['favouritetitle'] = $card['favouritearialabel'];
 
         return $card;
     }
@@ -442,7 +447,12 @@ class dataset_provider {
 
         $metadata = $bulkmetadata[$competencyid] ?? null;
         $card = $this->build_competency_card($planid, $competencyid, $competency, $metadata);
-        $card['isfavourite'] = isset($compfavids[$competencyid]);
+        $isfavourite = isset($compfavids[$competencyid]);
+        $card['isfavourite'] = $isfavourite;
+        $card['favouritearialabel'] = $isfavourite
+            ? get_string('removefromfavourites', 'block_dimensions')
+            : get_string('addtofavourites', 'block_dimensions');
+        $card['favouritetitle'] = $card['favouritearialabel'];
 
         return ['counted' => true, 'card' => $card];
     }
@@ -526,6 +536,12 @@ class dataset_provider {
             'tag1' => $templateid ? ($templatemetadata['tag1'] ?? null) : null,
             'tag2' => $templateid ? ($templatemetadata['tag2'] ?? null) : null,
         ];
+        $normtags = [];
+        foreach ($tags as $value) {
+            if (!empty($value)) {
+                $normtags[] = ['value' => $value];
+            }
+        }
 
         $trailpayload = $this->build_plan_trail_payload($planid, $templateid, $imageurl);
         $imageurl = $trailpayload['imageurl'];
@@ -563,6 +579,8 @@ class dataset_provider {
             'hastag1' => !empty($tags['tag1']),
             'tag2' => $tags['tag2'],
             'hastag2' => !empty($tags['tag2']),
+            'tags' => $normtags,
+            'hastags' => !empty($normtags),
             'showcardtitle' => true,
             'buttonlabel' => $buttonlabel,
             'buttonarialabel' => $buttonarialabel,
@@ -729,6 +747,12 @@ class dataset_provider {
         $tag2 = $metadata['tag2'] ?? null;
         $bgcolor = $metadata['bgcolor'] ?? null;
         $textcolor = $metadata['textcolor'] ?? null;
+        $tags = [];
+        foreach ([$tag1, $tag2] as $value) {
+            if (!empty($value)) {
+                $tags[] = ['value' => $value];
+            }
+        }
 
         $compname = format_string($competency->get('shortname'));
 
@@ -742,6 +766,8 @@ class dataset_provider {
             'hastag1' => !empty($tag1),
             'tag2' => $tag2,
             'hastag2' => !empty($tag2),
+            'tags' => $tags,
+            'hastags' => !empty($tags),
             'bgcolor' => $bgcolor,
             'hasbgcolor' => !empty($bgcolor),
             'textcolor' => $textcolor,

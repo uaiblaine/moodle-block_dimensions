@@ -59,22 +59,13 @@
                  style="{{#hasbgcolor}}background: var(--dimension-custombgcolor);{{/hasbgcolor}}">
             </div>
             {{/hasimage}}
-            {{#hastag1}}{{#hastag2}}
+            {{#hastags}}
             <div class="dimension-tags" aria-hidden="true">
-                <span class="dimension-tag cm-tag">{{tag1}}</span>
-                <span class="dimension-tag cm-tag">{{tag2}}</span>
+                {{#tags}}
+                <span class="dimension-tag cm-tag">{{value}}</span>
+                {{/tags}}
             </div>
-            {{/hastag2}}{{/hastag1}}
-            {{#hastag1}}{{^hastag2}}
-            <div class="dimension-tags" aria-hidden="true">
-                <span class="dimension-tag cm-tag">{{tag1}}</span>
-            </div>
-            {{/hastag2}}{{/hastag1}}
-            {{^hastag1}}{{#hastag2}}
-            <div class="dimension-tags" aria-hidden="true">
-                <span class="dimension-tag cm-tag">{{tag2}}</span>
-            </div>
-            {{/hastag2}}{{/hastag1}}
+            {{/hastags}}
             <span class="dims-card-access-btn" aria-hidden="true">
                 {{buttonlabel}} <i class="fa fa-arrow-right" aria-hidden="true"></i>
             </span>
@@ -82,8 +73,8 @@
                     class="dims-fav-btn"
                     data-fav-type="competency"
                     data-fav-id="{{id}}"
-                    aria-label="{{#isfavourite}}{{#str}}removefromfavourites, block_dimensions{{/str}}{{/isfavourite}}{{^isfavourite}}{{#str}}addtofavourites, block_dimensions{{/str}}{{/isfavourite}}"
-                    title="{{#isfavourite}}{{#str}}removefromfavourites, block_dimensions{{/str}}{{/isfavourite}}{{^isfavourite}}{{#str}}addtofavourites, block_dimensions{{/str}}{{/isfavourite}}">
+                    aria-label="{{favouritearialabel}}"
+                    title="{{favouritetitle}}">
                 {{#isfavourite}}
                 <i class="fa fa-star dims-fav-icon-filled" aria-hidden="true"></i>
                 {{/isfavourite}}

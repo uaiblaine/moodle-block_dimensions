@@ -247,6 +247,20 @@ class summary implements renderable, templatable {
         $uiconfig = dataset_provider::get_ui_config();
 
         $containerid = 'block-dimensions-' . uniqid();
+        $labels = [
+            'filterall' => get_string('filterall', 'block_dimensions'),
+            'noactiveplans' => get_string('noactiveplans', 'block_dimensions'),
+            'nocompetencies' => get_string('nocompetencies', 'block_dimensions'),
+            'loaderror' => get_string('loaderror', 'block_dimensions'),
+            'myfavourites' => get_string('myfavourites', 'block_dimensions'),
+            'addtofavourites' => get_string('addtofavourites', 'block_dimensions'),
+            'removefromfavourites' => get_string('removefromfavourites', 'block_dimensions'),
+            'showallitems' => get_string('showallitems', 'block_dimensions'),
+            'ghostcardsubtitle' => get_string('ghostcardsubtitle', 'block_dimensions'),
+            'ghostcardtitle' => get_string('ghostcardtitle', 'block_dimensions'),
+            'togglefilters' => get_string('togglefilters', 'block_dimensions'),
+            'clearfilters' => get_string('clearfilters', 'block_dimensions'),
+        ];
 
         return [
             'containerid' => $containerid,
@@ -255,6 +269,7 @@ class summary implements renderable, templatable {
             'showsectionheaders' => $uiconfig['showsectionheaders'],
             'endpointmethod' => 'block_dimensions_get_block_dataset',
             'filtersettingsjson' => json_encode($uiconfig['filtersettings']),
+            'labelsjson' => json_encode($labels),
             'favouritesenabled' => $uiconfig['favouritesenabled'] ? 'true' : 'false',
         ];
     }

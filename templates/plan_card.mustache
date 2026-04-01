@@ -60,22 +60,13 @@
                  aria-hidden="true"
                  style="{{#hasbgcolor}}background: var(--dimension-custombgcolor);{{/hasbgcolor}}"></div>
             {{/hasimage}}
-            {{#hastag1}}{{#hastag2}}
+            {{#hastags}}
             <div class="dimension-tags" aria-hidden="true">
-                <span class="dimension-tag plan-tag">{{tag1}}</span>
-                <span class="dimension-tag plan-tag">{{tag2}}</span>
+                {{#tags}}
+                <span class="dimension-tag plan-tag">{{value}}</span>
+                {{/tags}}
             </div>
-            {{/hastag2}}{{/hastag1}}
-            {{#hastag1}}{{^hastag2}}
-            <div class="dimension-tags" aria-hidden="true">
-                <span class="dimension-tag plan-tag">{{tag1}}</span>
-            </div>
-            {{/hastag2}}{{/hastag1}}
-            {{^hastag1}}{{#hastag2}}
-            <div class="dimension-tags" aria-hidden="true">
-                <span class="dimension-tag plan-tag">{{tag2}}</span>
-            </div>
-            {{/hastag2}}{{/hastag1}}
+            {{/hastags}}
             <span class="dims-card-access-btn" aria-hidden="true">
                 {{buttonlabel}} <i class="fa fa-arrow-right" aria-hidden="true"></i>
             </span>
@@ -83,8 +74,8 @@
                     class="dims-fav-btn"
                     data-fav-type="plan"
                     data-fav-id="{{id}}"
-                    aria-label="{{#isfavourite}}{{#str}}removefromfavourites, block_dimensions{{/str}}{{/isfavourite}}{{^isfavourite}}{{#str}}addtofavourites, block_dimensions{{/str}}{{/isfavourite}}"
-                    title="{{#isfavourite}}{{#str}}removefromfavourites, block_dimensions{{/str}}{{/isfavourite}}{{^isfavourite}}{{#str}}addtofavourites, block_dimensions{{/str}}{{/isfavourite}}">
+                    aria-label="{{favouritearialabel}}"
+                    title="{{favouritetitle}}">
                 {{#isfavourite}}
                 <i class="fa fa-star dims-fav-icon-filled" aria-hidden="true"></i>
                 {{/isfavourite}}
@@ -123,8 +114,8 @@
 {{/isvertical}}
 {{#ishorizontal}}
 <article class="card plan-card plan-card-horizontal h-100" aria-labelledby="plan-title-{{id}}" style="{{#hasbgcolor}}--dimension-custombgcolor: {{bgcolor}};{{/hasbgcolor}}{{#hastextcolor}}--dimension-customtextcolor: {{textcolor}};{{/hastextcolor}}">
-    <a href="{{url}}"
-    class="plan-card-link text-decoration-none d-flex h-100"
+        <a href="{{url}}"
+             class="plan-card-link text-decoration-none d-flex h-100"
        aria-describedby="plan-title-{{id}}">
         <div class="plan-card-image-wrapper plan-card-image-wrapper-horizontal">
             {{#hasimage}}
@@ -142,28 +133,19 @@
             <span class="dims-card-access-btn dims-card-access-btn-horizontal" aria-hidden="true">
                 {{buttonlabel}} <i class="fa fa-arrow-right" aria-hidden="true"></i>
             </span>
-            {{#hastag1}}{{#hastag2}}
+            {{#hastags}}
             <div class="dimension-tags" aria-hidden="true">
-                <span class="dimension-tag plan-tag">{{tag1}}</span>
-                <span class="dimension-tag plan-tag">{{tag2}}</span>
+                {{#tags}}
+                <span class="dimension-tag plan-tag">{{value}}</span>
+                {{/tags}}
             </div>
-            {{/hastag2}}{{/hastag1}}
-            {{#hastag1}}{{^hastag2}}
-            <div class="dimension-tags" aria-hidden="true">
-                <span class="dimension-tag plan-tag">{{tag1}}</span>
-            </div>
-            {{/hastag2}}{{/hastag1}}
-            {{^hastag1}}{{#hastag2}}
-            <div class="dimension-tags" aria-hidden="true">
-                <span class="dimension-tag plan-tag">{{tag2}}</span>
-            </div>
-            {{/hastag2}}{{/hastag1}}
+            {{/hastags}}
             <button type="button"
                     class="dims-fav-btn"
                     data-fav-type="plan"
                     data-fav-id="{{id}}"
-                    aria-label="{{#isfavourite}}{{#str}}removefromfavourites, block_dimensions{{/str}}{{/isfavourite}}{{^isfavourite}}{{#str}}addtofavourites, block_dimensions{{/str}}{{/isfavourite}}"
-                    title="{{#isfavourite}}{{#str}}removefromfavourites, block_dimensions{{/str}}{{/isfavourite}}{{^isfavourite}}{{#str}}addtofavourites, block_dimensions{{/str}}{{/isfavourite}}">
+                    aria-label="{{favouritearialabel}}"
+                    title="{{favouritetitle}}">
                 {{#isfavourite}}
                 <i class="fa fa-star dims-fav-icon-filled" aria-hidden="true"></i>
                 {{/isfavourite}}
