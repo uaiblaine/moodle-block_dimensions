@@ -15,21 +15,28 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
+    @template block_dimensions/filters
+
     Filter bar template for block_dimensions.
 
     Renders filter controls (tabs or dropdown) for tag1/tag2 custom fields.
     Used for both competency and plan filters.
 
-    Context variables required for this template:
-    * filters - Array of filter configurations, each with:
-      * field - Filter field identifier (e.g. competency_tag1)
-      * tag - Tag name (tag1 or tag2)
-      * type - Type (competency or plan)
-      * label - Display label
-      * istabs - Boolean: render as pill-style tabs
-      * isdropdown - Boolean: render as dropdown select
-      * alllabel - Label for the "All" option
-      * options - Array of { value, label }
+    Example context (json):
+    {
+        "filters": [
+            {
+                "field": "competency_tag1",
+                "label": "Year",
+                "alllabel": "All",
+                "istabs": true,
+                "isdropdown": false,
+                "options": [
+                    {"value": "2026", "label": "2026"}
+                ]
+            }
+        ]
+    }
 }}
 <div class="dims-filters-bar" role="toolbar" aria-label="{{#str}}filterall, block_dimensions{{/str}}">
     {{#filters}}

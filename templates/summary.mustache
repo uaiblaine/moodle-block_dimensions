@@ -15,10 +15,23 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
+    @template block_dimensions/summary
+
     Summary template for block_dimensions (hybrid lazy-load mode).
 
     Initial HTML is intentionally minimal. The complete dataset is fetched
     client-side through one non-paginated endpoint and rendered incrementally.
+
+    Example context (json):
+    {
+        "containerid": "block_dimensions_1",
+        "showheading": true,
+        "showsearch": true,
+        "showsectionheaders": true,
+        "endpointmethod": "block_dimensions_get_block_dataset",
+        "filtersettingsjson": "{}",
+        "favouritesenabled": true
+    }
 }}
 <div id="{{containerid}}" class="block-dimensions-content" role="region" aria-label="{{#str}}mycompetencies, block_dimensions{{/str}}">
     <div class="dims-block-header">

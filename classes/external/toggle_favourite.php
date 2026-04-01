@@ -76,6 +76,10 @@ class toggle_favourite extends external_api {
             throw new \invalid_parameter_exception('Invalid itemtype: ' . $itemtype);
         }
 
+        if ($itemid <= 0) {
+            throw new \invalid_parameter_exception('Invalid itemid: must be greater than zero.');
+        }
+
         // Check admin setting.
         if (!get_config('block_dimensions', 'enable_favourites')) {
             throw new \moodle_exception('favouritesdisabled', 'block_dimensions');

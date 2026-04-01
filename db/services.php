@@ -28,17 +28,17 @@ $functions = [
     'block_dimensions_get_block_dataset' => [
         'classname' => 'block_dimensions\\external\\get_block_dataset',
         'methodname' => 'execute',
+        'classpath' => 'blocks/dimensions/classes/external/get_block_dataset.php',
         'description' => 'Returns the complete non-paginated dataset for block_dimensions cards and filters.',
         'type' => 'read',
         'ajax' => true,
-        'capabilities' => '',
     ],
     'block_dimensions_toggle_favourite' => [
         'classname' => 'block_dimensions\\external\\toggle_favourite',
         'methodname' => 'execute',
+        'classpath' => 'blocks/dimensions/classes/external/toggle_favourite.php',
         'description' => 'Toggles a plan or competency as a favourite for the current user.',
         'type' => 'write',
         'ajax' => true,
-        'capabilities' => '',
     ],
 ];

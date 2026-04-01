@@ -94,28 +94,14 @@ class dataset_provider {
     public function get_dataset(bool $favouritesonly = false): array {
         global $USER;
 
-        $activeplans = [];
-        foreach ($this->plans as $plan) {
-            if ($plan->get('status') == plan::STATUS_ACTIVE) {
-                $activeplans[] = $plan;
-            }
-        }
+        $activeplans = $this->get_active_plans();
 
         // Pre-load favourite IDs if the feature is enabled.
         $favouritesenabled = self::is_favourites_enabled();
         $planfavids = [];
         $compfavids = [];
         if ($favouritesenabled) {
-            $usercontext = \context_user::instance($USER->id);
-            $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
-            $planfavs = $ufservice->find_favourites_by_type('block_dimensions', 'plan');
-            foreach ($planfavs as $fav) {
-                $planfavids[$fav->itemid] = true;
-            }
-            $compfavs = $ufservice->find_favourites_by_type('block_dimensions', 'competency');
-            foreach ($compfavs as $fav) {
-                $compfavids[$fav->itemid] = true;
-            }
+            [$planfavids, $compfavids] = $this->preload_favourite_ids((int) $USER->id);
         }
 
         $competencycards = [];
@@ -128,80 +114,35 @@ class dataset_provider {
             $planid = $plan->get('id');
             $templateid = $plan->get('templateid');
 
-            // Fetch template metadata once — used for displaymode decision and plan card building.
-            $templatemetadata = [];
-            if ($templateid) {
-                $templatemetadata = template_metadata_cache::get_template_metadata($templateid);
-                $displaymode = $templatemetadata['displaymode'] ?? constants::DISPLAYMODE_COMPETENCIES;
-            } else {
-                $displaymode = constants::DISPLAYMODE_PLAN;
-            }
+            [$templatemetadata, $displaymode] = $this->resolve_plan_display_context($templateid);
 
             if ($displaymode == constants::DISPLAYMODE_PLAN) {
                 $totalplans++;
 
-                // In favourites-only mode, skip non-favourite plans.
-                if ($favouritesonly && !isset($planfavids[$planid])) {
-                    continue;
+                $card = $this->build_plan_dataset_card(
+                    $plan,
+                    $templateid,
+                    $planid,
+                    $templatemetadata,
+                    $favouritesonly,
+                    $planfavids
+                );
+                if (!empty($card)) {
+                    $plancards[] = $card;
                 }
-
-                $card = $this->build_plan_card($plan, $templateid, $planid, $templatemetadata);
-                $card['isfavourite'] = isset($planfavids[$planid]);
-                $plancards[] = $card;
                 continue;
             }
 
-            try {
-                $competencies = api::list_plan_competencies($plan);
-            } catch (\Exception $e) {
-                continue;
-            }
+            $result = $this->process_plan_competencies(
+                $planid,
+                $plan,
+                $favouritesonly,
+                $compfavids,
+                $seencompetencies
+            );
 
-            $allcompids = array_map(fn($c) => $c->competency->get('id'), $competencies);
-            $competencieswithcourses = $this->get_competencies_with_courses($allcompids);
-
-            // Count eligible competencies and collect IDs to process.
-            $eligibleids = [];
-            foreach ($competencies as $compdata) {
-                $cid = $compdata->competency->get('id');
-                if (!isset($seencompetencies[$cid]) && isset($competencieswithcourses[$cid])) {
-                    $eligibleids[] = $cid;
-                }
-            }
-
-            // In favourites-only mode, determine which eligible IDs to fully process.
-            $idstoprocess = $eligibleids;
-            if ($favouritesonly) {
-                $idstoprocess = array_filter($eligibleids, fn($id) => isset($compfavids[$id]));
-            }
-
-            // Only pre-fetch metadata for IDs we will fully process.
-            $bulkmetadata = !empty($idstoprocess) ? competency_metadata_cache::get_many($idstoprocess) : [];
-
-            foreach ($competencies as $compdata) {
-                $competency = $compdata->competency;
-                $competencyid = $competency->get('id');
-
-                if (isset($seencompetencies[$competencyid])) {
-                    continue;
-                }
-
-                if (!isset($competencieswithcourses[$competencyid])) {
-                    $seencompetencies[$competencyid] = true;
-                    continue;
-                }
-
-                $seencompetencies[$competencyid] = true;
-                $totalcompetencies++;
-
-                // In favourites-only mode, skip non-favourite competencies.
-                if ($favouritesonly && !isset($compfavids[$competencyid])) {
-                    continue;
-                }
-
-                $metadata = $bulkmetadata[$competencyid] ?? null;
-                $card = $this->build_competency_card($planid, $competencyid, $competency, $metadata);
-                $card['isfavourite'] = isset($compfavids[$competencyid]);
+            $totalcompetencies += $result['counted'];
+            foreach ($result['cards'] as $card) {
                 $competencycards[] = $card;
             }
         }
@@ -217,6 +158,293 @@ class dataset_provider {
             'hasnonfavouriteplans' => ($favouritesonly && count($plancards) < $totalplans),
             'hasnonfavouritecompetencies' => ($favouritesonly && count($competencycards) < $totalcompetencies),
         ];
+    }
+
+    /**
+     * Get only active plans from the current plan list.
+     *
+     * @return array<int, \core_competency\plan>
+     */
+    protected function get_active_plans(): array {
+        $activeplans = [];
+        foreach ($this->plans as $plan) {
+            if ($plan->get('status') == plan::STATUS_ACTIVE) {
+                $activeplans[] = $plan;
+            }
+        }
+
+        return $activeplans;
+    }
+
+    /**
+     * Pre-load user favourite IDs for plans and competencies.
+     *
+     * @param int $userid User id.
+     * @return array{0: array<int, bool>, 1: array<int, bool>}
+     */
+    protected function preload_favourite_ids(int $userid): array {
+        $planfavids = [];
+        $compfavids = [];
+
+        $usercontext = \context_user::instance($userid);
+        $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
+
+        $planfavs = $ufservice->find_favourites_by_type('block_dimensions', 'plan');
+        foreach ($planfavs as $fav) {
+            $planfavids[$fav->itemid] = true;
+        }
+
+        $compfavs = $ufservice->find_favourites_by_type('block_dimensions', 'competency');
+        foreach ($compfavs as $fav) {
+            $compfavids[$fav->itemid] = true;
+        }
+
+        return [$planfavids, $compfavids];
+    }
+
+    /**
+     * Resolve template metadata and resulting display mode for a plan.
+     *
+     * @param int|null $templateid Template id.
+     * @return array{0: array<string, mixed>, 1: mixed}
+     */
+    protected function resolve_plan_display_context(?int $templateid): array {
+        if (!$templateid) {
+            return [[], constants::DISPLAYMODE_PLAN];
+        }
+
+        $templatemetadata = template_metadata_cache::get_template_metadata($templateid);
+        $displaymode = $templatemetadata['displaymode'] ?? constants::DISPLAYMODE_COMPETENCIES;
+
+        return [$templatemetadata, $displaymode];
+    }
+
+    /**
+     * Build plan card payload for dataset considering favourites-only mode.
+     *
+     * @param \core_competency\plan $plan Plan object.
+     * @param int|null $templateid Template id.
+     * @param int $planid Plan id.
+     * @param array $templatemetadata Template metadata.
+     * @param bool $favouritesonly Whether favourites-only mode is active.
+     * @param array $planfavids Plan favourites map.
+     * @return array|null
+     */
+    protected function build_plan_dataset_card(
+        \core_competency\plan $plan,
+        ?int $templateid,
+        int $planid,
+        array $templatemetadata,
+        bool $favouritesonly,
+        array $planfavids
+    ): ?array {
+        // In favourites-only mode, skip non-favourite plans.
+        if ($favouritesonly && !isset($planfavids[$planid])) {
+            return null;
+        }
+
+        $card = $this->build_plan_card($plan, $templateid, $planid, $templatemetadata);
+        $card['isfavourite'] = isset($planfavids[$planid]);
+
+        return $card;
+    }
+
+    /**
+     * Fetch bulk competency metadata from cache.
+     *
+     * Extracted to allow overriding in tests without requiring local_dimensions.
+     *
+     * @param array $competencyids Competency ids.
+     * @return array
+     */
+    protected function fetch_bulk_competency_metadata(array $competencyids): array {
+        return competency_metadata_cache::get_many($competencyids);
+    }
+
+    /**
+     * Fetch competencies for a plan from the Moodle API.
+     *
+     * Extracted to allow overriding in tests without a real database.
+     *
+     * @param \core_competency\plan $plan Plan object.
+     * @return array Plan competencies payload.
+     * @throws \Exception If the API call fails.
+     */
+    protected function fetch_plan_competencies_api(\core_competency\plan $plan): array {
+        return api::list_plan_competencies($plan);
+    }
+
+    /**
+     * Process all competencies for a given plan and return card/count results.
+     *
+     * @param int $planid Plan id.
+     * @param \core_competency\plan $plan Plan object.
+     * @param bool $favouritesonly Whether favourites-only mode is active.
+     * @param array $compfavids Favourite competency ids map.
+     * @param array $seencompetencies Seen competency ids map (updated by reference).
+     * @return array
+     */
+    protected function process_plan_competencies(
+        int $planid,
+        \core_competency\plan $plan,
+        bool $favouritesonly,
+        array $compfavids,
+        array &$seencompetencies
+    ): array {
+        try {
+            $competencies = $this->fetch_plan_competencies_api($plan);
+        } catch (\Exception $e) {
+            return ['counted' => 0, 'cards' => []];
+        }
+
+        $allcompids = array_map(fn($c) => $c->competency->get('id'), $competencies);
+        $competencieswithcourses = $this->get_competencies_with_courses($allcompids);
+
+        $eligibleids = $this->get_eligible_competency_ids($competencies, $seencompetencies, $competencieswithcourses);
+        $idstoprocess = $this->get_ids_to_process($eligibleids, $favouritesonly, $compfavids);
+        $bulkmetadata = !empty($idstoprocess) ? $this->fetch_bulk_competency_metadata($idstoprocess) : [];
+
+        $counted = 0;
+        $cards = [];
+
+        foreach ($competencies as $compdata) {
+            $processed = $this->process_competency_dataset_item(
+                $planid,
+                $compdata->competency,
+                $favouritesonly,
+                $compfavids,
+                $competencieswithcourses,
+                $bulkmetadata,
+                $seencompetencies
+            );
+
+            if ($processed['counted']) {
+                $counted++;
+            }
+
+            if (!empty($processed['card'])) {
+                $cards[] = $processed['card'];
+            }
+        }
+
+        return ['counted' => $counted, 'cards' => $cards];
+    }
+
+    /**
+     * Get competency IDs eligible for card processing.
+     *
+     * @param array $competencies Plan competencies payload.
+     * @param array $seencompetencies Competency ids already seen.
+     * @param array $competencieswithcourses Competencies linked to visible courses.
+     * @return array
+     */
+    protected function get_eligible_competency_ids(
+        array $competencies,
+        array $seencompetencies,
+        array $competencieswithcourses
+    ): array {
+        $eligibleids = [];
+        foreach ($competencies as $compdata) {
+            $cid = (int) $compdata->competency->get('id');
+            if (!isset($seencompetencies[$cid]) && isset($competencieswithcourses[$cid])) {
+                $eligibleids[] = $cid;
+            }
+        }
+
+        return $eligibleids;
+    }
+
+    /**
+     * Get competency IDs that must be fully processed.
+     *
+     * @param array $eligibleids Eligible competency ids.
+     * @param bool $favouritesonly Whether favourites-only mode is active.
+     * @param array $compfavids Favourite competency ids map.
+     * @return array
+     */
+    protected function get_ids_to_process(array $eligibleids, bool $favouritesonly, array $compfavids): array {
+        if (!$favouritesonly) {
+            return $eligibleids;
+        }
+
+        return array_values(array_filter($eligibleids, fn($id) => isset($compfavids[$id])));
+    }
+
+    /**
+     * Decide whether a competency should be skipped for visibility reasons.
+     *
+     * @param int $competencyid Competency id.
+     * @param array $seencompetencies Seen competency ids (updated by reference).
+     * @param array $competencieswithcourses Competency ids linked to visible courses.
+     * @return bool
+     */
+    protected function skip_competency_for_visibility(
+        int $competencyid,
+        array &$seencompetencies,
+        array $competencieswithcourses
+    ): bool {
+        if (isset($seencompetencies[$competencyid])) {
+            return true;
+        }
+
+        if (!isset($competencieswithcourses[$competencyid])) {
+            $seencompetencies[$competencyid] = true;
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Decide whether a competency should be skipped for favourites-only view.
+     *
+     * @param bool $favouritesonly Whether favourites-only mode is active.
+     * @param int $competencyid Competency id.
+     * @param array $compfavids Favourite competency ids map.
+     * @return bool
+     */
+    protected function skip_competency_for_favourites(bool $favouritesonly, int $competencyid, array $compfavids): bool {
+        return ($favouritesonly && !isset($compfavids[$competencyid]));
+    }
+
+    /**
+     * Process one competency item for dataset output.
+     *
+     * @param int $planid Plan id.
+     * @param object $competency Competency object.
+     * @param bool $favouritesonly Whether favourites-only mode is active.
+     * @param array $compfavids Favourite competency ids map.
+     * @param array $competencieswithcourses Competency ids linked to visible courses.
+     * @param array $bulkmetadata Cached metadata by competency id.
+     * @param array $seencompetencies Seen competency ids map (updated by reference).
+     * @return array
+     */
+    protected function process_competency_dataset_item(
+        int $planid,
+        object $competency,
+        bool $favouritesonly,
+        array $compfavids,
+        array $competencieswithcourses,
+        array $bulkmetadata,
+        array &$seencompetencies
+    ): array {
+        $competencyid = (int) $competency->get('id');
+
+        if ($this->skip_competency_for_visibility($competencyid, $seencompetencies, $competencieswithcourses)) {
+            return ['counted' => false, 'card' => null];
+        }
+
+        $seencompetencies[$competencyid] = true;
+
+        if ($this->skip_competency_for_favourites($favouritesonly, $competencyid, $compfavids)) {
+            return ['counted' => true, 'card' => null];
+        }
+
+        $metadata = $bulkmetadata[$competencyid] ?? null;
+        $card = $this->build_competency_card($planid, $competencyid, $competency, $metadata);
+        $card['isfavourite'] = isset($compfavids[$competencyid]);
+
+        return ['counted' => true, 'card' => $card];
     }
 
     /**
@@ -271,7 +499,7 @@ class dataset_provider {
      * @param \core_competency\plan $plan Plan object.
      * @param int|null $templateid Template id.
      * @param int $planid Plan id.
-     * @param array<string, mixed> $templatemetadata Pre-fetched template metadata from cache.
+     * @param array $templatemetadata Pre-fetched template metadata from cache.
      * @return array<string, mixed>
      */
     protected function build_plan_card(
@@ -299,80 +527,19 @@ class dataset_provider {
             'tag2' => $templateid ? ($templatemetadata['tag2'] ?? null) : null,
         ];
 
-        $totalcompetencies = 0;
-        $hasitemsbeforetrail = false;
-        $hasitemsaftertrail = false;
-        $competencytrail = [];
+        $trailpayload = $this->build_plan_trail_payload($planid, $templateid, $imageurl);
+        $imageurl = $trailpayload['imageurl'];
+        $totalcompetencies = $trailpayload['totalcompetencies'];
+        $hasitemsbeforetrail = $trailpayload['hasitemsbeforetrail'];
+        $hasitemsaftertrail = $trailpayload['hasitemsaftertrail'];
+        $competencytrail = $trailpayload['competencytrail'];
 
-        try {
-            $traildata = plan_trail_cache::get_trail_data($planid, $this->userid, $templateid);
-            $totalcompetencies = $traildata['total'];
-
-            if ($totalcompetencies > 0) {
-                // Image fallback: use first competency's cached image if template has none.
-                if (!$imageurl) {
-                    $firstcompid = (int)$traildata['competencies'][0]['id'];
-                    $firstmeta = competency_metadata_cache::get_competency_metadata($firstcompid);
-                    $imageurl = $firstmeta['cardimageurl'] ?? null;
-                }
-
-                $competencydata = [];
-                $lastcompletedindex = -1;
-                $index = 0;
-
-                foreach ($traildata['competencies'] as $row) {
-                    $competencyid = (int)$row['id'];
-                    $isproficient = !empty($row['proficiency']);
-
-                    if ($isproficient) {
-                        $lastcompletedindex = $index;
-                    }
-
-                    $competencydata[] = [
-                        'id' => $competencyid,
-                        'shortname' => format_string($row['shortname']),
-                        'iscompleted' => $isproficient,
-                        'index' => $index,
-                        'url' => (new moodle_url('/local/dimensions/view-plan.php', [
-                            'id' => $planid,
-                            'competencyid' => $competencyid,
-                        ]))->out(false),
-                    ];
-                    $index++;
-                }
-
-                $trailstartindex = $this->get_trail_start_index(count($competencydata), $lastcompletedindex);
-                $competencytrail = $this->select_trail_competencies($competencydata, $lastcompletedindex);
-
-                $hasitemsbeforetrail = ($trailstartindex > 0);
-                $hasitemsaftertrail = (($trailstartindex + count($competencytrail)) < count($competencydata));
-            }
-        } catch (\Exception $e) {
-            debugging('Error processing competencies for trail: ' . $e->getMessage(), DEBUG_DEVELOPER);
-        }
-
-        $haspartialtrail = false;
-        if (!empty($competencytrail)) {
-            $completedcount = 0;
-            foreach ($competencytrail as $item) {
-                if (!empty($item['iscompleted'])) {
-                    $completedcount++;
-                }
-            }
-            $totaltrail = count($competencytrail);
-            if ($completedcount > 0 && $completedcount < $totaltrail) {
-                $haspartialtrail = true;
-            }
-        }
+        $haspartialtrail = $this->has_partial_trail($competencytrail);
 
         $planname = format_string($plan->get('name'));
-        if ($haspartialtrail) {
-            $buttonlabel = get_string('continuecard', 'block_dimensions');
-            $buttonarialabel = get_string('continuecardaria', 'block_dimensions', $planname);
-        } else {
-            $buttonlabel = get_string('accesscard', 'block_dimensions');
-            $buttonarialabel = get_string('accesscardaria', 'block_dimensions', $planname);
-        }
+        $buttondata = $this->get_plan_button_data($planname, $haspartialtrail);
+        $buttonlabel = $buttondata['buttonlabel'];
+        $buttonarialabel = $buttondata['buttonarialabel'];
 
         $layoutmode = get_config('block_dimensions', 'plancard_layout') ?: 'vertical';
 
@@ -405,12 +572,141 @@ class dataset_provider {
     }
 
     /**
+     * Build trail-related payload for a plan card.
+     *
+     * @param int $planid Plan id.
+     * @param int|null $templateid Template id.
+     * @param string|null $imageurl Current image url.
+     * @return array
+     */
+    protected function build_plan_trail_payload(int $planid, ?int $templateid, ?string $imageurl): array {
+        $payload = [
+            'imageurl' => $imageurl,
+            'totalcompetencies' => 0,
+            'hasitemsbeforetrail' => false,
+            'hasitemsaftertrail' => false,
+            'competencytrail' => [],
+        ];
+
+        try {
+            $traildata = plan_trail_cache::get_trail_data($planid, $this->userid, $templateid);
+            $payload['totalcompetencies'] = $traildata['total'];
+
+            if ($payload['totalcompetencies'] <= 0) {
+                return $payload;
+            }
+
+            // Image fallback: use first competency's cached image if template has none.
+            if (!$payload['imageurl']) {
+                $firstcompid = (int)$traildata['competencies'][0]['id'];
+                $firstmeta = competency_metadata_cache::get_competency_metadata($firstcompid);
+                $payload['imageurl'] = $firstmeta['cardimageurl'] ?? null;
+            }
+
+            [$competencydata, $lastcompletedindex] = $this->build_trail_competency_data(
+                $planid,
+                $traildata['competencies']
+            );
+
+            $trailstartindex = $this->get_trail_start_index(count($competencydata), $lastcompletedindex);
+            $trail = $this->select_trail_competencies($competencydata, $lastcompletedindex);
+
+            $payload['competencytrail'] = $trail;
+            $payload['hasitemsbeforetrail'] = ($trailstartindex > 0);
+            $payload['hasitemsaftertrail'] = (($trailstartindex + count($trail)) < count($competencydata));
+        } catch (\Exception $e) {
+            debugging('Error processing competencies for trail: ' . $e->getMessage(), DEBUG_DEVELOPER);
+        }
+
+        return $payload;
+    }
+
+    /**
+     * Build normalized trail competency data and last completed index.
+     *
+     * @param int $planid Plan id.
+     * @param array $trailcompetencies Raw trail competency rows.
+     * @return array
+     */
+    protected function build_trail_competency_data(int $planid, array $trailcompetencies): array {
+        $competencydata = [];
+        $lastcompletedindex = -1;
+        $index = 0;
+
+        foreach ($trailcompetencies as $row) {
+            $competencyid = (int)$row['id'];
+            $isproficient = !empty($row['proficiency']);
+
+            if ($isproficient) {
+                $lastcompletedindex = $index;
+            }
+
+            $competencydata[] = [
+                'id' => $competencyid,
+                'shortname' => format_string($row['shortname']),
+                'iscompleted' => $isproficient,
+                'index' => $index,
+                'url' => (new moodle_url('/local/dimensions/view-plan.php', [
+                    'id' => $planid,
+                    'competencyid' => $competencyid,
+                ]))->out(false),
+            ];
+            $index++;
+        }
+
+        return [$competencydata, $lastcompletedindex];
+    }
+
+    /**
+     * Whether a trail has both completed and pending items.
+     *
+     * @param array $competencytrail Trail items.
+     * @return bool
+     */
+    protected function has_partial_trail(array $competencytrail): bool {
+        if (empty($competencytrail)) {
+            return false;
+        }
+
+        $completedcount = 0;
+        foreach ($competencytrail as $item) {
+            if (!empty($item['iscompleted'])) {
+                $completedcount++;
+            }
+        }
+
+        $totaltrail = count($competencytrail);
+        return ($completedcount > 0 && $completedcount < $totaltrail);
+    }
+
+    /**
+     * Get button labels for plan card according to trail state.
+     *
+     * @param string $planname Formatted plan name.
+     * @param bool $haspartialtrail Whether trail is partially completed.
+     * @return array
+     */
+    protected function get_plan_button_data(string $planname, bool $haspartialtrail): array {
+        if ($haspartialtrail) {
+            return [
+                'buttonlabel' => get_string('continuecard', 'block_dimensions'),
+                'buttonarialabel' => get_string('continuecardaria', 'block_dimensions', $planname),
+            ];
+        }
+
+        return [
+            'buttonlabel' => get_string('accesscard', 'block_dimensions'),
+            'buttonarialabel' => get_string('accesscardaria', 'block_dimensions', $planname),
+        ];
+    }
+
+    /**
      * Build a single competency card payload.
      *
      * @param int $planid Plan id.
      * @param int $competencyid Competency id.
      * @param \core_competency\competency $competency Competency object.
-     * @param array<string, mixed>|null $metadata Pre-fetched cached metadata, or null to fetch on demand.
+     * @param array|null $metadata Pre-fetched cached metadata, or null to fetch on demand.
      * @return array<string, mixed>
      */
     protected function build_competency_card(
@@ -603,7 +899,7 @@ class dataset_provider {
     /**
      * Get competency ids with at least one visible linked course.
      *
-     * @param array<int> $competencyids Competency ids.
+     * @param array $competencyids Competency ids.
      * @return array<int, mixed>
      */
     protected function get_competencies_with_courses(array $competencyids): array {
@@ -625,7 +921,7 @@ class dataset_provider {
     /**
      * Select 5 competencies centered on the last completed one.
      *
-     * @param array<int, array<string, mixed>> $competencies Competency data.
+     * @param array $competencies Competency data.
      * @param int $lastcompletedindex Last completed index.
      * @return array<int, array<string, mixed>>
      */
@@ -677,7 +973,7 @@ class dataset_provider {
     /**
      * Add position markers to trail data.
      *
-     * @param array<int, array<string, mixed>> $competencies Competencies.
+     * @param array $competencies Competencies.
      * @return array<int, array<string, mixed>>
      */
     protected function add_trail_positions(array $competencies): array {

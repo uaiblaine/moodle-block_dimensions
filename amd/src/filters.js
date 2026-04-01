@@ -24,14 +24,17 @@
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+/* eslint-disable jsdoc/require-jsdoc, jsdoc/require-param, jsdoc/check-param-names, max-len */
 
-define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav'], function(Ajax, Templates, FilterTabsNav) {
+define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'block_dimensions/state'],
+    function(Ajax, Templates, FilterTabsNav, State) {
     const BATCH_SIZE = 24;
 
-    const normalizeText = (str) => (str || '')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase();
+    const normalizeText = State.normalizeText;
+    const createState = State.createState;
+    const applyFilters = State.applyFilters;
+    const hasActiveFiltersForType = State.hasActiveFiltersForType;
+    const updateFavouriteCounts = State.updateFavouriteCounts;
 
     const escapeHtml = (value) => String(value)
         .replace(/&/g, '&amp;')
@@ -39,50 +42,6 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav'], func
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
-
-    function createState(options) {
-        return {
-            rawDataset: {
-                hasactiveplans: false,
-                hasplancards: false,
-                hascompetencies: false,
-                plancards: [],
-                competencycards: []
-            },
-            filteredDataset: {
-                plancards: [],
-                competencycards: []
-            },
-            searchTerm: '',
-            normalizedSearch: '',
-            activeFilters: {
-                plan_tag1: '',
-                plan_tag2: '',
-                competency_tag1: '',
-                competency_tag2: ''
-            },
-            favouriteFilterActive: {
-                plan: false,
-                competency: false
-            },
-            favouritesEnabled: !!options.favouritesenabled,
-            filterSettings: options.filtersettings || {},
-            renderToken: 0,
-            filtersRendered: false,
-            cardsRendered: {
-                plan: false,
-                competency: false
-            },
-            // Two-phase loading state.
-            fullDatasetLoaded: false,
-            hasnonfavouriteplans: false,
-            hasnonfavouritecompetencies: false,
-            totalplans: 0,
-            totalcompetencies: 0,
-            favouriteCountPlan: 0,
-            favouriteCountCompetency: 0
-        };
-    }
 
     function fetchDataset(methodname, args) {
         return Ajax.call([{methodname: methodname, args: args || {}}])[0];
@@ -239,52 +198,6 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav'], func
 
         // Update the animated indicator position in all tab nav instances.
         FilterTabsNav.updateAll(container);
-    }
-
-    function isCardVisible(card, state, type) {
-        // Favourite filter check.
-        if (state.favouriteFilterActive[type] && !card.isfavourite) {
-            return false;
-        }
-
-        const tag1filter = state.activeFilters[type + '_tag1'];
-        const tag2filter = state.activeFilters[type + '_tag2'];
-
-        if (tag1filter && card.tag1 !== tag1filter) {
-            return false;
-        }
-        if (tag2filter && card.tag2 !== tag2filter) {
-            return false;
-        }
-        if (state.normalizedSearch) {
-            return normalizeText(card.name || '').includes(state.normalizedSearch);
-        }
-
-        return true;
-    }
-
-    function applyFilters(state) {
-        state.filteredDataset.plancards = state.rawDataset.plancards.filter((card) => isCardVisible(card, state, 'plan'));
-        state.filteredDataset.competencycards = state.rawDataset.competencycards.filter((card) => isCardVisible(card, state, 'competency'));
-    }
-
-    /**
-     * Check whether the given type has any non-default filter active.
-     * @param {Object} state Application state.
-     * @param {string} type 'plan' or 'competency'.
-     * @return {boolean}
-     */
-    function hasActiveFiltersForType(state, type) {
-        if (state.favouriteFilterActive[type]) {
-            return true;
-        }
-        if (state.activeFilters[type + '_tag1']) {
-            return true;
-        }
-        if (state.activeFilters[type + '_tag2']) {
-            return true;
-        }
-        return false;
     }
 
     /**
@@ -599,11 +512,6 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav'], func
         }).catch(function() {
             delete btn.dataset.favPending;
         });
-    }
-
-    function updateFavouriteCounts(state) {
-        state.favouriteCountPlan = state.rawDataset.plancards.filter(c => c.isfavourite).length;
-        state.favouriteCountCompetency = state.rawDataset.competencycards.filter(c => c.isfavourite).length;
     }
 
     function rerender(container, state, options) {

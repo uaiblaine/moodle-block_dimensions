@@ -47,7 +47,10 @@ class get_block_dataset extends external_api {
     public static function execute_parameters() {
         return new external_function_parameters([
             'favouritesonly' => new external_value(
-                PARAM_BOOL, 'If true, only return favourited items', VALUE_DEFAULT, false
+                PARAM_BOOL,
+                'If true, only return favourited items',
+                VALUE_DEFAULT,
+                false
             ),
         ]);
     }
@@ -55,6 +58,7 @@ class get_block_dataset extends external_api {
     /**
      * Execute method.
      *
+     * @param bool $favouritesonly Whether only favourites should be returned.
      * @return array<string, mixed>
      */
     public static function execute(bool $favouritesonly = false) {
@@ -197,9 +201,15 @@ class get_block_dataset extends external_api {
             'filtersettings' => $filtersettings,
             'favouritesenabled' => new external_value(PARAM_BOOL, 'Whether favourites feature is enabled'),
             'totalplans' => new external_value(PARAM_INT, 'Total number of plan cards (including non-favourites)'),
-            'totalcompetencies' => new external_value(PARAM_INT, 'Total number of competency cards (including non-favourites)'),
+            'totalcompetencies' => new external_value(
+                PARAM_INT,
+                'Total number of competency cards (including non-favourites)'
+            ),
             'hasnonfavouriteplans' => new external_value(PARAM_BOOL, 'Whether there are non-favourite plans not returned'),
-            'hasnonfavouritecompetencies' => new external_value(PARAM_BOOL, 'Whether there are non-favourite competencies not returned'),
+            'hasnonfavouritecompetencies' => new external_value(
+                PARAM_BOOL,
+                'Whether there are non-favourite competencies not returned'
+            ),
         ]);
     }
 }

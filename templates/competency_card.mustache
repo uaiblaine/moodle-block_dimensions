@@ -15,6 +15,8 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
+    @template block_dimensions/competency_card
+
     Competency card template for block_dimensions.
 
     WCAG 2.2 Accessibility Features:
@@ -24,21 +26,19 @@
     - aria-hidden for purely decorative elements
     - Visible focus indicator via CSS
 
-    Context variables required for this template:
-    * id - Competency ID
-    * name - Competency name
-    * url - Link to view-plan.php
-    * imageurl - Custom card image URL (optional)
-    * hasimage - Boolean indicating if image exists
-    * tag1 - First tag label (optional)
-    * hastag1 - Boolean indicating if tag1 exists
-    * tag2 - Second tag label (optional)
-    * hastag2 - Boolean indicating if tag2 exists
-    * bgcolor - Custom background color (optional)
-    * hasbgcolor - Boolean indicating if bgcolor exists
-    * textcolor - Custom text color (optional)
-    * hastextcolor - Boolean indicating if textcolor exists
-    * isfavourite - Boolean indicating if the competency is a favourite
+    Example context (json):
+    {
+        "id": 100,
+        "name": "Competency",
+        "url": "#",
+        "hasimage": false,
+        "hastag1": true,
+        "tag1": "2026",
+        "hastag2": true,
+        "tag2": "Category",
+        "isfavourite": false,
+        "buttonlabel": "Access"
+    }
 }}
 <article class="card competency-card h-100" aria-labelledby="competency-title-{{id}}" style="{{#hasbgcolor}}--dimension-custombgcolor: {{bgcolor}};{{/hasbgcolor}}{{#hastextcolor}}--dimension-customtextcolor: {{textcolor}};{{/hastextcolor}}">
     <a href="{{url}}" 

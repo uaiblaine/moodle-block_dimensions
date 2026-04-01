@@ -15,6 +15,8 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
+    @template block_dimensions/plan_card
+
     Plan card template for block_dimensions with competency trail.
 
     WCAG 2.2 Accessibility Features:
@@ -22,28 +24,23 @@
     - aria-labelledby linking to the card title
     - Trail with clear visual indicators for completed/pending competencies
 
-    Context variables required for this template:
-    * id - Plan ID
-    * name - Plan name
-    * url - Link to view-plan.php
-    * imageurl - Custom card image URL (optional)
-    * hasimage - Boolean indicating if image exists
-    * hastrail - Boolean indicating if trail data exists
-    * trail - Array of competencies for the trail
-    * competencycounttext - Textual competency count (e.g. 9 competencies)
-    * hasitemsbeforetrail - Whether there are hidden competencies before the displayed trail
-    * hasitemsaftertrail - Whether there are hidden competencies after the displayed trail
-    * bgcolor - Custom background color (optional)
-    * hasbgcolor - Boolean indicating if bgcolor exists
-    * textcolor - Custom text color (optional)
-    * hastextcolor - Boolean indicating if textcolor exists
-    * tag1 - First tag label (optional)
-    * hastag1 - Boolean indicating if tag1 exists
-    * tag2 - Second tag label (optional)
-    * trailclickable - Boolean indicating if trail items are clickable links
-    * ishorizontal - Boolean indicating horizontal layout mode
-    * isvertical - Boolean indicating vertical layout mode
-    * isfavourite - Boolean indicating if the plan is a favourite
+    Example context (json):
+    {
+        "id": 10,
+        "name": "Learning plan",
+        "url": "#",
+        "hasimage": false,
+        "hastrail": true,
+        "competencycounttext": "3 competencies",
+        "trailclickable": false,
+        "isvertical": true,
+        "ishorizontal": false,
+        "isfavourite": false,
+        "trail": [
+            {"shortname": "Competency A", "iscompleted": true, "isfirst": true, "islast": false},
+            {"shortname": "Competency B", "iscompleted": false, "isfirst": false, "islast": true}
+        ]
+    }
 }}
 {{#isvertical}}
 <article class="card plan-card h-100" aria-labelledby="plan-title-{{id}}" style="{{#hasbgcolor}}--dimension-custombgcolor: {{bgcolor}};{{/hasbgcolor}}{{#hastextcolor}}--dimension-customtextcolor: {{textcolor}};{{/hastextcolor}}">

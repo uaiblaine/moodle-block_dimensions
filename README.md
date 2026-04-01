@@ -1,7 +1,7 @@
 moodle-block_dimensions
 =======================
 
-[![Moodle Plugin CI](https://github.com/uaiblaine/moodle-block_dimensions/actions/workflows/moodle-plugin-ci.yml/badge.svg?branch=main)](https://github.com/uaiblaine/moodle-block_dimensions/actions?query=workflow%3A%22Moodle+Plugin+CI%22+branch%3Amain)
+[![Moodle Plugin CI](https://github.com/uaiblaine/moodle-block_dimensions/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/uaiblaine/moodle-block_dimensions/actions/workflows/ci.yml?query=branch%3Amain)
 
 A Moodle block plugin that displays competency cards from users' active learning plans, providing quick access to competency progress tracking via the local_dimensions plugin.
 
@@ -74,12 +74,18 @@ This plugin does not add any additional scheduled tasks.
 How this plugin works
 ---------------------
 
-1. When a user views the block, it retrieves all active learning plans for that user
-2. For each plan, it fetches the associated competencies
-3. Competencies without linked courses are filtered out
-4. Duplicate competencies (appearing in multiple plans) are deduplicated
-5. For each competency, it attempts to load a custom card image from the local_dimensions custom field
-6. The block renders competency cards linking to the local_dimensions view-plan page
+1. When a user views the block, it retrieves all active learning plans for that user via `dataset_provider`.
+2. For each plan, `resolve_plan_display_context` determines whether it renders as a plan card (DISPLAYMODE_PLAN) or as individual competency cards (DISPLAYMODE_COMPETENCIES).
+3. Competencies without linked courses are filtered out by `get_eligible_competency_ids`.
+4. Duplicate competencies (appearing in multiple plans) are deduplicated via the `seencompetencies` map.
+5. Bulk competency metadata (images, tags, colors) is loaded from `competency_metadata_cache` in a single batch per plan.
+6. Trail data for plan cards is fetched from `plan_trail_cache` and windowed to 5 items centered on the last completed competency.
+7. The block renders cards linking to the `local_dimensions` view-plan page.
+
+**AMD modules:**
+- `block_dimensions/state` — pure state functions: `createState`, `applyFilters`, `isCardVisible`, `hasActiveFiltersForType`, `updateFavouriteCounts`, `normalizeText`.
+- `block_dimensions/filters` — main orchestrator: initialises state, handles tab navigation, search (100 ms debounce, accent-insensitive), filter buttons, and favourites toggle.
+- `block_dimensions/filter_tabs_nav` — accessible tab-navigation component for filter controls.
 
 
 Theme support
