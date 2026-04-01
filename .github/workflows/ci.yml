@@ -40,12 +40,6 @@ jobs:
         with:
           path: plugin
 
-      - name: Check out local_dimensions dependency
-        uses: actions/checkout@v4
-        with:
-          repository: uaiblaine/moodle-local_dimensions
-          path: extra-plugins/moodle-local_dimensions
-
       - name: Setup PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@v2
         with:
@@ -57,14 +51,23 @@ jobs:
 
       - name: Initialise moodle-plugin-ci
         run: |
-          composer create-project -n --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci ^4
-          echo $(cd ci/bin; pwd) >> $GITHUB_PATH
-          echo $(cd ci/vendor/bin; pwd) >> $GITHUB_PATH
+          wget -q https://github.com/moodlehq/moodle-plugin-ci/releases/download/4.5.10/moodle-plugin-ci.phar -O moodle-plugin-ci.phar
+          chmod +x moodle-plugin-ci.phar
+          mkdir -p "$HOME/.local/bin"
+          cat > "$HOME/.local/bin/moodle-plugin-ci" <<'EOF'
+          #!/bin/sh
+          php "$GITHUB_WORKSPACE/moodle-plugin-ci.phar" "$@"
+          EOF
+          chmod +x "$HOME/.local/bin/moodle-plugin-ci"
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
           sudo locale-gen en_AU.UTF-8
           echo "NVM_DIR=$HOME/.nvm" >> $GITHUB_ENV
 
+      - name: Queue local_dimensions dependency
+        run: moodle-plugin-ci add-plugin --branch main uaiblaine/moodle-local_dimensions
+
       - name: Install moodle-plugin-ci
-        run: moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1 --extra-plugins ./extra-plugins
+        run: moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1
         env:
           DB: ${{ matrix.database }}
           MOODLE_BRANCH: ${{ matrix.moodle-branch }}
