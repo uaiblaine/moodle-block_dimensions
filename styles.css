@@ -183,6 +183,7 @@ body.dark .block_dimensions .dims-block-search-clear:hover {
 .block_dimensions .competency-card {
     display: flex;
     flex-direction: column;
+    position: relative;
     border-radius: 0.5rem;
     overflow: hidden;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
@@ -404,6 +405,7 @@ body.dark .block_dimensions .competency-card:focus-within {
 .block_dimensions .plan-card {
     display: flex;
     flex-direction: column;
+    position: relative;
     border-radius: 0.5rem;
     overflow: hidden;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
@@ -1054,9 +1056,9 @@ body.dark .block_dimensions .dimension-tag {
 }
 
 .block_dimensions .dims-clear-filters-btn:hover {
-    color: #d93025;
-    border-color: #d93025;
-    background: rgba(217, 48, 37, 0.06);
+    color: #8f1d16;
+    border-color: #8f1d16;
+    background: #fdecea;
 }
 
 .block_dimensions .dims-clear-filters-btn:focus-visible {
@@ -1464,9 +1466,9 @@ body.dark .block_dimensions .dims-clear-filters-btn {
 
 .theme-dark .block_dimensions .dims-clear-filters-btn:hover,
 body.dark .block_dimensions .dims-clear-filters-btn:hover {
-    color: #ea8685;
-    border-color: #ea8685;
-    background: rgba(234, 134, 133, 0.1);
+    color: #ffd7d7;
+    border-color: #ffd7d7;
+    background: #5a1d1d;
 }
 
 /* ============================================
@@ -1605,7 +1607,7 @@ body.dark .block_dimensions .dims-section-header {
 }
 
 /* Horizontal plan card: access button is top-left, so star goes top-right */
-.block_dimensions .plan-card-image-wrapper-horizontal .dims-fav-btn {
+.block_dimensions .plan-card.plan-card-horizontal > .dims-fav-btn {
     left: auto;
     right: 8px;
 }
