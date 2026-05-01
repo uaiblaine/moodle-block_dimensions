@@ -288,7 +288,7 @@ final class dataset_provider_test extends advanced_testcase {
                 'shortname' => 'C' . $i,
                 'iscompleted' => ($i <= 4),
                 'index' => $i - 1,
-                'url' => '/local/dimensions/view-plan.php?id=99&competencyid=' . $i,
+                'url' => '/local/dimensions/view-competency.php?id=99&competencyid=' . $i,
             ];
         }
 

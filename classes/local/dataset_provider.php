@@ -664,7 +664,7 @@ class dataset_provider {
                 'shortname' => format_string($row['shortname']),
                 'iscompleted' => $isproficient,
                 'index' => $index,
-                'url' => (new moodle_url('/local/dimensions/view-plan.php', [
+                'url' => (new moodle_url('/local/dimensions/view-competency.php', [
                     'id' => $planid,
                     'competencyid' => $competencyid,
                 ]))->out(false),
@@ -733,7 +733,7 @@ class dataset_provider {
         \core_competency\competency $competency,
         ?array $metadata = null
     ): array {
-        $viewurl = new moodle_url('/local/dimensions/view-plan.php', [
+        $viewurl = new moodle_url('/local/dimensions/view-competency.php', [
             'id' => $planid,
             'competencyid' => $competencyid,
         ]);
