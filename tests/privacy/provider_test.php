@@ -33,7 +33,6 @@ use core_privacy\tests\provider_testcase;
  * @coversDefaultClass \block_dimensions\privacy\provider
  */
 final class provider_test extends provider_testcase {
-
     /**
      * Helper: create a favourite for the given user, itemtype and itemid.
      *
@@ -48,6 +47,8 @@ final class provider_test extends provider_testcase {
     }
 
     /**
+     * Test that metadata is returned correctly.
+     *
      * @covers ::get_metadata
      */
     public function test_get_metadata(): void {
@@ -58,6 +59,8 @@ final class provider_test extends provider_testcase {
     }
 
     /**
+     * Test that correct contexts are returned for a user.
+     *
      * @covers ::get_contexts_for_userid
      */
     public function test_get_contexts_for_userid(): void {
@@ -77,6 +80,8 @@ final class provider_test extends provider_testcase {
     }
 
     /**
+     * Test that users in a context are returned correctly.
+     *
      * @covers ::get_users_in_context
      */
     public function test_get_users_in_context(): void {
@@ -104,6 +109,8 @@ final class provider_test extends provider_testcase {
     }
 
     /**
+     * Test that users from other components are not included.
+     *
      * @covers ::get_users_in_context
      */
     public function test_get_users_in_context_ignores_other_components(): void {
@@ -120,6 +127,8 @@ final class provider_test extends provider_testcase {
     }
 
     /**
+     * Test that non-user contexts are ignored.
+     *
      * @covers ::get_users_in_context
      */
     public function test_get_users_in_context_ignores_non_user_contexts(): void {
@@ -133,6 +142,8 @@ final class provider_test extends provider_testcase {
     }
 
     /**
+     * Test that user data is exported correctly.
+     *
      * @covers ::export_user_data
      */
     public function test_export_user_data(): void {
@@ -160,6 +171,8 @@ final class provider_test extends provider_testcase {
     }
 
     /**
+     * Test that all user data in a context is deleted correctly.
+     *
      * @covers ::delete_data_for_all_users_in_context
      */
     public function test_delete_data_for_all_users_in_context(): void {
@@ -180,6 +193,8 @@ final class provider_test extends provider_testcase {
     }
 
     /**
+     * Test that deletion is skipped for non-user contexts.
+     *
      * @covers ::delete_data_for_all_users_in_context
      */
     public function test_delete_data_for_all_users_in_context_ignores_non_user_context(): void {
@@ -197,6 +212,8 @@ final class provider_test extends provider_testcase {
     }
 
     /**
+     * Test that user data is deleted correctly for a specific user.
+     *
      * @covers ::delete_data_for_user
      */
     public function test_delete_data_for_user(): void {
@@ -227,6 +244,8 @@ final class provider_test extends provider_testcase {
     }
 
     /**
+     * Test that data is deleted correctly for multiple users.
+     *
      * @covers ::delete_data_for_users
      */
     public function test_delete_data_for_users(): void {
