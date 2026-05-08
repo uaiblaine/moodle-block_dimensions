@@ -94,7 +94,7 @@
                 {{#trail}}
                 <div class="trail-item {{#iscompleted}}completed{{/iscompleted}} {{#isfirst}}first{{/isfirst}} {{#islast}}last{{/islast}}{{#trailclickable}} clickable{{/trailclickable}}"
                      role="listitem"
-                     {{#trailclickable}}data-href="{{url}}" title="{{shortname}}" onclick="event.preventDefault();event.stopPropagation();window.location.href=this.dataset.href;"{{/trailclickable}}>
+                     {{#trailclickable}}data-href="{{url}}" data-planid="{{planid}}" title="{{shortname}}"{{/trailclickable}}>
                     <div class="trail-marker" aria-hidden="true">
                         {{#iscompleted}}
                         <i class="fa fa-check-circle text-success"></i>
@@ -164,7 +164,7 @@
                 {{#trail}}
                 <div class="trail-item trail-item-vertical {{#iscompleted}}completed{{/iscompleted}} {{#isfirst}}first{{/isfirst}} {{#islast}}last{{/islast}}{{#trailclickable}} clickable{{/trailclickable}}"
                      role="listitem"
-                     {{#trailclickable}}data-href="{{url}}" title="{{shortname}}" onclick="event.preventDefault();event.stopPropagation();window.location.href=this.dataset.href;"{{/trailclickable}}>
+                     {{#trailclickable}}data-href="{{url}}" data-planid="{{planid}}" title="{{shortname}}"{{/trailclickable}}>
                     <div class="trail-marker" aria-hidden="true">
                         {{#iscompleted}}
                         <i class="fa fa-check-circle text-success"></i>

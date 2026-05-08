@@ -681,6 +681,37 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         }
 
         container.addEventListener('click', (e) => {
+            // Handle clickable trail item — call WS to set return context, then navigate.
+            const trailItem = e.target.closest('.trail-item.clickable[data-href]');
+            if (trailItem) {
+                e.preventDefault();
+                e.stopPropagation();
+                const href = trailItem.dataset.href;
+                const planid = parseInt(trailItem.dataset.planid, 10);
+                if (href) {
+                    if (planid) {
+                        // Fire-and-forget: call WS to store return context, then navigate.
+                        // Use a short timeout as fallback in case the call takes too long.
+                        let navigated = false;
+                        const navigate = () => {
+                            if (!navigated) {
+                                navigated = true;
+                                window.location.href = href;
+                            }
+                        };
+                        Ajax.call([{
+                            methodname: 'block_dimensions_set_return_context',
+                            args: {planid: planid, courseid: 0}
+                        }])[0].then(navigate).catch(navigate);
+                        // Fallback: navigate after 1.5s even if WS is slow.
+                        setTimeout(navigate, 1500);
+                    } else {
+                        window.location.href = href;
+                    }
+                }
+                return;
+            }
+
             // Handle "Clear filters" button click (scoped to one section).
             const clearBtn = e.target.closest('.dims-clear-filters-btn');
             if (clearBtn) {

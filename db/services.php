@@ -41,4 +41,12 @@ $functions = [
         'type' => 'write',
         'ajax' => true,
     ],
+    'block_dimensions_set_return_context' => [
+        'classname' => 'block_dimensions\\external\\set_return_context',
+        'methodname' => 'execute',
+        'classpath' => 'blocks/dimensions/classes/external/set_return_context.php',
+        'description' => 'Stores the return-to-plan context in session cache for the floating FAB button.',
+        'type' => 'write',
+        'ajax' => true,
+    ],
 ];

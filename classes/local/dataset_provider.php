@@ -661,6 +661,7 @@ class dataset_provider {
 
             $competencydata[] = [
                 'id' => $competencyid,
+                'planid' => $planid,
                 'shortname' => format_string($row['shortname']),
                 'iscompleted' => $isproficient,
                 'index' => $index,

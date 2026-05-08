@@ -121,6 +121,7 @@ class get_block_dataset extends external_api {
     public static function execute_returns() {
         $trailitem = new external_single_structure([
             'id' => new external_value(PARAM_INT, 'Competency id'),
+            'planid' => new external_value(PARAM_INT, 'Plan id'),
             'shortname' => new external_value(PARAM_TEXT, 'Competency shortname'),
             'iscompleted' => new external_value(PARAM_BOOL, 'Whether the competency is completed'),
             'index' => new external_value(PARAM_INT, 'Index in the original trail list'),
