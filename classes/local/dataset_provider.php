@@ -492,15 +492,54 @@ class dataset_provider {
                     'tag2enabled' => (bool) get_config('block_dimensions', 'enable_plan_tag2_filter'),
                     'tag1displaymode' => get_config('block_dimensions', 'plan_tag1_displaymode') ?: 'tabs',
                     'tag2displaymode' => get_config('block_dimensions', 'plan_tag2_displaymode') ?: 'tabs',
+                    'tag1label' => self::get_customfield_name(constants::CFIELD_TAG1, 'lp'),
+                    'tag2label' => self::get_customfield_name(constants::CFIELD_TAG2, 'lp'),
                 ],
                 'competency' => [
                     'tag1enabled' => (bool) get_config('block_dimensions', 'enable_competency_tag1_filter'),
                     'tag2enabled' => (bool) get_config('block_dimensions', 'enable_competency_tag2_filter'),
                     'tag1displaymode' => get_config('block_dimensions', 'competency_tag1_displaymode') ?: 'tabs',
                     'tag2displaymode' => get_config('block_dimensions', 'competency_tag2_displaymode') ?: 'tabs',
+                    'tag1label' => self::get_customfield_name(constants::CFIELD_TAG1, 'competency'),
+                    'tag2label' => self::get_customfield_name(constants::CFIELD_TAG2, 'competency'),
                 ],
             ],
         ];
+    }
+
+    /**
+     * Resolve the user-facing display name of a custom field by shortname/area.
+     *
+     * Used to give filter radiogroups and dropdowns a meaningful aria-label
+     * (e.g. "Year" / "Category") instead of the internal slug "tag1" / "tag2"
+     * (WCAG 2.4.6 Headings and Labels). Returns null when the field is not
+     * defined (admin hasn't configured the custom field) so the caller can
+     * fall back to a generic localized label.
+     *
+     * @param string $shortname Custom field shortname.
+     * @param string $area Custom field area ('lp' for plan templates, 'competency' for competencies).
+     * @return string|null format_string'd display name, or null if not found.
+     */
+    public static function get_customfield_name(string $shortname, string $area): ?string {
+        global $DB;
+        $key = "name_{$shortname}_{$area}";
+        if (!array_key_exists($key, self::$fieldcache)) {
+            $sql = "SELECT f.name
+                      FROM {customfield_field} f
+                      JOIN {customfield_category} c ON c.id = f.categoryid
+                     WHERE f.shortname = :shortname
+                       AND c.component = :component
+                       AND c.area = :area";
+            $name = $DB->get_field_sql($sql, [
+                'shortname' => $shortname,
+                'component' => 'local_dimensions',
+                'area' => $area,
+            ]);
+            self::$fieldcache[$key] = ($name !== false && $name !== null && $name !== '')
+                ? format_string($name, true, ['context' => \context_system::instance()])
+                : null;
+        }
+        return self::$fieldcache[$key];
     }
 
     /**
@@ -525,7 +564,7 @@ class dataset_provider {
         if ($templateid) {
             $customtype = $templatemetadata['type'] ?? null;
             if (!empty($customtype)) {
-                $competencytypesuffix = format_string(trim($customtype));
+                $competencytypesuffix = format_string(trim($customtype), true, ['context' => \context_system::instance()]);
             }
         }
 
@@ -552,7 +591,7 @@ class dataset_provider {
 
         $haspartialtrail = $this->has_partial_trail($competencytrail);
 
-        $planname = format_string($plan->get('name'));
+        $planname = format_string($plan->get('name'), true, ['context' => \context_system::instance()]);
         $buttondata = $this->get_plan_button_data($planname, $haspartialtrail);
         $buttonlabel = $buttondata['buttonlabel'];
         $buttonarialabel = $buttondata['buttonarialabel'];
@@ -662,7 +701,7 @@ class dataset_provider {
             $competencydata[] = [
                 'id' => $competencyid,
                 'planid' => $planid,
-                'shortname' => format_string($row['shortname']),
+                'shortname' => format_string($row['shortname'], true, ['context' => \context_system::instance()]),
                 'iscompleted' => $isproficient,
                 'index' => $index,
                 'url' => (new moodle_url('/local/dimensions/view-competency.php', [
@@ -755,7 +794,7 @@ class dataset_provider {
             }
         }
 
-        $compname = format_string($competency->get('shortname'));
+        $compname = format_string($competency->get('shortname'), true, ['context' => \context_system::instance()]);
 
         return [
             'id' => $competencyid,

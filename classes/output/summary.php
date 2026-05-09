@@ -260,6 +260,13 @@ class summary implements renderable, templatable {
             'ghostcardtitle' => get_string('ghostcardtitle', 'block_dimensions'),
             'togglefilters' => get_string('togglefilters', 'block_dimensions'),
             'clearfilters' => get_string('clearfilters', 'block_dimensions'),
+            'favouriteerror' => get_string('favouriteerror', 'block_dimensions'),
+            'resultsfound' => get_string('resultsfound', 'block_dimensions'),
+            'resultsnonefound' => get_string('resultsnonefound', 'block_dimensions'),
+            'paddleleft' => get_string('paddleleft', 'block_dimensions'),
+            'paddleright' => get_string('paddleright', 'block_dimensions'),
+            'filterbyplan' => get_string('filterbyplan', 'block_dimensions'),
+            'filterbycompetency' => get_string('filterbycompetency', 'block_dimensions'),
         ];
 
         return [

@@ -17,10 +17,17 @@
 {{!
     @template block_dimensions/filters
 
-    Filter bar template for block_dimensions.
+    Filter bar template for block_dimensions — illustrative only.
 
-    Renders filter controls (tabs or dropdown) for tag1/tag2 custom fields.
-    Used for both competency and plan filters.
+    NOTE: at runtime the filter bar is built by string concatenation in
+    amd/src/filters.js (renderFilterControls). This template is kept in sync
+    for documentation purposes; edits here have no effect on the rendered
+    output.
+
+    Filter pills represent a mutually-exclusive selection of tag values, so
+    they are exposed to assistive technology as a `radiogroup` of `radio`
+    buttons (with `aria-checked`) rather than as `tab`/`tablist` (which would
+    require an associated `tabpanel`). Dropdowns use the native <select>.
 
     Example context (json):
     {
@@ -42,11 +49,12 @@
     {{#filters}}
         {{#istabs}}
         <div class="dims-filter-tabs-wrapper" data-filter-group="{{field}}">
-            <div class="dims-filter-tabs" role="tablist">
+            <div class="dims-filter-tabs" role="radiogroup" aria-label="{{label}}">
                 <button type="button"
                         class="dims-filter-tab active"
-                        role="tab"
-                        aria-selected="true"
+                        role="radio"
+                        aria-checked="true"
+                        tabindex="0"
                         data-filter-field="{{field}}"
                         data-filter-value="">
                     {{alllabel}}
@@ -54,8 +62,9 @@
                 {{#options}}
                 <button type="button"
                         class="dims-filter-tab"
-                        role="tab"
-                        aria-selected="false"
+                        role="radio"
+                        aria-checked="false"
+                        tabindex="-1"
                         data-filter-field="{{field}}"
                         data-filter-value="{{value}}">
                     {{label}}

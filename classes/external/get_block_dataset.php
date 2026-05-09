@@ -156,6 +156,8 @@ class get_block_dataset extends external_api {
             'ishorizontal' => new external_value(PARAM_BOOL, 'Is horizontal'),
             'isvertical' => new external_value(PARAM_BOOL, 'Is vertical'),
             'isfavourite' => new external_value(PARAM_BOOL, 'Is favourite'),
+            'favouritearialabel' => new external_value(PARAM_TEXT, 'Favourite toggle button accessible name'),
+            'favouritetitle' => new external_value(PARAM_TEXT, 'Favourite toggle button tooltip'),
         ]);
 
         $competencycard = new external_single_structure([
@@ -176,6 +178,8 @@ class get_block_dataset extends external_api {
             'buttonlabel' => new external_value(PARAM_TEXT, 'Button label'),
             'buttonarialabel' => new external_value(PARAM_TEXT, 'Button aria label'),
             'isfavourite' => new external_value(PARAM_BOOL, 'Is favourite'),
+            'favouritearialabel' => new external_value(PARAM_TEXT, 'Favourite toggle button accessible name'),
+            'favouritetitle' => new external_value(PARAM_TEXT, 'Favourite toggle button tooltip'),
         ]);
 
         $filtersettings = new external_single_structure([
@@ -184,12 +188,40 @@ class get_block_dataset extends external_api {
                 'tag2enabled' => new external_value(PARAM_BOOL, 'Plan tag2 enabled'),
                 'tag1displaymode' => new external_value(PARAM_TEXT, 'Plan tag1 display mode'),
                 'tag2displaymode' => new external_value(PARAM_TEXT, 'Plan tag2 display mode'),
+                'tag1label' => new external_value(
+                    PARAM_TEXT,
+                    'Custom label for plan tag1 filter (admin-configured custom field name)',
+                    VALUE_DEFAULT,
+                    null,
+                    NULL_ALLOWED
+                ),
+                'tag2label' => new external_value(
+                    PARAM_TEXT,
+                    'Custom label for plan tag2 filter (admin-configured custom field name)',
+                    VALUE_DEFAULT,
+                    null,
+                    NULL_ALLOWED
+                ),
             ]),
             'competency' => new external_single_structure([
                 'tag1enabled' => new external_value(PARAM_BOOL, 'Competency tag1 enabled'),
                 'tag2enabled' => new external_value(PARAM_BOOL, 'Competency tag2 enabled'),
                 'tag1displaymode' => new external_value(PARAM_TEXT, 'Competency tag1 display mode'),
                 'tag2displaymode' => new external_value(PARAM_TEXT, 'Competency tag2 display mode'),
+                'tag1label' => new external_value(
+                    PARAM_TEXT,
+                    'Custom label for competency tag1 filter (admin-configured custom field name)',
+                    VALUE_DEFAULT,
+                    null,
+                    NULL_ALLOWED
+                ),
+                'tag2label' => new external_value(
+                    PARAM_TEXT,
+                    'Custom label for competency tag2 filter (admin-configured custom field name)',
+                    VALUE_DEFAULT,
+                    null,
+                    NULL_ALLOWED
+                ),
             ]),
         ]);
 

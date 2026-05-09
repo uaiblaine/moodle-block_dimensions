@@ -104,6 +104,11 @@
     background: rgba(0, 0, 0, 0.06);
 }
 
+.block_dimensions .dims-block-search-clear:focus-visible {
+    outline: 2px solid #1a73e8;
+    outline-offset: 2px;
+}
+
 .block_dimensions .dims-block-search-clear .fa {
     font-size: 0.625rem;
 }
@@ -544,7 +549,8 @@ body.dark .block_dimensions .competency-card:focus-within {
 .block_dimensions .trail-marker .empty-circle {
     width: 14px;
     height: 14px;
-    border: 2px solid #dee2e6;
+    /* WCAG 1.4.11 — non-text contrast: #adb5bd on #fff ≈ 3.1:1 (≥ 3:1). */
+    border: 2px solid #adb5bd;
     border-radius: 50%;
     background-color: #fff;
 }
@@ -1914,5 +1920,156 @@ body.dark .block_dimensions .dims-ghost-card-subtitle {
 @media print {
     .block_dimensions .dims-ghost-card {
         display: none;
+    }
+}
+
+/* ============================================
+   NO-JS FALLBACK MESSAGE (WCAG 1.3.1, 1.4.3)
+   ----------------------------------------------
+   For users with JavaScript disabled this is the only message they see;
+   it must have legible size and strong contrast (≥ 4.5:1).
+   ============================================ */
+.block_dimensions .dims-noscript {
+    margin: 0.75rem 0;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.4;
+    color: #212529;
+    background: #fff3cd;
+    border: 1px solid #ffe69c;
+    border-radius: 0.25rem;
+}
+
+.theme-dark .block_dimensions .dims-noscript,
+body.dark .block_dimensions .dims-noscript {
+    color: #e8eaed;
+    background: #3c2e00;
+    border-color: #5c4500;
+}
+
+/* ============================================
+   PSEUDO-LINK CARD (WCAG 2.4.4 / 2.5.3 / 4.1.1)
+   ----------------------------------------------
+   The card title is the real <a class="stretched-link">. A CSS ::after
+   pseudo-element on that link covers the visible card area so the entire
+   card is still mouse-clickable, while the link's accessible name stays
+   limited to the title (no nested interactives, no inflated names).
+
+   Sibling controls (favourite button, trail item links) sit above the
+   overlay via z-index to remain independently clickable / focusable.
+   ============================================ */
+.block_dimensions .plan-card,
+.block_dimensions .competency-card {
+    position: relative;
+}
+
+.block_dimensions .plan-card-link.stretched-link,
+.block_dimensions .competency-card-link.stretched-link {
+    color: inherit;
+}
+
+.block_dimensions .plan-card-link.stretched-link:hover,
+.block_dimensions .competency-card-link.stretched-link:hover,
+.block_dimensions .plan-card-link.stretched-link:focus,
+.block_dimensions .competency-card-link.stretched-link:focus {
+    text-decoration: none;
+}
+
+/* Belt-and-suspenders focus indicator on the title link itself, in addition
+   to the parent's :focus-within rule (WCAG 2.4.7). Useful when the article
+   sits inside layouts that disrupt :focus-within bubbling. */
+.block_dimensions .plan-card-link.stretched-link:focus-visible,
+.block_dimensions .competency-card-link.stretched-link:focus-visible {
+    outline: 2px solid #1a73e8;
+    outline-offset: 4px;
+    border-radius: 2px;
+}
+
+/* Retry button inside the error alert (WCAG 2.4.7). */
+.block_dimensions .dims-error-retry:focus-visible {
+    outline: 2px solid #1a73e8;
+    outline-offset: 2px;
+}
+
+/* Bootstrap supplies the overlay; restate as a defensive fallback. */
+.block_dimensions .plan-card-link.stretched-link::after,
+.block_dimensions .competency-card-link.stretched-link::after {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    content: "";
+    background-color: rgba(0, 0, 0, 0);
+    pointer-events: auto;
+}
+
+/* Sibling controls must remain clickable above the overlay.
+   Note: .dims-fav-btn is intentionally excluded — it's already
+   position:absolute; z-index:3 in its own block; including it here
+   would override that and break its top-left/top-right placement. */
+.block_dimensions .trail-item-link,
+.block_dimensions .dimension-tags {
+    position: relative;
+    z-index: 2;
+}
+
+/* Trail items now render as <ul><li>; reset list styling. */
+.block_dimensions .competency-trail {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+/* Trail link: inherits trail-item visuals, removes default <a> chrome. */
+.block_dimensions .trail-item-link {
+    display: inherit;
+    flex-direction: inherit;
+    align-items: inherit;
+    color: inherit;
+    text-decoration: none;
+}
+
+.block_dimensions .trail-item-link:hover,
+.block_dimensions .trail-item-link:focus {
+    color: inherit;
+    text-decoration: none;
+}
+
+.block_dimensions .trail-item-link:hover .trail-marker,
+.block_dimensions .trail-item-link:focus-visible .trail-marker {
+    transform: scale(1.2);
+    transition: transform 0.15s ease;
+}
+
+.block_dimensions .trail-item-link:hover .trail-label,
+.block_dimensions .trail-item-link:focus-visible .trail-label {
+    text-decoration: underline;
+}
+
+.block_dimensions .trail-item-link:focus {
+    outline: none;
+}
+
+.block_dimensions .trail-item-link:focus-visible {
+    outline: 2px solid #1a73e8;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Card hover/focus visual feedback now applies to the whole article since
+   stretched-link makes :hover and :focus-visible bubble through the overlay. */
+.block_dimensions .plan-card:hover .dims-card-access-btn,
+.block_dimensions .competency-card:hover .dims-card-access-btn,
+.block_dimensions .plan-card:focus-within .dims-card-access-btn,
+.block_dimensions .competency-card:focus-within .dims-card-access-btn,
+.block_dimensions .plan-card:hover .dims-card-access-btn-horizontal,
+.block_dimensions .plan-card:focus-within .dims-card-access-btn-horizontal {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .block_dimensions .trail-item-link:hover .trail-marker,
+    .block_dimensions .trail-item-link:focus-visible .trail-marker {
+        transform: none;
+        transition: none;
     }
 }

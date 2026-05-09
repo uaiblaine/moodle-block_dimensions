@@ -66,30 +66,16 @@ define([], function() {
     /**
      * Wrap the inner content of a .dims-filter-tabs element with mask/indicator/paddles.
      *
-     * Transforms:
-     *   <div class="dims-filter-tabs" role="tablist">
-     *     <button class="dims-filter-tab">…</button>
-     *     ...
-     *   </div>
-     *
-     * Into:
-     *   <div class="dims-filter-tabs" role="tablist">
-     *     <div class="dims-filter-tabs-mask">
-     *       <div class="dims-filter-tabs-items">
-     *         <button class="dims-filter-tab">…</button>
-     *         ...
-     *       </div>
-     *     </div>
-     *     <div class="dims-filter-tabs-indicator"></div>
-     *     <div class="dims-filter-tabs-paddles">
-     *       <button class="dims-filter-tabs-paddle dims-filter-tabs-paddle-left" ...>…</button>
-     *       <button class="dims-filter-tabs-paddle dims-filter-tabs-paddle-right" ...>…</button>
-     *     </div>
-     *   </div>
+     * Transforms a `role="radiogroup"` (or legacy `role="tablist"`) container
+     * containing `<button class="dims-filter-tab">` children into the
+     * scrollable structure with paddles. Accessibility roles on the children
+     * are preserved.
      *
      * @param {HTMLElement} tabsEl The .dims-filter-tabs element.
+     * @param {Object} [labels] Localized strings; reads `paddleleft`/`paddleright`.
      */
-    function wrapTabsContent(tabsEl) {
+    function wrapTabsContent(tabsEl, labels) {
+        labels = labels || {};
         // Collect all tab buttons.
         var tabs = [];
         var child = tabsEl.firstChild;
@@ -115,7 +101,10 @@ define([], function() {
         var indicatorEl = document.createElement('div');
         indicatorEl.className = 'dims-filter-tabs-indicator';
 
-        // Create paddles.
+        // Create paddles. Paddles are mouse-only affordances (keyboard users
+        // scroll via arrow keys which auto-center the focused radio), so they
+        // stay tabIndex=-1 — but their labels must be localized (WCAG 3.1.2)
+        // and aria-hidden must reflect their actual visibility.
         var paddlesEl = document.createElement('div');
         paddlesEl.className = 'dims-filter-tabs-paddles';
 
@@ -123,7 +112,7 @@ define([], function() {
         paddleLeft.type = 'button';
         paddleLeft.className = 'dims-filter-tabs-paddle dims-filter-tabs-paddle-left dims-filter-tabs-paddle-hidden';
         paddleLeft.setAttribute('aria-hidden', 'true');
-        paddleLeft.setAttribute('aria-label', 'Scroll filters left');
+        paddleLeft.setAttribute('aria-label', labels.paddleleft || 'Scroll filters left');
         paddleLeft.tabIndex = -1;
         paddleLeft.innerHTML = PADDLE_LEFT_SVG;
 
@@ -131,7 +120,7 @@ define([], function() {
         paddleRight.type = 'button';
         paddleRight.className = 'dims-filter-tabs-paddle dims-filter-tabs-paddle-right dims-filter-tabs-paddle-hidden';
         paddleRight.setAttribute('aria-hidden', 'true');
-        paddleRight.setAttribute('aria-label', 'Scroll filters right');
+        paddleRight.setAttribute('aria-label', labels.paddleright || 'Scroll filters right');
         paddleRight.tabIndex = -1;
         paddleRight.innerHTML = PADDLE_RIGHT_SVG;
 
@@ -149,17 +138,20 @@ define([], function() {
      * Controller for one .dims-filter-tabs-wrapper element.
      *
      * @param {HTMLElement} wrapperEl The .dims-filter-tabs-wrapper element.
+     * @param {Object} [options] Optional config; `labels` holds localized strings.
      * @constructor
      */
-    function FilterTabsNav(wrapperEl) {
+    function FilterTabsNav(wrapperEl, options) {
         this.wrapperEl = wrapperEl;
+        this.options = options || {};
+        this.labels = this.options.labels || {};
         this.platterEl = wrapperEl.querySelector('.dims-filter-tabs');
         if (!this.platterEl) {
             return;
         }
 
         // Wrap the tabs content with mask/indicator/paddles.
-        wrapTabsContent(this.platterEl);
+        wrapTabsContent(this.platterEl, this.labels);
 
         this.maskEl = this.platterEl.querySelector('.dims-filter-tabs-mask');
         this.itemsEl = this.platterEl.querySelector('.dims-filter-tabs-items');
@@ -352,25 +344,30 @@ define([], function() {
 
     /**
      * Update paddle visibility based on computed props.
+     *
+     * Keeps aria-hidden in sync with the visual hidden state (WCAG 4.1.2):
+     * a paddle that is visible on screen must not be aria-hidden, and a
+     * paddle that is visually hidden must be hidden from AT too.
+     *
      * @param {Object} props
      */
     FilterTabsNav.prototype._updatePaddles = function(props) {
+        var setHidden = function(el, hidden) {
+            el.classList.toggle('dims-filter-tabs-paddle-hidden', hidden);
+            el.disabled = hidden;
+            el.setAttribute('aria-hidden', hidden ? 'true' : 'false');
+        };
+
         if (!props.scrollable) {
-            this.paddleLeftEl.classList.add('dims-filter-tabs-paddle-hidden');
-            this.paddleLeftEl.disabled = true;
-            this.paddleRightEl.classList.add('dims-filter-tabs-paddle-hidden');
-            this.paddleRightEl.disabled = true;
+            setHidden(this.paddleLeftEl, true);
+            setHidden(this.paddleRightEl, true);
             this.maskEl.classList.add('dims-filter-tabs-mask-noscroll');
             return;
         }
 
         this.maskEl.classList.remove('dims-filter-tabs-mask-noscroll');
-
-        this.paddleLeftEl.classList.toggle('dims-filter-tabs-paddle-hidden', props.disableLeftPaddle);
-        this.paddleLeftEl.disabled = props.disableLeftPaddle;
-
-        this.paddleRightEl.classList.toggle('dims-filter-tabs-paddle-hidden', props.disableRightPaddle);
-        this.paddleRightEl.disabled = props.disableRightPaddle;
+        setHidden(this.paddleLeftEl, props.disableLeftPaddle);
+        setHidden(this.paddleRightEl, props.disableRightPaddle);
     };
 
     /**
@@ -461,11 +458,20 @@ define([], function() {
     };
 
     FilterTabsNav.prototype._onKeyDown = function(e) {
-        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') {
+        // WAI-ARIA radiogroup pattern: arrow keys move focus and check the
+        // new radio (auto-activation matches native <input type="radio">
+        // behaviour); Home/End jump to the first/last radio. The button is
+        // a real <button>, so Enter/Space already activate via native click.
+        var nav = e.key === 'ArrowRight' || e.key === 'ArrowLeft'
+                || e.key === 'Home' || e.key === 'End';
+        if (!nav) {
             return;
         }
 
         var tabs = this._getAllTabs();
+        if (!tabs.length) {
+            return;
+        }
         var focusedIndex = tabs.indexOf(document.activeElement);
         if (focusedIndex === -1) {
             return;
@@ -475,8 +481,13 @@ define([], function() {
         var nextIndex;
         if (e.key === 'ArrowRight') {
             nextIndex = (focusedIndex + 1) % tabs.length;
-        } else {
+        } else if (e.key === 'ArrowLeft') {
             nextIndex = (focusedIndex - 1 + tabs.length) % tabs.length;
+        } else if (e.key === 'Home') {
+            nextIndex = 0;
+        } else {
+            // End.
+            nextIndex = tabs.length - 1;
         }
 
         tabs[nextIndex].focus({preventScroll: true});
@@ -518,9 +529,10 @@ define([], function() {
      * Initialize FilterTabsNav on all .dims-filter-tabs-wrapper elements within a container.
      *
      * @param {HTMLElement} container
+     * @param {Object} [options] Forwarded to each FilterTabsNav instance.
      * @return {FilterTabsNav[]} Array of instances created.
      */
-    function initAll(container) {
+    function initAll(container, options) {
         var wrappers = container.querySelectorAll('.dims-filter-tabs-wrapper');
         var instances = [];
         for (var i = 0; i < wrappers.length; i++) {
@@ -533,7 +545,7 @@ define([], function() {
             if (!wrappers[i].querySelector('.dims-filter-tabs')) {
                 continue;
             }
-            instances.push(new FilterTabsNav(wrappers[i]));
+            instances.push(new FilterTabsNav(wrappers[i], options));
         }
         return instances;
     }

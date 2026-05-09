@@ -73,10 +73,21 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         const settings = state.filterSettings[type] || {};
         const html = [];
         let hasAnyFilter = false;
+        // Group label used as accessible name for each radiogroup and as the
+        // aria-label of the dropdown select. Better than the meaningless tag
+        // slug ("tag1" / "tag2") that was previously exposed to AT (WCAG 2.4.6,
+        // 4.1.2).
+        const groupLabel = type === 'plan'
+            ? (labels.filterbyplan || labels.filterall)
+            : (labels.filterbycompetency || labels.filterall);
 
-        html.push('<div class="dims-filters-bar" role="toolbar" aria-label="' + labels.filterall + '">');
+        html.push('<div class="dims-filters-bar" role="toolbar" aria-label="' + escapeHtml(groupLabel) + '">');
 
-        // Favourite / All pills (always first, if enabled).
+        // Favourite / All pills (always first, if enabled). Pills are mutually
+        // exclusive within a type, so they form a radiogroup (WCAG 4.1.2). The
+        // checked one carries tabindex="0", siblings tabindex="-1" so the
+        // group is reached as a single tab stop and arrow keys navigate within
+        // it (managed by filter_tabs_nav.js).
         // Counts are per-type: plan pills show plan counts, competency pills show competency counts.
         if (state.favouritesEnabled) {
             const typeFavCount = type === 'plan' ? state.favouriteCountPlan : state.favouriteCountCompetency;
@@ -86,21 +97,23 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
             if (typeFavCount > 0) {
                 hasAnyFilter = true;
                 html.push('<div class="dims-filter-tabs-wrapper" data-filter-group="fav_' + type + '">');
-                html.push('<div class="dims-filter-tabs" role="tablist">');
+                html.push('<div class="dims-filter-tabs" role="radiogroup" aria-label="' + escapeHtml(groupLabel) + '">');
 
-                // "My Favourites (N)" pill — count is per-type.
+                // "My Favourites (N)" pill — radio button.
                 html.push('<button type="button" class="dims-filter-tab dims-fav-filter-btn'
-                    + (isFavActive ? ' active' : '') + '" role="tab" aria-selected="'
-                    + (isFavActive ? 'true' : 'false') + '" data-fav-filter-type="' + type + '">'
+                    + (isFavActive ? ' active' : '') + '" role="radio" aria-checked="'
+                    + (isFavActive ? 'true' : 'false') + '" tabindex="' + (isFavActive ? '0' : '-1')
+                    + '" data-fav-filter-type="' + type + '">'
                     + '<i class="fa fa-star dims-fav-filter-icon" aria-hidden="true"></i> '
                     + escapeHtml(labels.myfavourites)
                     + ' <span class="dims-filter-count">' + typeFavCount + '</span>'
                     + '</button>');
 
-                // "Show all (N)" pill — count is per-type total.
+                // "Show all (N)" pill — radio button.
                 html.push('<button type="button" class="dims-filter-tab dims-all-filter-btn'
-                    + (!isFavActive ? ' active' : '') + '" role="tab" aria-selected="'
-                    + (!isFavActive ? 'true' : 'false') + '" data-all-filter-type="' + type + '">'
+                    + (!isFavActive ? ' active' : '') + '" role="radio" aria-checked="'
+                    + (!isFavActive ? 'true' : 'false') + '" tabindex="' + (!isFavActive ? '0' : '-1')
+                    + '" data-all-filter-type="' + type + '">'
                     + escapeHtml(labels.showallitems) + ' <span class="dims-filter-count">' + typeTotal + '</span>'
                     + '</button>');
 
@@ -124,20 +137,35 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
             hasAnyFilter = true;
             const mode = settings[modeKey] === 'dropdown' ? 'dropdown' : 'tabs';
             const selectedValue = state.activeFilters[field] || '';
+            // Combine the type-specific label ("Filter learning plans") with
+            // the admin-configured custom-field name ("Year") when available,
+            // so each radiogroup/select has a unique, meaningful name
+            // (WCAG 2.4.6, 4.1.2). Falls back to the generic group label when
+            // the customfield isn't defined.
+            const tagLabel = settings[tag + 'label'];
+            const fieldLabel = tagLabel ? (groupLabel + ' — ' + tagLabel) : groupLabel;
 
             if (mode === 'tabs') {
                 html.push('<div class="dims-filter-tabs-wrapper" data-filter-group="' + field + '">');
-                html.push('<div class="dims-filter-tabs" role="tablist">');
-                html.push('<button type="button" class="dims-filter-tab ' + (selectedValue === '' ? 'active' : '') + '" role="tab" aria-selected="' + (selectedValue === '' ? 'true' : 'false') + '" data-filter-field="' + field + '" data-filter-value="">' + labels.filterall + '</button>');
+                html.push('<div class="dims-filter-tabs" role="radiogroup" aria-label="' + escapeHtml(fieldLabel) + '">');
+                html.push('<button type="button" class="dims-filter-tab ' + (selectedValue === '' ? 'active' : '')
+                    + '" role="radio" aria-checked="' + (selectedValue === '' ? 'true' : 'false')
+                    + '" tabindex="' + (selectedValue === '' ? '0' : '-1')
+                    + '" data-filter-field="' + field + '" data-filter-value="">' + escapeHtml(labels.filterall) + '</button>');
                 values.forEach((value) => {
                     const isSelected = selectedValue === value;
-                    html.push('<button type="button" class="dims-filter-tab ' + (isSelected ? 'active' : '') + '" role="tab" aria-selected="' + (isSelected ? 'true' : 'false') + '" data-filter-field="' + field + '" data-filter-value="' + escapeHtml(value) + '">' + escapeHtml(value) + '</button>');
+                    html.push('<button type="button" class="dims-filter-tab ' + (isSelected ? 'active' : '')
+                        + '" role="radio" aria-checked="' + (isSelected ? 'true' : 'false')
+                        + '" tabindex="' + (isSelected ? '0' : '-1')
+                        + '" data-filter-field="' + field + '" data-filter-value="' + escapeHtml(value) + '">'
+                        + escapeHtml(value) + '</button>');
                 });
                 html.push('</div></div>');
             } else {
                 html.push('<div class="dims-filter-dropdown-wrapper" data-filter-group="' + field + '">');
-                html.push('<select class="dims-filter-select" data-filter-field="' + field + '" aria-label="' + tag + '">');
-                html.push('<option value=""' + (selectedValue === '' ? ' selected' : '') + '>' + labels.filterall + '</option>');
+                html.push('<select class="dims-filter-select" data-filter-field="' + field
+                    + '" aria-label="' + escapeHtml(fieldLabel) + '">');
+                html.push('<option value=""' + (selectedValue === '' ? ' selected' : '') + '>' + escapeHtml(labels.filterall) + '</option>');
                 values.forEach((value) => {
                     const isSelected = selectedValue === value;
                     html.push('<option value="' + escapeHtml(value) + '"' + (isSelected ? ' selected' : '') + '>' + escapeHtml(value) + '</option>');
@@ -160,8 +188,9 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
             // Destroy existing tab nav instances before replacing HTML.
             FilterTabsNav.destroyAll(host);
             host.innerHTML = '<div class="dims-filters-panel-inner">' + html.join('') + '</div>';
-            // Initialize horizontal-scrolling tab navigation.
-            FilterTabsNav.initAll(host);
+            // Initialize horizontal-scrolling tab navigation. Pass labels so
+            // paddle aria-labels can be localized (WCAG 3.1.2).
+            FilterTabsNav.initAll(host, {labels: labels});
         } else {
             FilterTabsNav.destroyAll(host);
             host.innerHTML = '';
@@ -169,12 +198,16 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
     }
 
     function syncFilterActiveState(container, state) {
+        // Tag-value radios. Each radiogroup keeps a single tab stop: the
+        // currently checked radio gets tabindex="0", the others tabindex="-1"
+        // (roving tabindex pattern, WCAG 2.1.1 + 2.4.3).
         container.querySelectorAll('.dims-filter-tab:not(.dims-fav-filter-btn):not(.dims-all-filter-btn)').forEach(function(tab) {
             var field = tab.dataset.filterField;
             var value = tab.dataset.filterValue || '';
             var isActive = (state.activeFilters[field] || '') === value;
             tab.classList.toggle('active', isActive);
-            tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            tab.setAttribute('aria-checked', isActive ? 'true' : 'false');
+            tab.setAttribute('tabindex', isActive ? '0' : '-1');
         });
 
         container.querySelectorAll('.dims-filter-select').forEach(function(select) {
@@ -182,18 +215,20 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
             select.value = state.activeFilters[field] || '';
         });
 
-        // Sync favourite / all pills.
+        // Sync favourite / all pills (also a radiogroup).
         container.querySelectorAll('.dims-fav-filter-btn').forEach(function(btn) {
             var favType = btn.dataset.favFilterType;
             var isActive = state.favouriteFilterActive[favType];
             btn.classList.toggle('active', isActive);
-            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
+            btn.setAttribute('tabindex', isActive ? '0' : '-1');
         });
         container.querySelectorAll('.dims-all-filter-btn').forEach(function(btn) {
             var allType = btn.dataset.allFilterType;
             var isActive = !state.favouriteFilterActive[allType];
             btn.classList.toggle('active', isActive);
-            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
+            btn.setAttribute('tabindex', isActive ? '0' : '-1');
         });
 
         // Update the animated indicator position in all tab nav instances.
@@ -423,10 +458,148 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
             return;
         }
         const text = errorBox.querySelector('.dims-error-text');
+        // For an element with role="alert" that lives in the DOM but is hidden
+        // via display:none, several screen readers do not announce content
+        // changes until the element becomes visible. Order matters here
+        // (WCAG 4.1.3): clear the text, make the element visible, then write
+        // the message in the next frame so the alert role fires reliably.
         if (text) {
-            text.textContent = message;
+            text.textContent = '';
         }
         errorBox.style.display = '';
+        if (text) {
+            requestAnimationFrame(function() {
+                text.textContent = message;
+            });
+        }
+    }
+
+    /**
+     * Surgically update the favourite-pill counts ("My Favourites (N)" and
+     * "Show all (N)") without rebuilding the filter bar. Used by toggleFavourite
+     * to preserve focus on the star button (WCAG 2.4.3).
+     */
+    function updateFavouritePillCounts(container, state) {
+        ['plan', 'competency'].forEach(function(type) {
+            const favCount = type === 'plan' ? state.favouriteCountPlan : state.favouriteCountCompetency;
+            const total = type === 'plan' ? state.totalplans : state.totalcompetencies;
+
+            const favBtn = container.querySelector('.dims-fav-filter-btn[data-fav-filter-type="' + type + '"]');
+            if (favBtn) {
+                const span = favBtn.querySelector('.dims-filter-count');
+                if (span) {
+                    span.textContent = String(favCount);
+                }
+            }
+
+            const allBtn = container.querySelector('.dims-all-filter-btn[data-all-filter-type="' + type + '"]');
+            if (allBtn) {
+                const span = allBtn.querySelector('.dims-filter-count');
+                if (span) {
+                    span.textContent = String(total);
+                }
+            }
+        });
+    }
+
+    let resultsAnnounceTimer = null;
+
+    /**
+     * Announce the filtered results count to assistive technology via the
+     * aria-live region in summary.mustache (WCAG 4.1.3). Debounced so rapid
+     * input (typing in search) doesn't spam the screen reader.
+     */
+    function announceResults(container, state, labels) {
+        const region = container.querySelector('[data-results-status]');
+        if (!region) {
+            return;
+        }
+        clearTimeout(resultsAnnounceTimer);
+        resultsAnnounceTimer = setTimeout(function() {
+            const planCount = state.filteredDataset.plancards.length;
+            const compCount = state.filteredDataset.competencycards.length;
+            let message;
+            if (planCount === 0 && compCount === 0) {
+                message = labels.resultsnonefound || '';
+            } else {
+                message = (labels.resultsfound || '')
+                    .replace('{$a->plans}', String(planCount))
+                    .replace('{$a->competencies}', String(compCount));
+            }
+            // Clear then set on next frame so identical messages still fire.
+            region.textContent = '';
+            requestAnimationFrame(function() {
+                region.textContent = message;
+            });
+        }, 600);
+    }
+
+    /**
+     * Announce a transient favourite-toggle error via the assertive aria-live
+     * region (WCAG 3.3.1, 4.1.3). Auto-clears after 5s so the message doesn't
+     * linger in the AT cursor.
+     */
+    function announceFavouriteError(container, message) {
+        const region = container.querySelector('[data-fav-status]');
+        if (!region) {
+            return;
+        }
+        region.textContent = '';
+        requestAnimationFrame(function() {
+            region.textContent = message;
+        });
+        setTimeout(function() {
+            if (region.textContent === message) {
+                region.textContent = '';
+            }
+        }, 5000);
+    }
+
+    /**
+     * Capture an identifier for the currently focused element inside the block
+     * so focus can be restored after a DOM rebuild (WCAG 2.4.3).
+     * @return {Object|null}
+     */
+    function captureFocusKey(container) {
+        const active = document.activeElement;
+        if (!active || !container.contains(active)) {
+            return null;
+        }
+        if (active.matches('.dims-fav-filter-btn[data-fav-filter-type]')) {
+            return {selector: '.dims-fav-filter-btn[data-fav-filter-type="' + active.dataset.favFilterType + '"]'};
+        }
+        if (active.matches('.dims-all-filter-btn[data-all-filter-type]')) {
+            return {selector: '.dims-all-filter-btn[data-all-filter-type="' + active.dataset.allFilterType + '"]'};
+        }
+        if (active.matches('.dims-filter-tab[data-filter-field]')) {
+            const field = active.dataset.filterField;
+            const value = active.dataset.filterValue || '';
+            return {selector: '.dims-filter-tab[data-filter-field="' + field + '"][data-filter-value="' + value + '"]'};
+        }
+        if (active.matches('.dims-clear-filters-btn[data-clear-type]')) {
+            return {selector: '.dims-clear-filters-btn[data-clear-type="' + active.dataset.clearType + '"]'};
+        }
+        if (active.matches('.dims-filter-select[data-filter-field]')) {
+            return {selector: '.dims-filter-select[data-filter-field="' + active.dataset.filterField + '"]'};
+        }
+        return null;
+    }
+
+    function restoreFocus(container, focusKey, fallbackSelector) {
+        if (!focusKey) {
+            return;
+        }
+        const target = container.querySelector(focusKey.selector);
+        if (target) {
+            target.focus({preventScroll: true});
+            return;
+        }
+        if (fallbackSelector) {
+            const fallback = container.querySelector(fallbackSelector);
+            if (fallback) {
+                fallback.focus({preventScroll: true});
+            }
+        }
     }
 
     /**
@@ -469,9 +642,10 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                 }
             }
 
-            // Update aria-label and title.
+            // Update aria-label, aria-pressed, and title.
             const label = nowFav ? options.labels.removefromfavourites : options.labels.addtofavourites;
             btn.setAttribute('aria-label', label);
+            btn.setAttribute('aria-pressed', nowFav ? 'true' : 'false');
             btn.setAttribute('title', label);
 
             // Update the card data in raw dataset.
@@ -483,11 +657,21 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                 }
             }
 
-            // Update favourite counts.
+            // The fav/all pills only need a full filter-bar rebuild when the
+            // count crosses the 0 boundary (pills appear or disappear). For any
+            // other transition we update counts in place to preserve focus on
+            // the star button the user just activated (WCAG 2.4.3).
+            const prevFavPlan = state.favouriteCountPlan;
+            const prevFavComp = state.favouriteCountCompetency;
             updateFavouriteCounts(state);
-
-            // Re-render filters to update pill counts.
-            state.filtersRendered = false;
+            const pillsToggleVisibility =
+                (prevFavPlan === 0) !== (state.favouriteCountPlan === 0) ||
+                (prevFavComp === 0) !== (state.favouriteCountCompetency === 0);
+            if (pillsToggleVisibility) {
+                state.filtersRendered = false;
+            } else {
+                updateFavouritePillCounts(container, state);
+            }
 
             // If favourite filter is active and count dropped to 0, deactivate and load all.
             const typeFavCount = itemtype === 'plan' ? state.favouriteCountPlan : state.favouriteCountCompetency;
@@ -511,11 +695,17 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
             rerender(container, state, options);
         }).catch(function() {
             delete btn.dataset.favPending;
+            announceFavouriteError(container, options.labels.favouriteerror);
         });
     }
 
     function rerender(container, state, options) {
         applyFilters(state);
+
+        // If the filter bar is about to be rebuilt, capture the focused
+        // element so we can restore focus after innerHTML replacement
+        // (WCAG 2.4.3 — Focus Order).
+        const focusKey = !state.filtersRendered ? captureFocusKey(container) : null;
 
         if (!state.filtersRendered) {
             renderFilterControls(container, 'plan', state.rawDataset.plancards, state, options.labels);
@@ -525,6 +715,10 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
 
         syncFilterActiveState(container, state);
         updateClearFilterButtons(container, state);
+
+        if (focusKey) {
+            restoreFocus(container, focusKey, '.dims-block-search-input');
+        }
 
         const token = String(++state.renderToken);
         container.dataset.renderToken = token;
@@ -547,6 +741,9 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                     : state.rawDataset.hascompetencies;
                 header.style.display = hasCards ? '' : 'none';
             });
+
+            // Announce filtered results count via aria-live (WCAG 4.1.3).
+            announceResults(container, state, options.labels);
         }).catch(() => {
             showError(container, options.labels.loaderror);
         });
@@ -682,33 +879,31 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
 
         container.addEventListener('click', (e) => {
             // Handle clickable trail item — call WS to set return context, then navigate.
-            const trailItem = e.target.closest('.trail-item.clickable[data-href]');
-            if (trailItem) {
-                e.preventDefault();
-                e.stopPropagation();
-                const href = trailItem.dataset.href;
-                const planid = parseInt(trailItem.dataset.planid, 10);
-                if (href) {
-                    if (planid) {
-                        // Fire-and-forget: call WS to store return context, then navigate.
-                        // Use a short timeout as fallback in case the call takes too long.
-                        let navigated = false;
-                        const navigate = () => {
-                            if (!navigated) {
-                                navigated = true;
-                                window.location.href = href;
-                            }
-                        };
-                        Ajax.call([{
-                            methodname: 'block_dimensions_set_return_context',
-                            args: {planid: planid, courseid: 0}
-                        }])[0].then(navigate).catch(navigate);
-                        // Fallback: navigate after 1.5s even if WS is slow.
-                        setTimeout(navigate, 1500);
-                    } else {
-                        window.location.href = href;
-                    }
+            // Trail items are real <a> elements (WCAG 2.1.1 — Enter/Space work
+            // natively via the browser). We only intercept the navigation when
+            // we need to fire the set_return_context web service first.
+            const trailLink = e.target.closest('a.trail-item-link');
+            if (trailLink) {
+                const planid = parseInt(trailLink.dataset.trailPlanid, 10);
+                if (planid) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const href = trailLink.href;
+                    let navigated = false;
+                    const navigate = () => {
+                        if (!navigated) {
+                            navigated = true;
+                            window.location.href = href;
+                        }
+                    };
+                    Ajax.call([{
+                        methodname: 'block_dimensions_set_return_context',
+                        args: {planid: planid, courseid: 0}
+                    }])[0].then(navigate).catch(navigate);
+                    // Fallback: navigate after 1.5s even if WS is slow.
+                    setTimeout(navigate, 1500);
                 }
+                // Otherwise let the browser navigate the link natively.
                 return;
             }
 
