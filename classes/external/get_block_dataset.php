@@ -52,6 +52,12 @@ class get_block_dataset extends external_api {
                 VALUE_DEFAULT,
                 false
             ),
+            'loadgroup' => new external_value(
+                PARAM_ALPHA,
+                'Limit card building to a single group: "plan", "competency", or empty string for both',
+                VALUE_DEFAULT,
+                ''
+            ),
         ]);
     }
 
@@ -59,15 +65,23 @@ class get_block_dataset extends external_api {
      * Execute method.
      *
      * @param bool $favouritesonly Whether only favourites should be returned.
+     * @param string $loadgroup Limit card building: 'plan', 'competency', or '' for both.
      * @return array<string, mixed>
      */
-    public static function execute(bool $favouritesonly = false) {
+    public static function execute(bool $favouritesonly = false, string $loadgroup = '') {
         global $USER;
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'favouritesonly' => $favouritesonly,
+            'loadgroup' => $loadgroup,
         ]);
         $favouritesonly = (bool) $params['favouritesonly'];
+        $loadgroup = $params['loadgroup'];
+
+        // Validate loadgroup value.
+        if ($loadgroup !== '' && $loadgroup !== 'plan' && $loadgroup !== 'competency') {
+            throw new \invalid_parameter_exception('loadgroup must be "", "plan", or "competency"');
+        }
 
         require_login();
         if (isguestuser()) {
@@ -96,7 +110,7 @@ class get_block_dataset extends external_api {
         self::validate_context($usercontext);
 
         $provider = new dataset_provider((int)$USER->id);
-        $dataset = $provider->get_dataset($favouritesonly);
+        $dataset = $provider->get_dataset($favouritesonly, $loadgroup);
 
         return [
             'hasactiveplans' => $dataset['hasactiveplans'],

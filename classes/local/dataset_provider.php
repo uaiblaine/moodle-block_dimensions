@@ -88,10 +88,16 @@ class dataset_provider {
      * are fully built, but totals are always counted so the frontend can display
      * accurate pill counts and decide when to load the full dataset.
      *
+     * When $loadgroup is set to 'plan' or 'competency', only cards for that
+     * group are built. This enables per-group Phase 2 loading so the frontend
+     * can fetch the missing group without re-processing the group that was
+     * already loaded with favourites in Phase 1.
+     *
      * @param bool $favouritesonly If true, only return favourited cards.
+     * @param string $loadgroup Limit card building: 'plan', 'competency', or '' for both.
      * @return array<string, mixed>
      */
-    public function get_dataset(bool $favouritesonly = false): array {
+    public function get_dataset(bool $favouritesonly = false, string $loadgroup = ''): array {
         global $USER;
 
         $activeplans = $this->get_active_plans();
@@ -119,6 +125,11 @@ class dataset_provider {
             if ($displaymode == constants::DISPLAYMODE_PLAN) {
                 $totalplans++;
 
+                // Skip building plan cards when only loading competencies.
+                if ($loadgroup === 'competency') {
+                    continue;
+                }
+
                 $card = $this->build_plan_dataset_card(
                     $plan,
                     $templateid,
@@ -130,6 +141,11 @@ class dataset_provider {
                 if (!empty($card)) {
                     $plancards[] = $card;
                 }
+                continue;
+            }
+
+            // Skip processing competencies when only loading plans.
+            if ($loadgroup === 'plan') {
                 continue;
             }
 

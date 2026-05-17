@@ -74,7 +74,10 @@ define([], function() {
                 plan: false,
                 competency: false
             },
-            fullDatasetLoaded: false,
+            fullDatasetLoaded: {
+                plan: false,
+                competency: false
+            },
             hasnonfavouriteplans: false,
             hasnonfavouritecompetencies: false,
             totalplans: 0,
