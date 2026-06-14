@@ -57,10 +57,12 @@ define([], function() {
             searchTerm: '',
             normalizedSearch: '',
             activeFilters: {
-                plan_tag1: '',
-                plan_tag2: '',
-                competency_tag1: '',
-                competency_tag2: ''
+                // Keys mirror the `{type}_tag{n}` data-filter-field contract
+                // (filters.mustache + dynamic access) — keep snake_case.
+                'plan_tag1': '',
+                'plan_tag2': '',
+                'competency_tag1': '',
+                'competency_tag2': ''
             },
             favouriteFilterActive: {
                 plan: false,

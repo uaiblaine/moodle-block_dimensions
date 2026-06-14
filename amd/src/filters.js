@@ -299,7 +299,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                     .then((nodes) => {
                         if (token !== container.dataset.renderToken) {
                             resolve();
-                            return;
+                            return null;
                         }
 
                         const fragment = document.createDocumentFragment();
@@ -307,6 +307,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                         list.appendChild(fragment);
 
                         globalThis.requestAnimationFrame(() => renderBatch(start + BATCH_SIZE));
+                        return null;
                     })
                     .catch(reject);
             };
@@ -325,6 +326,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
             if (token === container.dataset.renderToken) {
                 state.cardsRendered[type] = true;
             }
+            return null;
         });
     }
 
@@ -680,7 +682,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                 state.favouriteFilterActive[itemtype] = false;
                 if (!state.fullDatasetLoaded[itemtype] && typeHasNonFavs) {
                     loadGroupDataset(container, state, options, itemtype);
-                    return;
+                    return null;
                 }
             }
 
@@ -693,6 +695,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
             }
 
             rerender(container, state, options);
+            return null;
         }).catch(function() {
             delete btn.dataset.favPending;
             announceFavouriteError(container, options.labels.favouriteerror);
@@ -744,6 +747,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
 
             // Announce filtered results count via aria-live (WCAG 4.1.3).
             announceResults(container, state, options.labels);
+            return null;
         }).catch(() => {
             showError(container, options.labels.loaderror);
         });
@@ -804,6 +808,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                 state.filtersRendered = false;
                 rerender(container, state, options);
                 showLoading(container, false);
+                return null;
             })
             .catch(() => {
                 showLoading(container, false);
@@ -864,10 +869,13 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                         state.favouriteFilterActive.plan = false;
                         state.favouriteFilterActive.competency = false;
                         // Reset all tag filters so search shows everything.
+                        // Keys are the snake_case data-filter-field contract.
+                        /* eslint-disable camelcase */
                         state.activeFilters.plan_tag1 = '';
                         state.activeFilters.plan_tag2 = '';
                         state.activeFilters.competency_tag1 = '';
                         state.activeFilters.competency_tag2 = '';
+                        /* eslint-enable camelcase */
                         state.filtersRendered = false;
                     }
 
@@ -876,14 +884,15 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                     const searchNeedsLoad = state.normalizedSearch && !bothLoaded
                         && (state.hasnonfavouriteplans || state.hasnonfavouritecompetencies);
                     if (searchNeedsLoad) {
-                        loadGroupDataset(container, state, options, '').then(() => {
+                        return loadGroupDataset(container, state, options, '').then(() => {
                             state.searchTerm = searchInput.value.trim();
                             state.normalizedSearch = normalizeText(state.searchTerm);
                             rerender(container, state, options);
+                            return null;
                         });
-                    } else {
-                        rerender(container, state, options);
                     }
+                    rerender(container, state, options);
+                    return null;
                 }, 120);
             });
         }
@@ -901,6 +910,9 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
             });
         }
 
+        // Click delegator handles trail links, filter tabs and clear buttons;
+        // branch count over the lint cap is acknowledged (refactor pending).
+        // eslint-disable-next-line complexity
         container.addEventListener('click', (e) => {
             // Handle clickable trail item — call WS to set return context, then navigate.
             // Trail items are real <a> elements (WCAG 2.1.1 — Enter/Space work
@@ -1074,6 +1086,9 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         const fetchArgs = useFavouritesFirst ? {favouritesonly: true} : {};
 
         return fetchDataset(options.endpointmethod, fetchArgs)
+            // Phase-1/phase-2 favourites branching; branch count over the lint
+            // cap is acknowledged (refactor pending).
+            // eslint-disable-next-line complexity
             .then((dataset) => {
                 state.rawDataset = {
                     hasactiveplans: !!dataset.hasactiveplans,
@@ -1140,6 +1155,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                 resetRenderedState(container, state);
                 rerender(container, state, options);
                 showLoading(container, false);
+                return null;
             })
             .catch(() => {
                 showLoading(container, false);

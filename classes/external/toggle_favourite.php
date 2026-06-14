@@ -85,6 +85,18 @@ class toggle_favourite extends external_api {
             throw new \moodle_exception('favouritesdisabled', 'block_dimensions');
         }
 
+        // Only allow favouriting items the user can actually have: a learning
+        // plan that belongs to them, or an existing competency. Without this a
+        // user could create favourite rows for arbitrary or non-existent ids.
+        global $DB;
+        if ($itemtype === 'plan') {
+            if (!$DB->record_exists('competency_plan', ['id' => $itemid, 'userid' => $USER->id])) {
+                throw new \invalid_parameter_exception('Unknown or inaccessible plan: ' . $itemid);
+            }
+        } else if (!$DB->record_exists('competency', ['id' => $itemid])) {
+            throw new \invalid_parameter_exception('Unknown competency: ' . $itemid);
+        }
+
         $usercontext = \context_user::instance($USER->id);
         self::validate_context($usercontext);
 
