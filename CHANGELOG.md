@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Fixed
+- `toggle_favourite` now verifies the item exists and belongs to the user (own learning plan, or an existing competency) before creating a favourite; previously any — even non-existent — id was accepted.
+- Added the missing `labelsjson` field to the `summary.mustache` example context so the mustache linter's JS check passes on all supported Moodle branches.
+- Migrated CI to the moodle-an-hochschulen reusable workflow (PHPUnit + Behat on every PHP × DB leg) and cleared the pre-existing lang-order / ESLint debt the previous workflow never actually ran.
+
 ### Added
 - Added `aria-pressed` to favourite toggle buttons in `plan_card.mustache` and `competency_card.mustache` so screen readers announce the toggle state explicitly (WCAG 4.1.2).
 - Added two `aria-live` regions (`data-results-status` polite, `data-fav-status` assertive) in `summary.mustache` so result counts and favourite-toggle errors are announced (WCAG 4.1.3).
