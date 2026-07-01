@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Block Dimensions version file.
+ * Uninstall hook for block_dimensions.
  *
  * @package    block_dimensions
  * @copyright  2026 Anderson Blaine
@@ -24,13 +24,18 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2026070100;
-$plugin->requires = 2024100702;
-$plugin->supported = [405, 502];
-$plugin->component = 'block_dimensions';
-$plugin->maturity = MATURITY_BETA;
-$plugin->release = 'v1.0';
-$plugin->dependencies = [
-    'tool_lp' => ANY_VERSION,
-    'local_dimensions' => ANY_VERSION,
-];
+/**
+ * Remove data this plugin stored outside its own tables.
+ *
+ * Favourites live in the core 'favourite' table under this plugin's
+ * component name, which core's uninstall_plugin() does not purge.
+ *
+ * @return bool
+ */
+function xmldb_block_dimensions_uninstall() {
+    global $DB;
+
+    $DB->delete_records('favourite', ['component' => 'block_dimensions']);
+
+    return true;
+}

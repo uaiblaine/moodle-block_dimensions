@@ -27,7 +27,6 @@ namespace block_dimensions\local;
 use core_competency\api;
 use core_competency\plan;
 use local_dimensions\constants;
-use local_dimensions\picture_manager;
 use local_dimensions\template_metadata_cache;
 use local_dimensions\competency_metadata_cache;
 use local_dimensions\plan_trail_cache;
@@ -490,10 +489,9 @@ class dataset_provider {
      * @return array<string, mixed>
      */
     public static function get_ui_config(): array {
-        $showheading = (bool) get_config('block_dimensions', 'show_heading');
-        if (get_config('block_dimensions', 'show_heading') === false) {
-            $showheading = true;
-        }
+        $showheadingraw = get_config('block_dimensions', 'show_heading');
+        // Default to true when the config has never been set.
+        $showheading = ($showheadingraw === false) ? true : (bool) $showheadingraw;
 
         return [
             'showheading' => $showheading,
@@ -559,6 +557,40 @@ class dataset_provider {
     }
 
     /**
+     * Validate a colour value destined for an inline style attribute.
+     *
+     * Defence in depth: metadata caches in local_dimensions already restrict
+     * these values to hex colours, but this plugin renders them into a CSS
+     * context, so it must not rely on a sibling plugin's validation alone.
+     *
+     * @param string|null $color Raw colour value from cached metadata.
+     * @return string|null The colour when it is a safe hex token, null otherwise.
+     */
+    protected function sanitize_color(?string $color): ?string {
+        if (!is_string($color)) {
+            return null;
+        }
+        $color = trim($color);
+
+        return preg_match('/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i', $color) ? $color : null;
+    }
+
+    /**
+     * Validate an image URL destined for an inline background-image style.
+     *
+     * @param string|null $url Raw URL from cached metadata.
+     * @return string|null The URL when it passes PARAM_URL cleaning, null otherwise.
+     */
+    protected function sanitize_image_url(?string $url): ?string {
+        if ($url === null || $url === '') {
+            return null;
+        }
+        $clean = clean_param($url, PARAM_URL);
+
+        return $clean !== '' ? $clean : null;
+    }
+
+    /**
      * Build a single plan card payload.
      *
      * @param \core_competency\plan $plan Plan object.
@@ -585,8 +617,8 @@ class dataset_provider {
         }
 
         $imageurl = $templateid ? ($templatemetadata['templatecardimageurl'] ?? null) : null;
-        $bgcolor = $templateid ? ($templatemetadata['bgcolor'] ?? null) : null;
-        $textcolor = $templateid ? ($templatemetadata['textcolor'] ?? null) : null;
+        $bgcolor = $this->sanitize_color($templateid ? ($templatemetadata['bgcolor'] ?? null) : null);
+        $textcolor = $this->sanitize_color($templateid ? ($templatemetadata['textcolor'] ?? null) : null);
         $tags = [
             'tag1' => $templateid ? ($templatemetadata['tag1'] ?? null) : null,
             'tag2' => $templateid ? ($templatemetadata['tag2'] ?? null) : null,
@@ -599,7 +631,7 @@ class dataset_provider {
         }
 
         $trailpayload = $this->build_plan_trail_payload($planid, $templateid, $imageurl);
-        $imageurl = $trailpayload['imageurl'];
+        $imageurl = $this->sanitize_image_url($trailpayload['imageurl']);
         $totalcompetencies = $trailpayload['totalcompetencies'];
         $hasitemsbeforetrail = $trailpayload['hasitemsbeforetrail'];
         $hasitemsaftertrail = $trailpayload['hasitemsaftertrail'];
@@ -798,11 +830,11 @@ class dataset_provider {
             $metadata = competency_metadata_cache::get_competency_metadata($competencyid);
         }
 
-        $imageurl = $metadata['cardimageurl'] ?? null;
+        $imageurl = $this->sanitize_image_url($metadata['cardimageurl'] ?? null);
         $tag1 = $metadata['tag1'] ?? null;
         $tag2 = $metadata['tag2'] ?? null;
-        $bgcolor = $metadata['bgcolor'] ?? null;
-        $textcolor = $metadata['textcolor'] ?? null;
+        $bgcolor = $this->sanitize_color($metadata['bgcolor'] ?? null);
+        $textcolor = $this->sanitize_color($metadata['textcolor'] ?? null);
         $tags = [];
         foreach ([$tag1, $tag2] as $value) {
             if (!empty($value)) {
@@ -832,150 +864,6 @@ class dataset_provider {
             'buttonlabel' => get_string('accesscard', 'block_dimensions'),
             'buttonarialabel' => get_string('accesscardaria', 'block_dimensions', $compname),
         ];
-    }
-
-    /**
-     * Get competency card image URL.
-     *
-     * @param int $competencyid Competency id.
-     * @return string|null
-     */
-    protected function get_competency_card_image(int $competencyid): ?string {
-        if (picture_manager::is_builtin_mode()) {
-            $url = picture_manager::get_image_url('competency', $competencyid, 'cardimage');
-            if ($url) {
-                return $url;
-            }
-        }
-
-        global $DB;
-
-        $field = $this->get_field_definition(constants::CFIELD_CUSTOMCARD, 'competency');
-        if (!$field) {
-            return null;
-        }
-
-        $data = $DB->get_record('customfield_data', [
-            'fieldid' => $field->id,
-            'instanceid' => $competencyid,
-        ]);
-
-        if (!$data) {
-            return null;
-        }
-
-        $fs = get_file_storage();
-        $files = $fs->get_area_files(
-            $data->contextid,
-            'customfield_picture',
-            'file',
-            $data->id,
-            '',
-            false
-        );
-
-        if (empty($files)) {
-            return null;
-        }
-
-        $file = reset($files);
-        return moodle_url::make_pluginfile_url(
-            $file->get_contextid(),
-            $file->get_component(),
-            $file->get_filearea(),
-            $file->get_itemid(),
-            $file->get_filepath(),
-            $file->get_filename()
-        )->out();
-    }
-
-    /**
-     * Get competency tags.
-     *
-     * @param int $competencyid Competency id.
-     * @return array<string, string|null>
-     */
-    protected function get_competency_tags(int $competencyid): array {
-        return [
-            'tag1' => $this->get_select_field_value($competencyid, constants::CFIELD_TAG1, 'competency'),
-            'tag2' => $this->get_select_field_value($competencyid, constants::CFIELD_TAG2, 'competency'),
-        ];
-    }
-
-    /**
-     * Get select field value label.
-     *
-     * @param int $instanceid Instance id.
-     * @param string $shortname Field shortname.
-     * @param string $area Area.
-     * @return string|null
-     */
-    protected function get_select_field_value(int $instanceid, string $shortname, string $area): ?string {
-        global $DB;
-
-        $field = $this->get_field_definition($shortname, $area);
-        if (!$field) {
-            return null;
-        }
-
-        $data = $DB->get_record('customfield_data', [
-            'fieldid' => $field->id,
-            'instanceid' => $instanceid,
-        ]);
-
-        if (!$data) {
-            return null;
-        }
-
-        $selectedindex = (int)$data->intvalue;
-        if ($selectedindex <= 0) {
-            return null;
-        }
-
-        $config = json_decode($field->configdata, true);
-        if (empty($config['options'])) {
-            return null;
-        }
-
-        $options = explode("\n", $config['options']);
-        $optionindex = $selectedindex - 1;
-
-        if (!isset($options[$optionindex])) {
-            return null;
-        }
-
-        $value = trim($options[$optionindex]);
-        return $value !== '' ? $value : null;
-    }
-
-    /**
-     * Get custom field definition with static cache.
-     *
-     * @param string $shortname Field shortname.
-     * @param string $area Area name.
-     * @return object|false
-     */
-    protected function get_field_definition(string $shortname, string $area) {
-        $key = "{$shortname}_{$area}";
-
-        if (!isset(self::$fieldcache[$key])) {
-            global $DB;
-
-            $sql = "SELECT f.*
-                      FROM {customfield_field} f
-                      JOIN {customfield_category} c ON c.id = f.categoryid
-                     WHERE f.shortname = :shortname
-                       AND c.component = :component
-                       AND c.area = :area";
-
-            self::$fieldcache[$key] = $DB->get_record_sql($sql, [
-                'shortname' => $shortname,
-                'component' => 'local_dimensions',
-                'area' => $area,
-            ]);
-        }
-
-        return self::$fieldcache[$key];
     }
 
     /**

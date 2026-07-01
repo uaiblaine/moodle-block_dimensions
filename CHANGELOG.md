@@ -4,12 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Security
+- Card colour and image metadata is now validated server-side before reaching the inline `style` attributes of the card templates (defense in depth — `local_dimensions` already restricts these fields): `dataset_provider` gained `sanitize_color()` (hex colours only) and `sanitize_image_url()` (`PARAM_URL` cleaning), applied in `build_plan_card()` and `build_competency_card()`; `imageurl` in the `get_block_dataset` return structures changed from `PARAM_RAW` to `PARAM_URL`.
+
+### Removed
+- Removed ~350 lines of unreachable code left over from the cache-based metadata refactor: `summary.php` dropped its unused DB/File-API helpers (`get_competency_card_image`, `get_competency_tags`, `get_select_field_value`, `get_field_definition`, `get_competencies_with_courses`, `build_filter_config`, `select_trail_competencies`, `get_trail_start_index`, `add_trail_positions`) plus orphaned imports and properties; `dataset_provider.php` dropped its dead `get_competency_card_image`, `get_competency_tags`, `get_select_field_value` and `get_field_definition` duplicates. The live rendering path reads all metadata from the `local_dimensions` caches.
+
 ### Fixed
+- `toggle_favourite` now gates on `dataset_provider::is_favourites_enabled()` instead of a raw `get_config()` read, so a never-persisted `enable_favourites` setting no longer renders favourite buttons whose toggle request throws `favouritesdisabled`.
+- `get_ui_config()` reads `show_heading` once instead of twice (same "unset defaults to true" behaviour, one config lookup).
 - `toggle_favourite` now verifies the item exists and belongs to the user (own learning plan, or an existing competency) before creating a favourite; previously any — even non-existent — id was accepted.
 - Added the missing `labelsjson` field to the `summary.mustache` example context so the mustache linter's JS check passes on all supported Moodle branches.
 - Migrated CI to the moodle-an-hochschulen reusable workflow (PHPUnit + Behat on every PHP × DB leg) and cleared the pre-existing lang-order / ESLint debt the previous workflow never actually ran.
 
 ### Added
+- Added `db/uninstall.php` removing this plugin's rows from the core `favourite` table on uninstall — core's `uninstall_plugin()` does not purge `core_favourites` entries, so favourites would otherwise be orphaned.
+- Added PHPUnit coverage for the new colour/URL sanitisers (valid hex forms pass; CSS-injection payloads, named colours, `javascript:` and quote-breaking values are dropped).
+- Added `CLAUDE.md` mirroring the `local_dimensions` development conventions, adapted to this block.
 - Added `aria-pressed` to favourite toggle buttons in `plan_card.mustache` and `competency_card.mustache` so screen readers announce the toggle state explicitly (WCAG 4.1.2).
 - Added two `aria-live` regions (`data-results-status` polite, `data-fav-status` assertive) in `summary.mustache` so result counts and favourite-toggle errors are announced (WCAG 4.1.3).
 - Added language strings `favouriteerror`, `resultsfound`, `resultsnonefound`, `status_completed`, `status_pending`, `paddleleft`, `paddleright`, `filterbyplan`, `filterbycompetency`, `cardtags` (en + pt_br).

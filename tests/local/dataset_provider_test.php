@@ -256,6 +256,26 @@ final class dataset_provider_test extends advanced_testcase {
             ): ?array {
                 return $this->build_plan_dataset_card($plan, $templateid, $planid, $templatemetadata, $favouritesonly, $planfavids);
             }
+
+            /**
+             * Proxy for sanitize_color.
+             *
+             * @param string|null $color Raw colour value.
+             * @return string|null
+             */
+            public function test_sanitize_color(?string $color): ?string {
+                return $this->sanitize_color($color);
+            }
+
+            /**
+             * Proxy for sanitize_image_url.
+             *
+             * @param string|null $url Raw URL value.
+             * @return string|null
+             */
+            public function test_sanitize_image_url(?string $url): ?string {
+                return $this->sanitize_image_url($url);
+            }
         };
     }
 
@@ -882,5 +902,48 @@ final class dataset_provider_test extends advanced_testcase {
         $this->assertSame(0, $provider->test_get_trail_start_index(3, 0));
         $this->assertSame(0, $provider->test_get_trail_start_index(3, 2));
         $this->assertSame(0, $provider->test_get_trail_start_index(1, 0));
+    }
+
+    /**
+     * sanitize_color should accept hex colours and reject CSS injection payloads.
+     *
+     * @covers ::sanitize_color
+     */
+    public function test_sanitize_color_accepts_hex_and_rejects_injection(): void {
+        $provider = $this->get_provider_double();
+
+        // Valid hex colours in 3, 6 and 8 digit forms pass through (trimmed).
+        $this->assertSame('#fff', $provider->test_sanitize_color('#fff'));
+        $this->assertSame('#A1B2C3', $provider->test_sanitize_color('#A1B2C3'));
+        $this->assertSame('#a1b2c3d4', $provider->test_sanitize_color(' #a1b2c3d4 '));
+
+        // Anything that could smuggle extra CSS declarations is dropped.
+        $this->assertNull($provider->test_sanitize_color('#fff; position: fixed; inset: 0'));
+        $this->assertNull($provider->test_sanitize_color('red'));
+        $this->assertNull($provider->test_sanitize_color('rgb(0, 0, 0)'));
+        $this->assertNull($provider->test_sanitize_color('url(https://evil.example)'));
+        $this->assertNull($provider->test_sanitize_color(''));
+        $this->assertNull($provider->test_sanitize_color(null));
+    }
+
+    /**
+     * sanitize_image_url should accept pluginfile URLs and reject CSS-breaking values.
+     *
+     * @covers ::sanitize_image_url
+     */
+    public function test_sanitize_image_url_accepts_urls_and_rejects_injection(): void {
+        $provider = $this->get_provider_double();
+
+        // File API style URLs pass through untouched.
+        $pluginfile = 'https://example.com/pluginfile.php/1/local_dimensions/cardimage/7/photo.png';
+        $this->assertSame($pluginfile, $provider->test_sanitize_image_url($pluginfile));
+        $encoded = 'https://example.com/pluginfile.php/1/local_dimensions/cardimage/7/my%20photo.png';
+        $this->assertSame($encoded, $provider->test_sanitize_image_url($encoded));
+
+        // Values that would break out of url('...') in the inline style are dropped.
+        $this->assertNull($provider->test_sanitize_image_url("x') no-repeat; position: fixed; ('"));
+        $this->assertNull($provider->test_sanitize_image_url('javascript:alert(1)'));
+        $this->assertNull($provider->test_sanitize_image_url(''));
+        $this->assertNull($provider->test_sanitize_image_url(null));
     }
 }

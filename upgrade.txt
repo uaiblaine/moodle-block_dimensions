@@ -1,2 +1,12 @@
+== 2026070100 ==
+* Security hardening: card colours and image URLs are validated server-side
+  before reaching inline styles; imageurl web-service fields are now PARAM_URL.
+* Added db/uninstall.php purging this plugin's rows from the core favourite
+  table on uninstall.
+* Removed dead DB/File-API helper code from summary.php and
+  dataset_provider.php (metadata comes from local_dimensions caches).
+* toggle_favourite and the dataset provider now share the same
+  is_favourites_enabled() gate.
+
 == 2026021800 ==
 * Initial release of the Dimensions block plugin.

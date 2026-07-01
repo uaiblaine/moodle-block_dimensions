@@ -80,8 +80,9 @@ class toggle_favourite extends external_api {
             throw new \invalid_parameter_exception('Invalid itemid: must be greater than zero.');
         }
 
-        // Check admin setting.
-        if (!get_config('block_dimensions', 'enable_favourites')) {
+        // Check admin setting, treating "never set" as enabled for consistency
+        // with the dataset provider that renders the favourite buttons.
+        if (!\block_dimensions\local\dataset_provider::is_favourites_enabled()) {
             throw new \moodle_exception('favouritesdisabled', 'block_dimensions');
         }
 
