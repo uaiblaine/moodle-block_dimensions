@@ -157,11 +157,30 @@ function needs a `version.php` bump.**
 ### File header
 Every PHP file: GPL block, then file docblock with `@package
 block_dimensions`, `@copyright`, `@license` (no `@author`). Namespaced class
-files add `namespace block_dimensions\<sub>;`. Use
-`defined('MOODLE_INTERNAL') || die();` in every file **with side-effects**
-(procedural files, `db/*.php`); **omit** it in pure namespaced single-class
-files — the sniff `moodle.Files.MoodleInternal.MoodleInternalNotNeeded` fails
-the build otherwise. No `declare(strict_types=1)`; match surrounding files.
+files add `namespace block_dimensions\<sub>;`. No `declare(strict_types=1)`;
+match surrounding files.
+
+**`defined('MOODLE_INTERNAL') || die();` — only when the file executes
+top-level code on mere `include`.** The sniff is
+`moodle.Files.MoodleInternal.MoodleInternalNotNeeded` and it checks *effect on
+include*, not file location — `db/*.php` is not a blanket rule:
+- **Needs the guard**: files with top-level assignments/calls that run just by
+  being included — `db/access.php` (`$capabilities = […]`), `db/services.php`
+  (`$functions = […]`), `settings.php` (`$settings->add(…)`), `version.php`
+  (`$plugin->version = …`).
+- **Must omit it**: files whose only top-level construct is a **function or
+  class definition** — defining a function has no side effect until it is
+  *called*, so the guard is flagged as unneeded. This bit us for real:
+  `db/uninstall.php` (single `function xmldb_block_dimensions_uninstall() {
+  … }`, nothing else) failed CI with this exact warning after the guard was
+  added by habit. `db/install.php`/`db/upgrade.php` (if added later) follow
+  the same rule — check the sibling `local_dimensions/db/uninstall.php` and
+  core's `mod/subsection/db/uninstall.php` for the canonical shape (docblock,
+  then the function, no guard). Pure namespaced single-class files
+  (`classes/**`) never need it either.
+
+`--max-warnings 0` on the `phpcs` CI gate means this single warning fails the
+whole build — there is no "just a warning" tier here.
 
 ### PHPDoc (`phpdoc --max-warnings 0`)
 - Every class, method, property has a docblock; `@param` / `@return` /
