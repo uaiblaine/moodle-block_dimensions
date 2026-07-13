@@ -1,3 +1,12 @@
+== 2026071300 ==
+* Release v2.0; maturity raised to STABLE.
+* The local_dimensions dependency is now pinned to 2026071306 (its v2.0) —
+  ANY_VERSION previously allowed installs against incompatible old versions.
+* Web-service contract: block_dimensions_get_block_dataset accepts an optional
+  loadgroup parameter ('plan'|'competency') and returns hasnonfavouriteplans /
+  hasnonfavouritecompetencies instead of the former hasnonfavourites flag.
+* New setting enable_section_headers; see CHANGELOG.md for the full 2.0 list.
+
 == 2026070100 ==
 * Security hardening: card colours and image URLs are validated server-side
   before reaching inline styles; imageurl web-service fields are now PARAM_URL.

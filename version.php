@@ -24,13 +24,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2026070100;
+$plugin->version = 2026071300;
 $plugin->requires = 2024100702;
 $plugin->supported = [405, 502];
 $plugin->component = 'block_dimensions';
-$plugin->maturity = MATURITY_BETA;
-$plugin->release = 'v1.0';
+$plugin->maturity = MATURITY_STABLE;
+$plugin->release = 'v2.0';
 $plugin->dependencies = [
     'tool_lp' => ANY_VERSION,
-    'local_dimensions' => ANY_VERSION,
+    'local_dimensions' => 2026071306,
 ];

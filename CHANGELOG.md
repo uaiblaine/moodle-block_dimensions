@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [2.0] - 2026-07-13
 
 Macro view of everything since v1.0 — per-change detail lives in the commit history.
 
@@ -10,6 +10,12 @@ Macro view of everything since v1.0 — per-change detail lives in the commit hi
 - **Return-to-Plan integration**: the `block_dimensions_set_return_context` web service fires
   before trail navigation, and the dataset carries the plan association — so courses opened
   from the block get a working "Return to plan" button from `local_dimensions`.
+- **Two-phase loading**: `block_dimensions_get_block_dataset` gained a `loadgroup` parameter;
+  the block renders the user's favourites first and fetches each remaining card group on
+  demand ("Show all" pill, ghost card, search, or automatically for groups without
+  favourites).
+- **Section headers**: optional `enable_section_headers` setting rendering
+  language-customisable two-line headings above the plan and competency card groups.
 - **Filter UX package**: clear-filters button, horizontal-scrolling pill navigation with
   paddles, adaptive card grid, mobile refinements, and admin-configured custom-field display
   names as the filter labels.
@@ -24,11 +30,19 @@ Macro view of everything since v1.0 — per-change detail lives in the commit hi
   dataset provider, sanitisers and web-service contract; CI dependency wiring for
   `local_dimensions`.
 - **CI**: moodle-an-hochschulen reusable workflow — static checks plus PHPUnit and Behat
-  across the supported PHP × DB matrix.
+  runtime legs; full PHP × DB matrix on Moodle 5.02, single-database legs on
+  5.01/5.00/4.05.
 
 ### Changed
-- `dataset_provider` modularised into focused helpers; all card metadata is read from the
-  `local_dimensions` caches (no direct DB/File-API reads left).
+- **`local_dimensions` dependency pinned**: `version.php` now requires `local_dimensions`
+  2026071306 (its v2.0) or later instead of `ANY_VERSION` — the block depends on its cache
+  classes, constants and return-context API.
+- **Web-service contract**: the single `hasnonfavourites` flag in `get_block_dataset`'s
+  response was replaced by per-group `hasnonfavouriteplans` / `hasnonfavouritecompetencies`.
+- `dataset_provider` modularised into focused helpers; card metadata (images, tags,
+  colours) is read exclusively from the `local_dimensions` caches — no direct
+  customfield/File-API metadata reads left.
+- Plugin maturity raised from BETA to STABLE.
 
 ### Security
 - Card colours and image URLs are sanitised server-side before reaching inline styles
@@ -56,5 +70,5 @@ trail, favourites with filter pills, ghost cards, and display-mode routing into 
 ### Added
 - Initial release of the Dimensions block plugin.
 
-[Unreleased]: https://github.com/uaiblaine/moodle-block_dimensions/compare/v1.0...HEAD
+[2.0]: https://github.com/uaiblaine/moodle-block_dimensions/releases/tag/v2.0
 [1.0]: https://github.com/uaiblaine/moodle-block_dimensions/releases/tag/v1.0
