@@ -19,6 +19,10 @@ node_modules/
 # Moodle AMD build artifacts are tracked, but source maps are optional
 # amd/build/*.map
 
+# Design/planning docs (docs/block-kit) are versioned for collaboration, but kept
+# OUT of the release zip via .gitattributes (export-ignore) — the plugin ships
+# only what Moodle needs at runtime.
+
 # OS generated
 Thumbs.db
 ehthumbs.db

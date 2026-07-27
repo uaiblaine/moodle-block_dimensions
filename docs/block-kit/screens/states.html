@@ -1,0 +1,391 @@
+<!-- @dsCard group="Foundations" name="Interactive states & focus" subtitle="Hover, focus, high contrast, reduced motion and print, as they really ship — now on a single focus blue" -->
+<style>
+/* ============================================================================
+   Canonical block-kit scaffold (shared by every screen file).
+   AS-IS token values live on .kit (light, the default skin); .panel.dark
+   overrides only the tokens `.theme-dark` / `body.dark` really swap in
+   styles.css. Markup is written once with var(--bk-*) so the two panels
+   differ by token values alone. See tokens.html / token-migration.md.
+   Palette migrated to Moodle DS on 2026-07-27 — these ARE the shipped values.
+   ============================================================================ */
+.kit{
+  --bk-page:#f4f5f7;--bk-surface:#fff;--bk-surface-2:#f8f9fa;
+  --bk-card-bg:#fff;--bk-plan-card-bg:#fff;
+  --bk-card-border:rgba(0,0,0,.125);--bk-plan-card-border:rgba(0,0,0,.125);
+  --bk-text:#212529;--bk-muted:#6c757d;
+  --bk-line:#e9ecef;--bk-line-2:#ced4da;--bk-line-3:#dee2e6;--bk-line-4:#ced4da;
+  --bk-accent:#0f6cbf;--bk-accent-dark:#0c5699;--bk-accent-deep:#0f4d85;
+  --bk-pill-platter:#e9ecef;--bk-pill-text:#495057;--bk-pill-indicator:#fff;
+  --bk-counter-bg:#e9ecef;--bk-counter-fg:#495057;--bk-counter-active-bg:#cfe2ff;--bk-counter-active-fg:#0f4d85;
+  --bk-search-border:#dee2e6;--bk-search-icon:#6c757d;--bk-search-placeholder:#5c636a;
+  --bk-search-glow:rgba(15,108,191,.15);
+  --bk-select-hover-bg:#dee2e6;--bk-select-hover-border:#ced4da;
+  --bk-paddle:rgba(0,0,0,.56);--bk-paddle-hover:rgba(0,0,0,.72);
+  --bk-btn-bg:#fff;--bk-btn-fg:#212529;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.15);
+  --bk-section-from:#0f4d85;--bk-section-to:#0f6cbf;
+  --bk-plan-grad-a:#0f6cbf;--bk-plan-grad-b:#0a5aa0;
+  --bk-comp-grad-a:#ffc107;--bk-comp-grad-b:#fd7e14;--bk-comp-grad-c:#e8590c;
+  --bk-tag-bg:#fd7e14;--bk-tag-fg:#212529;--bk-halftone:#00000082;
+  --bk-success:#198754;--bk-success-text:#0f5132;--bk-star:#ffc107;
+  --bk-focus:#0f6cbf;--bk-focus-glow:rgba(15,108,191,.25);--bk-focus-btn:#0f6cbf;
+  --bk-danger-fg:#842029;--bk-danger-bg:#f8d7da;
+  --bk-warn-fg:#212529;--bk-warn-bg:#fff3cd;--bk-warn-border:#ffe69c;
+  --bk-empty-circle:#6c757d;--bk-empty-ring:1px;--bk-ghost-fg:#6c757d;--bk-ghost-circle:#adb5bd;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--bk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
+}
+.kit *{box-sizing:border-box;}
+.panel.dark{
+  --bk-page:#212529;--bk-surface:#212529;--bk-surface-2:#212529;
+  --bk-card-bg:#343a40;--bk-plan-card-bg:#343a40;
+  --bk-card-border:#495057;--bk-plan-card-border:#495057;
+  --bk-text:#f8f9fa;--bk-muted:#adb5bd;
+  --bk-line:#495057;--bk-line-2:#495057;--bk-line-3:#495057;--bk-line-4:#495057;
+  --bk-accent:#6ea8fe;--bk-accent-dark:#9ec5fe;
+  --bk-pill-platter:#212529;--bk-pill-text:#adb5bd;--bk-pill-indicator:#495057;
+  --bk-search-border:#495057;--bk-search-icon:#adb5bd;--bk-search-placeholder:#adb5bd;
+  --bk-search-glow:rgba(110,168,254,.2);
+  --bk-select-hover-bg:#343a40;
+  --bk-paddle:rgba(255,255,255,.64);--bk-paddle-hover:rgba(255,255,255,.88);
+  --bk-btn-bg:#343a40;--bk-btn-fg:#f8f9fa;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.35);
+  --bk-success:#75b798;--bk-success-text:#75b798;
+  --bk-counter-bg:#495057;--bk-counter-fg:#dee2e6;
+  --bk-focus:#6ea8fe;--bk-focus-glow:rgba(110,168,254,.25);--bk-focus-btn:#6ea8fe;
+  --bk-danger-fg:#ea868f;--bk-danger-bg:#2c0b0e;
+  --bk-warn-fg:#dee2e6;--bk-warn-bg:#332701;--bk-warn-border:#664d03;
+  --bk-empty-circle:#adb5bd;--bk-ghost-fg:#adb5bd;--bk-ghost-circle:#6c757d;
+  color:var(--bk-text);
+}
+.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
+.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--bk-page);padding:0 0 18px;overflow:hidden;}
+.panel.dark{border-color:#343a40;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--bk-text);padding:12px 20px 0;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--mono);font-size:10px;color:var(--bk-pill-text);background:var(--bk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
+.idb.r{border-color:#c9a3a3;color:#a3552d;}
+.panel.dark .idb{color:#adb5bd;border-color:#495057;}
+.bk-cap{font-size:11px;color:var(--bk-muted);padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.bk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
+.divlbl{font-size:11px;color:var(--bk-muted);margin:14px 20px 4px;border-top:1px solid var(--bk-line);padding-top:10px;}
+.note{font-size:10px;color:var(--bk-muted);padding:2px 20px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+.legend{max-width:1100px;margin:16px auto 0;background:#fff;border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
+.leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
+.leg .v b{color:#212529;font-weight:600;}
+.leg .v{color:#495057;}
+.leg .rule{color:#8a8980;}
+
+/* ---- screen-local values styles.css hardcodes but the token block has no name for ----
+   Deliberately NOT swapped in .panel.dark unless styles.css really swaps them:
+   --st-focus-link stays #0f6cbf in dark because no dark block restates the ring
+   on these controls. --st-trail-hover DOES swap: the dark trail-label hover rule
+   (styles.css:880-883) now sets #6ea8fe. */
+.kit{
+  --st-shadow-rest:0 .125rem .25rem rgba(0,0,0,.075);
+  --st-shadow-hover:0 .5rem 1rem rgba(0,0,0,.15);
+  --st-btn-shadow-hover:0 4px 14px rgba(0,0,0,.22);
+  --st-focus-link:#0f6cbf;--st-trail-hover:#0f6cbf;
+  --st-tab-active:#0f6cbf;--st-ind-shadow:0 1px 3px rgba(0,0,0,.12);
+  --st-star-empty:#6c757d;
+  --st-fav-bg:rgba(255,255,255,.85);--st-fav-bg-hover:rgba(255,255,255,1);--st-fav-shadow:0 1px 4px rgba(0,0,0,.18);
+  --st-ghost-border:#ced4da;--st-ghost-bg:transparent;--st-ghost-wash:rgba(15,108,191,.04);
+  --st-hc-border:#000;
+}
+.panel.dark{
+  --st-trail-hover:#6ea8fe;
+  /* The dark rest shadow is already 0 2px 8px/.35, so the light hover value
+     would read flatter than rest; styles.css:2158-2171 deepens it instead. */
+  --st-btn-shadow-hover:0 4px 14px rgba(0,0,0,.5);
+  --st-tab-active:#dee2e6;--st-ind-shadow:0 1px 3px rgba(0,0,0,.3);
+  --st-star-empty:#adb5bd;
+  --st-fav-bg:rgba(52,58,64,.85);--st-fav-bg-hover:#495057;--st-fav-shadow:0 1px 4px rgba(0,0,0,.4);
+  --st-ghost-border:#495057;--st-ghost-bg:var(--bk-surface-2);--st-ghost-wash:rgba(110,168,254,.08);
+  --st-hc-border:currentColor;
+}
+/* ---- state matrix scaffolding ---- */
+.lede{max-width:1100px;margin:0 auto 16px;background:var(--bk-surface);border:1px solid #e3e1da;border-radius:12px;padding:12px 16px;font-size:12px;color:#495057;}
+.lede b{color:var(--bk-text);}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:-1px;margin-right:3px;border:1px solid rgba(0,0,0,.15);}
+.mx{display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px 16px;padding:10px 20px 4px;}
+.st{flex:0 0 auto;min-width:0;}
+.st.w{flex:1 1 132px;max-width:172px;}
+.st.g{flex:1 1 152px;max-width:196px;}
+.stl{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:var(--bk-muted);margin-bottom:7px;white-space:nowrap;}
+.stage{display:flex;align-items:center;justify-content:flex-start;min-height:52px;}
+/* card (competency-card, styles.css:188-241) */
+.dc{display:flex;flex-direction:column;width:100%;border-radius:.5rem;overflow:hidden;border:1px solid var(--bk-card-border);background:var(--bk-card-bg);box-shadow:var(--st-shadow-rest);}
+.dc-img{height:32px;position:relative;background:linear-gradient(135deg,var(--bk-comp-grad-a) 0%,var(--bk-comp-grad-b) 50%,var(--bk-comp-grad-c) 100%);}
+.dc-img::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,var(--bk-halftone) 0,transparent 1px);background-size:5px 5px;filter:opacity(.5);}
+.dc-body{padding:7px 9px 9px;}
+.dc-title{font-size:.75rem;font-weight:700;line-height:1.4;color:var(--bk-text);}
+.dc.hov{transform:translateY(-2px);box-shadow:var(--st-shadow-hover);}
+.dc.foc{outline:3px solid var(--bk-focus);outline-offset:2px;box-shadow:0 0 0 4px var(--bk-focus-glow);}
+.dc-title.foc{display:inline-block;outline:2px solid var(--st-focus-link);outline-offset:4px;border-radius:2px;}
+/* access pill (dims-card-access-btn, styles.css:929-953; the article-scoped
+   hover / :focus-within lift lives at 2130-2184) */
+.apill{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:8px;background:var(--bk-btn-bg);color:var(--bk-btn-fg);font-size:.85rem;font-weight:600;line-height:1.3;white-space:nowrap;box-shadow:var(--bk-btn-shadow);}
+.apill .ic{width:.8rem;height:.8rem;}
+/* Hover and :focus-within share one treatment, and the pill draws no ring of
+   its own — the card's :focus-within ring is the accessible indicator. */
+.apill.hov,.apill.foc{box-shadow:var(--st-btn-shadow-hover);transform:translateY(-1px);}
+/* favourite star (dims-fav-btn, styles.css:1667-1769) */
+.favstage{display:inline-flex;align-items:center;justify-content:center;padding:6px;border-radius:6px;background:linear-gradient(135deg,var(--bk-comp-grad-a) 0%,var(--bk-comp-grad-b) 100%);}
+.fav{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border:none;border-radius:50%;background:var(--st-fav-bg);box-shadow:var(--st-fav-shadow);color:var(--st-star-empty);}
+.fav.hov{background:var(--st-fav-bg-hover);transform:scale(1.1);color:var(--bk-star);}
+.fav.act{transform:scale(.95);}
+.fav.foc{outline:2px solid var(--st-focus-link);outline-offset:2px;}
+.fav.on{color:var(--bk-star);}
+.ic.f{fill:currentColor;}
+/* filter pill (dims-filter-tabs / dims-filter-tab, styles.css:1123-1277) */
+.tabs{position:relative;display:inline-flex;height:44px;padding:4px;border-radius:999px;background:var(--bk-pill-platter);}
+.tab{position:relative;z-index:2;display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border:none;border-radius:999px;background:transparent;font-size:.875rem;font-weight:500;color:var(--bk-pill-text);opacity:.8;white-space:nowrap;}
+.tab.hov{opacity:1;}
+.tab.on{color:var(--st-tab-active);opacity:1;}
+.tab.foc{box-shadow:inset 0 0 0 2px var(--st-focus-link);opacity:1;}
+.ind{position:absolute;z-index:0;top:4px;bottom:4px;left:4px;right:4px;border-radius:999px;background:var(--bk-pill-indicator);box-shadow:var(--st-ind-shadow);}
+/* clear button (dims-clear-filters-btn, styles.css:1068-1100) */
+.clr{display:inline-flex;align-items:center;gap:.375rem;padding:.5rem 1rem;border:1px solid var(--bk-line-3);border-radius:999px;background:transparent;font-size:.875rem;font-weight:500;color:var(--bk-pill-text);white-space:nowrap;}
+.clr .ic{width:.8rem;height:.8rem;}
+.clr.hov{color:var(--bk-danger-fg);border-color:var(--bk-danger-fg);background:var(--bk-danger-bg);}
+.clr.foc{outline:2px solid var(--st-focus-link);outline-offset:2px;}
+/* trail item (trail-item / trail-marker / trail-label, styles.css:481-592, 2120-2139) */
+.trailrow{display:inline-flex;align-items:flex-start;}
+.trail{display:inline-flex;flex-direction:column;align-items:center;width:60px;}
+.tmark{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:20px;height:20px;background:var(--bk-card-bg);}
+.tcirc{width:14px;height:14px;border:var(--bk-empty-ring) solid var(--bk-empty-circle);border-radius:50%;background:var(--bk-card-bg);}
+.tlabel{max-width:60px;margin-top:4px;font-size:.65rem;color:var(--bk-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tlabel.done{color:var(--bk-success-text);font-weight:600;}
+.tconn{width:22px;height:2px;margin-top:9px;background:var(--bk-line);}
+.tconn.done{background:var(--bk-success);}
+.ic.chk{width:18px;height:18px;color:var(--bk-success);}
+.ic.chk circle{fill:currentColor;stroke:none;}
+.ic.chk path{stroke:var(--bk-card-bg);}
+.trail.hov .tmark{transform:scale(1.2);}
+.trail.hov .tlabel{text-decoration:underline;color:var(--st-trail-hover);}
+.trail.foc{outline:2px solid var(--st-focus-link);outline-offset:2px;border-radius:4px;}
+/* ghost card (dims-ghost-card-inner, styles.css:1853-1921) */
+.ghost{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.9rem .8rem;border:2px dashed var(--st-ghost-border);border-radius:12px;background:var(--st-ghost-bg);}
+.gcirc{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border:2px solid var(--bk-line-4);border-radius:50%;color:var(--bk-ghost-circle);}
+.gtitle{font-size:.85rem;font-weight:700;color:var(--bk-ghost-fg);text-align:center;}
+.gsub{font-size:.68rem;color:var(--bk-ghost-fg);text-align:center;}
+.ghost.hov{border-color:var(--bk-accent);background:var(--st-ghost-wash);transform:translateY(-2px);}
+.ghost.hov .gcirc{border-color:var(--bk-accent);color:var(--bk-accent);}
+.ghost.hov .gtitle{color:var(--bk-accent);}
+.ghost.foc{outline:2px solid var(--st-focus-link);outline-offset:2px;}
+/* summary blocks */
+.sums{max-width:1100px;margin:16px auto 0;display:grid;gap:14px;}
+.sum{background:#fff;border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.sum h4{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 8px;}
+.sum ul{margin:0;padding-left:18px;font-size:12px;color:#495057;}
+.sum li{margin:3px 0;}
+.sum code{font-family:var(--mono);font-size:11px;color:#a3552d;}
+</style>
+<div class="kit">
+
+<div class="lede"><b>One focus blue ships now.</b>
+<span class="sw" style="background:#0f6cbf"></span><code>#0f6cbf</code> draws every focus indicator in light: the card <code>:focus-within</code> ring (3px, 2px offset, plus a 4px <code>rgba(15,108,191,.25)</code> glow), the title link, the favourite star, the search clear, the clear-filters button, the filter select, the mobile filter toggle (<code>styles.css:1413-1416</code>, inside the <code>575.98px</code> query), the ghost card, the error retry and the trail link — plus the filter pill, whose indicator is an inset <code>box-shadow</code> in the same blue.
+Dark restates three of them, all with <span class="sw" style="background:#6ea8fe"></span><code>#6ea8fe</code>: the competency card's ring, plus a <code>rgba(110,168,254,.25)</code> glow (<code>styles.css:355-359</code>); the filter select's outline and border (<code>styles.css:1517-1521</code>); and the mobile toggle's outline, restated inside the same <code>575.98px</code> query the control lives in (<code>styles.css:1449-1452</code>). Every other ring — the plan card's identical one included — stays <code>#0f6cbf</code> on the dark surface, because no <code>.theme-dark</code> block restates it.
+Historically this was four different light blues: <code>#005fcc</code> on the card ring, <code>#1a73e8</code> on everything else, <code>#0a58ca</code> on the access pill alone and <code>#1765cc</code> on the mobile toggle alone, with <code>#66b3ff</code> as a fifth in dark. That spread is why the consolidation happened; it is recorded in <code>token-migration.md</code>. The pill's own ring is gone entirely now — it shares the card's, and answers hover and focus with the same lift instead.</div>
+
+<div class="screens">
+
+  <!-- ============ AS-IS · LIGHT ============ -->
+  <div class="panel">
+    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · light</div>
+
+    <div class="bk-cap">Card — rest / hover / <code>:focus-within</code> <span class="idb">STA-CARD-HOVER</span> <span class="idb">STA-CARD-FOCUS</span></div>
+    <div class="mx">
+      <div class="st w"><div class="stl">rest</div><div class="stage"><div class="dc"><div class="dc-img"></div><div class="dc-body"><div class="dc-title">Digital literacy</div></div></div></div></div>
+      <div class="st w"><div class="stl">hover</div><div class="stage"><div class="dc hov"><div class="dc-img"></div><div class="dc-body"><div class="dc-title">Digital literacy</div></div></div></div></div>
+      <div class="st w"><div class="stl">focus-within</div><div class="stage"><div class="dc foc"><div class="dc-img"></div><div class="dc-body"><div class="dc-title">Digital literacy</div></div></div></div></div>
+    </div>
+    <div class="note">Rest shadow <code>0 .125rem .25rem rgba(0,0,0,.075)</code> → hover <code>0 .5rem 1rem rgba(0,0,0,.15)</code> with <code>translateY(-2px)</code>, over a <code>.15s ease-in-out</code> transform + shadow transition. The focus ring is drawn on the article, not the link.</div>
+
+    <div class="divlbl">Card title link — its own <code>:focus-visible</code> <span class="idb">STA-TITLE-FOCUS</span></div>
+    <div class="mx">
+      <div class="st"><div class="stl">rest</div><div class="stage"><span class="dc-title">Digital literacy</span></div></div>
+      <div class="st"><div class="stl">focus-visible</div><div class="stage"><span class="dc-title foc">Digital literacy</span></div></div>
+    </div>
+    <div class="note">A second, deliberate indicator — <code>2px #0f6cbf</code>, offset <code>4px</code>, radius <code>2px</code> — that survives layouts where <code>:focus-within</code> does not bubble to the article. Both rings can still appear at once, but they are now the same blue, so a focused card no longer shows two colours of ring at the same time.</div>
+
+    <div class="divlbl">Access pill — hover and <code>:focus-within</code> share one lift <span class="idb">STA-BTN-FOCUS</span></div>
+    <div class="mx">
+      <div class="st"><div class="stl">rest</div><div class="stage"><span class="apill">Access<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div>
+      <div class="st"><div class="stl">hover</div><div class="stage"><span class="apill hov">Access<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div>
+      <div class="st"><div class="stl">focus-within</div><div class="stage"><span class="apill foc">Access<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div>
+    </div>
+    <div class="note">The pill is <code>pointer-events:none</code>, <code>aria-hidden</code> decoration — the card's <code>.stretched-link</code> is the real target — but it does react. Pointing at the card or tabbing into it grows the rest shadow <code>0 2px 8px/.15</code> to <code>0 4px 14px/.22</code> and lifts the pill <code>translateY(-1px)</code>, over its own <code>.2s</code> shadow + transform transition (<code>styles.css:2145-2154</code>). The selector reads oddly on purpose: it is scoped to the <em>article</em> — <code>.plan-card:hover</code> / <code>.competency-card:hover</code> and the matching <code>:focus-within</code>, with the pill as a descendant. The lift used to be written as <code>.card-link:hover .dims-card-access-btn</code> and never matched, because both templates put the pill inside the image wrapper and the link inside the card body, sibling subtrees (<code>plan_card.mustache:93</code> vs <code>:99</code>); <code>stretched-link</code> makes both <code>:hover</code> and <code>:focus-within</code> bubble to the article, so scoping there reaches all three pills — vertical plan, horizontal plan and competency. Hover and keyboard focus deliberately share the one treatment: the pill has <b>no ring of its own</b>, because the article already draws a <code>3px #0f6cbf</code> ring plus a 4px glow, and a second ring on a decorative element would put two indicators on screen for one focus event. <code>prefers-reduced-motion</code> drops the transform and keeps the shadow (<code>:2175-2184</code>). Logged in <code>token-migration.md</code>.</div>
+
+    <div class="divlbl">Favourite star <span class="idb">STA-STAR</span></div>
+    <div class="mx">
+      <div class="st"><div class="stl">rest</div><div class="stage"><span class="favstage"><span class="fav"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg></span></span></div></div>
+      <div class="st"><div class="stl">hover</div><div class="stage"><span class="favstage"><span class="fav hov"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg></span></span></div></div>
+      <div class="st"><div class="stl">active</div><div class="stage"><span class="favstage"><span class="fav act"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg></span></span></div></div>
+      <div class="st"><div class="stl">focus</div><div class="stage"><span class="favstage"><span class="fav foc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg></span></span></div></div>
+      <div class="st"><div class="stl">on</div><div class="stage"><span class="favstage"><span class="fav on"><svg class="ic f" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg></span></span></div></div>
+    </div>
+    <div class="note">Empty star <code>#6c757d</code> (dark <code>#adb5bd</code>) turns <code>#ffc107</code> on hover while the 32px disc scales <code>1.1</code> and its translucent white backing goes fully opaque; <code>:active</code> drops to <code>.95</code>. The ring is plain <code>:focus</code>, not <code>:focus-visible</code>, so it also shows on mouse click.</div>
+
+    <div class="divlbl">Filter pill — the inset focus ring <span class="idb">STA-PILL-FOCUS</span></div>
+    <div class="mx">
+      <div class="st"><div class="stl">inactive .8</div><div class="stage"><span class="tabs"><span class="tab">All</span></span></div></div>
+      <div class="st"><div class="stl">hover 1</div><div class="stage"><span class="tabs"><span class="tab hov">All</span></span></div></div>
+      <div class="st"><div class="stl">active</div><div class="stage"><span class="tabs"><span class="ind"></span><span class="tab on">All</span></span></div></div>
+      <div class="st"><div class="stl">focus-visible</div><div class="stage"><span class="tabs"><span class="tab foc">All</span></span></div></div>
+    </div>
+    <div class="note">Unusual: the pill's focus indicator is <code>box-shadow: inset 0 0 0 2px #0f6cbf</code> with <code>outline:none</code> — drawn <em>inside</em> the pill so it cannot be clipped by the platter's <code>overflow:hidden</code>, but it is also the only control here whose indicator does not sit outside the box. Active state is text colour (<code>#0f6cbf</code>) plus the sliding white indicator behind it; in dark the active text is <code>#dee2e6</code>, not the accent.</div>
+
+    <div class="divlbl">Clear filters button <span class="idb">STA-CLEAR-HOVER</span></div>
+    <div class="mx">
+      <div class="st"><div class="stl">rest</div><div class="stage"><span class="clr"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4-4a2 2 0 0 1 0-2.8L13.6 3.6a2 2 0 0 1 2.8 0l4 4a2 2 0 0 1 0 2.8L11 21z"/><path d="M21 21H7M9 11l5 5"/></svg>Clear</span></div></div>
+      <div class="st"><div class="stl">hover</div><div class="stage"><span class="clr hov"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4-4a2 2 0 0 1 0-2.8L13.6 3.6a2 2 0 0 1 2.8 0l4 4a2 2 0 0 1 0 2.8L11 21z"/><path d="M21 21H7M9 11l5 5"/></svg>Clear</span></div></div>
+      <div class="st"><div class="stl">focus-visible</div><div class="stage"><span class="clr foc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4-4a2 2 0 0 1 0-2.8L13.6 3.6a2 2 0 0 1 2.8 0l4 4a2 2 0 0 1 0 2.8L11 21z"/><path d="M21 21H7M9 11l5 5"/></svg>Clear</span></div></div>
+    </div>
+    <div class="note">Real label is “Clear filters” with <code>fa-eraser</code>; shortened here to fit the matrix. Hover moves foreground, border <em>and</em> background to the danger pair in one <code>.15s</code> transition.</div>
+
+    <div class="divlbl">Trail item <span class="idb">STA-TRAIL-HOVER</span></div>
+    <div class="mx">
+      <div class="st"><div class="stl">rest</div><div class="stage"><span class="trailrow"><span class="trail"><span class="tmark"><svg class="ic chk" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12.3 2.6 2.6 5.4-5.8"/></svg></span><span class="tlabel done">Basics</span></span><span class="tconn done"></span><span class="trail"><span class="tmark"><span class="tcirc"></span></span><span class="tlabel">Applied</span></span></span></div></div>
+      <div class="st"><div class="stl">hover</div><div class="stage"><span class="trailrow"><span class="trail hov"><span class="tmark"><span class="tcirc"></span></span><span class="tlabel">Applied</span></span></span></div></div>
+      <div class="st"><div class="stl">focus-visible</div><div class="stage"><span class="trailrow"><span class="trail foc"><span class="tmark"><span class="tcirc"></span></span><span class="tlabel">Applied</span></span></span></div></div>
+    </div>
+    <div class="note">Marker scales <code>1.2</code> over <code>.15s</code>; the label underlines. The pending marker is a <code>1px #6c757d</code> ring, 4.69:1 on the white card — it was <code>2px #adb5bd</code> at 2.07:1, and darkening it alone would have made pending steps read heavier than completed ones, so the stroke thinned in the same change; <code>1.4.11</code> sets a ratio, not a thickness. Outer size stays 14px on <code>border-box</code>, so nothing shifts. Note the split: <code>.trail-item.clickable:hover .trail-label</code> also recolours to <code>#0f6cbf</code> (dark <code>#6ea8fe</code>), but the newer <code>.trail-item-link:hover</code> rule only underlines — so a keyboard user and a mouse user can see different label colours on the same item. Focus ring is <code>2px #0f6cbf</code>, offset <code>2px</code>, radius <code>4px</code>.</div>
+
+    <div class="divlbl">Ghost card “Show all (N)” <span class="idb">STA-GHOST-HOVER</span></div>
+    <div class="mx">
+      <div class="st g"><div class="stl">rest</div><div class="stage"><span class="ghost"><span class="gcirc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="gtitle">Show all (24)</span><span class="gsub">Look beyond favourites.</span></span></div></div>
+      <div class="st g"><div class="stl">hover</div><div class="stage"><span class="ghost hov"><span class="gcirc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="gtitle">Show all (24)</span><span class="gsub">Look beyond favourites.</span></span></div></div>
+      <div class="st g"><div class="stl">focus</div><div class="stage"><span class="ghost foc"><span class="gcirc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="gtitle">Show all (24)</span><span class="gsub">Look beyond favourites.</span></span></div></div>
+    </div>
+    <div class="note">Scaled down for the matrix — the real card is a 50px circle, <code>2rem 1.5rem</code> padding and a <code>1.1rem</code> title. Hover takes the border and both texts to the accent (which <em>does</em> swap to <code>#6ea8fe</code> in dark) over a 4% accent wash, <code>rgba(15,108,191,.04)</code>, and lifts 2px; <code>:active</code> returns to <code>translateY(0)</code>. Focus stays <code>#0f6cbf</code> in both skins, so in dark the hover accent and the focus ring are still two different blues.</div>
+
+    <div class="bk-ids">
+      <span class="idb">every ring #0f6cbf</span>
+      <span class="idb">dark #6ea8fe: card ring, select, toggle</span>
+      <span class="idb">was #005fcc / #1a73e8 / #0a58ca / #1765cc</span>
+    </div>
+  </div>
+
+  <!-- ============ AS-IS · DARK ============ -->
+  <div class="panel dark">
+    <div class="plabel"><span class="pdot" style="background:#6ea8fe"></span>As-is · dark</div>
+
+    <div class="bk-cap">Card — rest / hover / <code>:focus-within</code> <span class="idb">STA-CARD-HOVER</span> <span class="idb">STA-CARD-FOCUS</span></div>
+    <div class="mx">
+      <div class="st w"><div class="stl">rest</div><div class="stage"><div class="dc"><div class="dc-img"></div><div class="dc-body"><div class="dc-title">Digital literacy</div></div></div></div></div>
+      <div class="st w"><div class="stl">hover</div><div class="stage"><div class="dc hov"><div class="dc-img"></div><div class="dc-body"><div class="dc-title">Digital literacy</div></div></div></div></div>
+      <div class="st w"><div class="stl">focus-within</div><div class="stage"><div class="dc foc"><div class="dc-img"></div><div class="dc-body"><div class="dc-title">Digital literacy</div></div></div></div></div>
+    </div>
+    <div class="note">Rest shadow <code>0 .125rem .25rem rgba(0,0,0,.075)</code> → hover <code>0 .5rem 1rem rgba(0,0,0,.15)</code> with <code>translateY(-2px)</code>, over a <code>.15s ease-in-out</code> transform + shadow transition. Dark restates only the ring colour and glow: <code>#6ea8fe</code> / <code>rgba(110,168,254,.25)</code> — and only for the competency card. The plan card's identical <code>:focus-within</code> rule (<code>styles.css:436-440</code>) is never restated, so its ring stays <code>#0f6cbf</code> on the dark surface.</div>
+
+    <div class="divlbl">Card title link — its own <code>:focus-visible</code> <span class="idb">STA-TITLE-FOCUS</span></div>
+    <div class="mx">
+      <div class="st"><div class="stl">rest</div><div class="stage"><span class="dc-title">Digital literacy</span></div></div>
+      <div class="st"><div class="stl">focus-visible</div><div class="stage"><span class="dc-title foc">Digital literacy</span></div></div>
+    </div>
+    <div class="note">A second, deliberate indicator — <code>2px #0f6cbf</code>, offset <code>4px</code>, radius <code>2px</code> — that survives layouts where <code>:focus-within</code> does not bubble to the article. Unchanged in dark: <code>#0f6cbf</code> on <code>#343a40</code> is a much weaker ring than the card's <code>#6ea8fe</code>.</div>
+
+    <div class="divlbl">Access pill — hover and <code>:focus-within</code> share one lift <span class="idb">STA-BTN-FOCUS</span></div>
+    <div class="mx">
+      <div class="st"><div class="stl">rest</div><div class="stage"><span class="apill">Access<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div>
+      <div class="st"><div class="stl">hover</div><div class="stage"><span class="apill hov">Access<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div>
+      <div class="st"><div class="stl">focus-within</div><div class="stage"><span class="apill foc">Access<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div>
+    </div>
+    <div class="note">Same article-scoped lift as light — hover and <code>:focus-within</code> on <code>.plan-card</code> / <code>.competency-card</code>, <code>translateY(-1px)</code>, no ring on the pill itself — but dark is the one skin that restates the shadow: <code>0 4px 14px rgba(0,0,0,.5)</code> (<code>styles.css:2158-2171</code>). It has to. The dark rest state is already the deeper <code>0 2px 8px rgba(0,0,0,.35)</code> (<code>:971-976</code>), so reusing the light hover value of <code>.22</code> would have made the lifted pill read <em>flatter</em> than the resting one. Everything else carries over: the selector is scoped to the article because the pill sits in the image wrapper and the link in the card body, sibling subtrees the old <code>.card-link:hover</code> form could never reach, and <code>prefers-reduced-motion</code> drops the transform while the deepened shadow stays.</div>
+
+    <div class="divlbl">Favourite star <span class="idb">STA-STAR</span></div>
+    <div class="mx">
+      <div class="st"><div class="stl">rest</div><div class="stage"><span class="favstage"><span class="fav"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg></span></span></div></div>
+      <div class="st"><div class="stl">hover</div><div class="stage"><span class="favstage"><span class="fav hov"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg></span></span></div></div>
+      <div class="st"><div class="stl">active</div><div class="stage"><span class="favstage"><span class="fav act"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg></span></span></div></div>
+      <div class="st"><div class="stl">focus</div><div class="stage"><span class="favstage"><span class="fav foc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg></span></span></div></div>
+      <div class="st"><div class="stl">on</div><div class="stage"><span class="favstage"><span class="fav on"><svg class="ic f" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg></span></span></div></div>
+    </div>
+    <div class="note">Dark backing is <code>rgba(52,58,64,.85)</code> → hover <code>#495057</code>, the empty star lifts to <code>#adb5bd</code>, and the hover colour is the same <code>#ffc107</code>. The ring is plain <code>:focus</code>, not <code>:focus-visible</code>, so it also shows on mouse click.</div>
+
+    <div class="divlbl">Filter pill — the inset focus ring <span class="idb">STA-PILL-FOCUS</span></div>
+    <div class="mx">
+      <div class="st"><div class="stl">inactive .8</div><div class="stage"><span class="tabs"><span class="tab">All</span></span></div></div>
+      <div class="st"><div class="stl">hover 1</div><div class="stage"><span class="tabs"><span class="tab hov">All</span></span></div></div>
+      <div class="st"><div class="stl">active</div><div class="stage"><span class="tabs"><span class="ind"></span><span class="tab on">All</span></span></div></div>
+      <div class="st"><div class="stl">focus-visible</div><div class="stage"><span class="tabs"><span class="tab foc">All</span></span></div></div>
+    </div>
+    <div class="note">Unusual: the pill's focus indicator is <code>box-shadow: inset 0 0 0 2px #0f6cbf</code> with <code>outline:none</code> — drawn <em>inside</em> the pill so it cannot be clipped by the platter's <code>overflow:hidden</code>. In dark the indicator becomes <code>#495057</code> and the active label <code>#dee2e6</code>, so the pill loses its accent entirely while the focus ring keeps the light-mode blue.</div>
+
+    <div class="divlbl">Clear filters button <span class="idb">STA-CLEAR-HOVER</span></div>
+    <div class="mx">
+      <div class="st"><div class="stl">rest</div><div class="stage"><span class="clr"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4-4a2 2 0 0 1 0-2.8L13.6 3.6a2 2 0 0 1 2.8 0l4 4a2 2 0 0 1 0 2.8L11 21z"/><path d="M21 21H7M9 11l5 5"/></svg>Clear</span></div></div>
+      <div class="st"><div class="stl">hover</div><div class="stage"><span class="clr hov"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4-4a2 2 0 0 1 0-2.8L13.6 3.6a2 2 0 0 1 2.8 0l4 4a2 2 0 0 1 0 2.8L11 21z"/><path d="M21 21H7M9 11l5 5"/></svg>Clear</span></div></div>
+      <div class="st"><div class="stl">focus-visible</div><div class="stage"><span class="clr foc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4-4a2 2 0 0 1 0-2.8L13.6 3.6a2 2 0 0 1 2.8 0l4 4a2 2 0 0 1 0 2.8L11 21z"/><path d="M21 21H7M9 11l5 5"/></svg>Clear</span></div></div>
+    </div>
+    <div class="note">Real label is “Clear filters” with <code>fa-eraser</code>; shortened here to fit the matrix. Dark is the only control with a fully restated hover pair: <code>#ea868f</code> on <code>#2c0b0e</code>.</div>
+
+    <div class="divlbl">Trail item <span class="idb">STA-TRAIL-HOVER</span></div>
+    <div class="mx">
+      <div class="st"><div class="stl">rest</div><div class="stage"><span class="trailrow"><span class="trail"><span class="tmark"><svg class="ic chk" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12.3 2.6 2.6 5.4-5.8"/></svg></span><span class="tlabel done">Basics</span></span><span class="tconn done"></span><span class="trail"><span class="tmark"><span class="tcirc"></span></span><span class="tlabel">Applied</span></span></span></div></div>
+      <div class="st"><div class="stl">hover</div><div class="stage"><span class="trailrow"><span class="trail hov"><span class="tmark"><span class="tcirc"></span></span><span class="tlabel">Applied</span></span></span></div></div>
+      <div class="st"><div class="stl">focus-visible</div><div class="stage"><span class="trailrow"><span class="trail foc"><span class="tmark"><span class="tcirc"></span></span><span class="tlabel">Applied</span></span></span></div></div>
+    </div>
+    <div class="note">Marker scales <code>1.2</code> over <code>.15s</code>; the label underlines. Dark now restates the whole trail palette: the marker backing (<code>#343a40</code>), the pending ring (<code>#adb5bd</code>, 5.55:1 on the card — <code>#6c757d</code> had measured 2.45:1 there, the mirror image of the light-mode problem), the completed marker and both completed connectors (<code>#75b798</code>, 4.92:1, where <code>#198754</code> was 2.54:1), the label (<code>#adb5bd</code>), the completed label (<code>#75b798</code>) and the <code>.clickable</code> hover label (<code>#6ea8fe</code>, 4.76:1, where <code>#0f6cbf</code> was 2.15:1). The focus ring is the one thing dark still leaves at <code>#0f6cbf</code>.</div>
+
+    <div class="divlbl">Ghost card “Show all (N)” <span class="idb">STA-GHOST-HOVER</span></div>
+    <div class="mx">
+      <div class="st g"><div class="stl">rest</div><div class="stage"><span class="ghost"><span class="gcirc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="gtitle">Show all (24)</span><span class="gsub">Look beyond favourites.</span></span></div></div>
+      <div class="st g"><div class="stl">hover</div><div class="stage"><span class="ghost hov"><span class="gcirc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="gtitle">Show all (24)</span><span class="gsub">Look beyond favourites.</span></span></div></div>
+      <div class="st g"><div class="stl">focus</div><div class="stage"><span class="ghost foc"><span class="gcirc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="gtitle">Show all (24)</span><span class="gsub">Look beyond favourites.</span></span></div></div>
+    </div>
+    <div class="note">Scaled down for the matrix — the real card is a 50px circle, <code>2rem 1.5rem</code> padding and a <code>1.1rem</code> title. Dark fills the card (<code>#212529</code>), moves the dashed border to <code>#495057</code> and washes hover with <code>rgba(110,168,254,.08)</code>; hover text is <code>#6ea8fe</code> while the focus ring stays <code>#0f6cbf</code>.</div>
+
+    <div class="bk-ids">
+      <span class="idb">every ring #0f6cbf</span>
+      <span class="idb">dark #6ea8fe: card ring, select, toggle</span>
+      <span class="idb">was #005fcc / #1a73e8 / #0a58ca / #1765cc</span>
+    </div>
+  </div>
+
+</div>
+
+<div class="sums">
+  <div class="sum">
+    <h4>prefers-contrast: high <span class="idb">STA-CONTRAST</span></h4>
+    <ul>
+      <li>Card gets <code>border: 2px solid #000</code> and its <code>:focus-within</code> ring turns <code>3px solid #000</code> — the only place the focus colour is replaced rather than thickened. Card titles are forced to <code>#000 !important</code>.</li>
+      <li>Competency gradient flattens to a solid <code>#6c757d</code>, so tag contrast is evaluated against one grey instead of three brand stops.</li>
+      <li>Access pill, tags and the favourite star all take <code>2px solid currentColor</code> and drop their shadows.</li>
+      <li>Filter pills gain <code>2px solid transparent</code>; the <em>active</em> pill gets a real <code>#0f6cbf</code> border, and the sliding indicator gains <code>outline: 2px solid #0f6cbf; outline-offset: -2px</code> so it reads as a bordered pill rather than a shadowed platter.</li>
+      <li>The select goes <code>2px solid #000</code>, the clear button <code>2px solid currentColor</code>, and the ghost card thickens to <code>3px</code> dashed <code>currentColor</code>.</li>
+      <li>None of these blocks are restated for dark mode — <code>#000</code> borders are applied on <code>#343a40</code> cards too.</li>
+    </ul>
+  </div>
+  <div class="sum">
+    <h4>prefers-reduced-motion: reduce <span class="idb">STA-MOTION</span> &nbsp;·&nbsp; print <span class="idb">STA-PRINT</span></h4>
+    <ul>
+      <li><b>Reduced motion</b> zeroes every transition (<code>card</code>, access pill, filter pill, select, indicator, paddles, clear button, favourite star, ghost card, the mobile filter host and its toggle) and every transform: card hover, the access pill's <code>translateY(-1px)</code>, star hover and <code>:active</code>, ghost hover and <code>:active</code>, and the trail marker's <code>scale(1.2)</code> all become <code>none</code>. Colour and shadow changes survive, so every state stays distinguishable without movement.</li>
+      <li><b>Print</b> hides the access pill, the tag row, the favourite star, the whole filter bar and the ghost card; the card drops its shadow, forces <code>border: 1px solid #000</code> and sets <code>break-inside: avoid</code>; the competency gradient flattens to <code>#ced4da !important</code> so a colour image never burns a page.</li>
+      <li>The section header prints as solid <code>#000</code>. Its print override used to set <code>color</code> only, which the base rule's <code>-webkit-text-fill-color: transparent</code> beat, so it painted nothing; it now clears <code>background-image</code> and resets the fill to <code>currentcolor</code> first. The dark override had the same defect and the same fix, and shows <code>#dee2e6</code>.</li>
+      <li>What print does <em>not</em> hide: the trail, the section header, the card title and the competency count — which is the intended paper artefact.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="legend">
+  <h3>ID legend — Interactive states &amp; focus (block_dimensions/styles.css)</h3>
+  <div class="leg">
+    <span class="k">STA-CARD-HOVER</span><span class="v"><b>Card hover</b> — <code>translateY(-2px)</code> and the shadow growing from <code>0 .125rem .25rem rgba(0,0,0,.075)</code> to <code>0 .5rem 1rem rgba(0,0,0,.15)</code>, transitioned at <code>.15s ease-in-out</code> <span class="rule">styles.css:188-198, 212-215</span></span>
+    <span class="k">STA-CARD-FOCUS</span><span class="v"><b>Card <code>:focus-within</code></b> — <code>3px solid #0f6cbf</code>, <code>outline-offset: 2px</code>, plus a <code>0 0 0 4px rgba(15,108,191,.25)</code> glow; the link itself sets <code>outline:none</code>. Dark swaps the competency card to <code>#6ea8fe</code> / <code>rgba(110,168,254,.25)</code> but never restates the identical plan-card rule, which keeps <code>#0f6cbf</code>. A <code>:has()</code> fallback repeats the ring for browsers without <code>:focus-visible</code> <span class="rule">styles.css:221-241, 355-359, 436-440</span></span>
+    <span class="k">STA-TITLE-FOCUS</span><span class="v"><b>Title-link <code>:focus-visible</code></b> — a deliberate second indicator on <code>.stretched-link</code>: <code>2px solid #0f6cbf</code>, offset <code>4px</code>, radius <code>2px</code>, so focus stays visible in layouts where <code>:focus-within</code> does not bubble to the article <span class="rule">styles.css:2053-2058</span></span>
+    <span class="k">STA-BTN-FOCUS</span><span class="v"><b>Access pill</b> — hover and <code>:focus-within</code> share one lift: shadow <code>0 2px 8px/.15</code> → <code>0 4px 14px/.22</code> (dark deepens to <code>/.5</code>) plus <code>translateY(-1px)</code>, dropped under reduced motion. Scoped to the article rather than the card link, which the templates never make the pill a descendant of; the pill draws no ring of its own, since the card's <code>:focus-within</code> ring is the accessible indicator for this <code>aria-hidden</code> decoration <span class="rule">styles.css:929-953, 2130-2184; plan_card.mustache:93,99</span></span>
+    <span class="k">STA-STAR</span><span class="v"><b>Favourite star</b> — empty <code>#6c757d</code> (dark <code>#adb5bd</code>) → hover <code>#ffc107</code> with <code>scale(1.1)</code> and an opaque backing, <code>:active scale(.95)</code>, <code>:focus</code> (not <code>:focus-visible</code>) <code>2px solid #0f6cbf</code>; the filled icon is <code>#ffc107</code> <span class="rule">styles.css:1667-1769</span></span>
+    <span class="k">STA-PILL-FOCUS</span><span class="v"><b>Filter pill</b> — inactive at <code>opacity:.8</code>, hover <code>1</code>, active takes <code>--dims-tabs-item-color-active</code> (<code>#0f6cbf</code>; dark <code>#dee2e6</code>) with the sliding indicator behind it, and <code>:focus-visible</code> uses <code>box-shadow: inset 0 0 0 2px #0f6cbf</code> with <code>outline:none</code> — the only inset indicator in the block <span class="rule">styles.css:1220-1277, 1491-1511</span></span>
+    <span class="k">STA-CLEAR-HOVER</span><span class="v"><b>Clear-filters button</b> — hover moves colour, border and background to <code>#842029</code> / <code>#f8d7da</code> (dark <code>#ea868f</code> / <code>#2c0b0e</code>) in one <code>.15s</code> transition; <code>:focus-visible</code> is <code>2px solid #0f6cbf</code>, offset <code>2px</code> <span class="rule">styles.css:1068-1100, 1542-1553</span></span>
+    <span class="k">STA-TRAIL-HOVER</span><span class="v"><b>Trail item</b> — marker <code>scale(1.2)</code> and label underline on hover and <code>:focus-visible</code>; the older <code>.trail-item.clickable</code> rule also recolours the label to <code>#0f6cbf</code> (dark <code>#6ea8fe</code>, <code>styles.css:880-883</code>), the newer <code>.trail-item-link</code> rule does not. Link focus ring <code>2px solid #0f6cbf</code>, offset <code>2px</code>, radius <code>4px</code> <span class="rule">styles.css:580-592, 2120-2139</span></span>
+    <span class="k">STA-GHOST-HOVER</span><span class="v"><b>Ghost card</b> — rest <code>2px dashed #ced4da</code> (dark <code>#495057</code> on <code>#212529</code>); hover takes border, circle and title to the accent over a <code>rgba(15,108,191,.04)</code> wash (dark <code>rgba(110,168,254,.08)</code>) and lifts <code>2px</code>, <code>:active</code> returns to <code>0</code>; <code>:focus</code> is <code>2px solid #0f6cbf</code> in both skins <span class="rule">styles.css:1853-1921</span></span>
+    <span class="k">STA-CONTRAST</span><span class="v"><b><code>prefers-contrast: high</code></b> — <code>2-3px</code> solid <code>#000</code> or <code>currentColor</code> borders on card, pill, tag, star, select, clear button and ghost card; the competency gradient flattens to <code>#6c757d</code>; the active filter pill gains a real border and the indicator an inset outline <span class="rule">styles.css:309-326, 972-979, 1045-1050, 1558-1579, 1756-1761, 1975-1980</span></span>
+    <span class="k">STA-MOTION</span><span class="v"><b><code>prefers-reduced-motion: reduce</code></b> — every transition and every transform in the block is set to <code>none</code>, including the trail marker's dedicated opt-out at the end of the file <span class="rule">styles.css:331-339, 990-996, 1584-1602, 1764-1773, 1983-2000, 2152-2158</span></span>
+    <span class="k">STA-PRINT</span><span class="v"><b><code>@media print</code></b> — access pill, tags, favourite star, filter bar and ghost card are <code>display:none</code>; the card drops its shadow, forces <code>1px solid #000</code> and <code>break-inside: avoid</code>; the gradient flattens to <code>#ced4da !important</code>; the section header drops its gradient fill and prints <code>#000</code> <span class="rule">styles.css:364-374, 999-1005, 1059-1063, 1635-1641, 1669-1673, 1776-1780, 2003-2007</span></span>
+  </div>
+</div>
+</div>

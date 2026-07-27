@@ -1,0 +1,479 @@
+<!-- @dsCard group="Block screens · Responsive (RSP)" name="Responsive — narrow block and mobile" subtitle="The 575.98px breakpoint, the collapsible filter panel and the container queries that respond to the block column, not the viewport · as-is" -->
+<style>
+/* ============================================================================
+   Canonical block-kit scaffold (shared by every screen file).
+   AS-IS token values live on .kit (light, the default skin); .panel.dark
+   overrides only the tokens `.theme-dark` / `body.dark` really swap in
+   styles.css. Markup is written once with var(--bk-*) so the two panels
+   differ by token values alone. See tokens.html / token-migration.md.
+   Palette migrated to Moodle DS on 2026-07-27 — these ARE the shipped values.
+   ============================================================================ */
+.kit{
+  --bk-page:#f4f5f7;--bk-surface:#fff;--bk-surface-2:#f8f9fa;
+  --bk-card-bg:#fff;--bk-plan-card-bg:#fff;
+  --bk-card-border:rgba(0,0,0,.125);--bk-plan-card-border:rgba(0,0,0,.125);
+  --bk-text:#212529;--bk-muted:#6c757d;
+  --bk-line:#e9ecef;--bk-line-2:#ced4da;--bk-line-3:#dee2e6;--bk-line-4:#ced4da;
+  --bk-accent:#0f6cbf;--bk-accent-dark:#0c5699;--bk-accent-deep:#0f4d85;
+  --bk-pill-platter:#e9ecef;--bk-pill-text:#495057;--bk-pill-indicator:#fff;
+  --bk-counter-bg:#e9ecef;--bk-counter-fg:#495057;--bk-counter-active-bg:#cfe2ff;--bk-counter-active-fg:#0f4d85;
+  --bk-search-border:#dee2e6;--bk-search-icon:#6c757d;--bk-search-placeholder:#5c636a;
+  --bk-search-glow:rgba(15,108,191,.15);
+  --bk-select-hover-bg:#dee2e6;--bk-select-hover-border:#ced4da;
+  --bk-paddle:rgba(0,0,0,.56);--bk-paddle-hover:rgba(0,0,0,.72);
+  --bk-btn-bg:#fff;--bk-btn-fg:#212529;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.15);
+  --bk-section-from:#0f4d85;--bk-section-to:#0f6cbf;
+  --bk-plan-grad-a:#0f6cbf;--bk-plan-grad-b:#0a5aa0;
+  --bk-comp-grad-a:#ffc107;--bk-comp-grad-b:#fd7e14;--bk-comp-grad-c:#e8590c;
+  --bk-tag-bg:#fd7e14;--bk-tag-fg:#212529;--bk-halftone:#00000082;
+  --bk-success:#198754;--bk-success-text:#0f5132;--bk-star:#ffc107;
+  --bk-focus:#0f6cbf;--bk-focus-glow:rgba(15,108,191,.25);--bk-focus-btn:#0f6cbf;
+  --bk-danger-fg:#842029;--bk-danger-bg:#f8d7da;
+  --bk-warn-fg:#212529;--bk-warn-bg:#fff3cd;--bk-warn-border:#ffe69c;
+  --bk-empty-circle:#6c757d;--bk-empty-ring:1px;--bk-ghost-fg:#6c757d;--bk-ghost-circle:#adb5bd;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--bk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
+}
+.kit *{box-sizing:border-box;}
+.panel.dark{
+  --bk-page:#212529;--bk-surface:#212529;--bk-surface-2:#212529;
+  --bk-card-bg:#343a40;--bk-plan-card-bg:#343a40;
+  --bk-card-border:#495057;--bk-plan-card-border:#495057;
+  --bk-text:#f8f9fa;--bk-muted:#adb5bd;
+  --bk-line:#495057;--bk-line-2:#495057;--bk-line-3:#495057;--bk-line-4:#495057;
+  --bk-accent:#6ea8fe;--bk-accent-dark:#9ec5fe;
+  --bk-pill-platter:#212529;--bk-pill-text:#adb5bd;--bk-pill-indicator:#495057;
+  --bk-search-border:#495057;--bk-search-icon:#adb5bd;--bk-search-placeholder:#adb5bd;
+  --bk-search-glow:rgba(110,168,254,.2);
+  --bk-select-hover-bg:#343a40;
+  --bk-paddle:rgba(255,255,255,.64);--bk-paddle-hover:rgba(255,255,255,.88);
+  --bk-btn-bg:#343a40;--bk-btn-fg:#f8f9fa;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.35);
+  --bk-success:#75b798;--bk-success-text:#75b798;
+  --bk-counter-bg:#495057;--bk-counter-fg:#dee2e6;
+  --bk-focus:#6ea8fe;--bk-focus-glow:rgba(110,168,254,.25);--bk-focus-btn:#6ea8fe;
+  --bk-danger-fg:#ea868f;--bk-danger-bg:#2c0b0e;
+  --bk-warn-fg:#dee2e6;--bk-warn-bg:#332701;--bk-warn-border:#664d03;
+  --bk-empty-circle:#adb5bd;--bk-ghost-fg:#adb5bd;--bk-ghost-circle:#6c757d;
+  color:var(--bk-text);
+}
+.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
+.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--bk-page);padding:0 0 18px;overflow:hidden;}
+.panel.dark{border-color:#343a40;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--bk-text);padding:12px 20px 0;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--mono);font-size:10px;color:var(--bk-pill-text);background:var(--bk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
+.idb.r{border-color:#c9a3a3;color:#a3552d;}
+.panel.dark .idb{color:#adb5bd;border-color:#495057;}
+.bk-cap{font-size:11px;color:var(--bk-muted);padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.bk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
+.divlbl{font-size:11px;color:var(--bk-muted);margin:14px 20px 4px;border-top:1px solid var(--bk-line);padding-top:10px;}
+.note{font-size:10px;color:var(--bk-muted);padding:2px 20px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+.legend{max-width:1100px;margin:16px auto 0;background:#fff;border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
+.leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
+.leg .v b{color:#212529;font-weight:600;}
+.leg .v{color:#495057;}
+.leg .rule{color:#8a8980;}
+
+/* ---- screen-local values styles.css uses that the token block does not name ---- */
+.kit{--bk-sticky-scrim:rgba(255,255,255,.7);--bk-sticky-scrim-dark:rgba(33,37,41,.97);
+     --bk-fav-scrim:rgba(255,255,255,.85);--bk-card-shadow:0 .125rem .25rem rgba(0,0,0,.075);}
+.ic.fill{fill:currentColor;}
+
+/* ---- phone frame: simulates the ≤575.98px viewport (panel 1) ---- */
+.phone{width:360px;max-width:100%;margin:8px 20px 0;border:1px solid var(--bk-line-2);border-radius:18px;background:var(--bk-surface);overflow:hidden;}
+.phone-nav{height:34px;display:flex;align-items:center;gap:6px;padding:0 12px;font-size:10px;font-weight:600;color:var(--bk-muted);background:var(--bk-surface-2);border-bottom:1px solid var(--bk-line);}
+.phone-scroll{max-height:470px;overflow-y:auto;padding:10px;background:var(--bk-page);}
+.filler{font-size:10px;color:var(--bk-muted);padding:8px 2px 0;}
+
+/* ---- block header (dims-block-header) — .mob applies the ≤575.98px rules ---- */
+.hdr{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.75rem;flex-wrap:wrap;}
+.mob .hdr{flex-direction:column;align-items:stretch;text-align:center;position:sticky;top:0;z-index:10;
+  background:var(--bk-sticky-scrim);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border-radius:10px;padding:10px 10px 1rem;margin-bottom:10px;}
+.heading{margin:0;font-weight:700;font-size:1.1rem;flex-shrink:0;}
+.srow{display:flex;align-items:center;gap:.5rem;min-width:0;max-width:200px;flex-shrink:1;margin-left:auto;}
+.mob .srow{max-width:100%;margin-left:0;}
+.swrap{position:relative;display:flex;align-items:center;min-width:0;flex:1;}
+.sicon{position:absolute;left:.625rem;width:.75rem;height:.75rem;color:var(--bk-search-icon);pointer-events:none;z-index:1;}
+.sinp{width:100%;padding:.375rem 1.75rem .375rem 1.875rem;border:1px solid var(--bk-search-border);border-radius:999px;
+  background:var(--bk-surface-2);font-size:.8125rem;color:var(--bk-text);line-height:1.3;font-family:inherit;outline:none;}
+.sinp::placeholder{color:var(--bk-search-placeholder);}
+.sclear{position:absolute;right:.25rem;display:flex;align-items:center;justify-content:center;width:22px;height:22px;
+  border:none;border-radius:50%;background:transparent;color:var(--bk-muted);padding:0;cursor:pointer;}
+.sclear .ic{width:.625rem;height:.625rem;}
+
+/* ---- filter toggle button: display:none until ≤575.98px ---- */
+.ftoggle{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:36px;height:36px;
+  border:1.5px solid var(--bk-line-3);border-radius:50%;background:var(--bk-surface-2);color:var(--bk-search-placeholder);cursor:pointer;}
+.ftoggle[aria-expanded="true"]{background:var(--bk-counter-active-bg);border-color:var(--bk-accent-deep);color:var(--bk-accent-deep);}
+.ftoggle .ic{width:.9rem;height:.9rem;}
+
+/* ---- dark strip for that toggle: the control only exists below 575.98px, so its
+   dark rules live inside the same query. Both panels on this screen are light, so
+   this small sample is where the dark treatment is shown. The rest state is pure
+   token swap (surface-2 / line-3 / search-placeholder all flip in dark); only the
+   on-state needs its own rule, because dark keeps the #212529 fill instead of
+   reusing the light #cfe2ff active-count tint. ---- */
+.dsample{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;margin:6px 20px 0;padding:12px;
+  border:1px solid #343a40;border-radius:10px;background:#212529;
+  --bk-surface-2:#212529;--bk-line-3:#495057;--bk-search-placeholder:#adb5bd;}
+.dcol{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:104px;}
+.dlab{font-size:10px;line-height:1.35;color:#adb5bd;text-align:center;}
+.dsample .ftoggle[aria-expanded="true"]{background:#212529;border-color:#6ea8fe;color:#6ea8fe;}
+.dsample .ftoggle.foc{outline:2px solid #6ea8fe;outline-offset:2px;}
+
+/* ---- collapsible filters host (0fr → 1fr) ---- */
+.fhost{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease;}
+.fhost.open{grid-template-rows:1fr;}
+.fhost-inner{overflow:hidden;min-height:0;}
+.fbar{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;padding:0 0 8px;}
+.platter{position:relative;display:inline-flex;width:fit-content;max-width:100%;height:44px;padding:4px;
+  background:var(--bk-pill-platter);border-radius:999px;overflow:hidden;}
+.ftab{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border:none;background:transparent;border-radius:999px;
+  font-size:.875rem;font-weight:500;font-family:inherit;color:var(--bk-pill-text);opacity:.8;cursor:pointer;white-space:nowrap;position:relative;z-index:2;}
+.ftab.active{color:var(--bk-accent);opacity:1;cursor:default;}
+.mob .ftab,.sml .ftab{padding:.375rem .625rem;font-size:.8rem;}
+.ind{position:absolute;top:4px;bottom:4px;border-radius:999px;background:var(--bk-pill-indicator);box-shadow:0 1px 3px rgba(0,0,0,.12);z-index:0;}
+.fcount{font-weight:600;margin-left:.15rem;background:var(--bk-counter-bg);color:var(--bk-counter-fg);border-radius:999px;padding:0 6px;font-size:.75rem;}
+.ftab.active .fcount{background:var(--bk-counter-active-bg);color:var(--bk-counter-active-fg);}
+.clearf{display:inline-flex;align-items:center;gap:.375rem;padding:.5rem 1rem;border:1px solid var(--bk-line-3);border-radius:999px;
+  background:transparent;font-size:.875rem;font-weight:500;font-family:inherit;color:var(--bk-muted);cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.paddle{display:flex;align-items:center;justify-content:center;width:24px;border:none;background:transparent;color:var(--bk-paddle);padding:0;cursor:pointer;}
+.paddle .ic{width:8px;height:14px;}
+
+/* ---- cards ---- */
+.card{position:relative;display:flex;flex-direction:column;border-radius:.5rem;overflow:hidden;box-shadow:var(--bk-card-shadow);
+  border:1px solid var(--bk-card-border);background:var(--bk-card-bg);}
+.card.plan{border-color:var(--bk-plan-card-border);background:var(--bk-plan-card-bg);}
+.imgwrap{position:relative;overflow:hidden;flex-shrink:0;}
+.cimg{width:100%;height:120px;background-size:cover;background-position:center;position:relative;flex-shrink:0;}
+.cimg.comp{background:linear-gradient(135deg,var(--bk-comp-grad-a) 0%,var(--bk-comp-grad-b) 50%,var(--bk-comp-grad-c) 100%);}
+.cimg.comp::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,var(--bk-halftone) 0,transparent 1px);background-size:5px 5px;filter:opacity(.5);}
+.cimg.pln{background:linear-gradient(135deg,var(--bk-plan-grad-a) 0%,var(--bk-plan-grad-b) 100%);}
+.mob .cimg.comp{height:140px;}
+.cbody{padding:1rem;}
+.ctitle{font-size:.9rem;line-height:1.4;font-weight:700;margin:0 0 .5rem;color:var(--bk-text);}
+.ctitle.clamp{display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.8em;}
+.ccount{margin:0;font-size:.82rem;line-height:1.3;color:var(--bk-muted);font-weight:600;}
+.access{position:absolute;top:10px;right:10px;z-index:2;display:inline-flex;align-items:center;gap:6px;padding:6px 16px;
+  background:var(--bk-btn-bg);color:var(--bk-btn-fg);font-size:.85rem;font-weight:600;line-height:1.3;border-radius:8px;
+  white-space:nowrap;box-shadow:var(--bk-btn-shadow);}
+.access.h{left:10px;right:auto;width:fit-content;}
+.access .ic{width:.8rem;height:.8rem;}
+.fav{position:absolute;top:8px;left:8px;z-index:3;display:flex;align-items:center;justify-content:center;width:32px;height:32px;
+  border:none;border-radius:50%;background:var(--bk-fav-scrim);color:var(--bk-star);padding:0;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+.card.horiz>.fav{left:auto;right:8px;}
+.tags{position:absolute;bottom:8px;left:8px;display:flex;flex-wrap:wrap;gap:4px;z-index:1;}
+.tag{display:inline-block;padding:4px 12px;font-size:.75rem;font-weight:600;border-radius:100px;background:var(--bk-tag-bg);color:var(--bk-tag-fg);}
+
+/* ---- trail ---- */
+.trail{display:flex;flex-direction:row;align-items:flex-start;gap:0;margin:.5rem 0 0;padding:.5rem 0 0;overflow-x:auto;list-style:none;}
+.mob .trail{flex-wrap:nowrap;}
+.titem{display:flex;flex-direction:column;align-items:center;position:relative;min-width:50px;flex:1;text-align:center;}
+.mob .titem{min-width:45px;}
+.titem:not(.last)::after{content:'';position:absolute;top:10px;left:50%;width:100%;height:2px;background:var(--bk-line);z-index:0;}
+.titem.done:not(.last)::after{background:var(--bk-success);}
+.tmark{position:relative;z-index:1;width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:var(--bk-success);}
+.tmark .ic{width:18px;height:18px;}
+.ecircle{width:14px;height:14px;border:var(--bk-empty-ring) solid var(--bk-empty-circle);border-radius:50%;background:var(--bk-surface);}
+.tlabel{font-size:.65rem;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60px;color:var(--bk-muted);}
+.mob .tlabel{font-size:.6rem;max-width:45px;}
+.tlabel.ok{color:var(--bk-success-text);font-weight:600;}
+.trail.v{flex-direction:column;overflow:visible;}
+.trail.v .titem{flex-direction:row;align-items:center;min-width:0;flex:none;text-align:left;padding:8px 0;}
+.trail.v .tmark{margin-right:8px;flex-shrink:0;}
+.trail.v .tlabel{white-space:normal;max-width:none;font-size:.72rem;margin-top:0;}
+.trail.v .titem:not(.last)::after{left:9px;top:calc(50% + 10px);width:2px;height:calc(100% - 10px);}
+
+/* ---- the grid that replaces Bootstrap .row, and the real container query ---- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(240px,30%,500px),1fr));gap:1rem;margin:0;padding:0;list-style:none;}
+.grid>li{container-type:inline-size;container-name:dims-card-cell;width:100%;max-width:100%;padding:0;margin:0;}
+.card.horiz{flex-direction:row;}
+.card.horiz>.imgwrap{flex:0 0 180px;}
+.card.horiz .cimg{height:100%;min-height:180px;}
+.card.horiz .cbody{flex:1;min-width:0;}
+@container dims-card-cell (max-width: 360px){
+  .card.horiz{flex-direction:column;}
+  .card.horiz>.imgwrap{flex:none;width:100%;}
+  .card.horiz .cimg{height:160px;min-height:auto;}
+}
+.wide{margin:8px 20px 0;padding:8px;border:1px dashed var(--bk-line-2);border-radius:10px;background:var(--bk-surface);display:flex;flex-wrap:wrap;gap:8px;}
+.wide-main{flex:1 1 auto;min-width:0;border:1px dashed var(--bk-line-3);border-radius:8px;background:var(--bk-surface-2);
+  display:flex;align-items:center;justify-content:center;text-align:center;font-size:10px;color:var(--bk-muted);padding:6px;}
+.blockcol{flex:0 0 320px;width:320px;max-width:100%;background:var(--bk-page);border:1px solid var(--bk-line);border-radius:8px;padding:12px;}
+.colcap{font-size:10px;font-weight:600;color:var(--bk-muted);margin-bottom:6px;}
+.fullcell{padding:8px 20px 0;}
+
+/* ---- breakpoint table ---- */
+.bpt{max-width:1100px;margin:16px auto 0;background:var(--bk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.bpt h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.bpt .scroll{overflow-x:auto;}
+.bpt table{width:100%;border-collapse:collapse;font-size:12px;min-width:620px;}
+.bpt th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--bk-muted);border-bottom:1px solid var(--bk-line);padding:0 10px 6px 0;}
+.bpt td{vertical-align:top;padding:8px 10px 8px 0;border-bottom:1px solid var(--bk-line);color:#495057;}
+.bpt td.q{font-family:var(--mono);font-size:11px;color:var(--bk-text);white-space:nowrap;}
+.bpt code{font-family:var(--mono);font-size:11px;}
+</style>
+<div class="kit"><div class="screens">
+
+  <!-- ============ PANEL 1 — MOBILE ============ -->
+  <div class="panel">
+    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · mobile (≤575.98px)</div>
+
+    <div class="bk-cap">Sticky stacked header, full-width search, toggle on · <span class="idb">RSP-STICKY</span> <span class="idb">RSP-SEARCH-STACK</span> <span class="idb">RSP-TOGGLE</span></div>
+    <div class="phone">
+      <div class="phone-nav">Boost fixed navbar — the sticky header parks at <code>top:60px</code></div>
+      <div class="phone-scroll">
+        <div class="mob">
+          <div class="hdr">
+            <h2 class="heading">My competencies</h2>
+            <div class="srow">
+              <div class="swrap">
+                <svg class="ic sicon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <input class="sinp" type="text" value="lead" aria-label="Search" />
+                <button class="sclear" type="button" aria-label="Clear"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+              </div>
+              <button class="ftoggle" type="button" aria-expanded="true" aria-label="Toggle filters">
+                <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="fhost open">
+            <div class="fhost-inner">
+              <div class="fbar">
+                <div class="platter"><span class="ind" style="left:4px;width:118px"></span>
+                  <button class="ftab active" type="button" role="radio" aria-checked="true"><svg class="ic fill" viewBox="0 0 24 24" aria-hidden="true" style="width:.8rem;height:.8rem;color:var(--bk-star)"><path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg>Favourites<span class="fcount">3</span></button>
+                  <button class="ftab" type="button" role="radio" aria-checked="false">Show all<span class="fcount">12</span></button>
+                </div>
+                <div class="platter"><span class="ind" style="left:28px;width:56px"></span>
+                  <button class="paddle" type="button" aria-label="Scroll left"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+                  <button class="ftab active" type="button" role="radio" aria-checked="true">All</button>
+                  <button class="ftab" type="button" role="radio" aria-checked="false">2025</button>
+                  <button class="paddle" type="button" aria-label="Scroll right"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+                </div>
+                <button class="clearf" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 20h-9M14.5 4.5 4.9 14.1a2 2 0 0 0 0 2.8l3.2 3.2a2 2 0 0 0 2.8 0l9.6-9.6a2 2 0 0 0 0-2.8l-3.2-3.2a2 2 0 0 0-2.8 0z"/></svg>Clear filters</button>
+              </div>
+            </div>
+          </div>
+
+          <ul class="grid">
+            <li>
+              <article class="card">
+                <div class="imgwrap">
+                  <div class="cimg comp"></div>
+                  <button class="fav" type="button" aria-pressed="true" aria-label="Favourite"><svg class="ic fill" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg></button>
+                  <span class="access">Access <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
+                  <span class="tags"><span class="tag">Leadership</span></span>
+                </div>
+                <div class="cbody"><h4 class="ctitle clamp">Lead a distributed team through change</h4></div>
+              </article>
+            </li>
+            <li>
+              <article class="card plan">
+                <div class="imgwrap">
+                  <div class="cimg pln"></div>
+                  <button class="fav" type="button" aria-pressed="false" aria-label="Favourite"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--bk-muted)"><path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg></button>
+                  <span class="access">Continue <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
+                </div>
+                <div class="cbody">
+                  <h4 class="ctitle">Leadership pathway</h4>
+                  <p class="ccount">4 of 6 competencies</p>
+                  <ul class="trail">
+                    <li class="titem done first"><span class="tmark"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="m9 11 3 3 9-9"/></svg></span><span class="tlabel ok">FEED</span></li>
+                    <li class="titem done"><span class="tmark"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="m9 11 3 3 9-9"/></svg></span><span class="tlabel ok">DELEG</span></li>
+                    <li class="titem"><span class="tmark"><span class="ecircle"></span></span><span class="tlabel">COACH</span></li>
+                    <li class="titem"><span class="tmark"><span class="ecircle"></span></span><span class="tlabel">STRAT</span></li>
+                    <li class="titem last"><span class="tmark"><span class="ecircle"></span></span><span class="tlabel">CHANGE</span></li>
+                  </ul>
+                </div>
+              </article>
+            </li>
+          </ul>
+          <p class="filler">Scroll the frame: the header stays put and the cards pass under the 70 % white scrim.</p>
+        </div>
+      </div>
+    </div>
+    <div class="bk-ids">
+      <span class="idb">RSP-IMAGE-140 · competency image band</span>
+      <span class="idb">plan image stays 120px at every width</span>
+    </div>
+    <div class="note">Header: <code>position:sticky; top:60px; z-index:10</code>, <code>rgba(255,255,255,.7)</code> + <code>backdrop-filter:blur(8px)</code>, <code>border-radius:10px</code>, 10px padding, 10px bottom margin. Dark mode overrides the scrim to <code>rgba(33,37,41,.97)</code> — nearly opaque, so the blur is decorative rather than functional there. Trail below 576px: items <code>min-width:45px</code>, labels <code>0.6rem</code> / <code>max-width:45px</code>, strip set to <code>overflow-x:auto; flex-wrap:nowrap</code>.</div>
+
+    <div class="divlbl">Filters host — <code>grid-template-rows:0fr</code> animating to <code>1fr</code> over 0.3s <span class="idb">RSP-FILTERS-COLLAPSE</span> <span class="idb">RSP-PILL-SMALL</span></div>
+    <div class="bk-cap" style="padding-top:6px">Collapsed — <code>aria-expanded="false"</code>, no <code>.dims-filters-open</code></div>
+    <div style="padding:4px 20px 0" class="mob">
+      <div class="srow" style="max-width:100%;margin-bottom:6px">
+        <div class="swrap">
+          <svg class="ic sicon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input class="sinp" type="text" placeholder="Search" aria-label="Search" />
+        </div>
+        <button class="ftoggle" type="button" aria-expanded="false" aria-label="Toggle filters"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></button>
+      </div>
+      <div class="fhost">
+        <div class="fhost-inner">
+          <div class="fbar"><div class="platter"><span class="ind" style="left:4px;width:118px"></span><button class="ftab active" type="button">Favourites<span class="fcount">3</span></button><button class="ftab" type="button">Show all<span class="fcount">12</span></button></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="note">The host keeps its markup and its DOM height contribution of zero — the inner wrapper carries <code>overflow:hidden; min-height:0</code>, which is what makes the row-track animation possible at all.</div>
+    <div class="bk-cap" style="padding-top:10px">Expanded — the same host with <code>.dims-filters-open</code> on the content container</div>
+    <div style="padding:4px 20px 0" class="mob">
+      <div class="srow" style="max-width:100%;margin-bottom:6px">
+        <div class="swrap">
+          <svg class="ic sicon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input class="sinp" type="text" placeholder="Search" aria-label="Search" />
+        </div>
+        <button class="ftoggle" type="button" aria-expanded="true" aria-label="Toggle filters"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></button>
+      </div>
+      <div class="fhost open">
+        <div class="fhost-inner">
+          <div class="fbar"><div class="platter"><span class="ind" style="left:4px;width:118px"></span><button class="ftab active" type="button">Favourites<span class="fcount">3</span></button><button class="ftab" type="button">Show all<span class="fcount">12</span></button></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="note">Pills shrink to <code>padding:.375rem .625rem; font-size:.8rem</code> (from <code>.5rem 1rem</code> / <code>.875rem</code>) but the 44px platter, its 4px padding and the 36px inner row are unchanged — and the <b>Clear filters</b> button keeps <code>0.875rem</code>, so it reads slightly larger than the pills beside it. Dropdown-mode selects go to <code>width:100%</code>.</div>
+
+    <div class="divlbl">The same toggle in dark — rules nested in the 575.98px query <span class="idb">RSP-TOGGLE</span></div>
+    <div class="dsample">
+      <div class="dcol">
+        <button class="ftoggle" type="button" aria-expanded="false" aria-label="Toggle filters"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></button>
+        <span class="dlab">rest<br>#adb5bd on #212529<br>7.43:1</span>
+      </div>
+      <div class="dcol">
+        <button class="ftoggle" type="button" aria-expanded="true" aria-label="Toggle filters"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></button>
+        <span class="dlab">hover / <code>aria-expanded</code><br>#6ea8fe border + icon<br>6.39:1</span>
+      </div>
+      <div class="dcol">
+        <button class="ftoggle foc" type="button" aria-expanded="false" aria-label="Toggle filters"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></button>
+        <span class="dlab"><code>:focus-visible</code><br>2px #6ea8fe at 2px offset</span>
+      </div>
+    </div>
+    <div class="note">The toggle is the one control on this screen that exists <i>only</i> below the breakpoint, so its dark rules had to be nested in the same <code>@media (max-width: 575.98px)</code> block rather than joining the other dark rules further down the file. Before that they were missing entirely and a light <code>#f8f9fa</code> disc sat on the dark sticky header. Rest is <code>#212529</code> fill / <code>#495057</code> border / <code>#adb5bd</code> icon; hover and <code>[aria-expanded="true"]</code> keep that fill and flip border and icon to <code>#6ea8fe</code> — dark does not reuse the light <code>#cfe2ff</code> tint, so the on-state reads as an outline change rather than a fill change; the focus ring keeps its geometry and only swaps colour. Both panels above are light, which is why this strip carries its own dark values.</div>
+  </div>
+
+  <!-- ============ PANEL 2 — NARROW BLOCK COLUMN ============ -->
+  <div class="panel">
+    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · narrow block column (wide viewport)</div>
+
+    <div class="bk-cap">Grid collapses to one column, card stacks by container query · <span class="idb">RSP-GRID</span> <span class="idb">RSP-H-STACK</span></div>
+    <div class="wide">
+      <div class="wide-main">page region<br>viewport ≥ 992px</div>
+      <div class="blockcol">
+        <div class="colcap">Block column · 320px</div>
+        <ul class="grid">
+          <li>
+            <article class="card plan horiz">
+              <button class="fav" type="button" aria-pressed="false" aria-label="Favourite"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--bk-muted)"><path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg></button>
+              <div class="imgwrap">
+                <div class="cimg pln"></div>
+                <span class="access h">Continue <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
+                <span class="tags"><span class="tag">2025</span></span>
+              </div>
+              <div class="cbody">
+                <h4 class="ctitle clamp">Leadership pathway</h4>
+                <p class="ccount">4 of 6 competencies</p>
+                <ul class="trail v">
+                  <li class="titem done first"><span class="tmark"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="m9 11 3 3 9-9"/></svg></span><span class="tlabel ok">Giving feedback</span></li>
+                  <li class="titem"><span class="tmark"><span class="ecircle"></span></span><span class="tlabel">Coaching conversations</span></li>
+                  <li class="titem last"><span class="tmark"><span class="ecircle"></span></span><span class="tlabel">Leading change</span></li>
+                </ul>
+              </div>
+            </article>
+          </li>
+          <li>
+            <article class="card plan">
+              <div class="imgwrap">
+                <div class="cimg pln"></div>
+                <span class="access">Continue <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
+              </div>
+              <div class="cbody"><h4 class="ctitle">Onboarding plan</h4><p class="ccount">2 of 3 competencies</p></div>
+            </article>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="bk-ids">
+      <span class="idb">grid · minmax(clamp(240px,30%,500px),1fr)</span>
+      <span class="idb">li · container-type:inline-size</span>
+      <span class="idb">@container dims-card-cell (max-width:360px)</span>
+    </div>
+    <div class="note">Cell width here is ≈296px, so <code>clamp(240px,30%,500px)</code> resolves to its 240px floor and <code>auto-fill</code> can only place one track. The same 296px trips the container query, so the horizontal card stacks its 180px image column to a full-width 160px band — on a 1440px viewport, where no media query would ever fire.</div>
+
+    <div class="divlbl">Same markup, wide cell — the query does not fire <span class="idb">RSP-H-STACK</span></div>
+    <div class="fullcell">
+      <ul class="grid">
+        <li>
+          <article class="card plan horiz">
+            <button class="fav" type="button" aria-pressed="true" aria-label="Favourite"><svg class="ic fill" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg></button>
+            <div class="imgwrap">
+              <div class="cimg pln"></div>
+              <span class="access h">Continue <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
+              <span class="tags"><span class="tag">2025</span></span>
+            </div>
+            <div class="cbody">
+              <h4 class="ctitle clamp">Leadership pathway</h4>
+              <p class="ccount">4 of 6 competencies</p>
+              <ul class="trail v">
+                <li class="titem done first"><span class="tmark"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="m9 11 3 3 9-9"/></svg></span><span class="tlabel ok">Giving feedback</span></li>
+                <li class="titem last"><span class="tmark"><span class="ecircle"></span></span><span class="tlabel">Leading change</span></li>
+              </ul>
+            </div>
+          </article>
+        </li>
+      </ul>
+    </div>
+    <div class="note">Why the grid exists at all: the block ships its cards inside Bootstrap's <code>.row</code> / <code>col-*</code> markup, then <b>overrides it</b> — <code>[data-cards-type]</code> becomes <code>display:grid</code> with the Bootstrap negative margins zeroed, and every <code>&gt;li</code> drops <code>flex</code>/<code>padding</code>/<code>margin-bottom</code> in favour of the 1rem grid gap. Bootstrap columns respond to the <b>viewport</b>; a Moodle block lives in a column whose width the viewport does not describe, so the plugin makes each cell a query container instead. Note the competency grid does not use the clamp — it hardcodes <code>minmax(360px,1fr)</code>, so in a block column narrower than 360px its single track overflows the column.</div>
+  </div>
+
+</div>
+
+<div class="bpt">
+  <h3>Breakpoint table — what changes, and where it is measured from</h3>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Query</th><th>Measures</th><th>What changes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="q">@media (min-width: 992px)</td>
+          <td>viewport</td>
+          <td>Competency card image band drops to <b>100px</b>. Nothing else keys off this breakpoint — the plan card image stays 120px. <span class="rule">styles.css:294-298</span></td>
+        </tr>
+        <tr>
+          <td class="q">default (576–991.98px)</td>
+          <td>—</td>
+          <td>Card images 120px. Header is a single <code>space-between</code> row; search row <code>max-width:200px; margin-left:auto</code>; the filter toggle is <code>display:none</code> and the filters host is always open. Pills 0.875rem; trail items 50px with 0.65rem / 60px labels. <span class="rule">styles.css:16-41, 246-254, 1396-1398</span></td>
+        </tr>
+        <tr>
+          <td class="q">@media (max-width: 575.98px)</td>
+          <td>viewport</td>
+          <td>Header stacks, centres and turns sticky at <code>top:60px</code> with the translucent scrim; search row goes full width; the 36px round toggle appears; the filters host becomes a <code>0fr</code> grid that opens to <code>1fr</code>; pills shrink to 0.8rem and selects to <code>width:100%</code>; competency image band grows to <b>140px</b>; horizontal plan cards stack with a 160px image; trail items 45px with 0.6rem / 45px labels. The toggle's dark treatment is nested here too, since the control does not exist above the breakpoint. <span class="rule">styles.css:116-149, 300-304, 758-775, 804-819, 1400-1453, 1458-1486</span></td>
+        </tr>
+        <tr>
+          <td class="q">@container dims-card-cell (max-width: 360px)</td>
+          <td>the grid cell</td>
+          <td>Horizontal plan card and its link switch to <code>flex-direction:column</code>; the image wrapper drops <code>flex:0 0 180px</code> for <code>width:100%</code>; the image goes to <code>height:160px; min-height:auto</code>. Fires at any viewport width, including desktop. <span class="rule">styles.css:376-405, 777-795</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="legend">
+  <h3>ID legend — Responsive (RSP)</h3>
+  <div class="leg">
+    <span class="k">RSP-STICKY</span><span class="v"><b>Sticky stacked block header.</b> Below 575.98px <code>.dims-block-header</code> becomes <code>flex-direction:column; align-items:stretch; text-align:center</code> and sticks at <code>top:60px</code> (clearing the Boost navbar) with <code>z-index:10</code>, <code>background:rgba(255,255,255,.7)</code>, <code>backdrop-filter:blur(8px)</code> (plus the <code>-webkit-</code> twin), <code>border-radius:10px</code>, 10px padding on three sides, 1rem bottom padding and a 10px bottom margin. A separate dark-mode block sets the scrim to <code>rgba(33,37,41,.97)</code> — nearly opaque, so dark loses the see-through effect the light skin depends on. <span class="rule">styles.css:116-140 (light), 143-149 (dark)</span></span>
+    <span class="k">RSP-SEARCH-STACK</span><span class="v"><b>Search row at full width.</b> <code>.dims-search-row</code> normally sits at <code>max-width:200px; margin-left:auto</code> so it hugs the right edge of the header row; on mobile both are reset (<code>max-width:100%; margin-left:0</code>) and it fills the stacked header. The inner <code>.dims-block-search-wrapper</code> is <code>flex:1</code> at every width, so the input absorbs whatever the toggle does not use. <span class="rule">styles.css:33-52, 136-139</span></span>
+    <span class="k">RSP-TOGGLE</span><span class="v"><b>Filter toggle button — mobile only.</b> <code>.dims-filter-toggle-btn</code> is <code>display:none</code> by default and only becomes an <code>inline-flex</code> 36px circle inside the 575.98px query: <code>1.5px solid #dee2e6</code>, <code>background:#f8f9fa</code>, <code>color:#5c636a</code> (darkened from #6c757d, which was only 4.45:1 on that fill). Hover and <code>[aria-expanded="true"]</code> share one rule — <code>#cfe2ff</code> fill, <code>#0f4d85</code> border and text — so the pressed state and the hover state are visually identical. <code>:focus-visible</code> is a 2px <code>#0f6cbf</code> outline at 2px offset. Dark is handled inside the very same query — it has to be, since the control is <code>display:none</code> above the breakpoint — and used to be absent altogether, which left a light <code>#f8f9fa</code> disc on the dark sticky header: rest is now <code>#212529</code> fill / <code>#495057</code> border / <code>#adb5bd</code> icon (7.43:1), hover and <code>[aria-expanded="true"]</code> hold the fill and take a <code>#6ea8fe</code> border and icon (6.39:1) instead of the light <code>#cfe2ff</code> tint, and the focus ring swaps to <code>#6ea8fe</code>. Ships in the mustache shell, not in the JS-built bar. <span class="rule">styles.css:1382-1442 (light 1400-1427, dark 1429-1452); summary.mustache:60-65</span></span>
+    <span class="k">RSP-FILTERS-COLLAPSE</span><span class="v"><b>Collapsible filters host.</b> Below 576px <code>.dims-filters-host</code> becomes <code>display:grid; grid-template-rows:0fr</code> with a <code>0.3s ease</code> transition, and <code>.dims-filters-panel-inner</code> takes <code>overflow:hidden; min-height:0</code> — the pair is what lets a height-unknown panel animate. Opening is done by <code>.dims-filters-open</code> on the <code>.block-dimensions-content</code> container, not on the host, which is why one class controls both hosts (plan and competency) at once. <span class="rule">styles.css:1444-1463; summary.mustache:86,102</span></span>
+    <span class="k">RSP-PILL-SMALL</span><span class="v"><b>Smaller pills inside the panel.</b> The only thing the mobile query does to the filter bar besides collapsing it: <code>.dims-filter-tab</code> goes to <code>padding:.375rem .625rem; font-size:.8rem</code> (from <code>.5rem 1rem</code> / <code>.875rem</code>) and <code>.dims-filter-select</code> to <code>width:100%</code>. Groups keep flowing with the desktop <code>flex-wrap</code>; the 44px platter, 4px platter padding, 36px inner row and the <code>Clear filters</code> button's 0.875rem are all untouched. <span class="rule">styles.css:1465-1475; 1079-1096 (clear button); 1134-1166 (platter)</span></span>
+    <span class="k">RSP-IMAGE-140</span><span class="v"><b>140px image band.</b> <code>.competency-card-image</code> is 120px by default, <b>100px</b> above 992px and <b>140px</b> below 575.98px — the widest band is the smallest screen, because on mobile it is the only thing separating stacked cards. The rule targets the competency card only: <code>.plan-card-image</code> holds 120px at every width, so the two card types diverge at both ends of the range. <span class="rule">styles.css:246-254, 294-298, 300-304, 442-449</span></span>
+    <span class="k">RSP-H-STACK</span><span class="v"><b>Horizontal card stacking.</b> Declared twice with identical bodies: once in <code>@media (max-width:575.98px)</code> and once in <code>@container dims-card-cell (max-width:360px)</code>. Card and link go <code>flex-direction:column</code>, <code>.plan-card-image-wrapper-horizontal</code> trades <code>flex:0 0 180px</code> for <code>flex:none; width:100%</code>, and <code>.plan-card-image-horizontal</code> goes from <code>height:100%; min-height:180px</code> to <code>height:160px; min-height:auto</code>. The container copy is the one that matters in a Moodle block: it fires on a wide viewport whenever the block column is narrow. <span class="rule">styles.css:594-615, 758-775 (media), 777-795 (container)</span></span>
+    <span class="k">RSP-GRID</span><span class="v"><b>The grid that replaces Bootstrap's row.</b> <code>[data-cards-type]</code> overrides <code>.row</code> with <code>display:grid; grid-template-columns:repeat(auto-fill,minmax(clamp(240px,30%,500px),1fr)); gap:1rem</code> and zeroes the Bootstrap negative margins; each <code>&gt;li</code> overrides <code>col-*</code> with <code>container-type:inline-size; container-name:dims-card-cell</code>, <code>width:100%</code>, <code>flex:none</code> and no padding or bottom margin. The clamp floor of 240px is what collapses the grid to one column in a narrow block. The competency grid re-declares itself later with a plain <code>minmax(360px,1fr)</code> and no clamp, so it does not shrink below 360px. <span class="rule">styles.css:376-405, 1650-1664</span></span>
+  </div>
+</div>
+</div>

@@ -7,5 +7,6 @@
 /.phpcsignore export-ignore
 /.stylelintrc.json export-ignore
 /CLAUDE.md export-ignore
+/docs export-ignore
 /package.json export-ignore
 /phpcs.xml export-ignore

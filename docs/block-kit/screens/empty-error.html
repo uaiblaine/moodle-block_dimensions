@@ -1,0 +1,347 @@
+<!-- @dsCard group="Block screens · States (BLK · GST)" name="Loading, error, empty & the ghost card" subtitle="Every non-card state the block can land in, plus the two-phase-loading ghost card · as-is light │ dark" -->
+<style>
+/* ============================================================================
+   Canonical block-kit scaffold (shared by every screen file).
+   AS-IS token values live on .kit (light, the default skin); .panel.dark
+   overrides only the tokens `.theme-dark` / `body.dark` really swap in
+   styles.css. Markup is written once with var(--bk-*) so the two panels
+   differ by token values alone. See tokens.html / token-migration.md.
+   Palette migrated to Moodle DS on 2026-07-27 — these ARE the shipped values.
+   ============================================================================ */
+.kit{
+  --bk-page:#f4f5f7;--bk-surface:#fff;--bk-surface-2:#f8f9fa;
+  --bk-card-bg:#fff;--bk-plan-card-bg:#fff;
+  --bk-card-border:rgba(0,0,0,.125);--bk-plan-card-border:rgba(0,0,0,.125);
+  --bk-text:#212529;--bk-muted:#6c757d;
+  --bk-line:#e9ecef;--bk-line-2:#ced4da;--bk-line-3:#dee2e6;--bk-line-4:#ced4da;
+  --bk-accent:#0f6cbf;--bk-accent-dark:#0c5699;--bk-accent-deep:#0f4d85;
+  --bk-pill-platter:#e9ecef;--bk-pill-text:#495057;--bk-pill-indicator:#fff;
+  --bk-counter-bg:#e9ecef;--bk-counter-fg:#495057;--bk-counter-active-bg:#cfe2ff;--bk-counter-active-fg:#0f4d85;
+  --bk-search-border:#dee2e6;--bk-search-icon:#6c757d;--bk-search-placeholder:#5c636a;
+  --bk-search-glow:rgba(15,108,191,.15);
+  --bk-select-hover-bg:#dee2e6;--bk-select-hover-border:#ced4da;
+  --bk-paddle:rgba(0,0,0,.56);--bk-paddle-hover:rgba(0,0,0,.72);
+  --bk-btn-bg:#fff;--bk-btn-fg:#212529;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.15);
+  --bk-section-from:#0f4d85;--bk-section-to:#0f6cbf;
+  --bk-plan-grad-a:#0f6cbf;--bk-plan-grad-b:#0a5aa0;
+  --bk-comp-grad-a:#ffc107;--bk-comp-grad-b:#fd7e14;--bk-comp-grad-c:#e8590c;
+  --bk-tag-bg:#fd7e14;--bk-tag-fg:#212529;--bk-halftone:#00000082;
+  --bk-success:#198754;--bk-success-text:#0f5132;--bk-star:#ffc107;
+  --bk-focus:#0f6cbf;--bk-focus-glow:rgba(15,108,191,.25);--bk-focus-btn:#0f6cbf;
+  --bk-danger-fg:#842029;--bk-danger-bg:#f8d7da;
+  --bk-warn-fg:#212529;--bk-warn-bg:#fff3cd;--bk-warn-border:#ffe69c;
+  --bk-empty-circle:#6c757d;--bk-empty-ring:1px;--bk-ghost-fg:#6c757d;--bk-ghost-circle:#adb5bd;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--bk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
+}
+.kit *{box-sizing:border-box;}
+.panel.dark{
+  --bk-page:#212529;--bk-surface:#212529;--bk-surface-2:#212529;
+  --bk-card-bg:#343a40;--bk-plan-card-bg:#343a40;
+  --bk-card-border:#495057;--bk-plan-card-border:#495057;
+  --bk-text:#f8f9fa;--bk-muted:#adb5bd;
+  --bk-line:#495057;--bk-line-2:#495057;--bk-line-3:#495057;--bk-line-4:#495057;
+  --bk-accent:#6ea8fe;--bk-accent-dark:#9ec5fe;
+  --bk-pill-platter:#212529;--bk-pill-text:#adb5bd;--bk-pill-indicator:#495057;
+  --bk-search-border:#495057;--bk-search-icon:#adb5bd;--bk-search-placeholder:#adb5bd;
+  --bk-search-glow:rgba(110,168,254,.2);
+  --bk-select-hover-bg:#343a40;
+  --bk-paddle:rgba(255,255,255,.64);--bk-paddle-hover:rgba(255,255,255,.88);
+  --bk-btn-bg:#343a40;--bk-btn-fg:#f8f9fa;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.35);
+  --bk-success:#75b798;--bk-success-text:#75b798;
+  --bk-counter-bg:#495057;--bk-counter-fg:#dee2e6;
+  --bk-focus:#6ea8fe;--bk-focus-glow:rgba(110,168,254,.25);--bk-focus-btn:#6ea8fe;
+  --bk-danger-fg:#ea868f;--bk-danger-bg:#2c0b0e;
+  --bk-warn-fg:#dee2e6;--bk-warn-bg:#332701;--bk-warn-border:#664d03;
+  --bk-empty-circle:#adb5bd;--bk-ghost-fg:#adb5bd;--bk-ghost-circle:#6c757d;
+  color:var(--bk-text);
+}
+.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
+.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--bk-page);padding:0 0 18px;overflow:hidden;}
+.panel.dark{border-color:#343a40;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--bk-text);padding:12px 20px 0;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--mono);font-size:10px;color:var(--bk-pill-text);background:var(--bk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
+.idb.r{border-color:#c9a3a3;color:#a3552d;}
+.panel.dark .idb{color:#adb5bd;border-color:#495057;}
+.bk-cap{font-size:11px;color:var(--bk-muted);padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.bk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
+.divlbl{font-size:11px;color:var(--bk-muted);margin:14px 20px 4px;border-top:1px solid var(--bk-line);padding-top:10px;}
+.note{font-size:10px;color:var(--bk-muted);padding:2px 20px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+.legend{max-width:1100px;margin:16px auto 0;background:#fff;border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
+.leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
+.leg .v b{color:#212529;font-weight:600;}
+.leg .v{color:#495057;}
+.leg .rule{color:#8a8980;}
+
+/* ============================================================================
+   Screen-local rules — states + ghost card
+   ============================================================================ */
+/* Bootstrap 4 .alert-warning, the only skin the error box gets (summary.mustache:74). The light
+   trio is Bootstrap's own and the palette migration never touched it; the dark pair has no
+   Bootstrap 4 counterpart and tracks the plugin's dark warn fill (styles.css:2015-2020). */
+.kit{--bk-alert-fg:#856404;--bk-alert-bg:#fff3cd;--bk-alert-border:#ffeeba;--bk-btn-outline:#6c757d;}
+.panel.dark{--bk-alert-fg:#ffe08a;--bk-alert-bg:#332701;--bk-alert-border:#664d03;--bk-btn-outline:#adb5bd;}
+.stage{padding:6px 20px 2px;}
+.blockish{background:var(--bk-surface);border:1px solid var(--bk-line);border-radius:8px;padding:12px 14px;}
+.panel.dark .blockish{background:var(--bk-page);}
+
+/* 1 — loading: <div class="dims-loading-state text-muted small" role="status"> */
+.dims-loading-state{font-size:.875rem;color:var(--bk-muted);}
+
+/* 2 — error: alert alert-warning + btn btn-sm btn-outline-secondary */
+.dims-error-message{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;padding:.75rem 1.25rem;font-size:.9rem;
+  color:var(--bk-alert-fg);background:var(--bk-alert-bg);border:1px solid var(--bk-alert-border);border-radius:.25rem;}
+.dims-error-text{flex:1 1 auto;min-width:0;}
+.dims-error-retry{font-size:.875rem;line-height:1.5;padding:.25rem .5rem;border-radius:.2rem;background:transparent;
+  color:var(--bk-btn-outline);border:1px solid var(--bk-btn-outline);cursor:pointer;font-family:inherit;white-space:nowrap;}
+
+/* 3 & 4 — empty: <p class="text-muted small dims-empty-state" role="status"> */
+.dims-empty-state{margin:0;font-size:.875rem;color:var(--bk-muted);}
+
+/* 5 — the assertive live region: never painted, drawn here as a dashed sr-only chip */
+.srchip{display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--bk-muted);
+  border:1px dashed var(--bk-line-2);border-radius:999px;padding:.25rem .7rem;background:transparent;}
+.srchip .ic{width:.85rem;height:.85rem;}
+.srtag{font-family:var(--mono);font-size:9px;color:var(--bk-pill-text);}
+
+/* 6 — .dims-noscript (styles.css:2015-2031) */
+.dims-noscript{margin:.75rem 0;padding:.5rem .75rem;font-size:1rem;line-height:1.4;
+  color:var(--bk-warn-fg);background:var(--bk-warn-bg);border:1px solid var(--bk-warn-border);border-radius:.25rem;}
+
+/* 7 — card grid + ghost card at true scale (styles.css:1849-1961) */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:1rem;list-style:none;margin:0;padding:0;}
+.plan-card{position:relative;display:flex;flex-direction:column;border-radius:.5rem;overflow:hidden;
+  border:1px solid var(--bk-plan-card-border);background:var(--bk-plan-card-bg);box-shadow:0 .125rem .25rem rgba(0,0,0,.075);}
+.plan-card-image{height:120px;flex-shrink:0;background:linear-gradient(135deg,var(--bk-plan-grad-a) 0%,var(--bk-plan-grad-b) 100%);}
+.dims-card-access-btn{position:absolute;top:10px;right:10px;display:inline-flex;align-items:center;gap:6px;padding:6px 16px;
+  font-size:.85rem;font-weight:600;line-height:1.3;border-radius:8px;white-space:nowrap;
+  background:var(--bk-btn-bg);color:var(--bk-btn-fg);box-shadow:var(--bk-btn-shadow);}
+.dims-card-access-btn .ic{width:.8rem;height:.8rem;}
+.dims-fav-btn{position:absolute;top:8px;left:8px;width:32px;height:32px;border-radius:50%;border:none;
+  display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.92);color:var(--bk-star);cursor:pointer;}
+.dims-fav-btn .ic{fill:currentColor;stroke:currentColor;stroke-width:1.5;}
+.card-body{padding:1rem;}
+.card-title{margin:0 0 .5rem;font-size:.9rem;line-height:1.4;font-weight:700;color:var(--bk-text);}
+.competency-count-text{margin:0;font-size:.82rem;line-height:1.3;font-weight:600;color:var(--bk-muted);}
+.dims-ghost-card{display:flex;}
+.dims-ghost-card-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;gap:.75rem;
+  padding:2rem 1.5rem;border:2px dashed var(--bk-ghost-border,#ced4da);border-radius:12px;background:var(--bk-ghost-bg,transparent);
+  cursor:pointer;font-family:inherit;transition:border-color .2s ease,background .2s ease,transform .15s ease;}
+.panel.dark .dims-ghost-card-inner{--bk-ghost-border:#495057;--bk-ghost-bg:#212529;}
+.dims-ghost-icon-circle{display:flex;align-items:center;justify-content:center;width:50px;height:50px;
+  border:2px solid var(--bk-ghost-ring,var(--bk-line-4));border-radius:50%;color:var(--bk-ghost-circle);font-size:1.2rem;}
+.dims-ghost-icon-circle .ic{width:1.2rem;height:1.2rem;}
+.dims-ghost-card-title{font-size:1.1rem;font-weight:700;text-align:center;color:var(--bk-ghost-fg);}
+.dims-ghost-card-subtitle{font-size:.85rem;font-weight:400;text-align:center;color:var(--bk-ghost-fg);}
+/* Static hover replica: :hover on the inner button (styles.css:1879-1924 / 1941-1967). */
+.dims-ghost-card-inner.hov{border-color:var(--bk-accent);background:var(--bk-ghost-hover,rgba(15,108,191,.04));transform:translateY(-2px);}
+.panel.dark .dims-ghost-card-inner.hov{--bk-ghost-hover:rgba(110,168,254,.08);}
+.dims-ghost-card-inner.hov .dims-ghost-icon-circle{border-color:var(--bk-accent);color:var(--bk-accent);}
+.dims-ghost-card-inner.hov .dims-ghost-card-title{color:var(--bk-accent);}
+</style>
+<div class="kit"><div class="screens">
+
+  <!-- ============ AS-IS · LIGHT ============ -->
+  <div class="panel">
+    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · light (Boost)</div>
+
+    <div class="bk-cap">1 · Loading — the block's very first paint · <span class="idb">BLK-LOADING</span></div>
+    <div class="stage"><div class="blockish">
+      <div class="dims-loading-state" role="status" aria-live="polite">Loading</div>
+    </div></div>
+    <div class="note">Server-rendered in the shell and visible before any fetch resolves; <code>showLoading()</code> only flips <code>display</code>. The string is core <code>loading</code>, not a plugin string.</div>
+
+    <div class="divlbl">2 · Error — warning alert + Retry <span class="idb">BLK-ERROR</span> <span class="idb">BLK-ERROR-RETRY</span></div>
+    <div class="stage">
+      <div class="dims-error-message" role="alert">
+        <span class="dims-error-text">Unable to load competency cards right now. Please try again.</span>
+        <button type="button" class="dims-error-retry">Retry</button>
+      </div>
+    </div>
+    <div class="note">Only <code>loadData().catch()</code> reaches here. <code>showError()</code> blanks the text, unhides the box, then writes the message on the next frame — a <code>role="alert"</code> that was <code>display:none</code> does not announce reliably otherwise (WCAG 4.1.3).</div>
+
+    <div class="divlbl">3 · Empty — no active plans <span class="idb">BLK-EMPTY-NOPLANS</span></div>
+    <div class="stage"><div class="blockish">
+      <p class="dims-empty-state" role="status" aria-live="polite">No active plans at the moment.</p>
+    </div></div>
+    <div class="note">The one state the block class can pre-empt: <code>has_content()</code> returns false and the block never renders. This text appears when plans existed at page build but the dataset comes back with <code>hasactiveplans</code> false — it is checked first and returns early, so it always wins over the competency message.</div>
+
+    <div class="divlbl">4 · Empty — no competencies <span class="idb">BLK-EMPTY-NOCOMP</span></div>
+    <div class="stage"><div class="blockish">
+      <p class="dims-empty-state" role="status" aria-live="polite">No competencies in your plans.</p>
+    </div></div>
+    <div class="note">Shown when filters or search reduce both lists to zero <b>and</b> no ghost card is on screen. <code>updateEmptyState</code> deliberately stays silent while a ghost card is visible — "no competencies" would be a lie when more are one click away.</div>
+
+    <div class="divlbl">5 · Favourite-toggle error — announced, never drawn <span class="idb">BLK-LIVE-FAV</span></div>
+    <div class="stage">
+      <span class="srchip"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 22h20L12 2z"/><path d="M12 9v5M12 18h.01"/></svg>Could not update favourites. Please try again.<span class="srtag">sr-only · assertive</span></span>
+    </div>
+    <div class="note">Written into the <code>data-fav-status</code> region, blanked then re-set on the next frame so an identical message still fires, and self-cleared after 5000&nbsp;ms so it does not linger in the AT cursor. Its sibling <code>data-results-status</code> is polite and debounced by 600&nbsp;ms so typing in the search box does not flood a screen reader.</div>
+
+    <div class="divlbl">6 · No JavaScript <span class="idb">BLK-NOSCRIPT</span></div>
+    <div class="stage">
+      <p class="dims-noscript" role="status">JavaScript is required to load your competency cards in this block.</p>
+    </div>
+    <div class="note">Deliberately <code>1rem</code>, not <code>small</code>: it is the only thing a no-JS user ever sees, so it carries legible size and &ge;&nbsp;4.5:1 contrast (WCAG 1.3.1, 1.4.3).</div>
+
+    <div class="divlbl">7 · Ghost card at true scale, beside an ordinary card <span class="idb">GST-CARD</span></div>
+    <div class="stage">
+      <ul class="cards" role="list" data-cards-type="plan">
+        <li class="dims-card-item">
+          <div class="plan-card">
+            <div class="plan-card-image"></div>
+            <button type="button" class="dims-fav-btn" aria-pressed="true" aria-label="Remove from favourites">
+              <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+            </button>
+            <span class="dims-card-access-btn" aria-hidden="true">Access <svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+            <div class="card-body">
+              <h4 class="card-title">Data literacy for managers</h4>
+              <p class="competency-count-text">6 competencies</p>
+            </div>
+          </div>
+        </li>
+        <li class="dims-card-item dims-ghost-card" data-ghost-type="plan">
+          <button type="button" class="dims-ghost-card-inner" aria-label="View more items (14)">
+            <span class="dims-ghost-icon-circle" aria-hidden="true"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+            <span class="dims-ghost-card-title">View more items (14)</span>
+            <span class="dims-ghost-card-subtitle">Explore beyond favourites.</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+    <div class="bk-ids">
+      <span class="idb">GST-ICON · 50px circle, 2px ring</span>
+      <span class="idb">GST-TITLE · 1.1rem / 700</span>
+      <span class="idb">GST-SUBTITLE · 0.85rem / 400</span>
+    </div>
+    <div class="note">The ghost card exists because of <b>two-phase loading</b>: with favourites enabled the first request asks for favourites only, so the ghost card is the invitation to fetch the rest. Its count is <code>totalplans&nbsp;&minus;&nbsp;loaded</code> in phase&nbsp;1 and <code>total&nbsp;&minus;&nbsp;favourites</code> once the full dataset has arrived. One ghost card per type, each appended to its own grid, and clicking it loads only that group.</div>
+
+    <div class="divlbl">7b · Ghost card, hover / focus <span class="idb">GST-CARD</span></div>
+    <div class="stage">
+      <ul class="cards" role="list">
+        <li class="dims-card-item dims-ghost-card" data-ghost-type="competency">
+          <button type="button" class="dims-ghost-card-inner hov" aria-label="View more items (23)">
+            <span class="dims-ghost-icon-circle" aria-hidden="true"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+            <span class="dims-ghost-card-title">View more items (23)</span>
+            <span class="dims-ghost-card-subtitle">Explore beyond favourites.</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+    <div class="note">Hover recolours border, circle and title to the accent and lifts the shell by 2px; focus swaps to a 2px accent outline at 2px offset. Reduced motion drops both the transition and the lift; high contrast forces a 3px <code>currentColor</code> border; print hides the ghost card entirely. The kit grid uses a 205px minimum so both cards fit the panel — the shipped grid is <code>minmax(clamp(240px,30%,500px),1fr)</code> at a 1rem gap.</div>
+  </div>
+
+  <!-- ============ AS-IS · DARK ============ -->
+  <div class="panel dark">
+    <div class="plabel"><span class="pdot" style="background:#6ea8fe"></span>As-is · dark (.theme-dark)</div>
+
+    <div class="bk-cap">1 · Loading — the block's very first paint · <span class="idb">BLK-LOADING</span></div>
+    <div class="stage"><div class="blockish">
+      <div class="dims-loading-state" role="status" aria-live="polite">Loading</div>
+    </div></div>
+    <div class="note">Server-rendered in the shell and visible before any fetch resolves; <code>showLoading()</code> only flips <code>display</code>. The string is core <code>loading</code>, not a plugin string.</div>
+
+    <div class="divlbl">2 · Error — warning alert + Retry <span class="idb">BLK-ERROR</span> <span class="idb">BLK-ERROR-RETRY</span></div>
+    <div class="stage">
+      <div class="dims-error-message" role="alert">
+        <span class="dims-error-text">Unable to load competency cards right now. Please try again.</span>
+        <button type="button" class="dims-error-retry">Retry</button>
+      </div>
+    </div>
+    <div class="note">Only <code>loadData().catch()</code> reaches here. <code>showError()</code> blanks the text, unhides the box, then writes the message on the next frame — a <code>role="alert"</code> that was <code>display:none</code> does not announce reliably otherwise (WCAG 4.1.3).</div>
+
+    <div class="divlbl">3 · Empty — no active plans <span class="idb">BLK-EMPTY-NOPLANS</span></div>
+    <div class="stage"><div class="blockish">
+      <p class="dims-empty-state" role="status" aria-live="polite">No active plans at the moment.</p>
+    </div></div>
+    <div class="note">The one state the block class can pre-empt: <code>has_content()</code> returns false and the block never renders. This text appears when plans existed at page build but the dataset comes back with <code>hasactiveplans</code> false — it is checked first and returns early, so it always wins over the competency message.</div>
+
+    <div class="divlbl">4 · Empty — no competencies <span class="idb">BLK-EMPTY-NOCOMP</span></div>
+    <div class="stage"><div class="blockish">
+      <p class="dims-empty-state" role="status" aria-live="polite">No competencies in your plans.</p>
+    </div></div>
+    <div class="note">Shown when filters or search reduce both lists to zero <b>and</b> no ghost card is on screen. <code>updateEmptyState</code> deliberately stays silent while a ghost card is visible — "no competencies" would be a lie when more are one click away.</div>
+
+    <div class="divlbl">5 · Favourite-toggle error — announced, never drawn <span class="idb">BLK-LIVE-FAV</span></div>
+    <div class="stage">
+      <span class="srchip"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 22h20L12 2z"/><path d="M12 9v5M12 18h.01"/></svg>Could not update favourites. Please try again.<span class="srtag">sr-only · assertive</span></span>
+    </div>
+    <div class="note">Written into the <code>data-fav-status</code> region, blanked then re-set on the next frame so an identical message still fires, and self-cleared after 5000&nbsp;ms so it does not linger in the AT cursor. Its sibling <code>data-results-status</code> is polite and debounced by 600&nbsp;ms so typing in the search box does not flood a screen reader.</div>
+
+    <div class="divlbl">6 · No JavaScript <span class="idb">BLK-NOSCRIPT</span></div>
+    <div class="stage">
+      <p class="dims-noscript" role="status">JavaScript is required to load your competency cards in this block.</p>
+    </div>
+    <div class="note">Deliberately <code>1rem</code>, not <code>small</code>: it is the only thing a no-JS user ever sees, so it carries legible size and &ge;&nbsp;4.5:1 contrast (WCAG 1.3.1, 1.4.3).</div>
+
+    <div class="divlbl">7 · Ghost card at true scale, beside an ordinary card <span class="idb">GST-CARD</span></div>
+    <div class="stage">
+      <ul class="cards" role="list" data-cards-type="plan">
+        <li class="dims-card-item">
+          <div class="plan-card">
+            <div class="plan-card-image"></div>
+            <button type="button" class="dims-fav-btn" aria-pressed="true" aria-label="Remove from favourites">
+              <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+            </button>
+            <span class="dims-card-access-btn" aria-hidden="true">Access <svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+            <div class="card-body">
+              <h4 class="card-title">Data literacy for managers</h4>
+              <p class="competency-count-text">6 competencies</p>
+            </div>
+          </div>
+        </li>
+        <li class="dims-card-item dims-ghost-card" data-ghost-type="plan">
+          <button type="button" class="dims-ghost-card-inner" aria-label="View more items (14)">
+            <span class="dims-ghost-icon-circle" aria-hidden="true"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+            <span class="dims-ghost-card-title">View more items (14)</span>
+            <span class="dims-ghost-card-subtitle">Explore beyond favourites.</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+    <div class="bk-ids">
+      <span class="idb">GST-ICON · 50px circle, 2px ring</span>
+      <span class="idb">GST-TITLE · 1.1rem / 700</span>
+      <span class="idb">GST-SUBTITLE · 0.85rem / 400</span>
+    </div>
+    <div class="note">Dark is the one place the ghost shell stops being transparent: it fills <code>#212529</code> — a step <b>below</b> the <code>#343a40</code> card surface, so the ghost recedes instead of competing — with a <code>#495057</code> dashed border, and the circle, title and subtitle all collapse onto the muted greys. Everything else — 12px radius, 2rem&nbsp;1.5rem padding, 50px circle, 0.75rem gap — is identical to light.</div>
+
+    <div class="divlbl">7b · Ghost card, hover / focus <span class="idb">GST-CARD</span></div>
+    <div class="stage">
+      <ul class="cards" role="list">
+        <li class="dims-card-item dims-ghost-card" data-ghost-type="competency">
+          <button type="button" class="dims-ghost-card-inner hov" aria-label="View more items (23)">
+            <span class="dims-ghost-icon-circle" aria-hidden="true"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+            <span class="dims-ghost-card-title">View more items (23)</span>
+            <span class="dims-ghost-card-subtitle">Explore beyond favourites.</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+    <div class="note">Hover recolours border, circle and title to the accent and lifts the shell by 2px; focus swaps to a 2px accent outline at 2px offset. Reduced motion drops both the transition and the lift; high contrast forces a 3px <code>currentColor</code> border; print hides the ghost card entirely. The kit grid uses a 205px minimum so both cards fit the panel — the shipped grid is <code>minmax(clamp(240px,30%,500px),1fr)</code> at a 1rem gap.</div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <h3>ID legend — Block states &amp; the ghost card (summary.mustache + filters.js)</h3>
+  <div class="leg">
+    <span class="k">BLK-LOADING</span><span class="v"><b>Loading line</b> — <code>.dims-loading-state.text-muted.small</code>, <code>role="status" aria-live="polite"</code>, core string <code>loading</code>. Rendered visible by the shell and toggled by <code>showLoading()</code>; hidden on both the success and the failure branch of <code>loadData</code> <span class="rule">summary.mustache:70-72; filters.js:443-448, 1157-1162</span></span>
+    <span class="k">BLK-ERROR</span><span class="v"><b>Error alert</b> — <code>.dims-error-message.alert.alert-warning</code> with <code>role="alert"</code>, <code>display:none</code> until needed; holds <code>.dims-error-text</code> with the <code>loaderror</code> string. <code>showError()</code> blanks the text, unhides, then writes on the next animation frame so the alert role fires <span class="rule">summary.mustache:74-79; filters.js:450-477; lang/en:76</span></span>
+    <span class="k">BLK-ERROR-RETRY</span><span class="v"><b>Retry button</b> — <code>btn btn-sm btn-outline-secondary .dims-error-retry.ml-2</code>, string <code>retry</code>; re-runs <code>loadData</code>, which calls <code>clearError()</code> before it starts <span class="rule">summary.mustache:76-78; filters.js:1080-1082; lang/en:101</span></span>
+    <span class="k">BLK-EMPTY-NOPLANS</span><span class="v"><b>No active plans</b> — the <code>noactiveplans</code> string in the shared <code>&lt;p class="text-muted small dims-empty-state"&gt;</code>. First branch of <code>updateEmptyState</code>, returns early. Normally unreachable because the block class refuses to render at all when there are no plans <span class="rule">summary.mustache:107; filters.js:426-430; lang/en:79</span></span>
+    <span class="k">BLK-EMPTY-NOCOMP</span><span class="v"><b>No competencies</b> — the <code>nocompetencies</code> string in the same paragraph; set only when both filtered lists are empty <b>and</b> no visible <code>.dims-ghost-card</code> is present <span class="rule">filters.js:432-440; lang/en:80</span></span>
+    <span class="k">BLK-LIVE-FAV</span><span class="v"><b>Assertive live region</b> — <code>&lt;span class="sr-only" data-fav-status role="status" aria-live="assertive"&gt;</code>; carries the <code>favouriteerror</code> string, is never painted, and self-clears after 5s. The polite twin <code>data-results-status</code> carries <code>resultsfound</code> / <code>resultsnonefound</code> on a 600ms debounce <span class="rule">summary.mustache:109-110; filters.js:507-558; lang/en:64, 99-100</span></span>
+    <span class="k">BLK-NOSCRIPT</span><span class="v"><b>No-JS notice</b> — <code>&lt;noscript&gt;&lt;p class="dims-noscript" role="status"&gt;</code> with <code>javascriptrequired</code>; 1rem / 1.4 on <code>#fff3cd</code> inside <code>#ffe69c</code> at <code>.25rem</code>, dark <code>#dee2e6</code> on <code>#332701</code> / <code>#664d03</code> <span class="rule">summary.mustache:112-114; styles.css:2015-2031; lang/en:73</span></span>
+    <span class="k">GST-CARD</span><span class="v"><b>Ghost card</b> — <code>li.dims-card-item.dims-ghost-card</code> holding a real <code>&lt;button class="dims-ghost-card-inner"&gt;</code>: 2px dashed <code>#ced4da</code>, radius 12px, transparent, padding <code>2rem 1.5rem</code>, gap <code>.75rem</code>. Built by string concatenation, one per type, appended to that type's <code>[data-cards-type]</code> grid; the <code>aria-label</code> repeats the visible title <span class="rule">filters.js:337-398; styles.css:1849-1881</span></span>
+    <span class="k">GST-ICON</span><span class="v"><b>Icon circle</b> — <code>.dims-ghost-icon-circle</code>, 50&times;50px, 2px solid <code>#ced4da</code>, colour <code>#adb5bd</code>, 1.2rem plus glyph; goes accent on hover, <code>#495057</code> / <code>#6c757d</code> in dark <span class="rule">styles.css:1884-1900, 1947-1957</span></span>
+    <span class="k">GST-TITLE</span><span class="v"><b>Ghost title</b> — <code>.dims-ghost-card-title</code>, 1.1rem / 700, <code>#6c757d</code>, centred; text is <code>ghostcardtitle</code> plus <code>' (' + count + ')'</code> from <code>labelWithCount()</code>. Accent on hover, <code>#adb5bd</code> in dark <span class="rule">styles.css:1903-1913; filters.js:63-65, 381; lang/en:70</span></span>
+    <span class="k">GST-SUBTITLE</span><span class="v"><b>Ghost subtitle</b> — <code>.dims-ghost-card-subtitle</code>, 0.85rem / 400, <code>#6c757d</code>, centred; the <code>ghostcardsubtitle</code> string, unchanged on hover <span class="rule">styles.css:1916-1921, 1969-1972; lang/en:69</span></span>
+  </div>
+</div>
+</div>

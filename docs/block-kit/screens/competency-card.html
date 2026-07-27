@@ -1,0 +1,399 @@
+<!-- @dsCard group="Block screens · Competency card (CMP)" name="Competency card — gradient, halftone, tags" subtitle="competency_card.mustache — the simplest card: image or gradient, tags, access pill, star, 2-line title · as-is light │ dark" -->
+<style>
+/* ============================================================================
+   Canonical block-kit scaffold (shared by every screen file).
+   AS-IS token values live on .kit (light, the default skin); .panel.dark
+   overrides only the tokens `.theme-dark` / `body.dark` really swap in
+   styles.css. Markup is written once with var(--bk-*) so the two panels
+   differ by token values alone. See tokens.html / token-migration.md.
+   Palette migrated to Moodle DS on 2026-07-27 — these ARE the shipped values.
+   ============================================================================ */
+.kit{
+  --bk-page:#f4f5f7;--bk-surface:#fff;--bk-surface-2:#f8f9fa;
+  --bk-card-bg:#fff;--bk-plan-card-bg:#fff;
+  --bk-card-border:rgba(0,0,0,.125);--bk-plan-card-border:rgba(0,0,0,.125);
+  --bk-text:#212529;--bk-muted:#6c757d;
+  --bk-line:#e9ecef;--bk-line-2:#ced4da;--bk-line-3:#dee2e6;--bk-line-4:#ced4da;
+  --bk-accent:#0f6cbf;--bk-accent-dark:#0c5699;--bk-accent-deep:#0f4d85;
+  --bk-pill-platter:#e9ecef;--bk-pill-text:#495057;--bk-pill-indicator:#fff;
+  --bk-counter-bg:#e9ecef;--bk-counter-fg:#495057;--bk-counter-active-bg:#cfe2ff;--bk-counter-active-fg:#0f4d85;
+  --bk-search-border:#dee2e6;--bk-search-icon:#6c757d;--bk-search-placeholder:#5c636a;
+  --bk-search-glow:rgba(15,108,191,.15);
+  --bk-select-hover-bg:#dee2e6;--bk-select-hover-border:#ced4da;
+  --bk-paddle:rgba(0,0,0,.56);--bk-paddle-hover:rgba(0,0,0,.72);
+  --bk-btn-bg:#fff;--bk-btn-fg:#212529;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.15);
+  --bk-section-from:#0f4d85;--bk-section-to:#0f6cbf;
+  --bk-plan-grad-a:#0f6cbf;--bk-plan-grad-b:#0a5aa0;
+  --bk-comp-grad-a:#ffc107;--bk-comp-grad-b:#fd7e14;--bk-comp-grad-c:#e8590c;
+  --bk-tag-bg:#fd7e14;--bk-tag-fg:#212529;--bk-halftone:#00000082;
+  --bk-success:#198754;--bk-success-text:#0f5132;--bk-star:#ffc107;
+  --bk-focus:#0f6cbf;--bk-focus-glow:rgba(15,108,191,.25);--bk-focus-btn:#0f6cbf;
+  --bk-danger-fg:#842029;--bk-danger-bg:#f8d7da;
+  --bk-warn-fg:#212529;--bk-warn-bg:#fff3cd;--bk-warn-border:#ffe69c;
+  --bk-empty-circle:#6c757d;--bk-empty-ring:1px;--bk-ghost-fg:#6c757d;--bk-ghost-circle:#adb5bd;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--bk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
+}
+.kit *{box-sizing:border-box;}
+.panel.dark{
+  --bk-page:#212529;--bk-surface:#212529;--bk-surface-2:#212529;
+  --bk-card-bg:#343a40;--bk-plan-card-bg:#343a40;
+  --bk-card-border:#495057;--bk-plan-card-border:#495057;
+  --bk-text:#f8f9fa;--bk-muted:#adb5bd;
+  --bk-line:#495057;--bk-line-2:#495057;--bk-line-3:#495057;--bk-line-4:#495057;
+  --bk-accent:#6ea8fe;--bk-accent-dark:#9ec5fe;
+  --bk-pill-platter:#212529;--bk-pill-text:#adb5bd;--bk-pill-indicator:#495057;
+  --bk-search-border:#495057;--bk-search-icon:#adb5bd;--bk-search-placeholder:#adb5bd;
+  --bk-search-glow:rgba(110,168,254,.2);
+  --bk-select-hover-bg:#343a40;
+  --bk-paddle:rgba(255,255,255,.64);--bk-paddle-hover:rgba(255,255,255,.88);
+  --bk-btn-bg:#343a40;--bk-btn-fg:#f8f9fa;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.35);
+  --bk-success:#75b798;--bk-success-text:#75b798;
+  --bk-counter-bg:#495057;--bk-counter-fg:#dee2e6;
+  --bk-focus:#6ea8fe;--bk-focus-glow:rgba(110,168,254,.25);--bk-focus-btn:#6ea8fe;
+  --bk-danger-fg:#ea868f;--bk-danger-bg:#2c0b0e;
+  --bk-warn-fg:#dee2e6;--bk-warn-bg:#332701;--bk-warn-border:#664d03;
+  --bk-empty-circle:#adb5bd;--bk-ghost-fg:#adb5bd;--bk-ghost-circle:#6c757d;
+  color:var(--bk-text);
+}
+.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
+.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--bk-page);padding:0 0 18px;overflow:hidden;}
+.panel.dark{border-color:#343a40;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--bk-text);padding:12px 20px 0;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--mono);font-size:10px;color:var(--bk-pill-text);background:var(--bk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
+.idb.r{border-color:#c9a3a3;color:#a3552d;}
+.panel.dark .idb{color:#adb5bd;border-color:#495057;}
+.bk-cap{font-size:11px;color:var(--bk-muted);padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.bk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
+.divlbl{font-size:11px;color:var(--bk-muted);margin:14px 20px 4px;border-top:1px solid var(--bk-line);padding-top:10px;}
+.note{font-size:10px;color:var(--bk-muted);padding:2px 20px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+.legend{max-width:1100px;margin:16px auto 0;background:#fff;border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
+.leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
+.leg .v b{color:#212529;font-weight:600;}
+.leg .v{color:#495057;}
+.leg .rule{color:#8a8980;}
+
+/* ---- screen-local values styles.css hardcodes but tokens.html does not name ---- */
+.kit{
+  --bk-card-shadow:0 .125rem .25rem rgba(0,0,0,.075);
+  --bk-tag-shadow:0 1px 3px rgba(0,0,0,.2);
+  --bk-fav-bg:rgba(255,255,255,.85);--bk-fav-shadow:0 1px 4px rgba(0,0,0,.18);
+  --bk-btn-shadow-hover:0 4px 14px rgba(0,0,0,.22);
+  --bk-star-empty:#6c757d;
+  --bk-demo-custombg:#0f6cbf;--bk-demo-customfg:#ffffff;
+  --bk-photo-a:#2f5d84;--bk-photo-b:#7fa8c9;--bk-photo-c:#1f3d57;--bk-photo-d:#f0cf9c;
+}
+.panel.dark{
+  --bk-tag-shadow:0 1px 3px rgba(0,0,0,.4);
+  --bk-fav-bg:rgba(52,58,64,.85);--bk-fav-shadow:0 1px 4px rgba(0,0,0,.4);
+  --bk-btn-shadow-hover:0 4px 14px rgba(0,0,0,.5);
+  --bk-star-empty:#adb5bd;
+}
+
+/* ---- competency grid: repeat(auto-fill, minmax(360px,1fr)) — 2 columns here ---- */
+.cmpgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;align-items:start;padding:10px 20px 2px;}
+.cell{min-width:0;}
+.cardcap{font-size:10px;color:var(--bk-muted);margin:5px 0 0;line-height:1.35;}
+
+/* ---- .competency-card (styles.css:188-198) ---- */
+.cmp-card{display:flex;flex-direction:column;position:relative;border-radius:.5rem;overflow:hidden;
+  box-shadow:var(--bk-card-shadow);border:1px solid var(--bk-card-border);background-color:var(--bk-card-bg);}
+.cmp-card.focus{outline:3px solid var(--bk-focus);outline-offset:2px;box-shadow:0 0 0 4px var(--bk-focus-glow);}
+
+/* ---- image wrapper + image band (styles.css:246-254, 922-926) ---- */
+.cmp-imgwrap{position:relative;flex-shrink:0;}
+.cmp-img{width:100%;height:120px;background-size:cover;background-position:center;background-repeat:no-repeat;position:relative;flex-shrink:0;}
+.cmp-grad{background:linear-gradient(135deg,var(--bk-comp-grad-a) 0%,var(--bk-comp-grad-b) 50%,var(--bk-comp-grad-c) 100%);}
+.cmp-grad.has-custom-bg{background:var(--dimension-custombgcolor);}
+.cmp-grad::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;
+  background-image:radial-gradient(circle,var(--dimension-customtextcolor,var(--bk-halftone)) 0,transparent 1px);
+  background-size:5px 5px;filter:opacity(.5);}
+.cmp-photo{background-image:
+  radial-gradient(circle at 78% 24%,var(--bk-photo-d) 0 9%,transparent 10%),
+  radial-gradient(circle at 24% 96%,var(--bk-photo-c) 0 34%,transparent 35%),
+  linear-gradient(196deg,var(--bk-photo-a) 0%,var(--bk-photo-b) 58%,var(--bk-photo-c) 100%);}
+
+/* ---- favourite star (styles.css:1667-1720) ---- */
+.cmp-fav{position:absolute;top:8px;left:8px;z-index:3;display:flex;align-items:center;justify-content:center;
+  width:32px;height:32px;border:none;border-radius:50%;background:var(--bk-fav-bg);cursor:pointer;padding:0;
+  box-shadow:var(--bk-fav-shadow);transition:background .2s ease,transform .15s ease;}
+.cmp-fav .ic{width:1rem;height:1rem;}
+.cmp-fav .off{color:var(--bk-star-empty);}
+.cmp-fav .on{color:var(--bk-star);fill:currentColor;}
+
+/* ---- tags (styles.css:999-1025) ---- */
+.cmp-tags{position:absolute;bottom:8px;left:8px;display:flex;flex-wrap:wrap;gap:4px;z-index:1;}
+.cmp-tag{display:inline-block;padding:4px 12px;font-size:.75rem;font-weight:600;line-height:1.2;border-radius:100px;
+  white-space:nowrap;box-shadow:var(--bk-tag-shadow);
+  background-color:var(--dimension-custombgcolor,var(--bk-tag-bg));color:var(--dimension-customtextcolor,var(--bk-tag-fg));}
+
+/* ---- access pill (styles.css:929-953) ---- */
+.cmp-access{position:absolute;top:10px;right:10px;z-index:2;display:inline-flex;align-items:center;gap:6px;
+  padding:6px 16px;background:var(--bk-btn-bg);color:var(--bk-btn-fg);font-size:.85rem;font-weight:600;line-height:1.3;
+  border-radius:8px;white-space:nowrap;box-shadow:var(--bk-btn-shadow);pointer-events:none;
+  transition:box-shadow .2s ease,transform .2s ease;}
+.cmp-access .ic{width:.8rem;height:.8rem;}
+/* Lift scoped to the article, hover and focus sharing one treatment, and no ring
+   on the pill itself — the card's ring is the focus indicator (styles.css:2130-2184). */
+.cmp-card:hover .cmp-access,
+.cmp-card:focus-within .cmp-access,
+.cmp-card.focus .cmp-access{opacity:1;box-shadow:var(--bk-btn-shadow-hover);transform:translateY(-1px);}
+@media (prefers-reduced-motion:reduce){
+  .cmp-access{transition:none;}
+  .cmp-card:hover .cmp-access,
+  .cmp-card:focus-within .cmp-access,
+  .cmp-card.focus .cmp-access{transform:none;}
+}
+
+/* ---- body + 2-line clamped title (styles.css:279-289) ---- */
+.cmp-body{padding:1rem;}
+.cmp-title{font-size:.9rem;line-height:1.4;font-weight:700;margin:0;color:var(--bk-text);
+  display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.8em;}
+.cmp-title a{color:inherit;text-decoration:none;}
+
+/* ---- anatomy strip ---- */
+.anat{padding:8px 20px 2px;}
+.bands{display:flex;gap:10px;align-items:flex-end;}
+.band{flex:1;text-align:center;}
+.band .b{border-radius:.5rem .5rem 0 0;}
+.band .l{font-family:var(--mono);font-size:9px;color:var(--bk-muted);padding-top:4px;display:block;}
+.anat-band{position:relative;border-radius:.5rem;overflow:hidden;margin-top:10px;}
+.chip{position:absolute;z-index:4;font-family:var(--mono);font-size:9px;line-height:1.5;padding:0 4px;border-radius:4px;
+  background:var(--bk-surface);color:var(--bk-text);border:1px solid var(--bk-line-3);white-space:nowrap;}
+.chip.c1{top:12px;left:48px;}
+.chip.c2{top:44px;right:10px;}
+.chip.c3{bottom:40px;left:8px;}
+.ht{display:flex;gap:10px;margin-top:10px;}
+.ht figure{margin:0;flex:1;}
+.ht .sw{height:64px;border-radius:.5rem;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--bk-comp-grad-a) 0%,var(--bk-comp-grad-b) 50%,var(--bk-comp-grad-c) 100%);}
+.ht .sw::after{content:'';position:absolute;inset:0;filter:opacity(.5);
+  background-image:radial-gradient(circle,var(--bk-halftone) 0,transparent 1px);background-size:5px 5px;}
+.ht .sw.zoom::after{background-image:radial-gradient(circle,var(--bk-halftone) 0,transparent 5px);background-size:25px 25px;}
+.ht figcaption{font-family:var(--mono);font-size:9px;color:var(--bk-muted);padding-top:4px;}
+</style>
+<div class="kit"><div class="screens">
+
+  <!-- ============ AS-IS · LIGHT ============ -->
+  <div class="panel">
+    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · light (Boost)</div>
+
+    <div class="bk-cap">Competency grid — <code>minmax(360px,1fr)</code>, gap 1rem · <span class="idb">CMP-CARD</span></div>
+    <div class="cmpgrid">
+      <div class="cell">
+        <article class="cmp-card" aria-labelledby="cmp-t-1">
+          <button type="button" class="cmp-fav" aria-pressed="false" aria-label="Add to favourites" data-fav-type="competency">
+            <svg class="ic off" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2-6.2 3.2L7 14.2l-5-4.9 6.9-1L12 2z"/></svg>
+          </button>
+          <div class="cmp-imgwrap">
+            <div class="cmp-img cmp-grad" aria-hidden="true"></div>
+            <div class="cmp-tags" role="group" aria-label="Tags"><span class="cmp-tag">2026</span><span class="cmp-tag">Core</span></div>
+            <span class="cmp-access" aria-hidden="true">Access <svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </div>
+          <div class="cmp-body"><h4 class="cmp-title" id="cmp-t-1"><a href="#cmp-1">Assertive communication</a></h4></div>
+        </article>
+        <p class="cardcap">Default — gradient + halftone, 2 tags, star off <span class="idb">CMP-GRADIENT</span></p>
+      </div>
+      <div class="cell">
+        <article class="cmp-card" aria-labelledby="cmp-t-2">
+          <button type="button" class="cmp-fav" aria-pressed="true" aria-label="Remove from favourites" data-fav-type="competency">
+            <svg class="ic on" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2-6.2 3.2L7 14.2l-5-4.9 6.9-1L12 2z"/></svg>
+          </button>
+          <div class="cmp-imgwrap">
+            <div class="cmp-img cmp-photo" role="img" aria-label="Data storytelling"></div>
+            <div class="cmp-tags" role="group" aria-label="Tags"><span class="cmp-tag">Analytics</span></div>
+            <span class="cmp-access" aria-hidden="true">Access <svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </div>
+          <div class="cmp-body"><h4 class="cmp-title" id="cmp-t-2"><a href="#cmp-2">Data storytelling</a></h4></div>
+        </article>
+        <p class="cardcap">Photo — no halftone (the overlay is on the gradient element only), star on <span class="idb">CMP-IMAGE</span></p>
+      </div>
+      <div class="cell">
+        <article class="cmp-card" aria-labelledby="cmp-t-3" style="--dimension-custombgcolor:var(--bk-demo-custombg);--dimension-customtextcolor:var(--bk-demo-customfg);">
+          <button type="button" class="cmp-fav" aria-pressed="false" aria-label="Add to favourites" data-fav-type="competency">
+            <svg class="ic off" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2-6.2 3.2L7 14.2l-5-4.9 6.9-1L12 2z"/></svg>
+          </button>
+          <div class="cmp-imgwrap">
+            <div class="cmp-img cmp-grad has-custom-bg" aria-hidden="true"></div>
+            <div class="cmp-tags" role="group" aria-label="Tags"><span class="cmp-tag">Elective</span></div>
+            <span class="cmp-access" aria-hidden="true">Access <svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </div>
+          <div class="cmp-body"><h4 class="cmp-title" id="cmp-t-3"><a href="#cmp-3">Feedback loops</a></h4></div>
+        </article>
+        <p class="cardcap">Custom colours — bg flattens the gradient, text colour recolours the chip <b>and</b> the halftone dots <span class="idb">CMP-HALFTONE</span></p>
+      </div>
+      <div class="cell">
+        <article class="cmp-card" aria-labelledby="cmp-t-4">
+          <button type="button" class="cmp-fav" aria-pressed="false" aria-label="Add to favourites" data-fav-type="competency">
+            <svg class="ic off" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2-6.2 3.2L7 14.2l-5-4.9 6.9-1L12 2z"/></svg>
+          </button>
+          <div class="cmp-imgwrap">
+            <div class="cmp-img cmp-grad" aria-hidden="true"></div>
+            <span class="cmp-access" aria-hidden="true">Access <svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </div>
+          <div class="cmp-body"><h4 class="cmp-title" id="cmp-t-4"><a href="#cmp-4">Strategic workforce planning and organisational capability design</a></h4></div>
+        </article>
+        <p class="cardcap">Long title clamped at 2 lines; the short title left of it reserves the same <code>min-height:2.8em</code>, so the row stays aligned <span class="idb">CMP-TITLE</span></p>
+      </div>
+    </div>
+    <div class="bk-ids">
+      <span class="idb">CMP-CARD · article.card.competency-card.h-100</span>
+      <span class="idb">CMP-FAV · button.dims-fav-btn (aria-pressed)</span>
+      <span class="idb">CMP-IMAGE · .competency-card-image</span>
+      <span class="idb">CMP-GRADIENT · .competency-card-gradient</span>
+      <span class="idb">CMP-HALFTONE · ::after dots</span>
+      <span class="idb">CMP-TAGS · .dimension-tags (role=group)</span>
+      <span class="idb">CMP-ACCESS · .dims-card-access-btn</span>
+      <span class="idb">CMP-TITLE · a.stretched-link</span>
+    </div>
+    <div class="note">Pseudo-link card: only the title is a real <code>&lt;a class="stretched-link"&gt;</code>, whose <code>::after</code> overlay makes the whole card clickable. That keeps the link's accessible name short (just the competency name) and lets the star stay a <b>sibling</b> control instead of an interactive nested inside an anchor.</div>
+    <div class="note">WCAG 1.1.1 split: the gradient and its halftone are decorative and <code>aria-hidden</code>; a real photo is <code>role="img"</code> with the competency name as <code>aria-label</code>. Tags sit in a <code>role="group"</code> labelled by the <code>cardtags</code> string. The access pill is <code>aria-hidden</code> + <code>pointer-events:none</code> — pure affordance.</div>
+    <div class="note">A competency only earns a card when it has at least one <b>visible linked course</b>, and repeats across plans are de-duplicated (<code>get_eligible_competency_ids</code> / <code>skip_competency_for_visibility</code>). This card carries <b>no trail and no count text</b> — it is the plan card minus everything below the title.</div>
+
+    <div class="divlbl">Anatomy — image band, overlay offsets, halftone <span class="idb">CMP-IMAGE</span></div>
+    <div class="anat">
+      <div class="bands">
+        <div class="band"><div class="b cmp-img cmp-grad" style="height:100px"></div><span class="l">100px · ≥992px</span></div>
+        <div class="band"><div class="b cmp-img cmp-grad" style="height:120px"></div><span class="l">120px · default</span></div>
+        <div class="band"><div class="b cmp-img cmp-grad" style="height:140px"></div><span class="l">140px · ≤576px</span></div>
+      </div>
+      <div class="anat-band">
+        <div class="cmp-img cmp-grad" aria-hidden="true"></div>
+        <span class="cmp-fav" aria-hidden="true"><svg class="ic off" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2-6.2 3.2L7 14.2l-5-4.9 6.9-1L12 2z"/></svg></span>
+        <span class="cmp-access" aria-hidden="true">Access <svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        <div class="cmp-tags" aria-hidden="true"><span class="cmp-tag">Tag</span></div>
+        <span class="chip c1">top 8 · left 8 · 32px circle · z 3</span>
+        <span class="chip c2">top 10 · right 10 · r8 · z 2</span>
+        <span class="chip c3">bottom 8 · left 8 · r100 · z 1</span>
+      </div>
+      <div class="ht">
+        <figure><div class="sw"></div><figcaption>actual — 5px grid, 1px dots, opacity .5</figcaption></figure>
+        <figure><div class="sw zoom"></div><figcaption>5× — 25px grid, 5px dots (same ratio)</figcaption></figure>
+      </div>
+    </div>
+    <div class="note">Card shell: radius <code>.5rem</code>, 1px border, shadow <code>0 .125rem .25rem rgba(0 0 0/.075)</code>, hover <code>translateY(-2px)</code>; <code>:focus-within</code> paints a 3px outline plus a 4px glow. High contrast flattens the gradient to <code>#6c757d</code> and print to <code>#ced4da</code>; print also drops the star, the tags and the access pill.</div>
+    <div class="note"><b>Palette migration (2026-07-27) — the gradient stops moved, the mechanism did not.</b> The warm three-stop fallback is now <code>linear-gradient(135deg,#ffc107 0%,#fd7e14 50%,#e8590c 100%)</code>, on the orange family <code>local_dimensions</code> keeps as its brand accent, in place of <code>#f5af19 → #f12711 → #ef4136</code>. Everything else is deliberately untouched: same <code>135deg</code>, same three stops at 0 / 50 / 100%, and the same <code>::after</code> halftone — a <code>5px × 5px</code> grid of 1px radial dots at <code>filter:opacity(.5)</code>, coloured by <code>--dimension-customtextcolor</code> falling back to <code>#00000082</code>. The two swatches above render from the shipped values, so "actual" and "5×" still show the identical dot-to-cell ratio they did before.</div>
+    <div class="note">The tag chips moved with it: fill <code>#ef4136 → #fd7e14</code> and the <b>default text flipped from <code>#fff</code> to <code>#212529</code></b>, Bootstrap's warning-badge convention. White on the old red measured <b>3.83:1</b> and failed WCAG 1.4.3; dark on <code>#fd7e14</code> is <b>6.00:1</b>. Dark text on a warm fill reads heavier than the old white-on-red — that is the intended change, not a regression. The custom-colour overrides (<code>--dimension-custombgcolor</code> / <code>--dimension-customtextcolor</code>) are unchanged, so the third card above still paints its chip from card data.</div>
+  </div>
+
+  <!-- ============ AS-IS · DARK ============ -->
+  <div class="panel dark">
+    <div class="plabel"><span class="pdot" style="background:#6ea8fe"></span>As-is · dark (.theme-dark)</div>
+
+    <div class="bk-cap">Competency grid — <code>minmax(360px,1fr)</code>, gap 1rem · <span class="idb">CMP-CARD</span></div>
+    <div class="cmpgrid">
+      <div class="cell">
+        <article class="cmp-card" aria-labelledby="cmp-d-1">
+          <button type="button" class="cmp-fav" aria-pressed="false" aria-label="Add to favourites" data-fav-type="competency">
+            <svg class="ic off" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2-6.2 3.2L7 14.2l-5-4.9 6.9-1L12 2z"/></svg>
+          </button>
+          <div class="cmp-imgwrap">
+            <div class="cmp-img cmp-grad" aria-hidden="true"></div>
+            <div class="cmp-tags" role="group" aria-label="Tags"><span class="cmp-tag">2026</span><span class="cmp-tag">Core</span></div>
+            <span class="cmp-access" aria-hidden="true">Access <svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </div>
+          <div class="cmp-body"><h4 class="cmp-title" id="cmp-d-1"><a href="#cmp-d1">Assertive communication</a></h4></div>
+        </article>
+        <p class="cardcap">Default — gradient + halftone, 2 tags, star off <span class="idb">CMP-GRADIENT</span></p>
+      </div>
+      <div class="cell">
+        <article class="cmp-card" aria-labelledby="cmp-d-2">
+          <button type="button" class="cmp-fav" aria-pressed="true" aria-label="Remove from favourites" data-fav-type="competency">
+            <svg class="ic on" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2-6.2 3.2L7 14.2l-5-4.9 6.9-1L12 2z"/></svg>
+          </button>
+          <div class="cmp-imgwrap">
+            <div class="cmp-img cmp-photo" role="img" aria-label="Data storytelling"></div>
+            <div class="cmp-tags" role="group" aria-label="Tags"><span class="cmp-tag">Analytics</span></div>
+            <span class="cmp-access" aria-hidden="true">Access <svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </div>
+          <div class="cmp-body"><h4 class="cmp-title" id="cmp-d-2"><a href="#cmp-d2">Data storytelling</a></h4></div>
+        </article>
+        <p class="cardcap">Photo — no halftone (the overlay is on the gradient element only), star on <span class="idb">CMP-IMAGE</span></p>
+      </div>
+      <div class="cell">
+        <article class="cmp-card" aria-labelledby="cmp-d-3" style="--dimension-custombgcolor:var(--bk-demo-custombg);--dimension-customtextcolor:var(--bk-demo-customfg);">
+          <button type="button" class="cmp-fav" aria-pressed="false" aria-label="Add to favourites" data-fav-type="competency">
+            <svg class="ic off" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2-6.2 3.2L7 14.2l-5-4.9 6.9-1L12 2z"/></svg>
+          </button>
+          <div class="cmp-imgwrap">
+            <div class="cmp-img cmp-grad has-custom-bg" aria-hidden="true"></div>
+            <div class="cmp-tags" role="group" aria-label="Tags"><span class="cmp-tag">Elective</span></div>
+            <span class="cmp-access" aria-hidden="true">Access <svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </div>
+          <div class="cmp-body"><h4 class="cmp-title" id="cmp-d-3"><a href="#cmp-d3">Feedback loops</a></h4></div>
+        </article>
+        <p class="cardcap">Custom colours — bg flattens the gradient, text colour recolours the chip <b>and</b> the halftone dots <span class="idb">CMP-HALFTONE</span></p>
+      </div>
+      <div class="cell">
+        <article class="cmp-card" aria-labelledby="cmp-d-4">
+          <button type="button" class="cmp-fav" aria-pressed="false" aria-label="Add to favourites" data-fav-type="competency">
+            <svg class="ic off" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2-6.2 3.2L7 14.2l-5-4.9 6.9-1L12 2z"/></svg>
+          </button>
+          <div class="cmp-imgwrap">
+            <div class="cmp-img cmp-grad" aria-hidden="true"></div>
+            <span class="cmp-access" aria-hidden="true">Access <svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </div>
+          <div class="cmp-body"><h4 class="cmp-title" id="cmp-d-4"><a href="#cmp-d4">Strategic workforce planning and organisational capability design</a></h4></div>
+        </article>
+        <p class="cardcap">Long title clamped at 2 lines; the short title left of it reserves the same <code>min-height:2.8em</code>, so the row stays aligned <span class="idb">CMP-TITLE</span></p>
+      </div>
+    </div>
+    <div class="bk-ids">
+      <span class="idb">CMP-CARD · #343a40 on #495057</span>
+      <span class="idb">CMP-FAV · platter rgba(52 58 64/.85)</span>
+      <span class="idb">CMP-IMAGE · unchanged</span>
+      <span class="idb">CMP-GRADIENT · unchanged</span>
+      <span class="idb">CMP-HALFTONE · unchanged</span>
+      <span class="idb">CMP-TAGS · shadow deepens to .4</span>
+      <span class="idb">CMP-ACCESS · #343a40 / #f8f9fa</span>
+      <span class="idb">CMP-TITLE · #f8f9fa !important</span>
+    </div>
+    <div class="note">Dark mode touches five things only: card background and border, the title colour, the <code>:focus-within</code> outline (<code>#6ea8fe</code>), the star platter and its empty-star colour (<code>#adb5bd</code>), and the access-pill / tag shadows — the pill's rest shadow and, deeper still, its hover / <code>:focus-within</code> shadow. The brand gradient, the halftone and the tag fill are <b>identical</b> in both skins — they come from card data, not from the theme, so the migrated <code>#ffc107 → #fd7e14 → #e8590c</code> stops and the <code>#212529</code> chip text land here unchanged.</div>
+    <div class="note">Same WCAG contract as light: decorative gradient <code>aria-hidden</code>, photo <code>role="img"</code> + name, tags in a labelled <code>role="group"</code>, the star a sibling button with <code>aria-pressed</code>, only the title a real link.</div>
+    <div class="note">Same eligibility rule: one card per competency that has a visible linked course, de-duplicated across plans; no trail, no count text.</div>
+
+    <div class="divlbl">Anatomy — image band, overlay offsets, halftone <span class="idb">CMP-IMAGE</span></div>
+    <div class="anat">
+      <div class="bands">
+        <div class="band"><div class="b cmp-img cmp-grad" style="height:100px"></div><span class="l">100px · ≥992px</span></div>
+        <div class="band"><div class="b cmp-img cmp-grad" style="height:120px"></div><span class="l">120px · default</span></div>
+        <div class="band"><div class="b cmp-img cmp-grad" style="height:140px"></div><span class="l">140px · ≤576px</span></div>
+      </div>
+      <div class="anat-band">
+        <div class="cmp-img cmp-grad" aria-hidden="true"></div>
+        <span class="cmp-fav" aria-hidden="true"><svg class="ic off" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2-6.2 3.2L7 14.2l-5-4.9 6.9-1L12 2z"/></svg></span>
+        <span class="cmp-access" aria-hidden="true">Access <svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        <div class="cmp-tags" aria-hidden="true"><span class="cmp-tag">Tag</span></div>
+        <span class="chip c1">top 8 · left 8 · 32px circle · z 3</span>
+        <span class="chip c2">top 10 · right 10 · r8 · z 2</span>
+        <span class="chip c3">bottom 8 · left 8 · r100 · z 1</span>
+      </div>
+      <div class="ht">
+        <figure><div class="sw"></div><figcaption>actual — 5px grid, 1px dots, opacity .5</figcaption></figure>
+        <figure><div class="sw zoom"></div><figcaption>5× — 25px grid, 5px dots (same ratio)</figcaption></figure>
+      </div>
+    </div>
+    <div class="note">Card shell geometry is theme-independent: radius <code>.5rem</code>, hover lift <code>-2px</code>, focus ring 3px + 4px glow (blue swaps to <code>#6ea8fe</code>). The photo swatch here is a CSS stand-in — the kit ships no external assets; the real image is a File-API URL passed through <code>sanitize_image_url()</code>.</div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <h3>ID legend — Competency card (competency_card.mustache)</h3>
+  <div class="leg">
+    <span class="k">CMP-CARD</span><span class="v"><b>Card shell</b> — <code>&lt;article class="card competency-card h-100"&gt;</code>, <code>aria-labelledby</code> the title id; flex column, radius <code>.5rem</code>, <code>overflow:hidden</code>, 1px <code>rgba(0 0 0/.125)</code> border on <code>#fff</code>, shadow <code>0 .125rem .25rem rgba(0 0 0/.075)</code>, hover <code>translateY(-2px)</code> + <code>0 .5rem 1rem rgba(0 0 0/.15)</code>, <code>:focus-within</code> 3px <code>#0f6cbf</code> + <code>0 0 0 4px rgba(15 108 191/.25)</code>. The custom colours arrive as inline <code>--dimension-custombgcolor</code> / <code>--dimension-customtextcolor</code> on this element and cascade to the gradient, the halftone and the tags. Dark: <code>#343a40</code> / <code>#495057</code>, focus <code>#6ea8fe</code> <span class="rule">competency_card.mustache:48; styles.css:188-241, 344-359</span></span>
+    <span class="k">CMP-FAV</span><span class="v"><b>Favourite star</b> — <code>button.dims-fav-btn</code>, <code>data-fav-type="competency"</code>, <code>data-fav-id</code>, <code>aria-pressed</code> true/false, 32px circle at top 8 / left 8, <code>z-index:3</code>, platter <code>rgba(255 255 255/.85)</code>, hover <code>scale(1.1)</code>, active <code>scale(.95)</code>, focus 2px <code>#0f6cbf</code>. Star filled <code>#ffc107</code>, empty <code>#6c757d</code> (dark <code>#adb5bd</code>, hover both go amber). A sibling of the link, never nested in it; hidden in print <span class="rule">competency_card.mustache:49-62; styles.css:1667-1769</span></span>
+    <span class="k">CMP-IMAGE</span><span class="v"><b>Image band</b> — <code>.competency-card-image</code> inside <code>.competency-card-image-wrapper</code> (the only positioned ancestor for the three overlays); 100% × <b>120px</b>, <code>cover</code> / <code>center</code> / <code>no-repeat</code>, <code>flex-shrink:0</code>; <b>100px</b> at ≥992px, <b>140px</b> at ≤575.98px. With a real photo it is <code>role="img"</code> + <code>aria-label="{{name}}"</code> and carries no overlay pattern; the URL is validated by <code>dataset_provider::sanitize_image_url()</code> (<code>PARAM_URL</code>) before it reaches the <code>style</code> attribute <span class="rule">competency_card.mustache:63-70; styles.css:246-254, 294-304, 922-926</span></span>
+    <span class="k">CMP-GRADIENT</span><span class="v"><b>Gradient fallback</b> — <code>.competency-card-gradient</code>, shown when <code>hasimage</code> is false; <code>linear-gradient(135deg,#ffc107 0%,#fd7e14 50%,#e8590c 100%)</code>, <code>aria-hidden="true"</code> (decorative, WCAG 1.1.1). The 2026-07-27 migration moved only these three stops — off <code>#f5af19 → #f12711 → #ef4136</code> and onto the orange family <code>local_dimensions</code> ships as its brand accent; the angle, the stop positions and the halftone overlay are unchanged. With a custom background the template adds <code>.has-custom-bg</code> and the inline <code>background: var(--dimension-custombgcolor)</code>, flattening the three-stop gradient to one solid. High contrast replaces it with <code>#6c757d</code>, print with <code>#ced4da</code> <span class="rule">competency_card.mustache:72-75; styles.css:257-259, 323-325, 371-373</span></span>
+    <span class="k">CMP-HALFTONE</span><span class="v"><b>Halftone dot overlay</b> — <code>.competency-card-gradient::after</code>, inset 0, <code>radial-gradient(circle, var(--dimension-customtextcolor,#00000082) 0px, transparent 1px)</code> on a <code>5px × 5px</code> grid at <code>filter:opacity(.5)</code>, <code>pointer-events:none</code>. It exists only on the gradient element, so a photo card never gets dots; setting a custom text colour recolours the dots and the tag chip together <span class="rule">styles.css:262-273</span></span>
+    <span class="k">CMP-TAGS</span><span class="v"><b>Tag chips</b> — <code>.dimension-tags</code>, <code>role="group"</code> labelled by the <code>cardtags</code> lang string (WCAG 1.3.1), absolute bottom 8 / left 8, <code>flex-wrap</code>, gap 4px, <code>z-index:1</code>; each <code>.dimension-tag.cm-tag</code> is 4px/12px, <code>.75rem</code>/600, radius <code>100px</code>, shadow <code>0 1px 3px rgba(0 0 0/.2)</code> (dark <code>.4</code>), fill <code>var(--dimension-custombgcolor,#fd7e14)</code> on <code>var(--dimension-customtextcolor,#212529)</code> — the default text flipped from <code>#fff</code> (3.83:1 on the old <code>#ef4136</code>, a WCAG 1.4.3 failure) to dark, which reads 6.00:1 on <code>#fd7e14</code>. Zero, one or two chips — <code>tag1</code> / <code>tag2</code> from the competency metadata cache; hidden in print <span class="rule">competency_card.mustache:77-83; styles.css:999-1025; dataset_provider.php:834-843</span></span>
+    <span class="k">CMP-ACCESS</span><span class="v"><b>Access pill</b> — <code>span.dims-card-access-btn</code>, <code>aria-hidden="true"</code> and <code>pointer-events:none</code> because the title anchor is the real link; top 10 / right 10, <code>z-index:2</code>, 6px/16px, <code>.85rem</code>/600, radius <code>8px</code>, <code>#212529</code> on <code>#fff</code> with <code>0 2px 8px rgba(0 0 0/.15)</code>. It <b>lifts</b> to <code>0 4px 14px rgba(0 0 0/.22)</code> + <code>translateY(-1px)</code> on <code>.competency-card:hover</code> <b>and</b> <code>.competency-card:focus-within</code> — pointer and keyboard deliberately share one treatment. The lift used to be written as <code>.card-link:hover .dims-card-access-btn</code> and never matched (pill at <code>:84</code> inside the image wrapper, link at <code>:90</code> inside the body, so the pill is the link's sibling subtree, not its descendant); it is now scoped to the article, where <code>stretched-link</code> makes both states bubble — which is why the selector reads off the card rather than off the link. The pill carries <b>no ring of its own</b> on purpose: the article already paints the focus indicator (3px ring + 4px glow around the whole card), so a second ring would put two rings on screen for one focus event — the pill is <code>aria-hidden</code> decoration, the card's ring is the accessible indicator. Dark deepens the hover shadow to <code>0 4px 14px rgba(0 0 0/.5)</code>, since the dark rest shadow is already <code>rgba(0 0 0/.35)</code> and the light hover value would read <i>flatter</i> than rest; <code>prefers-reduced-motion:reduce</code> drops the <code>transform</code> and keeps the shadow. Label is always <code>accesscard</code> here — unlike the plan card, a competency never shows "Continue". Dark: <code>#343a40</code> / <code>#f8f9fa</code> <span class="rule">competency_card.mustache:84-86, 90; styles.css:929-994, 2130-2184; dataset_provider.php:864</span></span>
+    <span class="k">CMP-TITLE</span><span class="v"><b>Title link</b> — <code>h4.card-title</code> (id <code>competency-title-{{id}}</code>) wrapping <code>a.competency-card-link.stretched-link</code>; <code>.9rem</code>/1.4, <code>-webkit-line-clamp:2</code> and <code>min-height:2.8em</code> so one-line and two-line titles occupy the same box and a row of cards stays aligned. The only real interactive link on the card (pseudo-link pattern, WCAG 2.4.4 / 2.5.3 / 4.1.1); its href is <code>/local/dimensions/view-competency.php?id={planid}&amp;competencyid={id}</code>. Dark forces <code>#f8f9fa !important</code> <span class="rule">competency_card.mustache:88-92; styles.css:279-289, 350-353; dataset_provider.php:824-827</span></span>
+  </div>
+</div>
+</div>

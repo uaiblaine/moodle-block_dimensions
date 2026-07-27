@@ -1,0 +1,195 @@
+<!-- @dsCard group="Foundations" name="Tokens (Dimensions block) — as-is" subtitle="The styles.css palette after the 2026-07-27 Moodle DS migration, tokenized as --bk-*; light and dark are both as-is (the plugin ships both)" -->
+<style>
+.bk-tok{
+  /* ---- Canonical --bk-* token block (AS-IS, faithful to block_dimensions/styles.css) ---- */
+  --bk-page:#f4f5f7;--bk-surface:#fff;--bk-surface-2:#f8f9fa;
+  --bk-card-bg:#fff;--bk-plan-card-bg:#fff;
+  --bk-card-border:rgba(0,0,0,.125);--bk-plan-card-border:rgba(0,0,0,.125);
+  --bk-text:#212529;--bk-muted:#6c757d;
+  --bk-line:#e9ecef;--bk-line-2:#ced4da;--bk-line-3:#dee2e6;--bk-line-4:#ced4da;
+  --bk-accent:#0f6cbf;--bk-accent-dark:#0c5699;--bk-accent-deep:#0f4d85;
+  --bk-pill-platter:#e9ecef;--bk-pill-text:#495057;--bk-pill-indicator:#fff;
+  --bk-counter-bg:#e9ecef;--bk-counter-active-bg:#cfe2ff;--bk-counter-active-fg:#0f4d85;
+  --bk-search-border:#dee2e6;--bk-search-icon:#6c757d;--bk-search-placeholder:#5c636a;
+  --bk-search-glow:rgba(15,108,191,.15);
+  --bk-select-hover-bg:#dee2e6;--bk-select-hover-border:#ced4da;
+  --bk-paddle:rgba(0,0,0,.56);--bk-paddle-hover:rgba(0,0,0,.72);
+  --bk-btn-bg:#fff;--bk-btn-fg:#212529;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.15);
+  --bk-section-from:#0f4d85;--bk-section-to:#0f6cbf;
+  --bk-plan-grad-a:#0f6cbf;--bk-plan-grad-b:#0a5aa0;
+  --bk-comp-grad-a:#ffc107;--bk-comp-grad-b:#fd7e14;--bk-comp-grad-c:#e8590c;
+  --bk-tag-bg:#fd7e14;--bk-tag-fg:#212529;--bk-halftone:#00000082;
+  --bk-success:#198754;--bk-success-text:#0f5132;--bk-star:#ffc107;
+  --bk-focus:#0f6cbf;--bk-focus-glow:rgba(15,108,191,.25);--bk-focus-btn:#0f6cbf;
+  --bk-danger-fg:#842029;--bk-danger-bg:#f8d7da;
+  --bk-warn-fg:#212529;--bk-warn-bg:#fff3cd;--bk-warn-border:#ffe69c;
+  --bk-empty-circle:#6c757d;--bk-empty-ring:1px;--bk-ghost-fg:#6c757d;--bk-ghost-circle:#adb5bd;
+
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  font-family:var(--font);color:var(--bk-text);background:var(--bk-page);margin:0;padding:22px;line-height:1.5;
+}
+/* ---- dark override: what `.theme-dark` / `body.dark` really swap in styles.css ---- */
+.bk-tok.dark{
+  --bk-page:#212529;--bk-surface:#212529;--bk-surface-2:#212529;
+  --bk-card-bg:#343a40;--bk-plan-card-bg:#343a40;
+  --bk-card-border:#495057;--bk-plan-card-border:#495057;
+  --bk-text:#f8f9fa;--bk-muted:#adb5bd;
+  --bk-line:#495057;--bk-line-2:#495057;--bk-line-3:#495057;--bk-line-4:#495057;
+  --bk-accent:#6ea8fe;--bk-accent-dark:#9ec5fe;
+  --bk-pill-platter:#212529;--bk-pill-text:#adb5bd;--bk-pill-indicator:#495057;
+  --bk-search-border:#495057;--bk-search-icon:#adb5bd;--bk-search-placeholder:#adb5bd;
+  --bk-search-glow:rgba(110,168,254,.2);
+  --bk-btn-bg:#343a40;--bk-btn-fg:#f8f9fa;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.35);
+  --bk-success-text:#75b798;
+  --bk-focus:#6ea8fe;--bk-focus-glow:rgba(110,168,254,.25);
+  --bk-danger-fg:#ea868f;--bk-danger-bg:#2c0b0e;
+  --bk-warn-fg:#dee2e6;--bk-warn-bg:#332701;--bk-warn-border:#664d03;
+  --bk-empty-circle:#adb5bd;--bk-ghost-fg:#adb5bd;--bk-ghost-circle:#6c757d;
+  color:var(--bk-text);background:var(--bk-page);
+}
+.bk-tok h1{font-size:17px;font-weight:700;margin:0 0 2px;}
+.bk-tok .sub{font-size:12px;color:var(--bk-muted);margin:0 0 18px;}
+.bk-tok h2{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--bk-muted);margin:22px 0 8px;}
+.bk-cols{display:flex;flex-wrap:wrap;gap:22px;}
+.bk-col{flex:1 1 340px;min-width:300px;}
+.bk-col h3{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--bk-text);margin:0 0 10px;}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;}
+.tk{display:grid;grid-template-columns:34px 1fr auto;gap:8px 10px;align-items:center;margin:5px 0;}
+.tk .sw{width:34px;height:22px;border-radius:6px;border:1px solid rgba(0,0,0,.12);}
+.tk .nm{font-size:11px;font-weight:600;}
+.tk .nm small{display:block;font-weight:400;color:var(--bk-muted);}
+.tk .hex{font-family:var(--mono);font-size:10px;color:var(--bk-muted);text-align:right;}
+.flag{font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:10px;white-space:nowrap;}
+.flag.mig{background:#e7f0f9;color:#0f6cbf;border:1px solid #9fc4e5;}
+.flag.keep{background:rgba(253,126,20,.1);color:#842029;border:1px solid rgba(253,126,20,.3);}
+.flag.rev{background:#fcefdc;color:#8a5a1f;border:1px solid #e6b877;}
+.note{font-size:11px;color:var(--bk-muted);margin-top:8px;}
+.line{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0;}
+.pair{display:flex;align-items:center;gap:8px;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:600;width:fit-content;}
+.radii{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;}
+.rad{width:88px;text-align:center;font-size:11px;color:var(--bk-muted);}
+.rad .box{height:48px;background:#e7ecff;border:1px solid #c9d6ff;}
+.type{display:grid;grid-template-columns:auto 1fr auto;gap:4px 14px;align-items:baseline;font-size:12px;color:var(--bk-muted);}
+.type b{color:var(--bk-text);}
+.type .px{font-family:var(--mono);font-size:10px;}
+.grad{height:44px;border-radius:8px;position:relative;overflow:hidden;}
+.grad span{position:absolute;left:10px;bottom:6px;font-size:11px;font-weight:600;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5);}
+.halftone::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,#00000082 0,transparent 1px);background-size:5px 5px;filter:opacity(.5);}
+.darkbox{background:#212529;border-radius:10px;padding:14px 16px;margin-top:8px;}
+.darkbox .tk .nm{color:#dee2e6;}
+.darkbox .tk .hex{color:#adb5bd;}
+.was{font-family:var(--mono);font-size:9px;color:#a3552d;text-decoration:line-through;}
+</style>
+<div class="bk-tok">
+  <h1>Tokens — Dimensions block</h1>
+  <p class="sub">Real values read out of <code>blocks/dimensions/styles.css</code> (Boost, Bootstrap 4 conventions), tokenized as <code>--bk-*</code>. Everything here is <b>as-is</b>: the light column is the default skin and the dark column is the <code>.theme-dark</code> / <code>body.dark</code> override the plugin already ships — not a proposal. The palette was <b>migrated to Moodle DS on 2026-07-27</b> to match the sibling plugin <code>local_dimensions</code>; the retired values are shown struck through for orientation, and the full record is in <code>token-migration.md</code>.</p>
+
+  <h2>Primary &amp; accents <span class="flag mig">migrated</span></h2>
+  <div class="bk-cols">
+    <div class="bk-col">
+      <h3><span class="dot" style="background:#8a8980"></span>Light (default)</h3>
+      <div class="tk"><span class="sw" style="background:#0f6cbf"></span><span class="nm">accent <small>28 uses — focus rings, active pill text, fav pill, ghost hover, trail-label hover</small></span><span class="hex">#0f6cbf<br><span class="was">#1a73e8</span></span></div>
+      <div class="tk"><span class="sw" style="background:#0c5699"></span><span class="nm">accent hover <small>fav-pill hover fill</small></span><span class="hex">#0c5699<br><span class="was">#1765cc</span></span></div>
+      <div class="tk"><span class="sw" style="background:#0f4d85"></span><span class="nm">accent deep <small>text on a subtle-blue fill</small></span><span class="hex">#0f4d85<br><span class="was">#1765cc</span></span></div>
+      <div class="tk"><span class="sw" style="background:#cfe2ff"></span><span class="nm">subtle blue <small>active count badge, mobile toggle on</small></span><span class="hex">#cfe2ff<br><span class="was">#e8f0fe</span></span></div>
+      <div class="tk"><span class="sw" style="background:rgba(15,108,191,.25)"></span><span class="nm">focus glow <small>4px ring outside the 3px outline</small></span><span class="hex">rgba(15 108 191/.25)</span></div>
+    </div>
+    <div class="bk-col">
+      <h3><span class="dot" style="background:#6ea8fe"></span>Dark (<code>.theme-dark</code>, shipped)</h3>
+      <div class="darkbox">
+        <div class="tk"><span class="sw" style="background:#6ea8fe"></span><span class="nm">accent · focus ring <small>one value, was two</small></span><span class="hex">#6ea8fe<br><span class="was">#8ab4f8 #66b3ff</span></span></div>
+        <div class="tk"><span class="sw" style="background:#9ec5fe"></span><span class="nm">accent hover <small>fav-pill hover</small></span><span class="hex">#9ec5fe<br><span class="was">#aecbfa</span></span></div>
+        <div class="tk"><span class="sw" style="background:rgba(110,168,254,.2)"></span><span class="nm">search focus glow</span><span class="hex">rgba(110 168 254/.2)</span></div>
+      </div>
+      <p class="note"><b>One focus ring now.</b> Four different blues used to mark the same state — <code>#005fcc</code> on the card, <code>#1a73e8</code> on nine controls, <code>#0a58ca</code> on the access pill alone and <code>#1765cc</code> on the mobile toggle. Three of them are now <code>#0f6cbf</code>, and dark's two are <code>#6ea8fe</code>. The fourth was not recoloured but <b>removed</b>: the access pill draws no ring of its own any more — the card's own <code>:focus-within</code> ring is its indicator, and the pill answers hover and focus with one shared lift instead.</p>
+    </div>
+  </div>
+
+  <h2>Surfaces &amp; neutrals</h2>
+  <div class="bk-cols">
+    <div class="bk-col">
+      <h3><span class="dot" style="background:#8a8980"></span>Light</h3>
+      <div class="tk"><span class="sw" style="background:#fff"></span><span class="nm">card background <small>both card types — the plan card's warm <span class="was">#FFFEFC</span> is gone</small></span><span class="hex">#fff</span></div>
+      <div class="tk"><span class="sw" style="background:#f8f9fa"></span><span class="nm">search field / filter toggle fill</span><span class="hex">#f8f9fa</span></div>
+      <div class="tk"><span class="sw" style="background:#212529"></span><span class="nm">body text <small>card title, access pill, tag chip</small></span><span class="hex">#212529</span></div>
+      <div class="tk"><span class="sw" style="background:#495057"></span><span class="nm">text on a tinted fill <small>pill, select, count badge</small></span><span class="hex">#495057<br><span class="was">#5f6368</span></span></div>
+      <div class="tk"><span class="sw" style="background:#5c636a"></span><span class="nm">placeholder / mobile toggle label</span><span class="hex">#5c636a<br><span class="was">#5f6368</span></span></div>
+      <div class="tk"><span class="sw" style="background:#6c757d"></span><span class="nm">muted <small>count text, trail label, ghost text, search icon</small></span><span class="hex">#6c757d</span></div>
+      <div class="tk"><span class="sw" style="background:#e9ecef"></span><span class="nm">pill platter · select fill · trail connector</span><span class="hex">#e9ecef<br><span class="was">#f1f3f4</span></span></div>
+      <div class="tk"><span class="sw" style="background:#dee2e6"></span><span class="nm">borders <small>search, select, clear, toggle</small></span><span class="hex">#dee2e6<br><span class="was">#e1e3e6 #dadce0</span></span></div>
+      <div class="tk"><span class="sw" style="background:#ced4da"></span><span class="nm">dashed stubs · ghost border · hover border</span><span class="hex">#ced4da<br><span class="was">#c6c8ca #d1d5db</span></span></div>
+      <div class="tk"><span class="sw" style="background:rgba(0,0,0,.125)"></span><span class="nm">card border <small>the plan card's malformed 4-arg <code>rgb()</code> is fixed</small></span><span class="hex">rgba(0 0 0/.125)</span></div>
+    </div>
+    <div class="bk-col">
+      <h3><span class="dot" style="background:#6ea8fe"></span>Dark</h3>
+      <div class="darkbox">
+        <div class="tk"><span class="sw" style="background:#212529"></span><span class="nm">page · recessed controls <small>input, select, platter, ghost</small></span><span class="hex">#212529<br><span class="was">#3c4043 #292a2d</span></span></div>
+        <div class="tk"><span class="sw" style="background:#343a40"></span><span class="nm">card · raised surfaces <small>access pill, select hover</small></span><span class="hex">#343a40<br><span class="was">#2c2c2e #4a4d51</span></span></div>
+        <div class="tk"><span class="sw" style="background:#495057"></span><span class="nm">borders · indicator pill · connectors</span><span class="hex">#495057<br><span class="was">#5f6368</span></span></div>
+        <div class="tk"><span class="sw" style="background:#f8f9fa"></span><span class="nm">card title · access-pill text</span><span class="hex">#f8f9fa<br><span class="was">#f5f5f7</span></span></div>
+        <div class="tk"><span class="sw" style="background:#dee2e6"></span><span class="nm">input text · active pill · section header</span><span class="hex">#dee2e6<br><span class="was">#e8eaed</span></span></div>
+        <div class="tk"><span class="sw" style="background:#adb5bd"></span><span class="nm">muted · pill text · icons</span><span class="hex">#adb5bd<br><span class="was">#9aa0a6</span></span></div>
+        <div class="tk"><span class="sw" style="background:rgba(33,37,41,.97)"></span><span class="nm">sticky mobile header scrim</span><span class="hex">rgba(33 37 41/.97)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Card gradients — colours migrated, mechanism kept <span class="flag keep">halftone kept</span></h2>
+  <div class="bk-cols">
+    <div class="bk-col">
+      <div class="grad" style="background:linear-gradient(135deg,#0f6cbf 0%,#0a5aa0 100%)"><span>plan card — #0f6cbf → #0a5aa0</span></div>
+      <p class="note">The <b>exact gradient <code>local_dimensions</code> uses</b> (its <code>styles.css:2569</code>), so the block's placeholder and the page it links into now match. Was <span class="was">#667eea → #764ba2</span>.</p>
+    </div>
+    <div class="bk-col">
+      <div class="grad halftone" style="background:linear-gradient(135deg,#ffc107 0%,#fd7e14 50%,#e8590c 100%)"><span>competency card — #ffc107 → #fd7e14 → #e8590c</span></div>
+      <p class="note">Still a warm three-stop gradient, still overlaid with the halftone dot grid — <code>radial-gradient(circle, var(--dimension-customtextcolor,#00000082) 0, transparent 1px)</code> at <code>5px</code> / <code>opacity(.5)</code>, untouched. Only the stops moved, onto the orange family <code>local_dimensions</code> keeps as its brand accent. Was <span class="was">#f5af19 → #f12711 → #ef4136</span>.</p>
+    </div>
+  </div>
+  <p class="note">Keeping one card warm and the other cool is what distinguishes a competency card from a plan card at a glance; migrating both onto primary would have made them identical.</p>
+  <div class="line" style="margin-top:8px">
+    <span class="pair" style="background:#fd7e14;color:#212529;border-radius:100px;box-shadow:0 1px 3px rgba(0,0,0,.2)">Tag default #fd7e14</span>
+    <span class="pair" style="background:linear-gradient(180deg,#0f4d85 45%,#0f6cbf 90%);color:#fff">Section header gradient</span>
+  </div>
+  <p class="note">Tag chips read <code>var(--dimension-custombgcolor, #fd7e14)</code> / <code>var(--dimension-customtextcolor, #212529)</code>. The default text flipped from white to dark: white on the old <span class="was">#ef4136</span> was 3.83:1 and failed WCAG 1.4.3 for 12px bold text; dark on <code>#fd7e14</code> is <b>6.00:1</b>. Both values are set inline on the card from <code>local_dimensions</code> metadata and hex-validated by <code>dataset_provider::sanitize_color()</code>.</p>
+
+  <h2>Status, favourite &amp; feedback</h2>
+  <div class="line">
+    <span class="pair" style="background:rgba(25,135,84,.12);color:#0f5132">✓ Completed — marker #198754 · label #0f5132</span>
+    <span class="pair" style="background:#fff;color:#6c757d;border:1px solid #6c757d">◯ Pending — circle #6c757d</span>
+    <span class="pair" style="background:rgba(255,193,7,.18);color:#664d03">★ Favourite #ffc107</span>
+  </div>
+  <div class="line" style="margin-top:8px">
+    <span class="pair" style="background:#f8d7da;color:#842029">Clear filters, hover</span>
+    <span class="pair" style="background:#fff3cd;color:#212529;border:1px solid #ffe69c">No-JS notice</span>
+    <span class="pair" style="background:#2c0b0e;color:#ea868f">Clear filters, hover (dark)</span>
+    <span class="pair" style="background:#332701;color:#dee2e6;border:1px solid #664d03">No-JS notice (dark)</span>
+  </div>
+  <p class="note">Success moved from BS4 <span class="was">#28a745</span>/<span class="was">#1a7431</span> to BS5 <code>#198754</code>/<code>#0f5132</code> (dark <code>#75b798</code>, was <span class="was">#4dba6a</span>); the star from <span class="was">#ffb100</span> to BS5 warning <code>#ffc107</code>. High-contrast mode still replaces card borders and outlines with <code>#000</code> and flattens the competency gradient to <code>#6c757d</code>; print flattens it to <code>#ced4da</code>.</p>
+  <p class="note"><b>No pair fails any more.</b> The pending-trail ring used to be a 2px <code>#adb5bd</code> on white — <b>2.07:1</b>, under the 3:1 non-text floor, and a source comment claimed "≈ 3.1:1", which was never true. It is now <b>1px <code>#6c757d</code></b>, 4.69:1: darkening alone would have made every pending step read heavier than the completed ones, so the stroke thinned in the same change — WCAG 1.4.11 constrains the ratio, not the thickness. Dark had the inverse failure (<code>#6c757d</code> on <code>#343a40</code>, 2.45:1) and now uses <code>#adb5bd</code> at 5.55:1. Sweeping for the same problem closed four more dark gaps; see <code>token-migration.md</code>.</p>
+
+  <h2>Radii</h2>
+  <div class="radii">
+    <div class="rad"><div class="box" style="border-radius:.25rem"></div>0.25rem<br>no-JS notice</div>
+    <div class="rad"><div class="box" style="border-radius:.5rem"></div>0.5rem<br>card</div>
+    <div class="rad"><div class="box" style="border-radius:8px"></div>8px<br>access pill</div>
+    <div class="rad"><div class="box" style="border-radius:10px"></div>10px<br>mobile header</div>
+    <div class="rad"><div class="box" style="border-radius:12px"></div>12px<br>ghost card</div>
+    <div class="rad"><div class="box" style="border-radius:999px"></div>999px<br>pill · search · tag</div>
+  </div>
+
+  <h2>Type scale</h2>
+  <div class="type">
+    <span class="px">2rem / 600</span><span><b>Section header</b> — gradient-clipped, two lines from two lang strings</span><span></span>
+    <span class="px">1.1rem / 700</span><span><b>Block heading</b> ("My competencies") · <b>ghost card title</b></span><span></span>
+    <span class="px">0.9rem / 700</span><span><b>Card title</b> — competency clamps to 2 lines, <code>min-height:2.8em</code></span><span></span>
+    <span class="px">0.875rem / 500</span><span><b>Filter tab</b> · select · clear button <small>(0.8rem below 576px)</small></span><span></span>
+    <span class="px">0.85rem / 600</span><span><b>Access / Continue pill</b> · ghost subtitle (400)</span><span></span>
+    <span class="px">0.82rem / 600</span><span><b>Competency count text</b></span><span></span>
+    <span class="px">0.8125rem</span><span><b>Search input</b></span><span></span>
+    <span class="px">0.75rem / 600</span><span><b>Tag chip</b> · filter count badge</span><span></span>
+    <span class="px">0.72rem</span><span><b>Trail label, vertical</b> — 2-line clamp</span><span></span>
+    <span class="px">0.65rem</span><span><b>Trail label, horizontal</b> — ellipsis at 60px <small>(0.6rem / 45px below 576px)</small></span><span></span>
+  </div>
+  <p class="note">Font is inherited from Boost — the block sets no family of its own. Fixed geometry worth knowing: card image <b>120px</b> (100px ≥992px, 140px ≤576px); horizontal card image column <b>180px</b> (min-height 180px, 160px stacked); favourite button <b>32px</b> circle at 8px; trail marker <b>20px</b> with a <b>14px</b> empty circle; pill platter <b>44px</b> tall with a <b>36px</b> inner row and 4px padding; card grid <code>repeat(auto-fill,minmax(clamp(240px,30%,500px),1fr))</code>, competency grid <code>minmax(360px,1fr)</code>, both with a 1rem gap. The horizontal card's title now carries <code>padding-right:1.75rem</code> so it clears the favourite star.</p>
+</div>

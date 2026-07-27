@@ -1,0 +1,380 @@
+<!-- @dsCard group="Block screens · Filters (FLT)" name="Filter bar — pills, platter, dropdown, clear" subtitle="Built by string concatenation in filters.js renderFilterControls; filter_tabs_nav.js adds mask, indicator and paddles · as-is light │ dark" -->
+<style>
+/* ============================================================================
+   Canonical block-kit scaffold (shared by every screen file).
+   AS-IS token values live on .kit (light, the default skin); .panel.dark
+   overrides only the tokens `.theme-dark` / `body.dark` really swap in
+   styles.css. Markup is written once with var(--bk-*) so the two panels
+   differ by token values alone. See tokens.html / token-migration.md.
+   Palette migrated to Moodle DS on 2026-07-27 — these ARE the shipped values.
+   ============================================================================ */
+.kit{
+  --bk-page:#f4f5f7;--bk-surface:#fff;--bk-surface-2:#f8f9fa;
+  --bk-card-bg:#fff;--bk-plan-card-bg:#fff;
+  --bk-card-border:rgba(0,0,0,.125);--bk-plan-card-border:rgba(0,0,0,.125);
+  --bk-text:#212529;--bk-muted:#6c757d;
+  --bk-line:#e9ecef;--bk-line-2:#ced4da;--bk-line-3:#dee2e6;--bk-line-4:#ced4da;
+  --bk-accent:#0f6cbf;--bk-accent-dark:#0c5699;--bk-accent-deep:#0f4d85;
+  --bk-pill-platter:#e9ecef;--bk-pill-text:#495057;--bk-pill-indicator:#fff;
+  --bk-counter-bg:#e9ecef;--bk-counter-fg:#495057;--bk-counter-active-bg:#cfe2ff;--bk-counter-active-fg:#0f4d85;
+  --bk-search-border:#dee2e6;--bk-search-icon:#6c757d;--bk-search-placeholder:#5c636a;
+  --bk-search-glow:rgba(15,108,191,.15);
+  --bk-select-hover-bg:#dee2e6;--bk-select-hover-border:#ced4da;
+  --bk-paddle:rgba(0,0,0,.56);--bk-paddle-hover:rgba(0,0,0,.72);
+  --bk-btn-bg:#fff;--bk-btn-fg:#212529;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.15);
+  --bk-section-from:#0f4d85;--bk-section-to:#0f6cbf;
+  --bk-plan-grad-a:#0f6cbf;--bk-plan-grad-b:#0a5aa0;
+  --bk-comp-grad-a:#ffc107;--bk-comp-grad-b:#fd7e14;--bk-comp-grad-c:#e8590c;
+  --bk-tag-bg:#fd7e14;--bk-tag-fg:#212529;--bk-halftone:#00000082;
+  --bk-success:#198754;--bk-success-text:#0f5132;--bk-star:#ffc107;
+  --bk-focus:#0f6cbf;--bk-focus-glow:rgba(15,108,191,.25);--bk-focus-btn:#0f6cbf;
+  --bk-danger-fg:#842029;--bk-danger-bg:#f8d7da;
+  --bk-warn-fg:#212529;--bk-warn-bg:#fff3cd;--bk-warn-border:#ffe69c;
+  --bk-empty-circle:#6c757d;--bk-empty-ring:1px;--bk-ghost-fg:#6c757d;--bk-ghost-circle:#adb5bd;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--bk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
+}
+.kit *{box-sizing:border-box;}
+.panel.dark{
+  --bk-page:#212529;--bk-surface:#212529;--bk-surface-2:#212529;
+  --bk-card-bg:#343a40;--bk-plan-card-bg:#343a40;
+  --bk-card-border:#495057;--bk-plan-card-border:#495057;
+  --bk-text:#f8f9fa;--bk-muted:#adb5bd;
+  --bk-line:#495057;--bk-line-2:#495057;--bk-line-3:#495057;--bk-line-4:#495057;
+  --bk-accent:#6ea8fe;--bk-accent-dark:#9ec5fe;
+  --bk-pill-platter:#212529;--bk-pill-text:#adb5bd;--bk-pill-indicator:#495057;
+  --bk-search-border:#495057;--bk-search-icon:#adb5bd;--bk-search-placeholder:#adb5bd;
+  --bk-search-glow:rgba(110,168,254,.2);
+  --bk-select-hover-bg:#343a40;
+  --bk-paddle:rgba(255,255,255,.64);--bk-paddle-hover:rgba(255,255,255,.88);
+  --bk-btn-bg:#343a40;--bk-btn-fg:#f8f9fa;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.35);
+  --bk-success:#75b798;--bk-success-text:#75b798;
+  --bk-counter-bg:#495057;--bk-counter-fg:#dee2e6;
+  --bk-focus:#6ea8fe;--bk-focus-glow:rgba(110,168,254,.25);--bk-focus-btn:#6ea8fe;
+  --bk-danger-fg:#ea868f;--bk-danger-bg:#2c0b0e;
+  --bk-warn-fg:#dee2e6;--bk-warn-bg:#332701;--bk-warn-border:#664d03;
+  --bk-empty-circle:#adb5bd;--bk-ghost-fg:#adb5bd;--bk-ghost-circle:#6c757d;
+  color:var(--bk-text);
+}
+.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
+.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--bk-page);padding:0 0 18px;overflow:hidden;}
+.panel.dark{border-color:#343a40;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--bk-text);padding:12px 20px 0;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--mono);font-size:10px;color:var(--bk-pill-text);background:var(--bk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
+.idb.r{border-color:#c9a3a3;color:#a3552d;}
+.panel.dark .idb{color:#adb5bd;border-color:#495057;}
+.bk-cap{font-size:11px;color:var(--bk-muted);padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.bk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
+.divlbl{font-size:11px;color:var(--bk-muted);margin:14px 20px 4px;border-top:1px solid var(--bk-line);padding-top:10px;}
+.note{font-size:10px;color:var(--bk-muted);padding:2px 20px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+.legend{max-width:1100px;margin:16px auto 0;background:#fff;border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
+.leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
+.leg .v b{color:#212529;font-weight:600;}
+.leg .v{color:#495057;}
+.leg .rule{color:#8a8980;}
+
+/* ============================================================================
+   Screen-local values styles.css owns but the --bk-* vocabulary has no name
+   for. Declared here, never inline in the markup.
+   ============================================================================ */
+.kit{
+  --flt-tab-active-fg:var(--bk-accent);          /* --dims-tabs-item-color-active */
+  --flt-fav-active-fg:#fff;                      /* .dims-fav-filter-btn.active colour */
+  --flt-ind-shadow:0 1px 3px rgba(0,0,0,.12);    /* --dims-tabs-indicator-shadow */
+  --flt-fav-shadow:0 1px 3px rgba(0,0,0,.12);    /* no dark override in styles.css */
+  --flt-select-fg:var(--bk-pill-text);
+  --flt-mask-on:black;                           /* mask alpha, not a UI colour */
+  --flt-mask-off:transparent;
+  --flt-select-chevron:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236c757d' d='M3.4 4.2L6 6.8l2.6-2.6.8.8L6 8.4 2.6 5z'/%3E%3C/svg%3E");
+}
+.panel.dark{
+  --flt-tab-active-fg:#dee2e6;
+  --flt-fav-active-fg:#212529;
+  --flt-ind-shadow:0 1px 3px rgba(0,0,0,.3);
+  --flt-select-fg:#dee2e6;
+  --flt-select-chevron:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23adb5bd' d='M3.4 4.2L6 6.8l2.6-2.6.8.8L6 8.4 2.6 5z'/%3E%3C/svg%3E");
+}
+
+/* ---- .dims-filters-bar (styles.css:1068-1074) ---- */
+.flt-wrap{padding:6px 20px 2px;}
+.flt-bar{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;}
+
+/* ---- .dims-filter-tabs platter (styles.css:1123-1155); real custom properties:
+       height 44px · inner 36px · padding 4px · paddle 40px · mask gradient 22px ---- */
+.flt-tabs{position:relative;display:inline-flex;width:fit-content;max-width:100%;height:44px;padding:4px;
+  background:var(--bk-pill-platter);border-radius:999px;overflow:hidden;}
+.flt-mask{position:relative;width:100%;height:100%;z-index:1;overflow-x:hidden;}
+.flt-mask.fade{
+  -webkit-mask-image:linear-gradient(90deg,var(--flt-mask-off) 0,var(--flt-mask-off) 36px,var(--flt-mask-on) 58px,
+    var(--flt-mask-on) calc(100% - 58px),var(--flt-mask-off) calc(100% - 36px),var(--flt-mask-off));
+  mask-image:linear-gradient(90deg,var(--flt-mask-off) 0,var(--flt-mask-off) 36px,var(--flt-mask-on) 58px,
+    var(--flt-mask-on) calc(100% - 58px),var(--flt-mask-off) calc(100% - 36px),var(--flt-mask-off));
+}
+.flt-items{display:flex;align-items:center;width:fit-content;height:100%;margin:0;padding:0;white-space:nowrap;position:relative;z-index:1;}
+
+/* ---- .dims-filter-tab (styles.css:1220-1259) ---- */
+.flt-tab{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.5rem 1rem;border:none;
+  background:transparent;border-radius:999px;font-family:var(--font);font-size:.875rem;font-weight:500;
+  color:var(--bk-pill-text);cursor:pointer;white-space:nowrap;position:relative;z-index:2;opacity:.8;
+  transition:color 120ms ease-out,opacity 100ms ease-in-out;-webkit-user-select:none;user-select:none;}
+.flt-tab:hover{opacity:1;}
+.flt-tab.active{background:transparent;color:var(--flt-tab-active-fg);opacity:1;cursor:default;}
+/* Deterministic widths so the hand-placed indicator lines up in any font. */
+.w-all{min-width:52px;}.w-val{min-width:66px;}.w-fav{min-width:178px;}.w-show{min-width:140px;}
+
+/* ---- favourite pill (styles.css:1774-1796) ---- */
+.flt-tab.fav{gap:.35rem;}
+.flt-tab.fav.active{background:var(--bk-accent);color:var(--flt-fav-active-fg);box-shadow:var(--flt-fav-shadow);}
+.flt-tab.fav .ic.st{width:.8rem;height:.8rem;fill:currentColor;stroke:none;}
+
+/* ---- .dims-filter-count (styles.css:1836-1855 / dark 1534-1540); both skins are
+       named by the scaffold now, so the badge needs no screen-local token ---- */
+.flt-count{font-weight:600;margin-left:.15rem;background:var(--bk-counter-bg);color:var(--bk-counter-fg);
+  border-radius:999px;padding:0 6px;font-size:.75rem;}
+.flt-tab.fav.active .flt-count,.flt-tab.show.active .flt-count{background:var(--bk-counter-active-bg);color:var(--bk-counter-active-fg);}
+
+/* ---- .dims-filter-tabs-indicator (styles.css:1262-1277) ---- */
+.flt-ind{position:absolute;top:4px;bottom:4px;height:calc(100% - 8px);border-radius:999px;
+  background-color:var(--bk-pill-indicator);box-shadow:var(--flt-ind-shadow);pointer-events:none;z-index:0;}
+
+/* ---- .dims-filter-tabs-paddle (styles.css:1280-1341) ---- */
+.flt-paddles{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:3;}
+.flt-paddle{position:absolute;top:4px;bottom:4px;width:40px;min-height:36px;z-index:3;display:flex;align-items:center;
+  justify-content:center;border:none;background:transparent;color:var(--bk-paddle);cursor:pointer;pointer-events:auto;padding:0;}
+.flt-paddle:hover{color:var(--bk-paddle-hover);}
+.flt-paddle.l{left:0;}.flt-paddle.r{right:0;}
+.flt-paddle svg{pointer-events:none;width:8px;height:14px;}
+
+/* ---- .dims-filter-select (styles.css:1351-1380 / dark 1513-1532) ---- */
+.flt-select{appearance:none;-webkit-appearance:none;padding:.5rem 2rem .5rem 1rem;border:1px solid var(--bk-line-3);
+  border-radius:999px;background-color:var(--bk-pill-platter);background-image:var(--flt-select-chevron);
+  background-repeat:no-repeat;background-position:right .75rem center;background-size:12px;font-family:var(--font);
+  font-size:.875rem;font-weight:500;color:var(--flt-select-fg);cursor:pointer;min-width:120px;transition:all .2s ease;}
+.flt-select:hover{background-color:var(--bk-select-hover-bg);border-color:var(--bk-select-hover-border);}
+
+/* ---- .dims-clear-filters-btn (styles.css:1068-1100 / dark 1542-1553) ---- */
+.flt-clear{display:inline-flex;align-items:center;gap:.375rem;padding:.5rem 1rem;border:1px solid var(--bk-line-3);
+  border-radius:999px;background:transparent;font-family:var(--font);font-size:.875rem;font-weight:500;
+  color:var(--bk-muted);cursor:pointer;white-space:nowrap;flex-shrink:0;
+  transition:color .15s ease,border-color .15s ease,background .15s ease;}
+.flt-clear:hover,.flt-clear.hov{color:var(--bk-danger-fg);border-color:var(--bk-danger-fg);background:var(--bk-danger-bg);}
+.flt-clear .ic{width:.8rem;height:.8rem;}
+.stack{display:flex;flex-wrap:wrap;gap:12px;align-items:center;}
+.hint{font-family:var(--mono);font-size:9px;color:var(--bk-muted);}
+</style>
+<div class="kit"><div class="screens">
+
+  <!-- ============ AS-IS · LIGHT ============ -->
+  <div class="panel">
+    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · light (Boost)</div>
+
+    <div class="bk-cap">The composed bar — <code>role="toolbar"</code> <span class="idb">FLT-BAR</span></div>
+    <div class="flt-wrap">
+      <div class="flt-bar" role="toolbar" aria-label="Filter learning plans">
+        <div class="flt-tabs" role="radiogroup" aria-label="Filter learning plans">
+          <div class="flt-mask"><div class="flt-items">
+            <button type="button" class="flt-tab fav active w-fav" role="radio" aria-checked="true" tabindex="0"><svg class="ic st" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> My Favourites <span class="flt-count">3</span></button>
+            <button type="button" class="flt-tab show w-show" role="radio" aria-checked="false" tabindex="-1">Show all <span class="flt-count">12</span></button>
+          </div></div>
+          <div class="flt-ind" style="left:4px;width:178px"></div>
+        </div>
+        <div class="flt-tabs" role="radiogroup" aria-label="Filter learning plans — Year">
+          <div class="flt-mask"><div class="flt-items">
+            <button type="button" class="flt-tab w-all" role="radio" aria-checked="false" tabindex="-1">All</button>
+            <button type="button" class="flt-tab w-val" role="radio" aria-checked="false" tabindex="-1">2024</button>
+            <button type="button" class="flt-tab active w-val" role="radio" aria-checked="true" tabindex="0">2025</button>
+            <button type="button" class="flt-tab w-val" role="radio" aria-checked="false" tabindex="-1">2026</button>
+          </div></div>
+          <div class="flt-ind" style="left:122px;width:66px"></div>
+        </div>
+        <button type="button" class="flt-clear" aria-label="Clear filters"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg> Clear filters</button>
+      </div>
+    </div>
+    <div class="bk-ids">
+      <span class="idb">FLT-FAV-PILL · checked</span>
+      <span class="idb">FLT-ALL-PILL</span>
+      <span class="idb">FLT-COUNT ×2</span>
+      <span class="idb">FLT-TABS · tag1</span>
+      <span class="idb">FLT-TAB-ALL</span>
+      <span class="idb">FLT-TAB ×3</span>
+      <span class="idb">FLT-INDICATOR</span>
+      <span class="idb">FLT-CLEAR</span>
+    </div>
+    <div class="note">Pills are a <b>radiogroup of radios with <code>aria-checked</code></b>, deliberately not tab/tablist — a tablist would require an associated tabpanel (docblock in <code>templates/filters.mustache</code>). Roving tabindex: the checked radio is the group's only tab stop (<code>tabindex="0"</code>), siblings are <code>-1</code>, arrow keys move within.</div>
+    <div class="note">Accessible name = type label + the admin's custom-field name, "Filter learning plans — Year"; it falls back to the bare group label when the custom field is undefined (<code>filters.js:140-146</code>).</div>
+    <div class="note">Dark swaps seven platter custom properties (<code>styles.css:1480-1490</code>): platter <code>#212529</code>, item <code>#adb5bd</code>, active item <code>#dee2e6</code> — <b>not</b> the accent — indicator <code>#495057</code>, deeper indicator shadow, and both paddle colours (rest and hover) lightened; the checked favourite pill goes <code>#6ea8fe</code> on <code>#212529</code> text. The count badge sits right after them (<code>styles.css:1523-1529</code>): dark fills it <code>#495057</code> with <code>#dee2e6</code> text, 6.28:1. It used to have no dark rule at all and kept its light <code>#e9ecef</code> / <code>#495057</code> as a foreign island on the dark platter; the active badge inside a checked pill was never part of that — it is <code>#cfe2ff</code> / <code>#0f4d85</code> at 6.60:1 in both skins.</div>
+
+    <div class="divlbl">Same radiogroup, the other radio checked — only one is on <span class="idb">FLT-ALL-PILL</span> <span class="idb">FLT-INDICATOR</span></div>
+    <div class="flt-wrap">
+      <div class="flt-tabs" role="radiogroup" aria-label="Filter competencies">
+        <div class="flt-mask"><div class="flt-items">
+          <button type="button" class="flt-tab fav w-fav" role="radio" aria-checked="false" tabindex="-1"><svg class="ic st" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> My Favourites <span class="flt-count">3</span></button>
+          <button type="button" class="flt-tab show active w-show" role="radio" aria-checked="true" tabindex="0">Show all <span class="flt-count">12</span></button>
+        </div></div>
+        <div class="flt-ind" style="left:182px;width:140px"></div>
+      </div>
+    </div>
+    <div class="note">The favourite pill paints its own solid accent background, so when it is checked it covers the indicator sliding underneath; the "Show all" pill has no background of its own and reads as the indicator. The pair only renders when favourites are enabled <i>and</i> the type has at least one (<code>typeFavCount &gt; 0</code>). Counts are per type and are patched in place by <code>updateFavouritePillCounts()</code>, so toggling a star never rebuilds the bar and never steals focus.</div>
+
+    <div class="divlbl">Overflowing group — edge fade + both paddles <span class="idb">FLT-MASK</span> <span class="idb">FLT-PADDLE-L</span> <span class="idb">FLT-PADDLE-R</span></div>
+    <div class="flt-wrap">
+      <div class="flt-tabs" role="radiogroup" aria-label="Filter competencies — Cohort" style="max-width:300px">
+        <div class="flt-mask fade"><div class="flt-items" style="margin-left:-110px">
+          <button type="button" class="flt-tab w-all" role="radio" aria-checked="false" tabindex="-1">All</button>
+          <button type="button" class="flt-tab w-val" role="radio" aria-checked="false" tabindex="-1">2021</button>
+          <button type="button" class="flt-tab w-val" role="radio" aria-checked="false" tabindex="-1">2022</button>
+          <button type="button" class="flt-tab active w-val" role="radio" aria-checked="true" tabindex="0">2023</button>
+          <button type="button" class="flt-tab w-val" role="radio" aria-checked="false" tabindex="-1">2024</button>
+          <button type="button" class="flt-tab w-val" role="radio" aria-checked="false" tabindex="-1">2025</button>
+          <button type="button" class="flt-tab w-val" role="radio" aria-checked="false" tabindex="-1">2026</button>
+        </div></div>
+        <div class="flt-ind" style="left:78px;width:66px"></div>
+        <div class="flt-paddles">
+          <button type="button" class="flt-paddle l" aria-hidden="true" aria-label="Scroll filters left" tabindex="-1"><svg width="8" height="14" viewBox="0 0 8 14" fill="none" aria-hidden="true"><path d="M7 1L1 7L7 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button type="button" class="flt-paddle r" aria-hidden="true" aria-label="Scroll filters right" tabindex="-1"><svg width="8" height="14" viewBox="0 0 8 14" fill="none" aria-hidden="true"><path d="M1 1L7 7L1 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <div class="note">Paddles are <b>mouse-only</b>: <code>aria-hidden="true"</code>, <code>tabIndex = -1</code>, localized labels — keyboard users move with arrow keys, which auto-centre the focused radio. Each paddle is <code>36px + 4px = 40px</code> wide; the mask keeps <code>40 − 4 = 36px</code> fully transparent behind it and fades in over the next <code>22px</code>. Reaching an end swaps that side's mask colour to opaque and hides the paddle (<code>:has(.dims-filter-tabs-paddle-hidden)</code>). The indicator sits <i>outside</i> the mask, so it is never faded.</div>
+    <div class="note"><code>wrapTabsContent()</code> rewrites the radiogroup at init: the buttons move into <code>.dims-filter-tabs-items</code> inside <code>.dims-filter-tabs-mask</code>, then the indicator and the paddle pair are appended as siblings. Roles on the children survive the move, and <code>destroyAll()</code> runs before every re-render so instances never stack up.</div>
+
+    <div class="divlbl">Same group, dropdown display mode <span class="idb">FLT-SELECT</span></div>
+    <div class="flt-wrap">
+      <select class="flt-select" aria-label="Filter competencies — Cohort">
+        <option value="" selected>All</option>
+        <option value="2021">2021</option>
+        <option value="2022">2022</option>
+        <option value="2023">2023</option>
+      </select>
+    </div>
+    <div class="note">Admin picks pills or dropdown per tag through the four <code>*_displaymode</code> settings (<code>plan_tag1</code>, <code>plan_tag2</code>, <code>competency_tag1</code>, <code>competency_tag2</code>); anything other than <code>dropdown</code> falls back to tabs. Native <code>&lt;select&gt;</code> with <code>appearance:none</code> and the chevron baked in as a <code>data:</code> background image — dark ships a second data URI with a lighter fill. Dropdowns get no platter, no indicator and no paddles: <code>FilterTabsNav</code> only ever touches <code>.dims-filter-tabs</code>.</div>
+
+    <div class="divlbl">Clear button — rest and hover <span class="idb">FLT-CLEAR</span></div>
+    <div class="flt-wrap"><div class="stack">
+      <button type="button" class="flt-clear" aria-label="Clear filters"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg> Clear filters</button>
+      <button type="button" class="flt-clear hov" aria-label="Clear filters"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg> Clear filters</button>
+      <span class="hint">:hover</span>
+    </div></div>
+    <div class="note">The button is emitted with <code>style="display:none"</code> and <code>updateClearFilterButtons()</code> reveals it only once <i>that</i> type has an active filter. The whole bar renders <b>twice</b>, once per <code>data-filters-type</code> host (plan and competency), each with its own counts and its own clear button. Hover is the only state that gives the button colour, in either skin — which is why it is drawn twice here.</div>
+  </div>
+
+  <!-- ============ AS-IS · DARK ============ -->
+  <div class="panel dark">
+    <div class="plabel"><span class="pdot" style="background:#6ea8fe"></span>As-is · dark (<code>.theme-dark</code>)</div>
+
+    <div class="bk-cap">The composed bar — <code>role="toolbar"</code> <span class="idb">FLT-BAR</span></div>
+    <div class="flt-wrap">
+      <div class="flt-bar" role="toolbar" aria-label="Filter learning plans">
+        <div class="flt-tabs" role="radiogroup" aria-label="Filter learning plans">
+          <div class="flt-mask"><div class="flt-items">
+            <button type="button" class="flt-tab fav active w-fav" role="radio" aria-checked="true" tabindex="0"><svg class="ic st" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> My Favourites <span class="flt-count">3</span></button>
+            <button type="button" class="flt-tab show w-show" role="radio" aria-checked="false" tabindex="-1">Show all <span class="flt-count">12</span></button>
+          </div></div>
+          <div class="flt-ind" style="left:4px;width:178px"></div>
+        </div>
+        <div class="flt-tabs" role="radiogroup" aria-label="Filter learning plans — Year">
+          <div class="flt-mask"><div class="flt-items">
+            <button type="button" class="flt-tab w-all" role="radio" aria-checked="false" tabindex="-1">All</button>
+            <button type="button" class="flt-tab w-val" role="radio" aria-checked="false" tabindex="-1">2024</button>
+            <button type="button" class="flt-tab active w-val" role="radio" aria-checked="true" tabindex="0">2025</button>
+            <button type="button" class="flt-tab w-val" role="radio" aria-checked="false" tabindex="-1">2026</button>
+          </div></div>
+          <div class="flt-ind" style="left:122px;width:66px"></div>
+        </div>
+        <button type="button" class="flt-clear" aria-label="Clear filters"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg> Clear filters</button>
+      </div>
+    </div>
+    <div class="bk-ids">
+      <span class="idb">FLT-FAV-PILL · checked</span>
+      <span class="idb">FLT-ALL-PILL</span>
+      <span class="idb">FLT-COUNT ×2</span>
+      <span class="idb">FLT-TABS · tag1</span>
+      <span class="idb">FLT-TAB-ALL</span>
+      <span class="idb">FLT-TAB ×3</span>
+      <span class="idb">FLT-INDICATOR</span>
+      <span class="idb">FLT-CLEAR</span>
+    </div>
+    <div class="note">Pills are a <b>radiogroup of radios with <code>aria-checked</code></b>, deliberately not tab/tablist — a tablist would require an associated tabpanel (docblock in <code>templates/filters.mustache</code>). Roving tabindex: the checked radio is the group's only tab stop (<code>tabindex="0"</code>), siblings are <code>-1</code>, arrow keys move within.</div>
+    <div class="note">Accessible name = type label + the admin's custom-field name, "Filter learning plans — Year"; it falls back to the bare group label when the custom field is undefined (<code>filters.js:140-146</code>).</div>
+    <div class="note">Dark swaps seven platter custom properties (<code>styles.css:1480-1490</code>): platter <code>#212529</code>, item <code>#adb5bd</code>, active item <code>#dee2e6</code> — <b>not</b> the accent — indicator <code>#495057</code>, deeper indicator shadow, and both paddle colours (rest and hover) lightened; the checked favourite pill goes <code>#6ea8fe</code> on <code>#212529</code> text. The count badge sits right after them (<code>styles.css:1523-1529</code>): dark fills it <code>#495057</code> with <code>#dee2e6</code> text, 6.28:1. It used to have no dark rule at all and kept its light <code>#e9ecef</code> / <code>#495057</code> as a foreign island on the dark platter; the active badge inside a checked pill was never part of that — it is <code>#cfe2ff</code> / <code>#0f4d85</code> at 6.60:1 in both skins.</div>
+
+    <div class="divlbl">Same radiogroup, the other radio checked — only one is on <span class="idb">FLT-ALL-PILL</span> <span class="idb">FLT-INDICATOR</span></div>
+    <div class="flt-wrap">
+      <div class="flt-tabs" role="radiogroup" aria-label="Filter competencies">
+        <div class="flt-mask"><div class="flt-items">
+          <button type="button" class="flt-tab fav w-fav" role="radio" aria-checked="false" tabindex="-1"><svg class="ic st" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> My Favourites <span class="flt-count">3</span></button>
+          <button type="button" class="flt-tab show active w-show" role="radio" aria-checked="true" tabindex="0">Show all <span class="flt-count">12</span></button>
+        </div></div>
+        <div class="flt-ind" style="left:182px;width:140px"></div>
+      </div>
+    </div>
+    <div class="note">The favourite pill paints its own solid accent background, so when it is checked it covers the indicator sliding underneath; the "Show all" pill has no background of its own and reads as the indicator. The pair only renders when favourites are enabled <i>and</i> the type has at least one (<code>typeFavCount &gt; 0</code>). Counts are per type and are patched in place by <code>updateFavouritePillCounts()</code>, so toggling a star never rebuilds the bar and never steals focus.</div>
+
+    <div class="divlbl">Overflowing group — edge fade + both paddles <span class="idb">FLT-MASK</span> <span class="idb">FLT-PADDLE-L</span> <span class="idb">FLT-PADDLE-R</span></div>
+    <div class="flt-wrap">
+      <div class="flt-tabs" role="radiogroup" aria-label="Filter competencies — Cohort" style="max-width:300px">
+        <div class="flt-mask fade"><div class="flt-items" style="margin-left:-110px">
+          <button type="button" class="flt-tab w-all" role="radio" aria-checked="false" tabindex="-1">All</button>
+          <button type="button" class="flt-tab w-val" role="radio" aria-checked="false" tabindex="-1">2021</button>
+          <button type="button" class="flt-tab w-val" role="radio" aria-checked="false" tabindex="-1">2022</button>
+          <button type="button" class="flt-tab active w-val" role="radio" aria-checked="true" tabindex="0">2023</button>
+          <button type="button" class="flt-tab w-val" role="radio" aria-checked="false" tabindex="-1">2024</button>
+          <button type="button" class="flt-tab w-val" role="radio" aria-checked="false" tabindex="-1">2025</button>
+          <button type="button" class="flt-tab w-val" role="radio" aria-checked="false" tabindex="-1">2026</button>
+        </div></div>
+        <div class="flt-ind" style="left:78px;width:66px"></div>
+        <div class="flt-paddles">
+          <button type="button" class="flt-paddle l" aria-hidden="true" aria-label="Scroll filters left" tabindex="-1"><svg width="8" height="14" viewBox="0 0 8 14" fill="none" aria-hidden="true"><path d="M7 1L1 7L7 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button type="button" class="flt-paddle r" aria-hidden="true" aria-label="Scroll filters right" tabindex="-1"><svg width="8" height="14" viewBox="0 0 8 14" fill="none" aria-hidden="true"><path d="M1 1L7 7L1 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <div class="note">Paddles are <b>mouse-only</b>: <code>aria-hidden="true"</code>, <code>tabIndex = -1</code>, localized labels — keyboard users move with arrow keys, which auto-centre the focused radio. Each paddle is <code>36px + 4px = 40px</code> wide; the mask keeps <code>40 − 4 = 36px</code> fully transparent behind it and fades in over the next <code>22px</code>. Reaching an end swaps that side's mask colour to opaque and hides the paddle (<code>:has(.dims-filter-tabs-paddle-hidden)</code>). The indicator sits <i>outside</i> the mask, so it is never faded.</div>
+    <div class="note"><code>wrapTabsContent()</code> rewrites the radiogroup at init: the buttons move into <code>.dims-filter-tabs-items</code> inside <code>.dims-filter-tabs-mask</code>, then the indicator and the paddle pair are appended as siblings. Roles on the children survive the move, and <code>destroyAll()</code> runs before every re-render so instances never stack up.</div>
+
+    <div class="divlbl">Same group, dropdown display mode <span class="idb">FLT-SELECT</span></div>
+    <div class="flt-wrap">
+      <select class="flt-select" aria-label="Filter competencies — Cohort">
+        <option value="" selected>All</option>
+        <option value="2021">2021</option>
+        <option value="2022">2022</option>
+        <option value="2023">2023</option>
+      </select>
+    </div>
+    <div class="note">Admin picks pills or dropdown per tag through the four <code>*_displaymode</code> settings (<code>plan_tag1</code>, <code>plan_tag2</code>, <code>competency_tag1</code>, <code>competency_tag2</code>); anything other than <code>dropdown</code> falls back to tabs. Native <code>&lt;select&gt;</code> with <code>appearance:none</code> and the chevron baked in as a <code>data:</code> background image — dark ships a second data URI with a lighter fill. Dropdowns get no platter, no indicator and no paddles: <code>FilterTabsNav</code> only ever touches <code>.dims-filter-tabs</code>.</div>
+
+    <div class="divlbl">Clear button — rest and hover <span class="idb">FLT-CLEAR</span></div>
+    <div class="flt-wrap"><div class="stack">
+      <button type="button" class="flt-clear" aria-label="Clear filters"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg> Clear filters</button>
+      <button type="button" class="flt-clear hov" aria-label="Clear filters"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg> Clear filters</button>
+      <span class="hint">:hover</span>
+    </div></div>
+    <div class="note">The button is emitted with <code>style="display:none"</code> and <code>updateClearFilterButtons()</code> reveals it only once <i>that</i> type has an active filter. The whole bar renders <b>twice</b>, once per <code>data-filters-type</code> host (plan and competency), each with its own counts and its own clear button. Hover is the only state that gives the button colour, in either skin — which is why it is drawn twice here.</div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <h3>ID legend — Filter bar (FLT) · rendered by amd/src/filters.js, not by a mustache template</h3>
+  <div class="leg">
+    <span class="k">FLT-BAR</span><span class="v"><b>Filter toolbar</b> — <code>.dims-filters-bar</code>, <code>role="toolbar"</code> with the group label as its accessible name; flex, wrap, <code>gap .75rem</code>, <code>margin-bottom 1rem</code>. Emitted once per <code>.dims-filters-host[data-filters-type]</code>, i.e. twice per block (plan + competency) <span class="rule">filters.js:67-90,84; styles.css:1068-1074</span></span>
+    <span class="k">FLT-FAV-PILL</span><span class="v"><b>"★ My Favourites (N)" radio</b> — <code>.dims-fav-filter-btn</code>, <code>data-fav-filter-type</code>; only rendered when favourites are enabled and the type has at least one. Checked state paints solid <code>#0f6cbf</code> / <code>#6ea8fe</code> instead of relying on the indicator <span class="rule">filters.js:92-111; styles.css:1774-1796, 1810-1824</span></span>
+    <span class="k">FLT-ALL-PILL</span><span class="v"><b>"Show all (N)" radio</b> — <code>.dims-all-filter-btn</code>, <code>data-all-filter-type</code>; the other half of the same radiogroup, checked whenever the favourite filter is off <span class="rule">filters.js:112-120, 226-232</span></span>
+    <span class="k">FLT-COUNT</span><span class="v"><b>Count badge</b> — <code>.dims-filter-count</code>, <code>0.75rem/600</code>, <code>999px</code>, <code>padding 0 6px</code>; patched in place by <code>updateFavouritePillCounts()</code> so starring a card keeps focus on the star. Dark has its own rule since the palette migration — <code>#495057</code> fill, <code>#dee2e6</code> text, 6.28:1; the badge inside a checked pill is <code>#cfe2ff</code> / <code>#0f4d85</code> in both skins <span class="rule">filters.js:484-505; styles.css:1836-1855, 1534-1540</span></span>
+    <span class="k">FLT-TABS</span><span class="v"><b>Tag radiogroup platter</b> — <code>.dims-filter-tabs</code> in <code>.dims-filter-tabs-wrapper[data-filter-group]</code>; <code>44px</code> shell, <code>4px</code> padding, <code>36px</code> inner row, <code>border-radius 999px</code>, wrapper capped at <code>600px</code> (auto for the <code>fav_</code> group) <span class="rule">filters.js:148-163; styles.css:1108-1155</span></span>
+    <span class="k">FLT-TAB-ALL</span><span class="v"><b>"All" radio</b> — the <code>data-filter-value=""</code> reset that leads every tag group; checked when no value is selected for that field <span class="rule">filters.js:151-154</span></span>
+    <span class="k">FLT-TAB</span><span class="v"><b>Tag value radio</b> — <code>.dims-filter-tab</code>, one per unique <code>tag1</code>/<code>tag2</code> value found in the loaded cards, locale-sorted; <code>0.875rem/500</code>, <code>opacity .8</code> rising to 1 on hover, focus-visible draws an <i>inset</i> 2px accent ring so it is not clipped by the platter <span class="rule">filters.js:155-162; styles.css:1220-1259</span></span>
+    <span class="k">FLT-INDICATOR</span><span class="v"><b>Sliding pill background</b> — <code>.dims-filter-tabs-indicator</code>, absolutely positioned sibling of the mask at <code>z-index 0</code>, driven by <code>--dims-tabs-indicator-start/-width</code>, <code>320ms ease-out</code>; white + <code>0 1px 3px rgba(0,0,0,.12)</code> light, <code>#495057</code> + <code>.3</code> shadow dark <span class="rule">filter_tabs_nav.js:100-102; styles.css:1262-1277</span></span>
+    <span class="k">FLT-MASK</span><span class="v"><b>Scroll clip + edge fade</b> — <code>.dims-filter-tabs-mask</code>, <code>overflow-x:hidden</code> with a <code>mask-image</code> that is transparent for <code>36px</code> then fades to opaque over <code>22px</code> at each end; the end that has no paddle switches to <code>black</code> via <code>:has()</code>, and <code>.dims-filter-tabs-mask-noscroll</code> drops the mask entirely <span class="rule">filter_tabs_nav.js:96-98; styles.css:1168-1176, 1185-1215</span></span>
+    <span class="k">FLT-PADDLE-L</span><span class="v"><b>Scroll-left paddle</b> — <code>40px</code> wide (<code>36 + 4</code>), chevron <code>M7 1L1 7L7 13</code> in an <code>8×14</code> viewBox at stroke-width 2; <code>aria-hidden="true"</code> and <code>tabIndex -1</code> because keyboard users navigate with arrow keys, but the label is still localized (<code>paddleleft</code>) <span class="rule">filter_tabs_nav.js:61-62, 111-117; styles.css:1280-1341</span></span>
+    <span class="k">FLT-PADDLE-R</span><span class="v"><b>Scroll-right paddle</b> — mirror of the left, chevron <code>M1 1L7 7L1 13</code>, label <code>paddleright</code>; both fade out via <code>.dims-filter-tabs-paddle-hidden</code> when that end is reached and dim to <code>opacity .42</code> when disabled <span class="rule">filter_tabs_nav.js:63-64, 119-125; styles.css:1326-1341</span></span>
+    <span class="k">FLT-SELECT</span><span class="v"><b>Dropdown display mode</b> — <code>.dims-filter-select</code>, chosen per tag by the <code>*_displaymode</code> admin setting; native <code>&lt;select&gt;</code> with <code>appearance:none</code>, <code>999px</code> radius, a <code>data:</code> SVG chevron at <code>right .75rem</code>, <code>min-width 120px</code>, and the same combined <code>aria-label</code> as the pill group <span class="rule">filters.js:164-174; styles.css:1351-1380, 1513-1532</span></span>
+    <span class="k">FLT-CLEAR</span><span class="v"><b>Clear filters</b> — <code>.dims-clear-filters-btn[data-clear-type]</code>, emitted with <code>style="display:none"</code> and revealed by <code>updateClearFilterButtons()</code> only when that type has an active filter; eraser icon at <code>0.8rem</code>, hover flips to the danger pair <span class="rule">filters.js:177-184, 241-246; styles.css:1068-1100, 1542-1553</span></span>
+  </div>
+</div>
+</div>
