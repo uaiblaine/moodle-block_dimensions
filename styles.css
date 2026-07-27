@@ -54,7 +54,7 @@
 .block_dimensions .dims-block-search-icon {
     position: absolute;
     left: 0.625rem;
-    color: #9aa0a6;
+    color: #6c757d;
     font-size: 0.75rem;
     pointer-events: none;
     z-index: 1;
@@ -63,7 +63,7 @@
 .block_dimensions .dims-block-search-input {
     width: 100%;
     padding: 0.375rem 1.75rem 0.375rem 1.875rem;
-    border: 1px solid #e1e3e6;
+    border: 1px solid #dee2e6;
     border-radius: 999px;
     background: #f8f9fa;
     font-size: 0.8125rem;
@@ -74,13 +74,13 @@
 }
 
 .block_dimensions .dims-block-search-input::placeholder {
-    color: #5f6368;
+    color: #5c636a;
 }
 
 .block_dimensions .dims-block-search-input:focus {
-    border-color: #1a73e8;
+    border-color: #0f6cbf;
     background: #fff;
-    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+    box-shadow: 0 0 0 3px rgba(15, 108, 191, 0.15);
 }
 
 .block_dimensions .dims-block-search-clear {
@@ -94,7 +94,7 @@
     border: none;
     border-radius: 50%;
     background: transparent;
-    color: #5f6368;
+    color: #6c757d;
     cursor: pointer;
     padding: 0;
     transition: background 0.15s ease;
@@ -105,7 +105,7 @@
 }
 
 .block_dimensions .dims-block-search-clear:focus-visible {
-    outline: 2px solid #1a73e8;
+    outline: 2px solid #0f6cbf;
     outline-offset: 2px;
 }
 
@@ -144,15 +144,15 @@
 
     .theme-dark .block_dimensions .dims-block-header,
     body.dark .block_dimensions .dims-block-header {
-        background: rgba(32, 33, 36, 0.97);
+        background: rgba(33, 37, 41, 0.97);
     }
 }
 
 .theme-dark .block_dimensions .dims-block-search-input,
 body.dark .block_dimensions .dims-block-search-input {
-    background: #3c4043;
-    border-color: #5f6368;
-    color: #e8eaed;
+    background: #212529;
+    border-color: #495057;
+    color: #dee2e6;
 }
 
 .theme-dark .block_dimensions .dims-block-search-input::placeholder,
@@ -162,19 +162,19 @@ body.dark .block_dimensions .dims-block-search-input::placeholder {
 
 .theme-dark .block_dimensions .dims-block-search-input:focus,
 body.dark .block_dimensions .dims-block-search-input:focus {
-    background: #292a2d;
-    border-color: #8ab4f8;
-    box-shadow: 0 0 0 3px rgba(138, 180, 248, 0.2);
+    background: #212529;
+    border-color: #6ea8fe;
+    box-shadow: 0 0 0 3px rgba(110, 168, 254, 0.2);
 }
 
 .theme-dark .block_dimensions .dims-block-search-icon,
 body.dark .block_dimensions .dims-block-search-icon {
-    color: #9aa0a6;
+    color: #adb5bd;
 }
 
 .theme-dark .block_dimensions .dims-block-search-clear,
 body.dark .block_dimensions .dims-block-search-clear {
-    color: #9aa0a6;
+    color: #adb5bd;
 }
 
 .theme-dark .block_dimensions .dims-block-search-clear:hover,
@@ -227,16 +227,16 @@ body.dark .block_dimensions .dims-block-search-clear:hover {
 }
 
 .block_dimensions .competency-card:focus-within {
-    outline: 3px solid #005fcc;
+    outline: 3px solid #0f6cbf;
     /* High contrast blue */
     outline-offset: 2px;
-    box-shadow: 0 0 0 4px rgba(0, 95, 204, 0.25);
+    box-shadow: 0 0 0 4px rgba(15, 108, 191, 0.25);
 }
 
 /* Fallback for browsers without :focus-visible support */
 .block_dimensions .competency-card-link:focus .competency-card,
 .block_dimensions .competency-card:has(.competency-card-link:focus) {
-    outline: 3px solid #005fcc;
+    outline: 3px solid #0f6cbf;
     outline-offset: 2px;
 }
 
@@ -255,7 +255,7 @@ body.dark .block_dimensions .dims-block-search-clear:hover {
 
 /* Gradient Fallback (decorative - hidden from AT) */
 .block_dimensions .competency-card-gradient {
-    background: linear-gradient(135deg, #f5af19 0%, #f12711 50%, #ef4136 100%);
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 50%, #e8590c 100%);
 }
 
 /* Halftone Pattern Overlay (decorative) */
@@ -321,7 +321,7 @@ body.dark .block_dimensions .dims-block-search-clear:hover {
     }
 
     .block_dimensions .competency-card-gradient {
-        background: #666;
+        background: #6c757d;
     }
 }
 
@@ -354,8 +354,8 @@ body.dark .block_dimensions .competency-card .card-title {
 
 .theme-dark .block_dimensions .competency-card:focus-within,
 body.dark .block_dimensions .competency-card:focus-within {
-    outline-color: #66b3ff;
-    box-shadow: 0 0 0 4px rgba(102, 179, 255, 0.25);
+    outline-color: #6ea8fe;
+    box-shadow: 0 0 0 4px rgba(110, 168, 254, 0.25);
 }
 
 /* ============================================
@@ -369,7 +369,7 @@ body.dark .block_dimensions .competency-card:focus-within {
     }
 
     .block_dimensions .competency-card-gradient {
-        background: #ccc !important;
+        background: #ced4da !important;
     }
 }
 
@@ -415,8 +415,8 @@ body.dark .block_dimensions .competency-card:focus-within {
     overflow: hidden;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-    border: 1px solid rgb(228, 228, 228, 0.44);
-    background-color: #FFFEFC;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    background-color: #fff;
 }
 
 .block_dimensions .plan-card-link {
@@ -434,9 +434,9 @@ body.dark .block_dimensions .competency-card:focus-within {
 }
 
 .block_dimensions .plan-card:focus-within {
-    outline: 3px solid #005fcc;
+    outline: 3px solid #0f6cbf;
     outline-offset: 2px;
-    box-shadow: 0 0 0 4px rgba(0, 95, 204, 0.25);
+    box-shadow: 0 0 0 4px rgba(15, 108, 191, 0.25);
 }
 
 .block_dimensions .plan-card-image {
@@ -449,7 +449,7 @@ body.dark .block_dimensions .competency-card:focus-within {
 }
 
 .block_dimensions .plan-card-gradient {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0f6cbf 0%, #0a5aa0 100%);
 }
 
 .block_dimensions .plan-card .card-title {
@@ -527,7 +527,7 @@ body.dark .block_dimensions .competency-card:focus-within {
 }
 
 .block_dimensions .competency-trail:not(.competency-trail-vertical) .trail-item.completed:not(.last)::after {
-    background-color: #28a745;
+    background-color: #198754;
 }
 
 /* Trail marker */
@@ -543,14 +543,19 @@ body.dark .block_dimensions .competency-card:focus-within {
 
 .block_dimensions .trail-marker .fa-check-circle {
     font-size: 18px;
-    color: #28a745;
+    color: #198754;
 }
 
 .block_dimensions .trail-marker .empty-circle {
     width: 14px;
     height: 14px;
-    /* WCAG 1.4.11 — non-text contrast: #adb5bd on #fff ≈ 3.1:1 (≥ 3:1). */
-    border: 2px solid #adb5bd;
+    /* WCAG 1.4.11 — non-text contrast: #6c757d on #fff is 4.69:1 (floor is 3:1).
+       The ring was #adb5bd at 2px, which measured only 2.07:1. Darkening it
+       alone would have made every pending step read heavier than the completed
+       ones, so the stroke drops to 1px in the same change: 1.4.11 sets no
+       minimum thickness, only a ratio, and the extra headroom over 3:1 absorbs
+       the antialiasing a 1px ring picks up around a full circle. */
+    border: 1px solid #6c757d;
     border-radius: 50%;
     background-color: #fff;
 }
@@ -567,7 +572,7 @@ body.dark .block_dimensions .competency-card:focus-within {
 }
 
 .block_dimensions .trail-label.text-success {
-    color: #1a7431 !important;
+    color: #0f5132 !important;
     font-weight: 600;
 }
 
@@ -583,7 +588,7 @@ body.dark .block_dimensions .competency-card:focus-within {
 
 .block_dimensions .trail-item.clickable:hover .trail-label {
     text-decoration: underline;
-    color: #1a73e8;
+    color: #0f6cbf;
 }
 
 /* ============================================
@@ -625,6 +630,12 @@ body.dark .block_dimensions .competency-card:focus-within {
     line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    /* Clear the favourite star, which this layout moves to the card's
+       top-right (see .plan-card.plan-card-horizontal > .dims-fav-btn). The
+       star is 32px wide at right:8px, so its left edge sits 40px in; the body
+       already contributes 1rem of padding, and this adds the rest so a long
+       first line cannot run underneath it. */
+    padding-right: 1.75rem;
 }
 
 /* Access button overlay on horizontal card image — top-left */
@@ -638,8 +649,8 @@ body.dark .block_dimensions .competency-card:focus-within {
     align-items: center;
     gap: 6px;
     padding: 6px 16px;
-    background: #ffffff;
-    color: #1d1d1f;
+    background: #fff;
+    color: #212529;
     font-size: 0.85rem;
     font-weight: 600;
     line-height: 1.3;
@@ -655,10 +666,8 @@ body.dark .block_dimensions .competency-card:focus-within {
     font-size: 0.8rem;
 }
 
-.block_dimensions .plan-card-link:hover .dims-card-access-btn-horizontal {
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
-    transform: translateY(-1px);
-}
+/* Hover/focus feedback for this pill is article-scoped too — see the
+   consolidated block at the end of this file. */
 
 /* ============================================
    VERTICAL TRAIL - For Horizontal Card
@@ -697,7 +706,7 @@ body.dark .block_dimensions .competency-card:focus-within {
 }
 
 .block_dimensions .trail-item-vertical.completed:not(.last)::after {
-    background-color: #28a745;
+    background-color: #198754;
 }
 
 .block_dimensions .trail-item-vertical .trail-marker {
@@ -836,7 +845,7 @@ body.dark .block_dimensions .trail-label {
 
 .theme-dark .block_dimensions .trail-label.text-success,
 body.dark .block_dimensions .trail-label.text-success {
-    color: #4dba6a !important;
+    color: #75b798 !important;
 }
 
 .theme-dark .block_dimensions .competency-count-text,
@@ -844,10 +853,33 @@ body.dark .block_dimensions .competency-count-text {
     color: #adb5bd;
 }
 
+/* Dark needs the ring lighter, not darker: #6c757d on the #343a40 card was
+   2.45:1. #adb5bd is 5.55:1 and is already the muted tone used by the trail
+   label beside it. The 1px stroke is inherited from the light rule. */
 .theme-dark .block_dimensions .trail-marker .empty-circle,
 body.dark .block_dimensions .trail-marker .empty-circle {
-    border-color: #6c757d;
+    border-color: #adb5bd;
     background-color: #343a40;
+}
+
+/* The completed marker and its connector: #198754 on #343a40 is 2.54:1.
+   #75b798 is 4.92:1 and matches the success tone the label already uses. */
+.theme-dark .block_dimensions .trail-marker .fa-check-circle,
+body.dark .block_dimensions .trail-marker .fa-check-circle {
+    color: #75b798;
+}
+
+.theme-dark .block_dimensions .competency-trail:not(.competency-trail-vertical) .trail-item.completed:not(.last)::after,
+body.dark .block_dimensions .competency-trail:not(.competency-trail-vertical) .trail-item.completed:not(.last)::after,
+.theme-dark .block_dimensions .trail-item-vertical.completed:not(.last)::after,
+body.dark .block_dimensions .trail-item-vertical.completed:not(.last)::after {
+    background-color: #75b798;
+}
+
+/* Trail-label hover: #0f6cbf on #343a40 is 2.15:1; the dark accent is 4.76:1. */
+.theme-dark .block_dimensions .trail-item.clickable:hover .trail-label,
+body.dark .block_dimensions .trail-item.clickable:hover .trail-label {
+    color: #6ea8fe;
 }
 
 .theme-dark .block_dimensions .trail-item:not(.last)::after,
@@ -865,8 +897,8 @@ body.dark .block_dimensions .competency-trail:not(.competency-trail-vertical).ha
 /* Dark mode — Horizontal card button */
 .theme-dark .block_dimensions .dims-card-access-btn-horizontal,
 body.dark .block_dimensions .dims-card-access-btn-horizontal {
-    background: #2c2c2e;
-    color: #f5f5f7;
+    background: #343a40;
+    color: #f8f9fa;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
@@ -903,8 +935,8 @@ body.dark .block_dimensions .competency-trail-vertical.has-after .trail-item-ver
     align-items: center;
     gap: 6px;
     padding: 6px 16px;
-    background: #ffffff;
-    color: #1d1d1f;
+    background: #fff;
+    color: #212529;
     font-size: 0.85rem;
     font-weight: 600;
     line-height: 1.3;
@@ -920,19 +952,10 @@ body.dark .block_dimensions .competency-trail-vertical.has-after .trail-item-ver
     font-size: 0.8rem;
 }
 
-/* Hover lift on parent link */
-.block_dimensions .competency-card-link:hover .dims-card-access-btn,
-.block_dimensions .plan-card-link:hover .dims-card-access-btn {
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
-    transform: translateY(-1px);
-}
-
-/* Focus-visible on parent link */
-.block_dimensions .competency-card-link:focus-visible .dims-card-access-btn,
-.block_dimensions .plan-card-link:focus-visible .dims-card-access-btn {
-    outline: 2px solid #0a58ca;
-    outline-offset: 2px;
-}
+/* The pill's hover/focus feedback is scoped to the article, not to the card
+   link — see the consolidated block at the end of this file. Both templates
+   put the pill inside the image wrapper and the link inside the card body, so
+   a link-descendant selector never reaches it. */
 
 /* High contrast */
 @media (prefers-contrast: high) {
@@ -947,8 +970,8 @@ body.dark .block_dimensions .competency-trail-vertical.has-after .trail-item-ver
 /* Dark mode */
 .theme-dark .block_dimensions .dims-card-access-btn,
 body.dark .block_dimensions .dims-card-access-btn {
-    background: #2c2c2e;
-    color: #f5f5f7;
+    background: #343a40;
+    color: #f8f9fa;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
@@ -989,22 +1012,22 @@ body.dark .block_dimensions .dims-card-access-btn {
     font-size: 0.75rem;
     font-weight: 600;
     line-height: 1.2;
-    border-radius: 100px;
-    /* Pill shape */
+    border-radius: 999px;
+    /* Pill shape — 999px matches every other pill in this file */
     white-space: nowrap;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* Competency card tags — inherit custom colors from .competency-card CSS variables */
 .block_dimensions .competency-card .dimension-tag.cm-tag {
-    background-color: var(--dimension-custombgcolor, #ef4136);
-    color: var(--dimension-customtextcolor, #ffffff);
+    background-color: var(--dimension-custombgcolor, #fd7e14);
+    color: var(--dimension-customtextcolor, #212529);
 }
 
 /* Plan card tags — inherit custom colors from .plan-card CSS variables */
 .block_dimensions .plan-card .dimension-tag.plan-tag {
-    background-color: var(--dimension-custombgcolor, #ef4136);
-    color: var(--dimension-customtextcolor, #ffffff);
+    background-color: var(--dimension-custombgcolor, #fd7e14);
+    color: var(--dimension-customtextcolor, #212529);
 }
 
 /* High contrast mode for tags */
@@ -1047,12 +1070,12 @@ body.dark .block_dimensions .dimension-tag {
     align-items: center;
     gap: 0.375rem;
     padding: 0.5rem 1rem;
-    border: 1px solid #dadce0;
+    border: 1px solid #dee2e6;
     border-radius: 999px;
     background: transparent;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #5f6368;
+    color: #6c757d;
     cursor: pointer;
     white-space: nowrap;
     transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
@@ -1062,13 +1085,13 @@ body.dark .block_dimensions .dimension-tag {
 }
 
 .block_dimensions .dims-clear-filters-btn:hover {
-    color: #8f1d16;
-    border-color: #8f1d16;
-    background: #fdecea;
+    color: #842029;
+    border-color: #842029;
+    background: #f8d7da;
 }
 
 .block_dimensions .dims-clear-filters-btn:focus-visible {
-    outline: 2px solid #1a73e8;
+    outline: 2px solid #0f6cbf;
     outline-offset: 2px;
 }
 
@@ -1101,11 +1124,11 @@ body.dark .block_dimensions .dimension-tag {
     --dims-tabs-height: 44px;
     --dims-tabs-inner-height: 36px;
     --dims-tabs-platter-padding: 4px;
-    --dims-tabs-platter-bg: #f1f3f4;
+    --dims-tabs-platter-bg: #e9ecef;
     --dims-tabs-indicator-bg: #fff;
     --dims-tabs-indicator-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-    --dims-tabs-item-color: #5f6368;
-    --dims-tabs-item-color-active: #1a73e8;
+    --dims-tabs-item-color: #495057;
+    --dims-tabs-item-color-active: #0f6cbf;
     --dims-tabs-paddle-color: rgba(0, 0, 0, 0.56);
     --dims-tabs-paddle-color-hover: rgba(0, 0, 0, 0.72);
     --dims-tabs-paddle-icon-opacity-disabled: 0.42;
@@ -1204,7 +1227,7 @@ body.dark .block_dimensions .dimension-tag {
     border-radius: 999px;
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--dims-tabs-item-color, #5f6368);
+    color: var(--dims-tabs-item-color, #495057);
     cursor: pointer;
     white-space: nowrap;
     position: relative;
@@ -1224,13 +1247,13 @@ body.dark .block_dimensions .dimension-tag {
 }
 
 .block_dimensions .block-dimensions-content .dims-filter-tab:focus-visible {
-    box-shadow: inset 0 0 0 2px #1a73e8;
+    box-shadow: inset 0 0 0 2px #0f6cbf;
     outline: none;
 }
 
 .block_dimensions .block-dimensions-content .dims-filter-tab.active {
     background: transparent;
-    color: var(--dims-tabs-item-color-active, #1a73e8);
+    color: var(--dims-tabs-item-color-active, #0f6cbf);
     opacity: 1;
     cursor: default;
 }
@@ -1330,30 +1353,30 @@ body.dark .block_dimensions .dimension-tag {
     -webkit-appearance: none;
     -moz-appearance: none;
     padding: 0.5rem 2rem 0.5rem 1rem;
-    border: 1px solid #dadce0;
+    border: 1px solid #dee2e6;
     border-radius: 999px;
-    background-color: #f1f3f4;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235f6368' d='M3.4 4.2L6 6.8l2.6-2.6.8.8L6 8.4 2.6 5z'/%3E%3C/svg%3E");
+    background-color: #e9ecef;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236c757d' d='M3.4 4.2L6 6.8l2.6-2.6.8.8L6 8.4 2.6 5z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     background-size: 12px;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #5f6368;
+    color: #495057;
     cursor: pointer;
     transition: all 0.2s ease;
     min-width: 120px;
 }
 
 .block_dimensions .dims-filter-select:hover {
-    background-color: #e8eaed;
-    border-color: #c6c8ca;
+    background-color: #dee2e6;
+    border-color: #ced4da;
 }
 
 .block_dimensions .dims-filter-select:focus {
-    outline: 2px solid #1a73e8;
+    outline: 2px solid #0f6cbf;
     outline-offset: 2px;
-    border-color: #1a73e8;
+    border-color: #0f6cbf;
 }
 
 /* ============================================
@@ -1371,10 +1394,10 @@ body.dark .block_dimensions .dimension-tag {
         flex-shrink: 0;
         width: 36px;
         height: 36px;
-        border: 1.5px solid #dadce0;
+        border: 1.5px solid #dee2e6;
         border-radius: 50%;
         background: #f8f9fa;
-        color: #5f6368;
+        color: #5c636a;
         cursor: pointer;
         transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
         font-size: 0.9rem;
@@ -1382,14 +1405,39 @@ body.dark .block_dimensions .dimension-tag {
 
     .block_dimensions .dims-filter-toggle-btn:hover,
     .block_dimensions .dims-filter-toggle-btn[aria-expanded="true"] {
-        background: #e8f0fe;
-        border-color: #1765cc;
-        color: #1765cc;
+        background: #cfe2ff;
+        border-color: #0f4d85;
+        color: #0f4d85;
     }
 
     .block_dimensions .dims-filter-toggle-btn:focus-visible {
-        outline: 2px solid #1765cc;
+        outline: 2px solid #0f6cbf;
         outline-offset: 2px;
+    }
+
+    /* This control exists only below the breakpoint, so its dark rules have to
+       live inside the same query. Without them a light #f8f9fa disc sat on the
+       dark sticky header. Rest #adb5bd on #212529 is 7.43:1; the on-state and
+       the focus ring use the dark accent at 6.39:1. */
+    .theme-dark .block_dimensions .dims-filter-toggle-btn,
+    body.dark .block_dimensions .dims-filter-toggle-btn {
+        background: #212529;
+        border-color: #495057;
+        color: #adb5bd;
+    }
+
+    .theme-dark .block_dimensions .dims-filter-toggle-btn:hover,
+    .theme-dark .block_dimensions .dims-filter-toggle-btn[aria-expanded="true"],
+    body.dark .block_dimensions .dims-filter-toggle-btn:hover,
+    body.dark .block_dimensions .dims-filter-toggle-btn[aria-expanded="true"] {
+        background: #212529;
+        border-color: #6ea8fe;
+        color: #6ea8fe;
+    }
+
+    .theme-dark .block_dimensions .dims-filter-toggle-btn:focus-visible,
+    body.dark .block_dimensions .dims-filter-toggle-btn:focus-visible {
+        outline-color: #6ea8fe;
     }
 }
 
@@ -1431,10 +1479,10 @@ body.dark .block_dimensions .dimension-tag {
    ============================================ */
 .theme-dark .block_dimensions .dims-filter-tabs,
 body.dark .block_dimensions .dims-filter-tabs {
-    --dims-tabs-platter-bg: #3c4043;
-    --dims-tabs-item-color: #9aa0a6;
-    --dims-tabs-item-color-active: #e8eaed;
-    --dims-tabs-indicator-bg: #5f6368;
+    --dims-tabs-platter-bg: #212529;
+    --dims-tabs-item-color: #adb5bd;
+    --dims-tabs-item-color-active: #dee2e6;
+    --dims-tabs-indicator-bg: #495057;
     --dims-tabs-indicator-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     --dims-tabs-paddle-color: rgba(255, 255, 255, 0.64);
     --dims-tabs-paddle-color-hover: rgba(255, 255, 255, 0.88);
@@ -1443,38 +1491,54 @@ body.dark .block_dimensions .dims-filter-tabs {
 
 .theme-dark .block_dimensions .dims-filter-tab,
 body.dark .block_dimensions .dims-filter-tab {
-    color: var(--dims-tabs-item-color, #9aa0a6);
+    color: var(--dims-tabs-item-color, #adb5bd);
 }
 
 .theme-dark .block_dimensions .dims-filter-tab.active,
 body.dark .block_dimensions .dims-filter-tab.active {
-    color: var(--dims-tabs-item-color-active, #e8eaed);
+    color: var(--dims-tabs-item-color-active, #dee2e6);
 }
 
 .theme-dark .block_dimensions .dims-filter-select,
 body.dark .block_dimensions .dims-filter-select {
-    background-color: #3c4043;
-    border-color: #5f6368;
-    color: #e8eaed;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239aa0a6' d='M3.4 4.2L6 6.8l2.6-2.6.8.8L6 8.4 2.6 5z'/%3E%3C/svg%3E");
+    background-color: #212529;
+    border-color: #495057;
+    color: #dee2e6;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23adb5bd' d='M3.4 4.2L6 6.8l2.6-2.6.8.8L6 8.4 2.6 5z'/%3E%3C/svg%3E");
 }
 
 .theme-dark .block_dimensions .dims-filter-select:hover,
 body.dark .block_dimensions .dims-filter-select:hover {
-    background-color: #4a4d51;
+    background-color: #343a40;
+}
+
+/* The focus ring has to flip with the skin: #0f6cbf on the #212529 platter is
+   2.88:1, under the 3:1 non-text floor; the dark accent is 6.39:1. */
+.theme-dark .block_dimensions .dims-filter-select:focus,
+body.dark .block_dimensions .dims-filter-select:focus {
+    outline-color: #6ea8fe;
+    border-color: #6ea8fe;
+}
+
+/* The count badge had no dark rule at all, so it kept a light #e9ecef fill and
+   sat on the dark platter as a foreign island. #dee2e6 on #495057 is 6.28:1. */
+.theme-dark .block_dimensions .dims-filter-count,
+body.dark .block_dimensions .dims-filter-count {
+    background: #495057;
+    color: #dee2e6;
 }
 
 .theme-dark .block_dimensions .dims-clear-filters-btn,
 body.dark .block_dimensions .dims-clear-filters-btn {
-    color: #9aa0a6;
-    border-color: #5f6368;
+    color: #adb5bd;
+    border-color: #495057;
 }
 
 .theme-dark .block_dimensions .dims-clear-filters-btn:hover,
 body.dark .block_dimensions .dims-clear-filters-btn:hover {
-    color: #ffd7d7;
-    border-color: #ffd7d7;
-    background: #5a1d1d;
+    color: #ea868f;
+    border-color: #ea868f;
+    background: #2c0b0e;
 }
 
 /* ============================================
@@ -1486,11 +1550,11 @@ body.dark .block_dimensions .dims-clear-filters-btn:hover {
     }
 
     .block_dimensions .dims-filter-tab.active {
-        border-color: #1a73e8;
+        border-color: #0f6cbf;
     }
 
     .block_dimensions .dims-filter-tabs-indicator {
-        outline: 2px solid #1a73e8;
+        outline: 2px solid #0f6cbf;
         outline-offset: -2px;
     }
 
@@ -1532,11 +1596,11 @@ body.dark .block_dimensions .dims-clear-filters-btn:hover {
 .block_dimensions .dims-section-header {
     font-size: 2rem;
     font-weight: 600;
-    color: #1d1d1f;
+    color: #212529;
     margin: 0 0 1.5rem;
     padding: 0;
     line-height: 1.3;
-    background-image: linear-gradient(180deg, #004C94 45%, #297BC4 90%);
+    background-image: linear-gradient(180deg, #0f4d85 45%, #0f6cbf 90%);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -1546,13 +1610,21 @@ body.dark .block_dimensions .dims-clear-filters-btn:hover {
    Use dims-section-header-plan and dims-section-header-competency
    to target each header independently. */
 
+/* `-webkit-text-fill-color: transparent` above wins over `color`, so an
+   override that only sets `color` paints nothing. Both of these used to do
+   exactly that and had no visible effect; they now drop the gradient fill
+   first so the colour they set actually applies. */
 .theme-dark .block_dimensions .dims-section-header,
 body.dark .block_dimensions .dims-section-header {
-    color: #e8eaed;
+    background-image: none;
+    -webkit-text-fill-color: currentcolor;
+    color: #dee2e6;
 }
 
 @media print {
     .block_dimensions .dims-section-header {
+        background-image: none;
+        -webkit-text-fill-color: currentcolor;
         color: #000;
     }
 }
@@ -1624,7 +1696,7 @@ body.dark .block_dimensions .dims-section-header {
 }
 
 .block_dimensions .dims-fav-btn:focus {
-    outline: 2px solid #1a73e8;
+    outline: 2px solid #0f6cbf;
     outline-offset: 2px;
 }
 
@@ -1635,28 +1707,28 @@ body.dark .block_dimensions .dims-section-header {
 /* Favourite star icons */
 .block_dimensions .dims-fav-icon-filled {
     font-size: 1rem;
-    color: #ffb100;
+    color: #ffc107;
 }
 
 .block_dimensions .dims-fav-icon-empty {
     font-size: 1rem;
-    color: #5f6368;
+    color: #6c757d;
 }
 
 .block_dimensions .dims-fav-btn:hover .dims-fav-icon-empty {
-    color: #ffb100;
+    color: #ffc107;
 }
 
 /* Dark mode */
 .theme-dark .block_dimensions .dims-fav-btn,
 body.dark .block_dimensions .dims-fav-btn {
-    background: rgba(50, 50, 50, 0.85);
+    background: rgba(52, 58, 64, 0.85);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 .theme-dark .block_dimensions .dims-fav-btn:hover,
 body.dark .block_dimensions .dims-fav-btn:hover {
-    background: rgba(70, 70, 70, 1);
+    background: #495057;
 }
 
 .theme-dark .block_dimensions .dims-fav-icon-empty,
@@ -1666,7 +1738,7 @@ body.dark .block_dimensions .dims-fav-icon-empty {
 
 .theme-dark .block_dimensions .dims-fav-btn:hover .dims-fav-icon-empty,
 body.dark .block_dimensions .dims-fav-btn:hover .dims-fav-icon-empty {
-    color: #ffb100;
+    color: #ffc107;
 }
 
 /* High contrast */
@@ -1706,13 +1778,13 @@ body.dark .block_dimensions .dims-fav-btn:hover .dims-fav-icon-empty {
 }
 
 .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active {
-    background: #1a73e8;
+    background: #0f6cbf;
     color: #fff;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active:hover {
-    background: #1765cc;
+    background: #0c5699;
 }
 
 .block_dimensions .dims-fav-filter-icon {
@@ -1726,18 +1798,18 @@ body.dark .block_dimensions .dims-fav-btn:hover .dims-fav-icon-empty {
 /* Dark mode */
 .theme-dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active,
 body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active {
-    background: #8ab4f8;
-    color: #1d1d1f;
+    background: #6ea8fe;
+    color: #212529;
 }
 
 .theme-dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active:hover,
 body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active:hover {
-    background: #aecbfa;
+    background: #9ec5fe;
 }
 
 .theme-dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active .dims-fav-filter-icon,
 body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active .dims-fav-filter-icon {
-    color: #1d1d1f;
+    color: #212529;
 }
 
 /* High contrast */
@@ -1753,8 +1825,8 @@ body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.activ
 .block_dimensions .dims-filter-count {
     font-weight: 600;
     margin-left: 0.15rem;
-    background: #e8eaed;
-    color: #5f6368;
+    background: #e9ecef;
+    color: #495057;
     border-radius: 999px;
     padding: 0 6px;
     font-size: 0.75rem;
@@ -1763,8 +1835,8 @@ body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.activ
 .block_dimensions .dims-fav-filter-btn.active .dims-filter-count,
 .block_dimensions .dims-all-filter-btn.active .dims-filter-count {
     opacity: 1;
-    background: #e8f0fe;
-    color: #1765cc;
+    background: #cfe2ff;
+    color: #0f4d85;
     border-radius: 999px;
     padding: 0 6px;
     font-size: 0.75rem;
@@ -1794,13 +1866,13 @@ body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.activ
 }
 
 .block_dimensions .dims-ghost-card-inner:hover {
-    border-color: #1a73e8;
-    background: rgba(26, 115, 232, 0.04);
+    border-color: #0f6cbf;
+    background: rgba(15, 108, 191, 0.04);
     transform: translateY(-2px);
 }
 
 .block_dimensions .dims-ghost-card-inner:focus {
-    outline: 2px solid #1a73e8;
+    outline: 2px solid #0f6cbf;
     outline-offset: 2px;
 }
 
@@ -1815,62 +1887,62 @@ body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.activ
     justify-content: center;
     width: 50px;
     height: 50px;
-    border: 2px solid #d1d5db;
+    border: 2px solid #ced4da;
     border-radius: 50%;
-    color: #b0b5bd;
+    color: #adb5bd;
     font-size: 1.2rem;
     transition: border-color 0.2s ease, color 0.2s ease;
 }
 
 .block_dimensions .dims-ghost-card-inner:hover .dims-ghost-icon-circle {
-    border-color: #1a73e8;
-    color: #1a73e8;
+    border-color: #0f6cbf;
+    color: #0f6cbf;
 }
 
 /* Title: "Mostrar tudo (N)" */
 .block_dimensions .dims-ghost-card-title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #666b72;
+    color: #6c757d;
     text-align: center;
     transition: color 0.2s ease;
 }
 
 .block_dimensions .dims-ghost-card-inner:hover .dims-ghost-card-title {
-    color: #1a73e8;
+    color: #0f6cbf;
 }
 
 /* Subtitle: "Explore além dos favoritos." */
 .block_dimensions .dims-ghost-card-subtitle {
     font-size: 0.85rem;
     font-weight: 400;
-    color: #666b72;
+    color: #6c757d;
     text-align: center;
 }
 
 /* Dark mode */
 .theme-dark .block_dimensions .dims-ghost-card-inner,
 body.dark .block_dimensions .dims-ghost-card-inner {
-    background: #3c4043;
-    border-color: #5f6368;
+    background: #212529;
+    border-color: #495057;
 }
 
 .theme-dark .block_dimensions .dims-ghost-card-inner:hover,
 body.dark .block_dimensions .dims-ghost-card-inner:hover {
-    border-color: #8ab4f8;
-    background: rgba(138, 180, 248, 0.08);
+    border-color: #6ea8fe;
+    background: rgba(110, 168, 254, 0.08);
 }
 
 .theme-dark .block_dimensions .dims-ghost-icon-circle,
 body.dark .block_dimensions .dims-ghost-icon-circle {
-    border-color: #5f6368;
+    border-color: #495057;
     color: #6c757d;
 }
 
 .theme-dark .block_dimensions .dims-ghost-card-inner:hover .dims-ghost-icon-circle,
 body.dark .block_dimensions .dims-ghost-card-inner:hover .dims-ghost-icon-circle {
-    border-color: #8ab4f8;
-    color: #8ab4f8;
+    border-color: #6ea8fe;
+    color: #6ea8fe;
 }
 
 .theme-dark .block_dimensions .dims-ghost-card-title,
@@ -1880,7 +1952,7 @@ body.dark .block_dimensions .dims-ghost-card-title {
 
 .theme-dark .block_dimensions .dims-ghost-card-inner:hover .dims-ghost-card-title,
 body.dark .block_dimensions .dims-ghost-card-inner:hover .dims-ghost-card-title {
-    color: #8ab4f8;
+    color: #6ea8fe;
 }
 
 .theme-dark .block_dimensions .dims-ghost-card-subtitle,
@@ -1942,9 +2014,9 @@ body.dark .block_dimensions .dims-ghost-card-subtitle {
 
 .theme-dark .block_dimensions .dims-noscript,
 body.dark .block_dimensions .dims-noscript {
-    color: #e8eaed;
-    background: #3c2e00;
-    border-color: #5c4500;
+    color: #dee2e6;
+    background: #332701;
+    border-color: #664d03;
 }
 
 /* ============================================
@@ -1980,14 +2052,14 @@ body.dark .block_dimensions .dims-noscript {
    sits inside layouts that disrupt :focus-within bubbling. */
 .block_dimensions .plan-card-link.stretched-link:focus-visible,
 .block_dimensions .competency-card-link.stretched-link:focus-visible {
-    outline: 2px solid #1a73e8;
+    outline: 2px solid #0f6cbf;
     outline-offset: 4px;
     border-radius: 2px;
 }
 
 /* Retry button inside the error alert (WCAG 2.4.7). */
 .block_dimensions .dims-error-retry:focus-visible {
-    outline: 2px solid #1a73e8;
+    outline: 2px solid #0f6cbf;
     outline-offset: 2px;
 }
 
@@ -2050,13 +2122,26 @@ body.dark .block_dimensions .dims-noscript {
 }
 
 .block_dimensions .trail-item-link:focus-visible {
-    outline: 2px solid #1a73e8;
+    outline: 2px solid #0f6cbf;
     outline-offset: 2px;
     border-radius: 4px;
 }
 
-/* Card hover/focus visual feedback now applies to the whole article since
-   stretched-link makes :hover and :focus-visible bubble through the overlay. */
+/* ============================================
+   ACCESS PILL - Hover / focus feedback (article-scoped)
+   ----------------------------------------------
+   This is the only place the pill reacts. The lift used to live on
+   `.card-link:hover .dims-card-access-btn`, which never matched: both templates
+   put the pill inside the image wrapper and the link inside the card body, so
+   the pill is the link's *sibling subtree*, never its descendant. Re-scoped to
+   the article, where stretched-link makes :hover and :focus-within bubble.
+
+   Hover and keyboard focus share one treatment on purpose. The article already
+   draws the focus indicator (a 3px ring plus a 4px glow around the whole card),
+   so giving the pill a second ring of its own would put two rings on screen for
+   one focus event. The pill is `aria-hidden` + `pointer-events: none`
+   decoration; the card's ring is the accessible indicator.
+   ============================================ */
 .block_dimensions .plan-card:hover .dims-card-access-btn,
 .block_dimensions .competency-card:hover .dims-card-access-btn,
 .block_dimensions .plan-card:focus-within .dims-card-access-btn,
@@ -2064,6 +2149,38 @@ body.dark .block_dimensions .dims-noscript {
 .block_dimensions .plan-card:hover .dims-card-access-btn-horizontal,
 .block_dimensions .plan-card:focus-within .dims-card-access-btn-horizontal {
     opacity: 1;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+    transform: translateY(-1px);
+}
+
+/* The dark rest state is already a deeper 0 2px 8px/.35, so the light hover
+   shadow would read *flatter* than rest. Deepen it instead. */
+.theme-dark .block_dimensions .plan-card:hover .dims-card-access-btn,
+.theme-dark .block_dimensions .competency-card:hover .dims-card-access-btn,
+.theme-dark .block_dimensions .plan-card:focus-within .dims-card-access-btn,
+.theme-dark .block_dimensions .competency-card:focus-within .dims-card-access-btn,
+.theme-dark .block_dimensions .plan-card:hover .dims-card-access-btn-horizontal,
+.theme-dark .block_dimensions .plan-card:focus-within .dims-card-access-btn-horizontal,
+body.dark .block_dimensions .plan-card:hover .dims-card-access-btn,
+body.dark .block_dimensions .competency-card:hover .dims-card-access-btn,
+body.dark .block_dimensions .plan-card:focus-within .dims-card-access-btn,
+body.dark .block_dimensions .competency-card:focus-within .dims-card-access-btn,
+body.dark .block_dimensions .plan-card:hover .dims-card-access-btn-horizontal,
+body.dark .block_dimensions .plan-card:focus-within .dims-card-access-btn-horizontal {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+/* The lift is motion, so it goes with prefers-reduced-motion like every other
+   transform in this file. */
+@media (prefers-reduced-motion: reduce) {
+    .block_dimensions .plan-card:hover .dims-card-access-btn,
+    .block_dimensions .competency-card:hover .dims-card-access-btn,
+    .block_dimensions .plan-card:focus-within .dims-card-access-btn,
+    .block_dimensions .competency-card:focus-within .dims-card-access-btn,
+    .block_dimensions .plan-card:hover .dims-card-access-btn-horizontal,
+    .block_dimensions .plan-card:focus-within .dims-card-access-btn-horizontal {
+        transform: none;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2072,4 +2189,58 @@ body.dark .block_dimensions .dims-noscript {
         transform: none;
         transition: none;
     }
+}
+/* ============================================
+   FOCUS RING - Dark Mode
+   ----------------------------------------------
+   The migration consolidated every focus indicator onto one blue, but only
+   three of them had ever been restated for dark mode. #0f6cbf measures 2.15:1
+   on the #343a40 card and 2.88:1 on the #212529 page/platter — both under the
+   3:1 WCAG 1.4.11 floor for a focus indicator. #6ea8fe is 4.76:1 and 6.39:1.
+
+   Kept as one block rather than scattered through the per-area dark sections:
+   the invariant is "every focus ring flips with the skin", and it is far easier
+   to see that it still holds when the rings are listed together.
+
+   The access pill is deliberately absent: it no longer carries a ring of its
+   own. Its feedback is the article-scoped lift near the end of this file, which
+   fires for :hover and :focus-within alike, so the card's ring is the single
+   focus indicator rather than one of two competing rings.
+   ============================================ */
+.theme-dark .block_dimensions .dims-block-search-clear:focus-visible,
+.theme-dark .block_dimensions .competency-card:has(.competency-card-link:focus),
+.theme-dark .block_dimensions .dims-clear-filters-btn:focus-visible,
+.theme-dark .block_dimensions .dims-fav-btn:focus,
+.theme-dark .block_dimensions .dims-ghost-card-inner:focus,
+.theme-dark .block_dimensions .plan-card-link.stretched-link:focus-visible,
+.theme-dark .block_dimensions .competency-card-link.stretched-link:focus-visible,
+.theme-dark .block_dimensions .dims-error-retry:focus-visible,
+.theme-dark .block_dimensions .trail-item-link:focus-visible,
+body.dark .block_dimensions .dims-block-search-clear:focus-visible,
+body.dark .block_dimensions .competency-card:has(.competency-card-link:focus),
+body.dark .block_dimensions .dims-clear-filters-btn:focus-visible,
+body.dark .block_dimensions .dims-fav-btn:focus,
+body.dark .block_dimensions .dims-ghost-card-inner:focus,
+body.dark .block_dimensions .plan-card-link.stretched-link:focus-visible,
+body.dark .block_dimensions .competency-card-link.stretched-link:focus-visible,
+body.dark .block_dimensions .dims-error-retry:focus-visible,
+body.dark .block_dimensions .trail-item-link:focus-visible {
+    outline-color: #6ea8fe;
+}
+
+/* The plan card carries a glow alongside its ring; the competency card's dark
+   equivalent is already restated in the card section. */
+.theme-dark .block_dimensions .plan-card:focus-within,
+body.dark .block_dimensions .plan-card:focus-within {
+    outline-color: #6ea8fe;
+    box-shadow: 0 0 0 4px rgba(110, 168, 254, 0.25);
+}
+
+/* The filter pill draws its ring as an inset shadow, so it needs the whole
+   declaration rather than an outline-color override. The `.block-dimensions-content`
+   step mirrors the light rule's selector so this wins on specificity rather than
+   on source order alone. */
+.theme-dark .block_dimensions .block-dimensions-content .dims-filter-tab:focus-visible,
+body.dark .block_dimensions .block-dimensions-content .dims-filter-tab:focus-visible {
+    box-shadow: inset 0 0 0 2px #6ea8fe;
 }
