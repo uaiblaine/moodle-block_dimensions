@@ -245,6 +245,27 @@ calls. Keep `CHANGELOG.md` (`## Unreleased` → `### Fixed/Added/Changed`)
 updated with every substantive change. When rebasing conflicts on
 `$plugin->version`, keep the **higher** number so the upgrade still triggers.
 
+## Test deploy zip
+`git archive` packages a **commit**, never the working tree — commit first.
+Name it `moodle-<component>-<version>-<shortSHA>.zip`, here
+`moodle-block_dimensions-<version>-<shortSHA>.zip`.
+
+The **filename** carries the frankenstyle component with a `moodle-` prefix,
+matching the repo name; the **`--prefix`** is the install directory, which is the
+component with its type stripped (`${comp#*_}`). They differ, and only the second
+is what Moodle validates. `local_dimensions`, `block_dimensions` and
+`aiplacement_dimensions` all install into a folder called `dimensions`, so naming
+the zip after the folder made all three collide in `~/Downloads`. The short SHA is
+required — several slices can share one version number.
+
+```sh
+comp=$(grep -oE "\$plugin->component[[:space:]]*=[[:space:]]*'[^']+'" version.php \
+  | grep -oE "'[^']+'" | tr -d "'")
+ver=$(grep -oE '\$plugin->version[[:space:]]*=[[:space:]]*[0-9]+' version.php | grep -oE '[0-9]+')
+sha=$(git rev-parse --short HEAD)
+git archive --format=zip --prefix="${comp#*_}/" HEAD -o ~/Downloads/moodle-$comp-$ver-$sha.zip
+```
+
 ## When in doubt
 Follow the patterns in existing files. The codebase is internally consistent —
 if a new file feels like it matches no existing shape, re-examine the approach.
