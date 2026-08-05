@@ -16,7 +16,15 @@ Requirements
 - [local_dimensions](https://moodle.org/plugins/local_dimensions) v2.0 or later — the block reads all card metadata through its caches
 
 
+Documentation / Documentação
+-----------------------------
+
+Full user and administrator documentation is available online in English and Portuguese:
+👉 **[Competency Dimensions Documentation (GitHub Pages)](https://uaiblaine.github.io/moodle-local_dimensions-docs/)**
+
+
 Motivation for this plugin
+
 --------------------------
 
 Moodle's competency system gives every learner a learning plan — but no fast way back into it. Day to day, plans sit several clicks deep in the profile area, and the Dashboard, the one page learners actually open every session, says nothing about them.
