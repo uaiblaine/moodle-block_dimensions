@@ -85,8 +85,10 @@ comfortably over the 3:1 non-text floor, and it matches the ring `local_dimensio
 | Competency card | `linear-gradient(135deg, #f5af19 0%, #f12711 50%, #ef4136 100%)` | `linear-gradient(135deg, #ffc107 0%, #fd7e14 50%, #e8590c 100%)` | 258 |
 | Section header | `linear-gradient(180deg, #004C94 45%, #297BC4 90%)` | `linear-gradient(180deg, #0f4d85 45%, #0f6cbf 90%)` | 1603 |
 
-The plan-card value is the **exact gradient `local_dimensions` migrated to** (its `styles.css:2569`),
-so the two plugins now share one placeholder treatment.
+The plan-card value is the **exact gradient `local_dimensions` migrated to**, so the two plugins now
+share one placeholder treatment. (The line number this sentence used to carry is dropped rather than
+re-derived: it pointed into the *sibling* plugin's stylesheet, which has been rewritten since, and
+this section records the 2026-07-27 migration rather than mapping either file as it stands today.)
 
 The competency card keeps its **warm three-stop gradient and its halftone overlay** — the
 `radial-gradient` dot grid at 5px / `opacity(.5)`, coloured by `--dimension-customtextcolor` falling
@@ -162,15 +164,15 @@ section below closes, along with the dark-mode gaps that sweeping for it exposed
 
 ## Defects fixed in passing
 
-- **`styles.css:638`** — `.plan-card-horizontal .card-title` gained `padding-right: 1.75rem`. This
+- **`styles.css:859`** — `.plan-card-horizontal .card-title` gained `padding-right: 1.75rem`. This
   layout moves the favourite star to the card's top-right (1699-1702) but nothing reserved that
   space in the body, so a long first line ran underneath the 32px star.
-- **`styles.css:418`** — the plan-card border was a malformed four-argument
+- **`styles.css:608`** — the plan-card border was a malformed four-argument
   `rgb(228, 228, 228, 0.44)`; it is now `rgba(0, 0, 0, 0.125)`, matching the competency card.
-- **`styles.css:552-557`** — a source comment asserted the pending marker's ring was "≈ 3.1:1"
+- **`styles.css:780-793`** — a source comment asserted the pending marker's ring was "≈ 3.1:1"
   against white. It never was; the real figure was 2.07:1. The comment now states the measured
   value and the reasoning behind the ring that replaced it.
-- **`styles.css:419`** — the near-white `#FFFEFC` plan-card background, invisible against `#fff` in
+- **`styles.css:608`** — the near-white `#FFFEFC` plan-card background, invisible against `#fff` in
   practice and identical to it in dark mode, normalised to `#fff`. Both card types now share one
   surface. The uppercase literals `#FFFEFC`, `#004C94` and `#297BC4` are gone with it.
 
