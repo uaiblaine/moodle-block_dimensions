@@ -117,11 +117,11 @@
 .srchip .ic{width:.85rem;height:.85rem;}
 .srtag{font-family:var(--mono);font-size:9px;color:var(--bk-pill-text);}
 
-/* 6 — .dims-noscript (styles.css:2015-2031) */
+/* 6 — .dims-noscript (styles.css:2081-2096) */
 .dims-noscript{margin:.75rem 0;padding:.5rem .75rem;font-size:1rem;line-height:1.4;
   color:var(--bk-warn-fg);background:var(--bk-warn-bg);border:1px solid var(--bk-warn-border);border-radius:.25rem;}
 
-/* 7 — card grid + ghost card at true scale (styles.css:1849-1961) */
+/* 7 — card grid + ghost card at true scale (styles.css:1955-1957) */
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:1rem;list-style:none;margin:0;padding:0;}
 .plan-card{position:relative;display:flex;flex-direction:column;border-radius:.5rem;overflow:hidden;
   border:1px solid var(--bk-plan-card-border);background:var(--bk-plan-card-bg);box-shadow:0 .125rem .25rem rgba(0,0,0,.075);}
@@ -146,7 +146,7 @@
 .dims-ghost-icon-circle .ic{width:1.2rem;height:1.2rem;}
 .dims-ghost-card-title{font-size:1.1rem;font-weight:700;text-align:center;color:var(--bk-ghost-fg);}
 .dims-ghost-card-subtitle{font-size:.85rem;font-weight:400;text-align:center;color:var(--bk-ghost-fg);}
-/* Static hover replica: :hover on the inner button (styles.css:1879-1924 / 1941-1967). */
+/* Static hover replica: :hover on the inner button (styles.css:1992-1994 / 1941-1967). */
 .dims-ghost-card-inner.hov{border-color:var(--bk-accent);background:var(--bk-ghost-hover,rgba(15,108,191,.04));transform:translateY(-2px);}
 .panel.dark .dims-ghost-card-inner.hov{--bk-ghost-hover:#292e33;}
 .dims-ghost-card-inner.hov .dims-ghost-icon-circle{border-color:var(--bk-accent);color:var(--bk-accent);}
@@ -345,11 +345,11 @@
     <span class="k">BLK-EMPTY-NOPLANS</span><span class="v"><b>No active plans</b> — the <code>noactiveplans</code> string in the shared <code>&lt;p class="text-muted small dims-empty-state"&gt;</code>. First branch of <code>updateEmptyState</code>, returns early. Normally unreachable because the block class refuses to render at all when there are no plans <span class="rule">summary.mustache:107; filters.js:426-430; lang/en:79</span></span>
     <span class="k">BLK-EMPTY-NOCOMP</span><span class="v"><b>No competencies</b> — the <code>nocompetencies</code> string in the same paragraph; set only when both filtered lists are empty <b>and</b> no visible <code>.dims-ghost-card</code> is present <span class="rule">filters.js:432-440; lang/en:80</span></span>
     <span class="k">BLK-LIVE-FAV</span><span class="v"><b>Assertive live region</b> — <code>&lt;span class="visually-hidden" data-fav-status role="status" aria-live="assertive"&gt;</code>; carries the <code>favouriteerror</code> string, is never painted, and self-clears after 5s. The polite twin <code>data-results-status</code> carries <code>resultsfound</code> / <code>resultsnonefound</code> on a 600ms debounce <span class="rule">summary.mustache:109-110; filters.js:507-558; lang/en:64, 99-100</span></span>
-    <span class="k">BLK-NOSCRIPT</span><span class="v"><b>No-JS notice</b> — <code>&lt;noscript&gt;&lt;p class="dims-noscript" role="status"&gt;</code> with <code>javascriptrequired</code>; 1rem / 1.4 on <code>#fff3cd</code> inside <code>#ffe69c</code> at <code>.25rem</code>, dark <code>#dee2e6</code> on <code>#332701</code> / <code>#664d03</code> <span class="rule">summary.mustache:112-114; styles.css:2015-2031; lang/en:73</span></span>
-    <span class="k">GST-CARD</span><span class="v"><b>Ghost card</b> — <code>li.dims-card-item.dims-ghost-card</code> holding a real <code>&lt;button class="dims-ghost-card-inner"&gt;</code>: 2px dashed <code>#ced4da</code>, radius 12px, transparent, padding <code>2rem 1.5rem</code>, gap <code>.75rem</code>. Built by string concatenation, one per type, appended to that type's <code>[data-cards-type]</code> grid; the <code>aria-label</code> repeats the visible title <span class="rule">filters.js:337-398; styles.css:1849-1881</span></span>
-    <span class="k">GST-ICON</span><span class="v"><b>Icon circle</b> — <code>.dims-ghost-icon-circle</code>, 50&times;50px, 2px solid <code>#ced4da</code>, colour <code>#adb5bd</code>, 1.2rem plus glyph; goes accent on hover, <code>#495057</code> / <code>#6c757d</code> in dark <span class="rule">styles.css:1884-1900, 1947-1957</span></span>
-    <span class="k">GST-TITLE</span><span class="v"><b>Ghost title</b> — <code>.dims-ghost-card-title</code>, 1.1rem / 700, <code>#6c757d</code>, centred; text is <code>ghostcardtitle</code> plus <code>' (' + count + ')'</code> from <code>labelWithCount()</code>. Accent on hover, <code>#adb5bd</code> in dark <span class="rule">styles.css:1903-1913; filters.js:63-65, 381; lang/en:70</span></span>
-    <span class="k">GST-SUBTITLE</span><span class="v"><b>Ghost subtitle</b> — <code>.dims-ghost-card-subtitle</code>, 0.85rem / 400, <code>#6c757d</code>, centred; the <code>ghostcardsubtitle</code> string, unchanged on hover <span class="rule">styles.css:1916-1921, 1969-1972; lang/en:69</span></span>
+    <span class="k">BLK-NOSCRIPT</span><span class="v"><b>No-JS notice</b> — <code>&lt;noscript&gt;&lt;p class="dims-noscript" role="status"&gt;</code> with <code>javascriptrequired</code>; 1rem / 1.4 on <code>--block-dimensions-warning-tint</code> inside a <code>--block-dimensions-warning-edge</code> border at <code>.25rem</code>, text <code>--block-dimensions-ink</code> — all three flip in dark on their own, no separate dark rule left <span class="rule">summary.mustache:112-114; styles.css:2081-2096; lang/en:73</span></span>
+    <span class="k">GST-CARD</span><span class="v"><b>Ghost card</b> — <code>li.dims-card-item.dims-ghost-card</code> holding a real <code>&lt;button class="dims-ghost-card-inner"&gt;</code>: 2px dashed <code>#ced4da</code>, radius 12px, transparent, padding <code>2rem 1.5rem</code>, gap <code>.75rem</code>. Built by string concatenation, one per type, appended to that type's <code>[data-cards-type]</code> grid; the <code>aria-label</code> repeats the visible title <span class="rule">filters.js:337-398; styles.css:1955-1994</span></span>
+    <span class="k">GST-ICON</span><span class="v"><b>Icon circle</b> — <code>.dims-ghost-icon-circle</code>, 50&times;50px, 2px solid <code>#ced4da</code>, colour <code>#adb5bd</code>, 1.2rem plus glyph; goes accent on hover; both the rest and hover colours are <code>--block-dimensions-*</code> tokens that flip in dark on their own <span class="rule">styles.css:1997-2017</span></span>
+    <span class="k">GST-TITLE</span><span class="v"><b>Ghost title</b> — <code>.dims-ghost-card-title</code>, 1.1rem / 700, <code>#6c757d</code>, centred; text is <code>ghostcardtitle</code> plus <code>' (' + count + ')'</code> from <code>labelWithCount()</code>. Accent on hover, <code>#adb5bd</code> in dark <span class="rule">styles.css:2020-2030; filters.js:63-65, 381; lang/en:70</span></span>
+    <span class="k">GST-SUBTITLE</span><span class="v"><b>Ghost subtitle</b> — <code>.dims-ghost-card-subtitle</code>, 0.85rem / 400, <code>#6c757d</code>, centred; the <code>ghostcardsubtitle</code> string, unchanged on hover — there is no hover-scoped selector for it at all <span class="rule">styles.css:2033-2038; lang/en:69</span></span>
   </div>
 </div>
 </div>

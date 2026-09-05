@@ -126,7 +126,7 @@
 .st.g{flex:1 1 152px;max-width:196px;}
 .stl{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:var(--bk-muted);margin-bottom:7px;white-space:nowrap;}
 .stage{display:flex;align-items:center;justify-content:flex-start;min-height:52px;}
-/* card (competency-card, styles.css:188-241) */
+/* card (competency-card, styles.css:327-337) */
 .dc{display:flex;flex-direction:column;width:100%;border-radius:.5rem;overflow:hidden;border:1px solid var(--bk-card-border);background:var(--bk-card-bg);box-shadow:var(--st-shadow-rest);}
 .dc-img{height:32px;position:relative;background:linear-gradient(135deg,var(--bk-comp-grad-a) 0%,var(--bk-comp-grad-b) 50%,var(--bk-comp-grad-c) 100%);}
 .dc-img::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,var(--bk-halftone) 0,transparent 1px);background-size:5px 5px;filter:opacity(.5);}
@@ -135,14 +135,14 @@
 .dc.hov{transform:translateY(-2px);box-shadow:var(--st-shadow-hover);}
 .dc.foc{outline:2px solid var(--bk-focus);outline-offset:2px;}
 .dc-title.foc{display:inline-block;outline:2px solid var(--st-focus-link);outline-offset:2px;border-radius:2px;}
-/* access pill (dims-card-access-btn, styles.css:929-953; the article-scoped
-   hover / :focus-within lift lives at 2130-2184) */
+/* access pill (dims-card-access-btn, styles.css:1065-1089; the article-scoped
+   hover / :focus-within lift lives at 2211-2261) */
 .apill{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:8px;background:var(--bk-btn-bg);color:var(--bk-btn-fg);font-size:.85rem;font-weight:600;line-height:1.3;white-space:nowrap;box-shadow:var(--bk-btn-shadow);}
 .apill .ic{width:.8rem;height:.8rem;}
 /* Hover and :focus-within share one treatment, and the pill draws no ring of
    its own — the card's :focus-within ring is the accessible indicator. */
 .apill.hov,.apill.foc{box-shadow:var(--st-btn-shadow-hover);transform:translateY(-1px);}
-/* favourite star (dims-fav-btn, styles.css:1667-1769) */
+/* favourite star (dims-fav-btn, styles.css:1783-1874) */
 .favstage{display:inline-flex;align-items:center;justify-content:center;padding:6px;border-radius:6px;background:linear-gradient(135deg,var(--bk-comp-grad-a) 0%,var(--bk-comp-grad-b) 100%);}
 .fav{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border:none;border-radius:50%;background:var(--st-fav-bg);box-shadow:var(--st-fav-shadow);color:var(--st-star-empty);}
 .fav.hov{background:var(--st-fav-bg-hover);transform:scale(1.1);color:var(--bk-star);}
@@ -150,19 +150,19 @@
 .fav.foc{outline:2px solid var(--st-focus-link);outline-offset:2px;}
 .fav.on{color:var(--bk-star);}
 .ic.f{fill:currentColor;}
-/* filter pill (dims-filter-tabs / dims-filter-tab, styles.css:1123-1277) */
+/* filter pill (dims-filter-tabs / dims-filter-tab, styles.css:1275-1440) */
 .tabs{position:relative;display:inline-flex;height:44px;padding:4px;border-radius:999px;background:var(--bk-pill-platter);}
 .tab{position:relative;z-index:2;display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border:none;border-radius:999px;background:transparent;font-size:.875rem;font-weight:500;color:var(--bk-pill-text);opacity:.8;white-space:nowrap;}
 .tab.hov{opacity:1;}
 .tab.on{color:var(--st-tab-active);opacity:1;}
 .tab.foc{outline:2px solid var(--st-focus-link);outline-offset:-2px;opacity:1;}
 .ind{position:absolute;z-index:0;top:4px;bottom:4px;left:4px;right:4px;border-radius:999px;background:var(--bk-pill-indicator);box-shadow:var(--st-ind-shadow);}
-/* clear button (dims-clear-filters-btn, styles.css:1068-1100) */
+/* clear button (dims-clear-filters-btn, styles.css:1216-1252) */
 .clr{display:inline-flex;align-items:center;gap:.375rem;padding:.5rem 1rem;border:1px solid var(--bk-line-3);border-radius:999px;background:transparent;font-size:.875rem;font-weight:500;color:var(--bk-pill-text);white-space:nowrap;}
 .clr .ic{width:.8rem;height:.8rem;}
 .clr.hov{color:var(--bk-danger-fg);border-color:var(--bk-danger-fg);background:var(--bk-danger-bg);}
 .clr.foc{outline:2px solid var(--st-focus-link);outline-offset:2px;}
-/* trail item (trail-item / trail-marker / trail-label, styles.css:481-592, 2120-2139) */
+/* trail item (trail-item / trail-marker / trail-label, styles.css:695-824, 2184-2208) */
 .trailrow{display:inline-flex;align-items:flex-start;}
 .trail{display:inline-flex;flex-direction:column;align-items:center;width:60px;}
 .tmark{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:20px;height:20px;background:var(--bk-card-bg);}
@@ -177,7 +177,7 @@
 .trail.hov .tmark{transform:scale(1.2);}
 .trail.hov .tlabel{text-decoration:underline;color:var(--st-trail-hover);}
 .trail.foc{outline:2px solid var(--st-focus-link);outline-offset:2px;border-radius:4px;}
-/* ghost card (dims-ghost-card-inner, styles.css:1853-1921) */
+/* ghost card (dims-ghost-card-inner, styles.css:1959-2038) */
 .ghost{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.9rem .8rem;border:2px dashed var(--st-ghost-border);border-radius:12px;background:var(--st-ghost-bg);}
 .gcirc{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border:2px solid var(--bk-line-4);border-radius:50%;color:var(--bk-ghost-circle);}
 .gtitle{font-size:.85rem;font-weight:700;color:var(--bk-ghost-fg);text-align:center;}
@@ -229,7 +229,7 @@ Historically this was four different light blues (<code>#005fcc</code>, <code>#1
       <div class="st"><div class="stl">hover</div><div class="stage"><span class="apill hov">Access<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div>
       <div class="st"><div class="stl">focus-within</div><div class="stage"><span class="apill foc">Access<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div>
     </div>
-    <div class="note">The pill is <code>pointer-events:none</code>, <code>aria-hidden</code> decoration — the card's <code>.stretched-link</code> is the real target — but it does react. Pointing at the card or tabbing into it grows the rest shadow <code>0 2px 8px/.15</code> to <code>0 4px 14px/.22</code> and lifts the pill <code>translateY(-1px)</code>, over its own <code>.2s</code> shadow + transform transition (<code>styles.css:2145-2154</code>). The selector reads oddly on purpose: it is scoped to the <em>article</em> — <code>.plan-card:hover</code> / <code>.competency-card:hover</code> and the matching <code>:focus-within</code>, with the pill as a descendant. The lift used to be written as <code>.card-link:hover .dims-card-access-btn</code> and never matched, because both templates put the pill inside the image wrapper and the link inside the card body, sibling subtrees (<code>plan_card.mustache:93</code> vs <code>:99</code>); <code>stretched-link</code> makes both <code>:hover</code> and <code>:focus-within</code> bubble to the article, so scoping there reaches all three pills — vertical plan, horizontal plan and competency. Hover and keyboard focus deliberately share the one treatment: the pill has <b>no ring of its own</b>, because the article already draws a <code>3px #0f6cbf</code> ring plus a 4px glow, and a second ring on a decorative element would put two indicators on screen for one focus event. <code>prefers-reduced-motion</code> drops the transform and keeps the shadow (<code>:2175-2184</code>). Logged in <code>token-migration.md</code>.</div>
+    <div class="note">The pill is <code>pointer-events:none</code>, <code>aria-hidden</code> decoration — the card's <code>.stretched-link</code> is the real target — but it does react. Pointing at the card or tabbing into it grows the rest shadow <code>0 2px 8px/.15</code> to <code>0 4px 14px/.22</code> and lifts the pill <code>translateY(-1px)</code>, over its own <code>.2s</code> shadow + transform transition (<code>styles.css:2232-2248</code>). The selector reads oddly on purpose: it is scoped to the <em>article</em> — <code>.plan-card:hover</code> / <code>.competency-card:hover</code> and the matching <code>:focus-within</code>, with the pill as a descendant. The lift used to be written as <code>.card-link:hover .dims-card-access-btn</code> and never matched, because both templates put the pill inside the image wrapper and the link inside the card body, sibling subtrees (<code>plan_card.mustache:93</code> vs <code>:99</code>); <code>stretched-link</code> makes both <code>:hover</code> and <code>:focus-within</code> bubble to the article, so scoping there reaches all three pills — vertical plan, horizontal plan and competency. Hover and keyboard focus deliberately share the one treatment: the pill has <b>no ring of its own</b>, because the article already draws a <code>3px #0f6cbf</code> ring plus a 4px glow, and a second ring on a decorative element would put two indicators on screen for one focus event. <code>prefers-reduced-motion</code> drops the transform and keeps the shadow (<code>:2175-2184</code>). Logged in <code>token-migration.md</code>.</div>
 
     <div class="divlbl">Favourite star <span class="idb">STA-STAR</span></div>
     <div class="mx">
@@ -306,7 +306,7 @@ Historically this was four different light blues (<code>#005fcc</code>, <code>#1
       <div class="st"><div class="stl">hover</div><div class="stage"><span class="apill hov">Access<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div>
       <div class="st"><div class="stl">focus-within</div><div class="stage"><span class="apill foc">Access<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div>
     </div>
-    <div class="note">Same article-scoped lift as light — hover and <code>:focus-within</code> on <code>.plan-card</code> / <code>.competency-card</code>, <code>translateY(-1px)</code>, no ring on the pill itself — but dark is the one skin that restates the shadow: <code>0 4px 14px rgba(0,0,0,.5)</code> (<code>styles.css:2158-2171</code>). It has to. The dark rest state is already the deeper <code>0 2px 8px rgba(0,0,0,.35)</code> (<code>:971-976</code>), so reusing the light hover value of <code>.22</code> would have made the lifted pill read <em>flatter</em> than the resting one. Everything else carries over: the selector is scoped to the article because the pill sits in the image wrapper and the link in the card body, sibling subtrees the old <code>.card-link:hover</code> form could never reach, and <code>prefers-reduced-motion</code> drops the transform while the deepened shadow stays.</div>
+    <div class="note">Same article-scoped lift as light — hover and <code>:focus-within</code> on <code>.plan-card</code> / <code>.competency-card</code>, <code>translateY(-1px)</code>, no ring on the pill itself — but dark is the one skin that restates the shadow: <code>0 4px 14px rgba(0,0,0,.5)</code> (<code>styles.css:2232-2248</code>). It has to. The dark rest state is already the deeper <code>0 2px 8px rgba(0,0,0,.35)</code> (<code>:1065-1089</code>), so reusing the light hover value of <code>.22</code> would have made the lifted pill read <em>flatter</em> than the resting one. Everything else carries over: the selector is scoped to the article because the pill sits in the image wrapper and the link in the card body, sibling subtrees the old <code>.card-link:hover</code> form could never reach, and <code>prefers-reduced-motion</code> drops the transform while the deepened shadow stays.</div>
 
     <div class="divlbl">Favourite star <span class="idb">STA-STAR</span></div>
     <div class="mx">

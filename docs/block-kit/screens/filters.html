@@ -112,11 +112,11 @@
   /* No dark twin needed: currentcolor already followed the flipped ink. */
 }
 
-/* ---- .dims-filters-bar (styles.css:1068-1074) ---- */
+/* ---- .dims-filters-bar (styles.css:1216-1233) ---- */
 .flt-wrap{padding:6px 20px 2px;}
 .flt-bar{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;}
 
-/* ---- .dims-filter-tabs platter (styles.css:1123-1155); real custom properties:
+/* ---- .dims-filter-tabs platter (styles.css:1275-1305); real custom properties:
        height 44px · inner 36px · padding 4px · paddle 40px · mask gradient 22px ---- */
 .flt-tabs{position:relative;display:inline-flex;width:fit-content;max-width:100%;height:44px;padding:4px;
   background:var(--bk-pill-platter);border-radius:999px;overflow:hidden;}
@@ -129,7 +129,7 @@
 }
 .flt-items{display:flex;align-items:center;width:fit-content;height:100%;margin:0;padding:0;white-space:nowrap;position:relative;z-index:1;}
 
-/* ---- .dims-filter-tab (styles.css:1220-1259) ---- */
+/* ---- .dims-filter-tab (styles.css:1376-1422) ---- */
 .flt-tab{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.5rem 1rem;border:none;
   background:transparent;border-radius:999px;font-family:var(--font);font-size:.875rem;font-weight:500;
   color:var(--bk-pill-text);cursor:pointer;white-space:nowrap;position:relative;z-index:2;opacity:.8;
@@ -139,22 +139,22 @@
 /* Deterministic widths so the hand-placed indicator lines up in any font. */
 .w-all{min-width:52px;}.w-val{min-width:66px;}.w-fav{min-width:178px;}.w-show{min-width:140px;}
 
-/* ---- favourite pill (styles.css:1774-1796) ---- */
+/* ---- favourite pill (styles.css:1879-1911) ---- */
 .flt-tab.fav{gap:.35rem;}
 .flt-tab.fav.active{background:var(--bk-accent);color:var(--flt-fav-active-fg);box-shadow:var(--flt-fav-shadow);}
 .flt-tab.fav .ic.st{width:.8rem;height:.8rem;fill:currentColor;stroke:none;}
 
-/* ---- .dims-filter-count (styles.css:1836-1855 / dark 1534-1540); both skins are
+/* ---- .dims-filter-count (styles.css:1942-1972, rest state 1931-1939); both skins are
        named by the scaffold now, so the badge needs no screen-local token ---- */
 .flt-count{font-weight:600;margin-left:.15rem;background:var(--bk-counter-bg);color:var(--bk-counter-fg);
   border-radius:999px;padding:0 6px;font-size:.75rem;}
 .flt-tab.fav.active .flt-count,.flt-tab.show.active .flt-count{background:var(--bk-counter-active-bg);color:var(--bk-counter-active-fg);}
 
-/* ---- .dims-filter-tabs-indicator (styles.css:1262-1277) ---- */
+/* ---- .dims-filter-tabs-indicator (styles.css:1425-1440) ---- */
 .flt-ind{position:absolute;top:4px;bottom:4px;height:calc(100% - 8px);border-radius:999px;
   background-color:var(--bk-pill-indicator);box-shadow:var(--flt-ind-shadow);pointer-events:none;z-index:0;}
 
-/* ---- .dims-filter-tabs-paddle (styles.css:1280-1341) ---- */
+/* ---- .dims-filter-tabs-paddle (styles.css:1443-1504) ---- */
 .flt-paddles{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:3;}
 .flt-paddle{position:absolute;top:4px;bottom:4px;width:40px;min-height:36px;z-index:3;display:flex;align-items:center;
   justify-content:center;border:none;background:transparent;color:var(--bk-paddle);cursor:pointer;pointer-events:auto;padding:0;}
@@ -162,14 +162,14 @@
 .flt-paddle.l{left:0;}.flt-paddle.r{right:0;}
 .flt-paddle svg{pointer-events:none;width:8px;height:14px;}
 
-/* ---- .dims-filter-select (styles.css:1351-1380 / dark 1513-1532) ---- */
+/* ---- .dims-filter-select (styles.css:1514-1552, hover/focus 1543-1552) ---- */
 .flt-select{appearance:none;-webkit-appearance:none;padding:.5rem 2rem .5rem 1rem;border:1px solid var(--bk-line-3);
   border-radius:999px;background-color:var(--bk-pill-platter);background-image:var(--flt-select-chevron);
   background-repeat:no-repeat;background-position:right .75rem center;background-size:12px;font-family:var(--font);
   font-size:.875rem;font-weight:500;color:var(--flt-select-fg);cursor:pointer;min-width:120px;transition:all .2s ease;}
 .flt-select:hover{background-color:var(--bk-select-hover-bg);border-color:var(--bk-select-hover-border);}
 
-/* ---- .dims-clear-filters-btn (styles.css:1068-1100 / dark 1542-1553) ---- */
+/* ---- .dims-clear-filters-btn (styles.css:1216-1252, hover 1239-1243) ---- */
 .flt-clear{display:inline-flex;align-items:center;gap:.375rem;padding:.5rem 1rem;border:1px solid var(--bk-line-3);
   border-radius:999px;background:transparent;font-family:var(--font);font-size:.875rem;font-weight:500;
   color:var(--bk-muted);cursor:pointer;white-space:nowrap;flex-shrink:0;
@@ -219,7 +219,7 @@
     </div>
     <div class="note">Pills are a <b>radiogroup of radios with <code>aria-checked</code></b>, deliberately not tab/tablist — a tablist would require an associated tabpanel (docblock in <code>templates/filters.mustache</code>). Roving tabindex: the checked radio is the group's only tab stop (<code>tabindex="0"</code>), siblings are <code>-1</code>, arrow keys move within.</div>
     <div class="note">Accessible name = type label + the admin's custom-field name, "Filter learning plans — Year"; it falls back to the bare group label when the custom field is undefined (<code>filters.js:140-146</code>).</div>
-    <div class="note">Dark swaps seven platter custom properties (<code>styles.css:1480-1490</code>): platter <code>#212529</code>, item <code>#adb5bd</code>, active item <code>#dee2e6</code> — <b>not</b> the accent — indicator <code>#495057</code>, deeper indicator shadow, and both paddle colours (rest and hover) lightened; the checked favourite pill goes <code>#6ea8fe</code> on <code>#212529</code> text. The count badge sits right after them (<code>styles.css:1523-1529</code>): dark fills it <code>#495057</code> with <code>#dee2e6</code> text, 6.28:1. It used to have no dark rule at all and kept its light <code>#e9ecef</code> / <code>#495057</code> as a foreign island on the dark platter; the active badge inside a checked pill was never part of that — it is <code>#cfe2ff</code> / <code>#0f4d85</code> at 6.60:1 in both skins.</div>
+    <div class="note">The platter's seven <code>--dims-tabs-*</code> colour variables — platter fill, item and active-item colour, indicator fill and shadow, both paddle colours — are gone; the base rule's use sites now read <code>--block-dimensions-*</code> tokens directly, so there is no separate dark-mode override left to swap them in (<code>styles.css:1275-1305</code>). The count badge is the same story: it is <code>--block-dimensions-surface</code> under <code>--block-dimensions-ink-muted</code> (<code>styles.css:1931-1939</code>), flipping on its own where it once had no dark rule at all and sat as a foreign light island on the dark platter; the active badge inside a checked pill keeps <code>--block-dimensions-brand-tint</code> / <code>--block-dimensions-brand-ink</code> in both skins and never needed a dark variant.</div>
 
     <div class="divlbl">Same radiogroup, the other radio checked — only one is on <span class="idb">FLT-ALL-PILL</span> <span class="idb">FLT-INDICATOR</span></div>
     <div class="flt-wrap">
@@ -313,7 +313,7 @@
     </div>
     <div class="note">Pills are a <b>radiogroup of radios with <code>aria-checked</code></b>, deliberately not tab/tablist — a tablist would require an associated tabpanel (docblock in <code>templates/filters.mustache</code>). Roving tabindex: the checked radio is the group's only tab stop (<code>tabindex="0"</code>), siblings are <code>-1</code>, arrow keys move within.</div>
     <div class="note">Accessible name = type label + the admin's custom-field name, "Filter learning plans — Year"; it falls back to the bare group label when the custom field is undefined (<code>filters.js:140-146</code>).</div>
-    <div class="note">Dark swaps seven platter custom properties (<code>styles.css:1480-1490</code>): platter <code>#212529</code>, item <code>#adb5bd</code>, active item <code>#dee2e6</code> — <b>not</b> the accent — indicator <code>#495057</code>, deeper indicator shadow, and both paddle colours (rest and hover) lightened; the checked favourite pill goes <code>#6ea8fe</code> on <code>#212529</code> text. The count badge sits right after them (<code>styles.css:1523-1529</code>): dark fills it <code>#495057</code> with <code>#dee2e6</code> text, 6.28:1. It used to have no dark rule at all and kept its light <code>#e9ecef</code> / <code>#495057</code> as a foreign island on the dark platter; the active badge inside a checked pill was never part of that — it is <code>#cfe2ff</code> / <code>#0f4d85</code> at 6.60:1 in both skins.</div>
+    <div class="note">The platter's seven <code>--dims-tabs-*</code> colour variables — platter fill, item and active-item colour, indicator fill and shadow, both paddle colours — are gone; the base rule's use sites now read <code>--block-dimensions-*</code> tokens directly, so there is no separate dark-mode override left to swap them in (<code>styles.css:1275-1305</code>). The count badge is the same story: it is <code>--block-dimensions-surface</code> under <code>--block-dimensions-ink-muted</code> (<code>styles.css:1931-1939</code>), flipping on its own where it once had no dark rule at all and sat as a foreign light island on the dark platter; the active badge inside a checked pill keeps <code>--block-dimensions-brand-tint</code> / <code>--block-dimensions-brand-ink</code> in both skins and never needed a dark variant.</div>
 
     <div class="divlbl">Same radiogroup, the other radio checked — only one is on <span class="idb">FLT-ALL-PILL</span> <span class="idb">FLT-INDICATOR</span></div>
     <div class="flt-wrap">
@@ -374,19 +374,19 @@
 <div class="legend">
   <h3>ID legend — Filter bar (FLT) · rendered by amd/src/filters.js, not by a mustache template</h3>
   <div class="leg">
-    <span class="k">FLT-BAR</span><span class="v"><b>Filter toolbar</b> — <code>.dims-filters-bar</code>, <code>role="toolbar"</code> with the group label as its accessible name; flex, wrap, <code>gap .75rem</code>, <code>margin-bottom 1rem</code>. Emitted once per <code>.dims-filters-host[data-filters-type]</code>, i.e. twice per block (plan + competency) <span class="rule">filters.js:67-90,84; styles.css:1068-1074</span></span>
-    <span class="k">FLT-FAV-PILL</span><span class="v"><b>"★ My Favourites (N)" radio</b> — <code>.dims-fav-filter-btn</code>, <code>data-fav-filter-type</code>; only rendered when favourites are enabled and the type has at least one. Checked state paints solid <code>#0f6cbf</code> / <code>#6ea8fe</code> instead of relying on the indicator <span class="rule">filters.js:92-111; styles.css:1774-1796, 1810-1824</span></span>
+    <span class="k">FLT-BAR</span><span class="v"><b>Filter toolbar</b> — <code>.dims-filters-bar</code>, <code>role="toolbar"</code> with the group label as its accessible name; flex, wrap, <code>gap .75rem</code>, <code>margin-bottom 1rem</code>. Emitted once per <code>.dims-filters-host[data-filters-type]</code>, i.e. twice per block (plan + competency) <span class="rule">filters.js:67-90,84; styles.css:1216-1233</span></span>
+    <span class="k">FLT-FAV-PILL</span><span class="v"><b>"★ My Favourites (N)" radio</b> — <code>.dims-fav-filter-btn</code>, <code>data-fav-filter-type</code>; only rendered when favourites are enabled and the type has at least one. Checked state paints solid <code>--block-dimensions-brand-fill</code> / <code>--block-dimensions-on-brand-fill</code> instead of relying on the indicator <span class="rule">filters.js:92-111; styles.css:1879-1911</span></span>
     <span class="k">FLT-ALL-PILL</span><span class="v"><b>"Show all (N)" radio</b> — <code>.dims-all-filter-btn</code>, <code>data-all-filter-type</code>; the other half of the same radiogroup, checked whenever the favourite filter is off <span class="rule">filters.js:112-120, 226-232</span></span>
-    <span class="k">FLT-COUNT</span><span class="v"><b>Count badge</b> — <code>.dims-filter-count</code>, <code>0.75rem/600</code>, <code>999px</code>, <code>padding 0 6px</code>; patched in place by <code>updateFavouritePillCounts()</code> so starring a card keeps focus on the star. Dark has its own rule since the palette migration — <code>#495057</code> fill, <code>#dee2e6</code> text, 6.28:1; the badge inside a checked pill is <code>#cfe2ff</code> / <code>#0f4d85</code> in both skins <span class="rule">filters.js:484-505; styles.css:1836-1855, 1534-1540</span></span>
-    <span class="k">FLT-TABS</span><span class="v"><b>Tag radiogroup platter</b> — <code>.dims-filter-tabs</code> in <code>.dims-filter-tabs-wrapper[data-filter-group]</code>; <code>44px</code> shell, <code>4px</code> padding, <code>36px</code> inner row, <code>border-radius 999px</code>, wrapper capped at <code>600px</code> (auto for the <code>fav_</code> group) <span class="rule">filters.js:148-163; styles.css:1108-1155</span></span>
+    <span class="k">FLT-COUNT</span><span class="v"><b>Count badge</b> — <code>.dims-filter-count</code>, <code>0.75rem/600</code>, <code>999px</code>, <code>padding 0 6px</code>; patched in place by <code>updateFavouritePillCounts()</code> so starring a card keeps focus on the star. Rest state is <code>--block-dimensions-surface</code> under <code>--block-dimensions-ink-muted</code>, which flips on its own in dark — no separate dark rule left to keep in sync; the badge inside a checked pill is <code>--block-dimensions-brand-tint</code> / <code>--block-dimensions-brand-ink</code> in both skins <span class="rule">filters.js:484-505; styles.css:1942-1972, 1931-1939</span></span>
+    <span class="k">FLT-TABS</span><span class="v"><b>Tag radiogroup platter</b> — <code>.dims-filter-tabs</code> in <code>.dims-filter-tabs-wrapper[data-filter-group]</code>; <code>44px</code> shell, <code>4px</code> padding, <code>36px</code> inner row, <code>border-radius 999px</code>, wrapper capped at <code>600px</code> (auto for the <code>fav_</code> group) <span class="rule">filters.js:148-163; styles.css:1260-1305</span></span>
     <span class="k">FLT-TAB-ALL</span><span class="v"><b>"All" radio</b> — the <code>data-filter-value=""</code> reset that leads every tag group; checked when no value is selected for that field <span class="rule">filters.js:151-154</span></span>
-    <span class="k">FLT-TAB</span><span class="v"><b>Tag value radio</b> — <code>.dims-filter-tab</code>, one per unique <code>tag1</code>/<code>tag2</code> value found in the loaded cards, locale-sorted; <code>0.875rem/500</code>, <code>opacity .8</code> rising to 1 on hover, focus-visible draws an <i>inset</i> 2px accent ring so it is not clipped by the platter <span class="rule">filters.js:155-162; styles.css:1220-1259</span></span>
-    <span class="k">FLT-INDICATOR</span><span class="v"><b>Sliding pill background</b> — <code>.dims-filter-tabs-indicator</code>, absolutely positioned sibling of the mask at <code>z-index 0</code>, driven by <code>--dims-tabs-indicator-start/-width</code>, <code>320ms ease-out</code>; white + <code>0 1px 3px rgba(0,0,0,.12)</code> light, <code>#495057</code> + <code>.3</code> shadow dark <span class="rule">filter_tabs_nav.js:100-102; styles.css:1262-1277</span></span>
-    <span class="k">FLT-MASK</span><span class="v"><b>Scroll clip + edge fade</b> — <code>.dims-filter-tabs-mask</code>, <code>overflow-x:hidden</code> with a <code>mask-image</code> that is transparent for <code>36px</code> then fades to opaque over <code>22px</code> at each end; the end that has no paddle switches to <code>black</code> via <code>:has()</code>, and <code>.dims-filter-tabs-mask-noscroll</code> drops the mask entirely <span class="rule">filter_tabs_nav.js:96-98; styles.css:1168-1176, 1185-1215</span></span>
-    <span class="k">FLT-PADDLE-L</span><span class="v"><b>Scroll-left paddle</b> — <code>40px</code> wide (<code>36 + 4</code>), chevron <code>M7 1L1 7L7 13</code> in an <code>8×14</code> viewBox at stroke-width 2; <code>aria-hidden="true"</code> and <code>tabIndex -1</code> because keyboard users navigate with arrow keys, but the label is still localized (<code>paddleleft</code>) <span class="rule">filter_tabs_nav.js:61-62, 111-117; styles.css:1280-1341</span></span>
-    <span class="k">FLT-PADDLE-R</span><span class="v"><b>Scroll-right paddle</b> — mirror of the left, chevron <code>M1 1L7 7L1 13</code>, label <code>paddleright</code>; both fade out via <code>.dims-filter-tabs-paddle-hidden</code> when that end is reached and dim to <code>opacity .42</code> when disabled <span class="rule">filter_tabs_nav.js:63-64, 119-125; styles.css:1326-1341</span></span>
-    <span class="k">FLT-SELECT</span><span class="v"><b>Dropdown display mode</b> — <code>.dims-filter-select</code>, chosen per tag by the <code>*_displaymode</code> admin setting; native <code>&lt;select&gt;</code> with <code>appearance:none</code>, <code>999px</code> radius, a <code>data:</code> SVG chevron at <code>right .75rem</code>, <code>min-width 120px</code>, and the same combined <code>aria-label</code> as the pill group <span class="rule">filters.js:164-174; styles.css:1351-1380, 1513-1532</span></span>
-    <span class="k">FLT-CLEAR</span><span class="v"><b>Clear filters</b> — <code>.dims-clear-filters-btn[data-clear-type]</code>, emitted with <code>style="display:none"</code> and revealed by <code>updateClearFilterButtons()</code> only when that type has an active filter; eraser icon at <code>0.8rem</code>, hover flips to the danger pair <span class="rule">filters.js:177-184, 241-246; styles.css:1068-1100, 1542-1553</span></span>
+    <span class="k">FLT-TAB</span><span class="v"><b>Tag value radio</b> — <code>.dims-filter-tab</code>, one per unique <code>tag1</code>/<code>tag2</code> value found in the loaded cards, locale-sorted; <code>0.875rem/500</code>, <code>opacity .8</code> rising to 1 on hover, focus-visible draws an <i>inset</i> 2px accent ring so it is not clipped by the platter <span class="rule">filters.js:155-162; styles.css:1376-1422</span></span>
+    <span class="k">FLT-INDICATOR</span><span class="v"><b>Sliding pill background</b> — <code>.dims-filter-tabs-indicator</code>, absolutely positioned sibling of the mask at <code>z-index 0</code>, driven by <code>--dims-tabs-indicator-start/-width</code>, <code>320ms ease-out</code>; white + <code>0 1px 3px rgba(0,0,0,.12)</code> light, <code>#495057</code> + <code>.3</code> shadow dark <span class="rule">filter_tabs_nav.js:100-102; styles.css:1425-1440</span></span>
+    <span class="k">FLT-MASK</span><span class="v"><b>Scroll clip + edge fade</b> — <code>.dims-filter-tabs-mask</code>, <code>overflow-x:hidden</code> with a <code>mask-image</code> that is transparent for <code>36px</code> then fades to opaque over <code>22px</code> at each end; the end that has no paddle switches to <code>black</code> via <code>:has()</code>, and <code>.dims-filter-tabs-mask-noscroll</code> drops the mask entirely <span class="rule">filter_tabs_nav.js:96-98; styles.css:1307-1315</span></span>
+    <span class="k">FLT-PADDLE-L</span><span class="v"><b>Scroll-left paddle</b> — <code>40px</code> wide (<code>36 + 4</code>), chevron <code>M7 1L1 7L7 13</code> in an <code>8×14</code> viewBox at stroke-width 2; <code>aria-hidden="true"</code> and <code>tabIndex -1</code> because keyboard users navigate with arrow keys, but the label is still localized (<code>paddleleft</code>) <span class="rule">filter_tabs_nav.js:61-62, 111-117; styles.css:1443-1504</span></span>
+    <span class="k">FLT-PADDLE-R</span><span class="v"><b>Scroll-right paddle</b> — mirror of the left, chevron <code>M1 1L7 7L1 13</code>, label <code>paddleright</code>; both fade out via <code>.dims-filter-tabs-paddle-hidden</code> when that end is reached and dim to <code>opacity .42</code> when disabled <span class="rule">filter_tabs_nav.js:63-64, 119-125; styles.css:1489-1504</span></span>
+    <span class="k">FLT-SELECT</span><span class="v"><b>Dropdown display mode</b> — <code>.dims-filter-select</code>, chosen per tag by the <code>*_displaymode</code> admin setting; native <code>&lt;select&gt;</code> with <code>appearance:none</code>, <code>999px</code> radius, a <code>data:</code> SVG chevron at <code>right .75rem</code>, <code>min-width 120px</code>, and the same combined <code>aria-label</code> as the pill group <span class="rule">filters.js:164-174; styles.css:1514-1552, 1543-1552</span></span>
+    <span class="k">FLT-CLEAR</span><span class="v"><b>Clear filters</b> — <code>.dims-clear-filters-btn[data-clear-type]</code>, emitted with <code>style="display:none"</code> and revealed by <code>updateClearFilterButtons()</code> only when that type has an active filter; eraser icon at <code>0.8rem</code>, hover flips to the danger pair <span class="rule">filters.js:177-184, 241-246; styles.css:1216-1252, 1239-1243</span></span>
   </div>
 </div>
 </div>
