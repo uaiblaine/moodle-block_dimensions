@@ -70,8 +70,7 @@
         {{/hasimage}}
         {{^hasimage}}
         <div class="competency-card-image competency-card-gradient{{#hasbgcolor}} has-custom-bg{{/hasbgcolor}}"
-             aria-hidden="true"
-             style="{{#hasbgcolor}}background: var(--dimension-custombgcolor);{{/hasbgcolor}}">
+             aria-hidden="true">
         </div>
         {{/hasimage}}
         {{#hastags}}
@@ -86,8 +85,8 @@
         </span>
     </div>
     <div class="card-body p-3">
-        <h4 class="card-title mb-0 font-weight-bold text-dark" id="competency-title-{{id}}">
-            <a href="{{url}}" class="competency-card-link stretched-link text-decoration-none text-dark">{{name}}</a>
+        <h4 class="card-title mb-0 font-weight-bold" id="competency-title-{{id}}">
+            <a href="{{url}}" class="competency-card-link stretched-link text-decoration-none">{{name}}</a>
         </h4>
     </div>
 </article>

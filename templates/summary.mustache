@@ -31,10 +31,11 @@
         "endpointmethod": "block_dimensions_get_block_dataset",
         "filtersettingsjson": "{}",
         "favouritesenabled": true,
-        "labelsjson": "{}"
+        "labelsjson": "{}",
+        "isbs4": false
     }
 }}
-<div id="{{containerid}}" class="block-dimensions-content" role="region" aria-label="{{#str}}mycompetencies, block_dimensions{{/str}}">
+<div id="{{containerid}}" class="block-dimensions-content{{#isbs4}} block-dimensions-bs4{{/isbs4}}" role="region" aria-label="{{#str}}mycompetencies, block_dimensions{{/str}}">
     <div class="dims-block-header">
         {{#showheading}}
         <h2 class="dims-block-heading" id="block-dimensions-heading-{{containerid}}">
@@ -44,7 +45,7 @@
         {{#showsearch}}
         <div class="dims-search-row">
             <div class="dims-block-search-wrapper">
-                <label for="dims-block-search-{{containerid}}" class="sr-only">
+                <label for="dims-block-search-{{containerid}}" class="visually-hidden">
                     {{#str}}searchlabel, block_dimensions{{/str}}
                 </label>
                 <i class="fa fa-search dims-block-search-icon" aria-hidden="true"></i>
@@ -73,7 +74,7 @@
 
     <div class="dims-error-message alert alert-warning" role="alert" style="display:none;">
         <span class="dims-error-text"></span>
-        <button type="button" class="btn btn-sm btn-outline-secondary dims-error-retry ml-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary dims-error-retry ms-2">
             {{#str}}retry, block_dimensions{{/str}}
         </button>
     </div>
@@ -106,8 +107,8 @@
 
     <p class="text-muted small dims-empty-state" role="status" aria-live="polite" style="display:none;"></p>
 
-    <span class="sr-only" data-results-status role="status" aria-live="polite"></span>
-    <span class="sr-only" data-fav-status role="status" aria-live="assertive"></span>
+    <span class="visually-hidden" data-results-status role="status" aria-live="polite"></span>
+    <span class="visually-hidden" data-fav-status role="status" aria-live="assertive"></span>
 
     <noscript>
         <p class="dims-noscript" role="status">{{#str}}javascriptrequired, block_dimensions{{/str}}</p>
