@@ -1,16 +1,29 @@
-# Token migration — Dimensions block (Material/Google → Moodle DS)
+# Token migrations — Dimensions block
 
-> **Status: IMPLEMENTED (2026-07-27).** Applied to `styles.css` as a value-only slice: 120 hex
+Two migrations, recorded in order. **2026-07-27:** Material/Google → Moodle DS, a value-for-value
+swap of 120 literals. **2026-09-05:** literals → a 34-token `:root` contract shared byte-for-byte
+with `local_dimensions`, which is where the second half of this file starts. Read the first as
+history: almost every value it lists has since been replaced by a token read, and the section at the
+end says which of its open questions that closed.
+
+# First migration — Material/Google → Moodle DS (2026-07-27)
+
+> **Status: IMPLEMENTED (2026-07-27), then SUPERSEDED (2026-09-05).** Every value below still
+> describes a real change that shipped, but almost none of them is still a literal in `styles.css`:
+> the second migration replaced them with token reads. The sections most affected are flagged where
+> they start. Read this half for provenance and for the reasoning; read the second half for what the
+> file contains today.
+>
+> Applied to `styles.css` as a value-only slice: 120 hex
 > tokens, 3 gradients and 12 functional colours rewritten, plus 4 contrast corrections and 4 defect
 > fixes. `version.php` bumped to `2026072700` so the CSS cache revision moves. No markup, no JS, no
-> behaviour changed. The kit's as-is panels now show these values — this file is the record of what
-> moved and why, and the list of what deliberately did not.
+> behaviour changed. The kit's as-is panels showed these values until 2026-09-05 — this half is the
+> record of what moved and why, and of what deliberately did not.
 >
 > **Follow-up, same day.** Three of the questions this file left open were then decided and applied:
 > the pending-trail marker (open #1), the count badge's missing dark rule (#5) and the inert
 > section-header overrides (#6). Sweeping for those turned up four more dark-mode contrast failures
-> nobody had logged. All are recorded below under *Dark-mode completion*; the numbered list at the
-> end now holds only what is still open.
+> nobody had logged. All are recorded below under *Dark-mode completion*.
 
 **Before** = a Material/Google skin (the `#1a73e8` / `#5f6368` / `#f1f3f4` family) with an
 Apple-flavoured chrome layer (`#1d1d1f` access pill, a `#004C94 → #297BC4` section-header gradient)
@@ -42,6 +55,12 @@ destination page's was Moodle blue. That drift, not a fresh design opinion, is w
 
 ## Migrated — focus rings, consolidated
 
+> **Superseded 2026-09-05.** The consolidation was right and the colour was wrong. Every indicator
+> below is now `outline: 2px solid var(--block-dimensions-focus-ring)` at `outline-offset: 2px`, an
+> ink extreme rather than a blue — see *The focus indicator, converged* in the second half. The
+> `#0f6cbf` this section lands on measured **2.15:1** on the dark card, which is under the 3:1 floor,
+> and eleven of the thirteen indicators kept it there.
+
 Four different blues used to indicate the same state. Three are now `#0f6cbf`; the fourth went away
 with the rule that drew it:
 
@@ -56,6 +75,9 @@ Dark mode had a fifth (`#66b3ff`); it is now a single `#6ea8fe` (357). `#0f6cbf`
 comfortably over the 3:1 non-text floor, and it matches the ring `local_dimensions` uses everywhere.
 
 ## Migrated — both gradients, mechanism untouched
+
+> **Superseded 2026-09-05.** Both gradients are built from tone tokens now, so their stops flip with
+> the host; the halftone and the admin-colour overrides are unchanged, as they were then.
 
 | Surface | Before | After | Line |
 |---|---|---|---|
@@ -90,8 +112,14 @@ landing every literal inside Moodle DS.
 
 ## Migrated — the dark skin
 
-`local_dimensions` ships **no dark mode at all**, so there was no sibling counterpart to copy. The
-dark values were mapped onto Bootstrap 5's dark tokens instead:
+> **Superseded 2026-09-05.** The premise of this section — that `local_dimensions` shipped no dark
+> mode, so the block had no sibling counterpart to copy — stopped being true, and the whole table
+> below stopped being shipped code. Both plugins now declare the same 34-token contract with
+> byte-identical suffixes, and the `.theme-dark` / `body.dark` rules that carried these values were
+> deleted as dead code. Kept as the record of where the values came from.
+
+At the time, `local_dimensions` shipped no dark mode at all, so there was no sibling counterpart to
+copy. The dark values were mapped onto Bootstrap 5's dark tokens instead:
 
 | Role | Before | After |
 |---|---|---|
@@ -181,9 +209,15 @@ three had ever been restated for dark: the competency card, the select and the m
 other eleven stayed `#0f6cbf` on a dark surface — **2.15:1** on the `#343a40` card, **2.88:1** on the
 `#212529` page — both under the 3:1 floor for a focus indicator, which the kit's own body text had
 been recording as fact all along without anyone connecting it to the summary claim. One consolidated
-block now flips all of them to `#6ea8fe` (4.76:1 / 6.39:1), including the plan card's glow and the
-filter pill's inset ring. Verified in a browser rather than by grep: every one of the thirteen
-indicators resolves to `#6ea8fe` under `body.dark`.
+block flipped all of them to `#6ea8fe` (4.76:1 / 6.39:1), including the plan card's glow and the
+filter pill's inset ring. Verified in a browser rather than by grep at the time: every one of the
+thirteen indicators resolved to `#6ea8fe` under `body.dark`.
+
+**And that verification is the cautionary part of this file.** It was true of the *rendered page in a
+browser with `body.dark` set by hand*, and it was taken as evidence that dark mode worked. It was
+not: **nothing sets `body.dark`.** No Moodle version in the plugin's supported range, and no theme in
+this fleet, has ever emitted that class or `.theme-dark`. Thirteen indicators verified in a state no
+user could reach. The 2026-09-05 migration below deleted all 154 of those rules.
 
 With these in, **no text or non-text pair the block controls fails WCAG 2.1 AA in either skin**, with
 one documented exception under `prefers-contrast: high` — see the open list. The *active* count badge
@@ -211,33 +245,229 @@ a decorative, `aria-hidden`, `pointer-events: none` element would put two rings 
 focus event. Verified in a browser — all three pills resolve the lift on `:hover` and
 `:focus-within`, in both skins.
 
-## Open — needs a decision, deliberately not applied
+## The 2026-07-27 open list, and what became of each
 
-1. **`prefers-contrast: high` assumes a light background.** That block paints `#000` borders and
-   outlines (311-321, 1558-1571 and the per-component high-contrast rules) with no dark counterpart,
-   so a user on dark + high-contrast gets black on `#343a40`. The rest of the file now flips cleanly
-   with the skin; this one corner does not.
-2. **The default tag chip disappears into the competency card's own gradient.** Chips sit at the
-   image band's bottom-left (1010-1018), which on a `135deg` gradient lands on roughly the middle
-   stop — and the middle stop is now `#fd7e14`, exactly the chip's own default fill (1034). Chip
-   against backdrop is **1.00:1**; only the `0 1px 3px rgba(0,0,0,.2)` shadow separates them.
-   This is inherited, not introduced — the old pairing was `#ef4136` on `#f12711`, 1.09:1, equally
-   invisible — but the migration made the collision exact. Note the *text* is unaffected and still
-   passes (`#212529` on `#fd7e14`, 6.00:1); this is legibility of the chip's edge, not of its label.
-   Three ways out, all design calls: give the chip a neutral fill that reads on any card colour,
-   give it a hairline border, or accept it on the grounds that admins set
-   `--dimension-custombgcolor` in practice and the default is only a fallback.
+Four of the five are closed by the 2026-09-05 migration below. Struck-through headings are closed;
+the one that is still open says so.
+
+1. ~~**`prefers-contrast: high` assumes a light background.**~~ **Closed 2026-09-05.** Every remedy
+   in those blocks that names an *extreme* is now `var(--block-dimensions-ink-strong)` or
+   `var(--block-dimensions-focus-ring)`, both of which chain `--bs-emphasis-color` and therefore flip:
+   `#000` on the light page, `#fff` on the dark one, `#343a40` on Moodle 4.5. The card border and
+   title, the select's border, the active filter pill's border and the indicator's outline all
+   follow the page now. `currentColor` covers the rest — the access pill, tags, star, clear button
+   and ghost card — and needs no token, because it is already whatever ink the element inherited.
+   **One literal survives on purpose**, and it is the one that names a *middle* rather than an
+   extreme: the competency gradient still flattens to `#6c757d`. A flat fill in the image slot has to
+   separate from the card face in both modes at once, so it can be neither extreme — `#6c757d` is
+   4.69:1 on the light card face and 3.45:1 on the dark one, and a token that flipped would turn the
+   image area light on a dark page and invert the card. That literal is on the token contract's
+   exemption list, and the contract fails the build if the list ever holds an entry matching no live
+   rule, so the exemption cannot rot into a blanket.
+   **A second, different block was added at the same time and should not be confused with this one:**
+   `@media (forced-colors: active)`. Windows High Contrast Mode substitutes the browser's palette for
+   every `background-color`, so the white sliding indicator and the filled active pill both flatten
+   to the same Canvas as their neighbours and the selected filter stops being distinguishable
+   (WCAG 1.4.1). An `outline` is the fix because outline *is* remapped there, while a background is
+   overwritten and a `box-shadow` is not drawn at all — which is also why no focus indicator in the
+   file is a `box-shadow` any more.
+2. ~~**The default tag chip disappears into the competency card's own gradient.**~~ **Closed
+   2026-09-05, by the first of the three ways out.** The chip's unconfigured fill is now
+   `var(--dimension-custombgcolor, var(--block-dimensions-surface-inset))` over
+   `var(--dimension-customtextcolor, var(--block-dimensions-ink))` — a neutral that reads on any card
+   colour, in either mode, and separates from every stop of both gradients. The 1.00:1 collision is
+   gone. The *configured* chip is untouched, and its contrast is still the site admin's to own,
+   which is the correct division: the admin's colour is instance data, not a design token, and the
+   mode layer is forbidden from declaring it.
 3. **Input borders are decorative, not identifying.** `#dee2e6` on white is 1.30:1. This is only a
    WCAG 1.4.11 failure if the border is the sole means of identifying the control; the search field
    and select both carry a fill distinct from the page, so it arguably is not. Unchanged from before
    the migration; worth a deliberate ruling rather than a silent pass.
-4. **The block ships a dark skin the sibling does not.** `local_dimensions` has no `.theme-dark`
-   rules at all. The block's dark mode is now complete and internally coherent on Bootstrap 5 dark tokens, but it
-   has no counterpart to stay in sync with — so it will drift again unless one plugin adopts the
-   other's position.
-5. **No custom-property layer.** Every value is still a literal. The filter platter already
-   demonstrates the better pattern — `styles.css:1123-1143` defines a dozen `--dims-tabs-*`
-   properties and dark mode overrides only those (1493-1500). Lifting the rest of the file to
-   `--bk-*` (or Boost's `--primary` / `--bs-*`) would make the next theme change one block instead
-   of 120 sites. `local_dimensions` itself only does this in 16 of its 90 primary uses, so this is a
-   shared improvement rather than a block-only gap.
+4. ~~**The block ships a dark skin the sibling does not.**~~ **Closed 2026-09-05, by deleting the
+   skin.** The premise was right and the framing was wrong: the drift risk was real, but the skin was
+   not something to keep in sync — it was 154 rules keyed off selectors nothing emits. Both plugins
+   now declare the same 34 token suffixes, byte-identical, and a test in each compares its own block
+   against the sibling's with the frankenstyle prefix rewritten to a sentinel.
+5. ~~**No custom-property layer.**~~ **Closed 2026-09-05, and it turned out to be the fix for
+   questions 1 and 4 as well.** This was logged as an ergonomics improvement — "the next theme change
+   is one block instead of 120 sites" — and that undersold it. Lifting the file onto
+   `var(--bs-NEW, var(--BS4-OLD, #literal))` chains did not merely centralise the values; it made 31
+   of the 34 tokens *core's* values, which is what made the whole hand-written dark layer
+   unnecessary, made the high-contrast block flip, and gave the two plugins a parity contract a test
+   can compare. Both plugins did it together, and both did all 34, not the 16-of-90 the note
+   anticipated.
+
+---
+
+# Second migration — literals to a 34-token `:root` contract (2026-09-05)
+
+> **Status: IMPLEMENTED (2026-09-05).** Applied to `styles.css` as a value-and-structure slice:
+> every colour literal outside three documented exemptions replaced by a token read, the
+> `.theme-dark` / `body.dark` layer deleted, the focus indicator converged on one shape, the
+> container-query layer removed, and the plugin's own `.stylelintrc.json` deleted. `version.php`
+> bumped so the CSS cache revision moves. 17 PHPUnit methods and 4 Behat scenarios were added with
+> it, every one mutation-checked. The kit's panels were re-baselined the same day.
+
+**Before** = the Moodle DS palette the first migration produced: correct values, but ~120 literals,
+each needing a hand-written dark twin. **After** = 34 custom properties declared once on bare
+`:root`, with the suffix set byte-identical to `local_dimensions`' `--local-dimensions-*` set.
+
+## What the contract is
+
+Thirty of the 34 are three-rung chains, `var(--bs-NEW, var(--BS4-OLD, #literal))`. Moodle 4.5
+declares **zero** `--bs-*` custom properties and Moodle 5.2 declares **zero** BS4 legacy names, so
+one chain is correct on every supported branch with no branch test anywhere. On 4.5 a chain lands on
+its *middle* rung wherever Boost declares the legacy name — `--white`, `--light`, `--gray-dark`,
+`--primary` — and on the terminal literal otherwise. Every literal in the block was chosen to equal
+the middle rung it stands behind, verified value by value against the compiled Boost sheets of the
+running m405 and m502 stacks on 2026-09-05.
+
+`:root` and not a plugin class, deliberately. Custom properties substitute at computed-value time on
+the element carrying the declaration; `:root` is the ancestor of every node in the document, so one
+rule covers every root the plugin can paint, including anything core relocates to `document.body`.
+That completeness is not cosmetic: **an unresolved `var()` does not fall back to its literal** — the
+whole declaration is invalid at computed-value time, so a background set from an undeclared token is
+not the default background, it is *no* background.
+
+## Why it made the dark skin unnecessary
+
+Because 31 of the 34 tokens resolve to core's own `--bs-*` values, and Moodle 5.1 and 5.2 already
+compile a complete `[data-bs-theme="dark"]` token block, those 31 are dark-correct **with no dark
+rule at all**. The plugin's card face *is* `--bs-body-bg`, which is also the page's own background,
+so the two cannot disagree.
+
+Only **three** tokens carry a plugin-authored dark value — `shadow`, `scrim` and `favourite` — and
+they are the entire contents of the one activation rule:
+
+```css
+:root[data-bs-theme="dark"] {
+    --block-dimensions-shadow: rgb(0 0 0 / 55%);
+    --block-dimensions-scrim: rgb(29 33 37 / 72%);
+    --block-dimensions-favourite: #fd7e14;
+}
+```
+
+That bound is a second, independent guarantee: the worst a wrongly-firing activation block can do is
+deepen a shadow, darken a veil and brighten a star. It cannot paint a dark surface on a light page.
+
+The rule is **anchored at `:root` on purpose**. A bare `[data-bs-theme="dark"]` matches through any
+ancestor at any depth, and CSS descendant combinators have no nearest-ancestor-wins rule. That is not
+hypothetical: `theme_boost_union_fundaseg` sets `data-bs-theme="dark"` on the navbar element itself,
+and `theme_boost_union` then re-pins `data-bs-theme="light"` by hand on five nested templates to stop
+the dark scope leaking into its own submenus. A bare selector would ignore those re-pins. `:root`
+restricts the match to the `html` element and forecloses the whole class at zero cost — and it is
+(0,2,0) against the token block's (0,1,0), so it wins on specificity rather than on source order.
+
+## What was deleted, and why it was dead
+
+**154 rules — 77 keyed off `.theme-dark` and 77 off `body.dark`.** Nothing in Moodle 4.5, 5.0, 5.1,
+5.2 or 5.3-dev, and nothing in `theme_boost_union` or `theme_boost_union_fundaseg`, has ever emitted
+either selector. They could not fire on any site the plugin supports.
+
+The signal that *does* exist is Bootstrap 5.3's own `data-bs-theme`, and Moodle **5.3** core writes it
+on the `<html>` element from `theme_boost\colour_mode` via `before_html_attributes`, with a head
+script that resolves `auto` through `matchMedia` and writes the result back. It is gated behind
+`theme_boost/enablecolourmodes` and is **off by default**; core's own comment gives the reason, that
+a plugin which has not been checked in dark mode can still draw its pages in light colours. It does
+not exist on 4.5, 5.0, 5.1 or 5.2 at all — which is why the Behat scenarios set the attribute
+themselves rather than asking a theme for it.
+
+Also gone: the last `!important` (Moodle's stylelint forbids the keyword; the admin fill moved off
+the inline style attribute onto a `.has-custom-bg` class reading a custom property, so the print and
+high-contrast overrides win at equal specificity instead), every inline SVG data URI (stylelint's
+`function-url-scheme-disallowed-list`; the select chevron is two `currentcolor` gradients now and the
+dashed trail stubs are `repeating-linear-gradient` on the `line` token, both of which follow the host
+for free where a re-encoded SVG needed a hand-written second copy), and the container-query layer.
+
+## The one live `@media (prefers-color-scheme: dark)` block, and the one that is inert
+
+The block that *was* live has been removed: it flipped the WCAG contrast panel from the OS preference
+while the rest of the Moodle page stayed light, which is exactly the defect the whole design exists
+to prevent.
+
+A `@media (prefers-color-scheme: dark)` block is still present, carrying the same three decorative
+tokens, and it is **deliberately inert**: every selector in it is gated on
+`[data-dimensions-media-optin]`, an attribute nothing in either plugin ever writes — no PHP, no AMD
+module, no Mustache template, no Behat step, no test. `colour_mode::MEDIA_OPTIN_ATTRIBUTE` names it
+as a constant and nothing assigns it.
+
+It is inert because **the OS preference is the wrong signal on its own**. Core reads
+`prefers-color-scheme` in a head script and writes the *result* into `data-bs-theme`, and only when
+the user's stored mode is `auto`; it treats the OS preference as an **input** to the attribute, never
+as an independent trigger. Firing on the media query directly would override an explicit user choice
+with an OS setting. Switching it on is one edit — delete `[data-dimensions-media-optin]` from the
+selector — and retiring it is the preferred outcome once the supported minimum reaches 503, because
+core resolves `auto` itself from 5.3 on.
+
+## The focus indicator, converged
+
+One shape, everywhere, in both plugins of the family:
+
+```css
+outline: 2px solid var(--block-dimensions-focus-ring);
+outline-offset: 2px;
+```
+
+Two exceptions, each with its reason beside it in the source, and both keep a **real** outline: the
+filter tab and the tabs indicator draw at `outline-offset: -2px` because their platter is
+`overflow: hidden` and would clip an outset ring.
+
+Three things changed and each has a measurement behind it. The card's ring came down from 3px to 2px,
+because two ring widths on one page read as a drawing error rather than as two meanings. The 4px
+brand glow is gone, and so is the filter pill's inset ring, because **a `box-shadow` is not rendered
+at all under `forced-colors: active`** — a control whose only focus signal was one had no indicator
+in Windows High Contrast Mode. And the colour is `--bs-emphasis-color` rather than the brand:
+21.0:1 light, 16.2:1 dark, 11.5:1 on 4.5, against a site primary that measures 2.33:1 as a ring on
+the dark card on this fleet's own theme. It deliberately does **not** chain
+`--bs-focus-ring-color`, which core fails to flip — 1.02:1 on the dark page.
+
+The card link's two `outline: none` rules were deleted as well: an author `outline: none` is not
+restored by the browser under forced colours, so a rule that suppresses the outline and puts nothing
+in its place leaves the control with no focus indicator at all.
+
+## The eight dark contrast repairs, retired without regression
+
+Every repair in *Dark-mode completion* above existed because the light value beside it was a literal.
+All six roles are single declarations now, and each resolves correctly in both modes with nothing to
+keep in step:
+
+| 2026-07-27 repair | 2026-09-05 replacement |
+|---|---|
+| pending ring, light `#6c757d` + dark `#adb5bd` | one `ink-muted` read |
+| completed marker and connectors, dark `#75b798` | one `success-ink` read |
+| trail-label hover, dark `#6ea8fe` | one `accent` read |
+| select focus ring, dark `#6ea8fe` | one `focus-ring` read |
+| count badge, dark `#495057` / `#dee2e6` | `surface` under `ink-muted` |
+| mobile filter toggle, dark block | `surface-alt` / `line` / `ink-muted`, `brand-tint` / `brand-ink` on |
+| card `:focus-within`, dark `#6ea8fe` + glow | one `focus-ring` read, no glow |
+| access-pill lift, dark `rgba(0,0,0,.5)` | one `shadow` read |
+
+The count badge picked up a real improvement on the way. Its rest fill had been `#e9ecef`, the same
+value as the platter it sits on, so the chip had no shape at all and only its bold text showed; it is
+`surface` now, which gives it a boundary and lifts its ink from 5.99:1 to 7.10:1 in light.
+
+## What this migration cost
+
+Recorded because a re-baseline that only lists wins is not a record.
+
+- **The horizontal plan card no longer stacks on a narrow block column at a wide viewport.** It was
+  declared twice, `@media (max-width: 575.98px)` and `@container dims-card-cell (max-width: 360px)`,
+  and the container copy — the one that mattered in a Moodle side region — is gone. Moodle's
+  stylelint reports `@container` as an unknown at-rule and `container-type` as an unknown property.
+- **The card list's column cap changed mechanism.**
+  `repeat(auto-fill, minmax(clamp(240px, 30%, 500px), 1fr))` became `flex: 1 1 30%; min-width: 15rem`
+  on each item. `clamp()` inside a length-valued property is rejected by `csstree/validator`. A flex
+  basis is still a percentage *of the container*, so the column count still answers to the block
+  column rather than the viewport; what is lost is restyling a card by the width of its own cell.
+- Both are consequences of one deletion: **`.stylelintrc.json` had no `extends`**, so it was silently
+  *replacing* Moodle's ~90-rule config rather than extending it, and was hiding 46 errors and 3
+  warnings. Removing the file is what surfaced them.
+
+## Still open
+
+3. **Input borders are decorative, not identifying.** `line` on `surface` is 1.30:1 in light. This is
+   only a WCAG 1.4.11 failure if the border is the sole means of identifying the control; the search
+   field and the select both carry a fill distinct from the page, so it arguably is not. Unchanged
+   through both migrations, and worth a deliberate ruling rather than a silent pass. Note the value
+   is core's own `--bs-border-color` now, so a ruling here is a ruling about core's hairline as much
+   as about the plugin's.

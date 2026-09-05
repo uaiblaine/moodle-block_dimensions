@@ -2,59 +2,67 @@
 <style>
 /* ============================================================================
    Canonical block-kit scaffold (shared by every screen file).
-   AS-IS token values live on .kit (light, the default skin); .panel.dark
-   overrides only the tokens `.theme-dark` / `body.dark` really swap in
-   styles.css. Markup is written once with var(--bk-*) so the two panels
-   differ by token values alone. See tokens.html / token-migration.md.
-   Palette migrated to Moodle DS on 2026-07-27 — these ARE the shipped values.
+   AS-IS token values live on .kit (light) and .panel.dark (dark). The plugin
+   no longer ships a skin of its own: styles.css declares 34 tokens on bare
+   :root as var(--bs-NEW, var(--BS4-OLD, #literal)) chains, so 31 of them ARE
+   core's own Bootstrap values and flip because core's [data-bs-theme="dark"]
+   block flips them. Only shadow, scrim and favourite are plugin-authored and
+   restated under :root[data-bs-theme="dark"]. So the two --bk-* blocks below
+   are the two RESOLUTIONS of one contract, not two hand-written palettes: the
+   light column is core's :root/[data-bs-theme="light"] values and the dark
+   column is core's [data-bs-theme="dark"] values, both read out of the running
+   m502 stack's compiled Boost sheet on 2026-09-05. Markup is written once with
+   var(--bk-*) so the two panels differ by token values alone.
+   See tokens.html / token-migration.md.
+   Re-based 2026-09-05; the 2026-07-27 Moodle DS values it replaces are gone.
    ============================================================================ */
 .kit{
-  --bk-page:#f4f5f7;--bk-surface:#fff;--bk-surface-2:#f8f9fa;
+  --bk-page:#fff;--bk-surface:#fff;--bk-surface-2:#f8f9fa;
   --bk-card-bg:#fff;--bk-plan-card-bg:#fff;
-  --bk-card-border:rgba(0,0,0,.125);--bk-plan-card-border:rgba(0,0,0,.125);
-  --bk-text:#212529;--bk-muted:#6c757d;
-  --bk-line:#e9ecef;--bk-line-2:#ced4da;--bk-line-3:#dee2e6;--bk-line-4:#ced4da;
-  --bk-accent:#0f6cbf;--bk-accent-dark:#0c5699;--bk-accent-deep:#0f4d85;
-  --bk-pill-platter:#e9ecef;--bk-pill-text:#495057;--bk-pill-indicator:#fff;
-  --bk-counter-bg:#e9ecef;--bk-counter-fg:#495057;--bk-counter-active-bg:#cfe2ff;--bk-counter-active-fg:#0f4d85;
-  --bk-search-border:#dee2e6;--bk-search-icon:#6c757d;--bk-search-placeholder:#5c636a;
-  --bk-search-glow:rgba(15,108,191,.15);
-  --bk-select-hover-bg:#dee2e6;--bk-select-hover-border:#ced4da;
-  --bk-paddle:rgba(0,0,0,.56);--bk-paddle-hover:rgba(0,0,0,.72);
-  --bk-btn-bg:#fff;--bk-btn-fg:#212529;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.15);
-  --bk-section-from:#0f4d85;--bk-section-to:#0f6cbf;
-  --bk-plan-grad-a:#0f6cbf;--bk-plan-grad-b:#0a5aa0;
-  --bk-comp-grad-a:#ffc107;--bk-comp-grad-b:#fd7e14;--bk-comp-grad-c:#e8590c;
-  --bk-tag-bg:#fd7e14;--bk-tag-fg:#212529;--bk-halftone:#00000082;
-  --bk-success:#198754;--bk-success-text:#0f5132;--bk-star:#ffc107;
-  --bk-focus:#0f6cbf;--bk-focus-glow:rgba(15,108,191,.25);--bk-focus-btn:#0f6cbf;
-  --bk-danger-fg:#842029;--bk-danger-bg:#f8d7da;
-  --bk-warn-fg:#212529;--bk-warn-bg:#fff3cd;--bk-warn-border:#ffe69c;
-  --bk-empty-circle:#6c757d;--bk-empty-ring:1px;--bk-ghost-fg:#6c757d;--bk-ghost-circle:#adb5bd;
+  --bk-card-border:#dee2e6;--bk-plan-card-border:#dee2e6;
+  --bk-text:#1d2125;--bk-muted:rgba(29,33,37,.75);
+  --bk-line:#e9ecef;--bk-line-2:#dee2e6;--bk-line-3:#dee2e6;--bk-line-4:#dee2e6;
+  --bk-accent:#0f6cbf;--bk-accent-dark:#0c5699;--bk-accent-deep:#062b4c;
+  --bk-pill-platter:#e9ecef;--bk-pill-text:rgba(29,33,37,.75);--bk-pill-indicator:#fff;
+  --bk-counter-bg:#fff;--bk-counter-fg:rgba(29,33,37,.75);--bk-counter-active-bg:#cfe2f2;--bk-counter-active-fg:#062b4c;
+  --bk-search-border:#dee2e6;--bk-search-icon:rgba(29,33,37,.75);--bk-search-placeholder:rgba(29,33,37,.75);
+  --bk-search-glow:transparent;
+  --bk-select-hover-bg:#dee2e6;--bk-select-hover-border:rgba(29,33,37,.75);
+  --bk-paddle:rgba(29,33,37,.75);--bk-paddle-hover:#1d2125;
+  --bk-btn-bg:#fff;--bk-btn-fg:#1d2125;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.1);
+  --bk-section-from:#062b4c;--bk-section-to:#0f6cbf;
+  --bk-plan-grad-a:#0f6cbf;--bk-plan-grad-b:#062b4c;
+  --bk-comp-grad-a:#f9deb8;--bk-comp-grad-b:#e8590c;--bk-comp-grad-c:#60451f;
+  --bk-tag-bg:#e9ecef;--bk-tag-fg:#1d2125;--bk-halftone:#00000082;
+  --bk-success:#153114;--bk-success-text:#153114;--bk-star:#e8590c;
+  --bk-focus:#000;--bk-focus-glow:transparent;--bk-focus-btn:#000;
+  --bk-danger-fg:#51140d;--bk-danger-bg:#f4d6d2;
+  --bk-warn-fg:#1d2125;--bk-warn-bg:#fcefdc;--bk-warn-border:#f9deb8;
+  --bk-empty-circle:rgba(29,33,37,.75);--bk-empty-ring:1px;--bk-ghost-fg:rgba(29,33,37,.75);--bk-ghost-circle:#dee2e6;
   --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:ui-monospace,Menlo,Consolas,monospace;
   color-scheme:light;font-family:var(--font);color:var(--bk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
 }
 .kit *{box-sizing:border-box;}
 .panel.dark{
-  --bk-page:#212529;--bk-surface:#212529;--bk-surface-2:#212529;
-  --bk-card-bg:#343a40;--bk-plan-card-bg:#343a40;
+  --bk-page:#1d2125;--bk-surface:#1d2125;--bk-surface-2:#292e33;
+  --bk-card-bg:#1d2125;--bk-plan-card-bg:#1d2125;
   --bk-card-border:#495057;--bk-plan-card-border:#495057;
-  --bk-text:#f8f9fa;--bk-muted:#adb5bd;
-  --bk-line:#495057;--bk-line-2:#495057;--bk-line-3:#495057;--bk-line-4:#495057;
-  --bk-accent:#6ea8fe;--bk-accent-dark:#9ec5fe;
-  --bk-pill-platter:#212529;--bk-pill-text:#adb5bd;--bk-pill-indicator:#495057;
-  --bk-search-border:#495057;--bk-search-icon:#adb5bd;--bk-search-placeholder:#adb5bd;
-  --bk-search-glow:rgba(110,168,254,.2);
-  --bk-select-hover-bg:#343a40;
-  --bk-paddle:rgba(255,255,255,.64);--bk-paddle-hover:rgba(255,255,255,.88);
-  --bk-btn-bg:#343a40;--bk-btn-fg:#f8f9fa;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.35);
-  --bk-success:#75b798;--bk-success-text:#75b798;
-  --bk-counter-bg:#495057;--bk-counter-fg:#dee2e6;
-  --bk-focus:#6ea8fe;--bk-focus-glow:rgba(110,168,254,.25);--bk-focus-btn:#6ea8fe;
-  --bk-danger-fg:#ea868f;--bk-danger-bg:#2c0b0e;
-  --bk-warn-fg:#dee2e6;--bk-warn-bg:#332701;--bk-warn-border:#664d03;
-  --bk-empty-circle:#adb5bd;--bk-ghost-fg:#adb5bd;--bk-ghost-circle:#6c757d;
+  --bk-text:#dee2e6;--bk-muted:rgba(222,226,230,.75);
+  --bk-line:#343a40;--bk-line-2:#495057;--bk-line-3:#495057;--bk-line-4:#495057;
+  --bk-accent:#6fa7d9;--bk-accent-dark:#8cb9e1;
+  --bk-pill-platter:#343a40;--bk-pill-text:rgba(222,226,230,.75);--bk-pill-indicator:#1d2125;
+  --bk-search-border:#495057;--bk-search-icon:rgba(222,226,230,.75);--bk-search-placeholder:rgba(222,226,230,.75);
+  --bk-search-glow:transparent;
+  --bk-select-hover-bg:#495057;
+  --bk-paddle:rgba(222,226,230,.75);--bk-paddle-hover:#dee2e6;
+  --bk-btn-bg:#1d2125;--bk-btn-fg:#dee2e6;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.55);
+  --bk-success:#86af84;--bk-success-text:#86af84;
+  --bk-counter-bg:#1d2125;--bk-counter-fg:rgba(222,226,230,.75);
+  --bk-focus:#fff;--bk-focus-glow:transparent;--bk-focus-btn:#fff;
+  --bk-danger-fg:#df8379;--bk-danger-bg:#280a06;
+  --bk-warn-fg:#dee2e6;--bk-warn-bg:#302310;--bk-warn-border:#90682f;
+  --bk-empty-circle:rgba(222,226,230,.75);--bk-ghost-fg:rgba(222,226,230,.75);--bk-ghost-circle:#495057;
   color:var(--bk-text);
 }
 .screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
@@ -80,8 +88,8 @@
 
 /* ---- screen-local tokens (values styles.css states literally, plus Boost's own
         alert pair, which the plugin never styles — absent from the shared block) ---- */
-.kit{--bk-input-fg:#212529;--bk-alert-fg:#856404;--bk-alert-border:#ffeeba;--bk-section-flat:#212529;--bk-clear-hover:rgba(0,0,0,.06);}
-.panel.dark{--bk-input-fg:#dee2e6;--bk-alert-fg:#dee2e6;--bk-alert-border:#664d03;--bk-section-flat:#dee2e6;--bk-clear-hover:rgba(255,255,255,.08);}
+.kit{--bk-input-fg:#1d2125;--bk-alert-fg:#60451f;--bk-alert-border:#f9deb8;--bk-section-flat:#1d2125;--bk-clear-hover:#e9ecef;}
+.panel.dark{--bk-input-fg:#dee2e6;--bk-alert-fg:#f6ce95;--bk-alert-border:#90682f;--bk-section-flat:#dee2e6;--bk-clear-hover:#343a40;}
 
 /* ---- block body: everything below lives inside .block-dimensions-content ---- */
 .sh-body{padding:6px 20px 0;background:var(--bk-page);}
@@ -184,20 +192,20 @@
     <div class="divlbl">5 · Empty state, live regions, no-JS <span class="idb">BLK-EMPTY</span> <span class="idb">BLK-NOSCRIPT</span></div>
     <div class="sh-body">
       <p class="sh-empty" role="status" aria-live="polite">No competencies in your plans.</p>
-      <span class="sh-sr" role="status" aria-live="polite">sr-only · data-results-status · "2 learning plans and 7 competencies found."</span>
-      <span class="sh-sr" role="status" aria-live="assertive">sr-only · data-fav-status · favourite-toggle errors</span>
+      <span class="sh-sr" role="status" aria-live="polite">visually-hidden · data-results-status · "2 learning plans and 7 competencies found."</span>
+      <span class="sh-sr" role="status" aria-live="assertive">visually-hidden · data-fav-status · favourite-toggle errors</span>
       <p class="sh-noscript" role="status">JavaScript is required to load your competency cards in this block.</p>
     </div>
     <div class="bk-ids">
       <span class="idb">BLK-LIVE-RESULTS · polite</span>
       <span class="idb">BLK-LIVE-FAV · assertive</span>
     </div>
-    <div class="note">The two live regions are genuinely <code>.sr-only</code> — the dashed strips exist only so this replica shows them. <code>updateEmptyState()</code> prefers <code>noactiveplans</code> over <code>nocompetencies</code>, and stays silent while a ghost card is visible. The no-JS notice lives inside <code>&lt;noscript&gt;</code> and is the only thing a scriptless user ever sees.</div>
+    <div class="note">The two live regions are genuinely <code>.visually-hidden</code> — the dashed strips exist only so this replica shows them. <code>updateEmptyState()</code> prefers <code>noactiveplans</code> over <code>nocompetencies</code>, and stays silent while a ghost card is visible. The no-JS notice lives inside <code>&lt;noscript&gt;</code> and is the only thing a scriptless user ever sees.</div>
   </div>
 
   <!-- ============ AS-IS · DARK ============ -->
   <div class="panel dark">
-    <div class="plabel"><span class="pdot" style="background:#6ea8fe"></span>As-is · dark (.theme-dark)</div>
+    <div class="plabel"><span class="pdot" style="background:#6fa7d9"></span>As-is · dark (host data-bs-theme="dark")</div>
 
     <div class="bk-cap">1 · Header row — heading + search <span class="idb">BLK-HEADING</span> <span class="idb">BLK-SEARCH</span></div>
     <div class="sh-body">
@@ -256,8 +264,8 @@
     <div class="divlbl">5 · Empty state, live regions, no-JS <span class="idb">BLK-EMPTY</span> <span class="idb">BLK-NOSCRIPT</span></div>
     <div class="sh-body">
       <p class="sh-empty" role="status" aria-live="polite">No competencies in your plans.</p>
-      <span class="sh-sr" role="status" aria-live="polite">sr-only · data-results-status · "2 learning plans and 7 competencies found."</span>
-      <span class="sh-sr" role="status" aria-live="assertive">sr-only · data-fav-status · favourite-toggle errors</span>
+      <span class="sh-sr" role="status" aria-live="polite">visually-hidden · data-results-status · "2 learning plans and 7 competencies found."</span>
+      <span class="sh-sr" role="status" aria-live="assertive">visually-hidden · data-fav-status · favourite-toggle errors</span>
       <p class="sh-noscript" role="status">JavaScript is required to load your competency cards in this block.</p>
     </div>
     <div class="bk-ids">
@@ -273,7 +281,7 @@
   <h3>ID legend — Block shell (summary.mustache)</h3>
   <div class="leg">
     <span class="k">BLK-HEADING</span><span class="v"><b>Block heading</b> — <code>h2.dims-block-heading</code>, "My competencies", <code>1.1rem</code>/700, id <code>block-dimensions-heading-{containerid}</code>; rendered only under <code>showheading</code> <span class="rule">summary.mustache:39-43 · styles.css:25-30</span></span>
-    <span class="k">BLK-SEARCH</span><span class="v"><b>Search input</b> — <code>input.dims-block-search-input</code>, pill (<code>999px</code>), <code>.8125rem</code>, padding <code>.375rem 1.75rem .375rem 1.875rem</code>, <code>#f8f9fa</code> on <code>#dee2e6</code> with a <code>#5c636a</code> placeholder; focus adds a <code>3px</code> <code>rgba(15,108,191,.15)</code> glow. Label is <code>.sr-only</code> <span class="rule">summary.mustache:44-59 · styles.css:63-84</span></span>
+    <span class="k">BLK-SEARCH</span><span class="v"><b>Search input</b> — <code>input.dims-block-search-input</code>, pill (<code>999px</code>), <code>.8125rem</code>, padding <code>.375rem 1.75rem .375rem 1.875rem</code>, <code>#f8f9fa</code> on <code>#dee2e6</code> with a <code>#5c636a</code> placeholder; focus adds a <code>3px</code> <code>rgba(15,108,191,.15)</code> glow. Label is <code>.visually-hidden</code> <span class="rule">summary.mustache:44-59 · styles.css:63-84</span></span>
     <span class="k">BLK-SEARCH-ICON</span><span class="v"><b>Magnifier</b> — <code>i.fa-search.dims-block-search-icon</code>, absolute at <code>left:0.625rem</code>, <code>0.75rem</code>, <code>#6c757d</code>, <code>pointer-events:none</code>, <code>aria-hidden</code> <span class="rule">styles.css:54-61</span></span>
     <span class="k">BLK-SEARCH-CLEAR</span><span class="v"><b>Clear button</b> — <code>button.dims-block-search-clear</code>, 22px circle at <code>right:0.25rem</code>; ships <code>display:none</code>, revealed by filters.js only while the field has text <span class="rule">summary.mustache:56-58 · styles.css:86-114</span></span>
     <span class="k">BLK-FILTER-TOGGLE</span><span class="v"><b>Mobile filter toggle</b> — <code>button.dims-filter-toggle-btn</code> with the sliders icon; <code>display:none</code> by default, a 36px circle only below 576px (label <code>#5c636a</code>, on-state <code>#0f4d85</code> on <code>#cfe2ff</code>), where <code>aria-expanded</code> flips and <code>.dims-filters-open</code> expands both hosts. Its dark rules live inside the same media query — rest <code>#adb5bd</code> on <code>#212529</code> inside a <code>#495057</code> ring, on-state and focus ring <code>#6ea8fe</code> <span class="rule">styles.css:1385-1442</span></span>
@@ -284,10 +292,10 @@
     <span class="k">BLK-SECTION-COMP</span><span class="v"><b>Competency section header</b> — same element with <code>data-section-header="competency"</code> and <code>sectionheader_competency_line1/_line2</code>; both ship <code>display:none</code> and are shown from <code>rawDataset.hasplancards</code> / <code>hascompetencies</code>, so they survive a zero-result filter. Dark drops the gradient for a flat <code>#dee2e6</code> and print for <code>#000</code>, each clearing <code>background-image</code> and <code>-webkit-text-fill-color</code> first so the colour is not swallowed by the base fill <span class="rule">summary.mustache:97-101 · filters.js:740-746 · styles.css:1617-1630</span></span>
     <span class="k">BLK-FILTERS-HOST</span><span class="v"><b>Filter host</b> — two empty <code>div.dims-filters-host</code>, <code>data-filters-type="plan"|"competency"</code>. Server-side they are literally empty; <code>renderFilterControls()</code> builds the bar by string concatenation (<code>templates/filters.mustache</code> is a documentation-only mirror) <span class="rule">summary.mustache:86,102 · filters.js:67-198</span></span>
     <span class="k">BLK-GRID-PLAN</span><span class="v"><b>Plan grid</b> — <code>ul.row.list-unstyled.dims-plan-grid[data-cards-type="plan"]</code> inside a labelled <code>&lt;nav&gt;</code>; Bootstrap <code>.row</code> is overridden to CSS Grid <code>repeat(auto-fill,minmax(clamp(240px,30%,500px),1fr))</code>, gap <code>1rem</code>, each <code>li</code> an inline-size container <span class="rule">summary.mustache:93-95 · styles.css:376-405</span></span>
-    <span class="k">BLK-GRID-COMP</span><span class="v"><b>Competency grid</b> — <code>ul[data-cards-type="competency"]</code>; same override with wider tracks, <code>minmax(360px,1fr)</code>. Filtered-out cards get <code>.dims-card-hidden</code> (<code>display:none !important</code>) <span class="rule">summary.mustache:103-105 · styles.css:1635-1646</span></span>
+    <span class="k">BLK-GRID-COMP</span><span class="v"><b>Competency grid</b> — <code>ul[data-cards-type="competency"]</code>; same override with wider tracks, <code>minmax(360px,1fr)</code>. Filtered-out cards get <code>.dims-card-hidden</code> (<code>display:none</code> — the <code>!important</code> is gone, as it is everywhere in the file: Moodle's stylelint forbids the keyword and the plugin's own <code>.stylelintrc.json</code>, which had been hiding that rule, was deleted) <span class="rule">summary.mustache:103-105 · styles.css:1635-1646</span></span>
     <span class="k">BLK-EMPTY</span><span class="v"><b>Empty state</b> — <code>p.dims-empty-state.text-muted.small</code>, <code>role="status"</code>; shows <code>noactiveplans</code> when the user has no plans at all, otherwise <code>nocompetencies</code>, and stays silent while a ghost card is visible <span class="rule">summary.mustache:107 · filters.js:418-441</span></span>
-    <span class="k">BLK-LIVE-RESULTS</span><span class="v"><b>Polite live region</b> — <code>span.sr-only[data-results-status]</code>; <code>announceResults()</code> debounces 600ms, clears then writes on the next frame so an identical count still announces <span class="rule">summary.mustache:109 · filters.js:514-537</span></span>
-    <span class="k">BLK-LIVE-FAV</span><span class="v"><b>Assertive live region</b> — <code>span.sr-only[data-fav-status]</code>; carries favourite-toggle errors and auto-clears after 5s <span class="rule">summary.mustache:110 · filters.js:544+</span></span>
+    <span class="k">BLK-LIVE-RESULTS</span><span class="v"><b>Polite live region</b> — <code>span.visually-hidden[data-results-status]</code>; <code>announceResults()</code> debounces 600ms, clears then writes on the next frame so an identical count still announces <span class="rule">summary.mustache:109 · filters.js:514-537</span></span>
+    <span class="k">BLK-LIVE-FAV</span><span class="v"><b>Assertive live region</b> — <code>span.visually-hidden[data-fav-status]</code>; carries favourite-toggle errors and auto-clears after 5s <span class="rule">summary.mustache:110 · filters.js:544+</span></span>
     <span class="k">BLK-NOSCRIPT</span><span class="v"><b>No-JS notice</b> — <code>p.dims-noscript</code> inside <code>&lt;noscript&gt;</code>; deliberately <code>1rem</code> for legibility, <code>#212529</code> on <code>#fff3cd</code> inside a <code>#ffe69c</code> border at radius <code>.25rem</code>; dark restates all three as <code>#dee2e6</code> on <code>#332701</code> inside <code>#664d03</code> <span class="rule">summary.mustache:112-114 · styles.css:2015-2031</span></span>
   </div>
 </div>
