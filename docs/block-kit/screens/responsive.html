@@ -2,59 +2,67 @@
 <style>
 /* ============================================================================
    Canonical block-kit scaffold (shared by every screen file).
-   AS-IS token values live on .kit (light, the default skin); .panel.dark
-   overrides only the tokens `.theme-dark` / `body.dark` really swap in
-   styles.css. Markup is written once with var(--bk-*) so the two panels
-   differ by token values alone. See tokens.html / token-migration.md.
-   Palette migrated to Moodle DS on 2026-07-27 — these ARE the shipped values.
+   AS-IS token values live on .kit (light) and .panel.dark (dark). The plugin
+   no longer ships a skin of its own: styles.css declares 34 tokens on bare
+   :root as var(--bs-NEW, var(--BS4-OLD, #literal)) chains, so 31 of them ARE
+   core's own Bootstrap values and flip because core's [data-bs-theme="dark"]
+   block flips them. Only shadow, scrim and favourite are plugin-authored and
+   restated under :root[data-bs-theme="dark"]. So the two --bk-* blocks below
+   are the two RESOLUTIONS of one contract, not two hand-written palettes: the
+   light column is core's :root/[data-bs-theme="light"] values and the dark
+   column is core's [data-bs-theme="dark"] values, both read out of the running
+   m502 stack's compiled Boost sheet on 2026-09-05. Markup is written once with
+   var(--bk-*) so the two panels differ by token values alone.
+   See tokens.html / token-migration.md.
+   Re-based 2026-09-05; the 2026-07-27 Moodle DS values it replaces are gone.
    ============================================================================ */
 .kit{
-  --bk-page:#f4f5f7;--bk-surface:#fff;--bk-surface-2:#f8f9fa;
+  --bk-page:#fff;--bk-surface:#fff;--bk-surface-2:#f8f9fa;
   --bk-card-bg:#fff;--bk-plan-card-bg:#fff;
-  --bk-card-border:rgba(0,0,0,.125);--bk-plan-card-border:rgba(0,0,0,.125);
-  --bk-text:#212529;--bk-muted:#6c757d;
-  --bk-line:#e9ecef;--bk-line-2:#ced4da;--bk-line-3:#dee2e6;--bk-line-4:#ced4da;
-  --bk-accent:#0f6cbf;--bk-accent-dark:#0c5699;--bk-accent-deep:#0f4d85;
-  --bk-pill-platter:#e9ecef;--bk-pill-text:#495057;--bk-pill-indicator:#fff;
-  --bk-counter-bg:#e9ecef;--bk-counter-fg:#495057;--bk-counter-active-bg:#cfe2ff;--bk-counter-active-fg:#0f4d85;
-  --bk-search-border:#dee2e6;--bk-search-icon:#6c757d;--bk-search-placeholder:#5c636a;
-  --bk-search-glow:rgba(15,108,191,.15);
-  --bk-select-hover-bg:#dee2e6;--bk-select-hover-border:#ced4da;
-  --bk-paddle:rgba(0,0,0,.56);--bk-paddle-hover:rgba(0,0,0,.72);
-  --bk-btn-bg:#fff;--bk-btn-fg:#212529;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.15);
-  --bk-section-from:#0f4d85;--bk-section-to:#0f6cbf;
-  --bk-plan-grad-a:#0f6cbf;--bk-plan-grad-b:#0a5aa0;
-  --bk-comp-grad-a:#ffc107;--bk-comp-grad-b:#fd7e14;--bk-comp-grad-c:#e8590c;
-  --bk-tag-bg:#fd7e14;--bk-tag-fg:#212529;--bk-halftone:#00000082;
-  --bk-success:#198754;--bk-success-text:#0f5132;--bk-star:#ffc107;
-  --bk-focus:#0f6cbf;--bk-focus-glow:rgba(15,108,191,.25);--bk-focus-btn:#0f6cbf;
-  --bk-danger-fg:#842029;--bk-danger-bg:#f8d7da;
-  --bk-warn-fg:#212529;--bk-warn-bg:#fff3cd;--bk-warn-border:#ffe69c;
-  --bk-empty-circle:#6c757d;--bk-empty-ring:1px;--bk-ghost-fg:#6c757d;--bk-ghost-circle:#adb5bd;
+  --bk-card-border:#dee2e6;--bk-plan-card-border:#dee2e6;
+  --bk-text:#1d2125;--bk-muted:rgba(29,33,37,.75);
+  --bk-line:#e9ecef;--bk-line-2:#dee2e6;--bk-line-3:#dee2e6;--bk-line-4:#dee2e6;
+  --bk-accent:#0f6cbf;--bk-accent-dark:#0c5699;--bk-accent-deep:#062b4c;
+  --bk-pill-platter:#e9ecef;--bk-pill-text:rgba(29,33,37,.75);--bk-pill-indicator:#fff;
+  --bk-counter-bg:#fff;--bk-counter-fg:rgba(29,33,37,.75);--bk-counter-active-bg:#cfe2f2;--bk-counter-active-fg:#062b4c;
+  --bk-search-border:#dee2e6;--bk-search-icon:rgba(29,33,37,.75);--bk-search-placeholder:rgba(29,33,37,.75);
+  --bk-search-glow:transparent;
+  --bk-select-hover-bg:#dee2e6;--bk-select-hover-border:rgba(29,33,37,.75);
+  --bk-paddle:rgba(29,33,37,.75);--bk-paddle-hover:#1d2125;
+  --bk-btn-bg:#fff;--bk-btn-fg:#1d2125;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.1);
+  --bk-section-from:#062b4c;--bk-section-to:#0f6cbf;
+  --bk-plan-grad-a:#0f6cbf;--bk-plan-grad-b:#062b4c;
+  --bk-comp-grad-a:#f9deb8;--bk-comp-grad-b:#e8590c;--bk-comp-grad-c:#60451f;
+  --bk-tag-bg:#e9ecef;--bk-tag-fg:#1d2125;--bk-halftone:#00000082;
+  --bk-success:#153114;--bk-success-text:#153114;--bk-star:#e8590c;
+  --bk-focus:#000;--bk-focus-glow:transparent;--bk-focus-btn:#000;
+  --bk-danger-fg:#51140d;--bk-danger-bg:#f4d6d2;
+  --bk-warn-fg:#1d2125;--bk-warn-bg:#fcefdc;--bk-warn-border:#f9deb8;
+  --bk-empty-circle:rgba(29,33,37,.75);--bk-empty-ring:1px;--bk-ghost-fg:rgba(29,33,37,.75);--bk-ghost-circle:#dee2e6;
   --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:ui-monospace,Menlo,Consolas,monospace;
   color-scheme:light;font-family:var(--font);color:var(--bk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
 }
 .kit *{box-sizing:border-box;}
 .panel.dark{
-  --bk-page:#212529;--bk-surface:#212529;--bk-surface-2:#212529;
-  --bk-card-bg:#343a40;--bk-plan-card-bg:#343a40;
+  --bk-page:#1d2125;--bk-surface:#1d2125;--bk-surface-2:#292e33;
+  --bk-card-bg:#1d2125;--bk-plan-card-bg:#1d2125;
   --bk-card-border:#495057;--bk-plan-card-border:#495057;
-  --bk-text:#f8f9fa;--bk-muted:#adb5bd;
-  --bk-line:#495057;--bk-line-2:#495057;--bk-line-3:#495057;--bk-line-4:#495057;
-  --bk-accent:#6ea8fe;--bk-accent-dark:#9ec5fe;
-  --bk-pill-platter:#212529;--bk-pill-text:#adb5bd;--bk-pill-indicator:#495057;
-  --bk-search-border:#495057;--bk-search-icon:#adb5bd;--bk-search-placeholder:#adb5bd;
-  --bk-search-glow:rgba(110,168,254,.2);
-  --bk-select-hover-bg:#343a40;
-  --bk-paddle:rgba(255,255,255,.64);--bk-paddle-hover:rgba(255,255,255,.88);
-  --bk-btn-bg:#343a40;--bk-btn-fg:#f8f9fa;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.35);
-  --bk-success:#75b798;--bk-success-text:#75b798;
-  --bk-counter-bg:#495057;--bk-counter-fg:#dee2e6;
-  --bk-focus:#6ea8fe;--bk-focus-glow:rgba(110,168,254,.25);--bk-focus-btn:#6ea8fe;
-  --bk-danger-fg:#ea868f;--bk-danger-bg:#2c0b0e;
-  --bk-warn-fg:#dee2e6;--bk-warn-bg:#332701;--bk-warn-border:#664d03;
-  --bk-empty-circle:#adb5bd;--bk-ghost-fg:#adb5bd;--bk-ghost-circle:#6c757d;
+  --bk-text:#dee2e6;--bk-muted:rgba(222,226,230,.75);
+  --bk-line:#343a40;--bk-line-2:#495057;--bk-line-3:#495057;--bk-line-4:#495057;
+  --bk-accent:#6fa7d9;--bk-accent-dark:#8cb9e1;
+  --bk-pill-platter:#343a40;--bk-pill-text:rgba(222,226,230,.75);--bk-pill-indicator:#1d2125;
+  --bk-search-border:#495057;--bk-search-icon:rgba(222,226,230,.75);--bk-search-placeholder:rgba(222,226,230,.75);
+  --bk-search-glow:transparent;
+  --bk-select-hover-bg:#495057;
+  --bk-paddle:rgba(222,226,230,.75);--bk-paddle-hover:#dee2e6;
+  --bk-btn-bg:#1d2125;--bk-btn-fg:#dee2e6;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.55);
+  --bk-success:#86af84;--bk-success-text:#86af84;
+  --bk-counter-bg:#1d2125;--bk-counter-fg:rgba(222,226,230,.75);
+  --bk-focus:#fff;--bk-focus-glow:transparent;--bk-focus-btn:#fff;
+  --bk-danger-fg:#df8379;--bk-danger-bg:#280a06;
+  --bk-warn-fg:#dee2e6;--bk-warn-bg:#302310;--bk-warn-border:#90682f;
+  --bk-empty-circle:rgba(222,226,230,.75);--bk-ghost-fg:rgba(222,226,230,.75);--bk-ghost-circle:#495057;
   color:var(--bk-text);
 }
 .screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
@@ -79,8 +87,8 @@
 .leg .rule{color:#8a8980;}
 
 /* ---- screen-local values styles.css uses that the token block does not name ---- */
-.kit{--bk-sticky-scrim:rgba(255,255,255,.7);--bk-sticky-scrim-dark:rgba(33,37,41,.97);
-     --bk-fav-scrim:rgba(255,255,255,.85);--bk-card-shadow:0 .125rem .25rem rgba(0,0,0,.075);}
+.kit{--bk-sticky-scrim:rgba(255,255,255,.72);--bk-sticky-scrim-dark:rgba(29,33,37,.72);
+     --bk-fav-scrim:rgba(255,255,255,.72);--bk-card-shadow:rgba(0,0,0,.1);}
 .ic.fill{fill:currentColor;}
 
 /* ---- phone frame: simulates the ≤575.98px viewport (panel 1) ---- */
@@ -120,7 +128,7 @@
    reusing the light #cfe2ff active-count tint. ---- */
 .dsample{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;margin:6px 20px 0;padding:12px;
   border:1px solid #343a40;border-radius:10px;background:#212529;
-  --bk-surface-2:#212529;--bk-line-3:#495057;--bk-search-placeholder:#adb5bd;}
+  --bk-surface-2:#f8f9fa;--bk-line-3:#dee2e6;--bk-search-placeholder:rgba(29,33,37,.75);}
 .dcol{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:104px;}
 .dlab{font-size:10px;line-height:1.35;color:#adb5bd;text-align:center;}
 .dsample .ftoggle[aria-expanded="true"]{background:#212529;border-color:#6ea8fe;color:#6ea8fe;}
@@ -189,14 +197,25 @@
 .trail.v .tlabel{white-space:normal;max-width:none;font-size:.72rem;margin-top:0;}
 .trail.v .titem:not(.last)::after{left:9px;top:calc(50% + 10px);width:2px;height:calc(100% - 10px);}
 
-/* ---- the grid that replaces Bootstrap .row, and the real container query ---- */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(240px,30%,500px),1fr));gap:1rem;margin:0;padding:0;list-style:none;}
-.grid>li{container-type:inline-size;container-name:dims-card-cell;width:100%;max-width:100%;padding:0;margin:0;}
+/* ---- the grid that replaces Bootstrap .row. It is flex now, not grid, and
+       there is no container query left in styles.css. All three of the pieces
+       that used to build this are rejected by Moodle's own stylelint config:
+       container-type is an unknown property, @container an unknown at-rule and
+       minmax(clamp(...)) an invalid value for grid-template-columns. The
+       replacement caps the column count with a percentage flex-basis, which is
+       a percentage OF THE CONTAINER and so still answers to the block column
+       rather than to the viewport - which was the whole point of the container
+       query. Three cards of 30% fit a row and four cannot; the 15rem floor
+       keeps a column readable. ---- */
+.grid{display:flex;flex-wrap:wrap;gap:1rem;margin:0;padding:0;list-style:none;}
+.grid>li{flex:1 1 30%;min-width:15rem;max-width:100%;padding:0;margin:0;}
 .card.horiz{flex-direction:row;}
 .card.horiz>.imgwrap{flex:0 0 180px;}
 .card.horiz .cimg{height:100%;min-height:180px;}
 .card.horiz .cbody{flex:1;min-width:0;}
-@container dims-card-cell (max-width: 360px){
+/* The stacking rule that used to be declared twice - once for the viewport and
+   once for the cell - now exists only in the viewport copy below. */
+@media (max-width: 575.98px){
   .card.horiz{flex-direction:column;}
   .card.horiz>.imgwrap{flex:none;width:100%;}
   .card.horiz .cimg{height:160px;min-height:auto;}
@@ -398,11 +417,11 @@
       </div>
     </div>
     <div class="bk-ids">
-      <span class="idb">grid · minmax(clamp(240px,30%,500px),1fr)</span>
-      <span class="idb">li · container-type:inline-size</span>
-      <span class="idb">@container dims-card-cell (max-width:360px)</span>
+      <span class="idb">flex-wrap · gap 1rem</span>
+      <span class="idb">li · flex: 1 1 30% · min-width 15rem</span>
+      <span class="idb">no @container — stylelint rejects it</span>
     </div>
-    <div class="note">Cell width here is ≈296px, so <code>clamp(240px,30%,500px)</code> resolves to its 240px floor and <code>auto-fill</code> can only place one track. The same 296px trips the container query, so the horizontal card stacks its 180px image column to a full-width 160px band — on a 1440px viewport, where no media query would ever fire.</div>
+    <div class="note">Cell width here is ≈296px, which is under the <code>15rem</code> floor's own working room, so the row can hold one card. The container query that used to stack the horizontal card at this width is <b>gone</b>, and this is the one place the re-baseline lost a behaviour rather than renaming one: on a 1440px viewport with a narrow block column the horizontal card now keeps its 180px image column, because <code>@container</code> is an unknown at-rule to Moodle's stylelint and the gate refuses it. The flex basis preserves the <em>column count</em> against the container; it cannot restyle a card by the width of its own cell.</div>
 
     <div class="divlbl">Same markup, wide cell — the query does not fire <span class="idb">RSP-H-STACK</span></div>
     <div class="fullcell">
@@ -455,8 +474,8 @@
         </tr>
         <tr>
           <td class="q">@container dims-card-cell (max-width: 360px)</td>
-          <td>the grid cell</td>
-          <td>Horizontal plan card and its link switch to <code>flex-direction:column</code>; the image wrapper drops <code>flex:0 0 180px</code> for <code>width:100%</code>; the image goes to <code>height:160px; min-height:auto</code>. Fires at any viewport width, including desktop. <span class="rule">styles.css:376-405, 777-795</span></td>
+          <td>— removed —</td>
+          <td><b>No longer shipped.</b> It duplicated the viewport rule above and fired at any viewport width, including desktop, which is what made it the useful half. It was removed with the rest of the container-query layer because Moodle's stylelint reports <code>@container</code> as an unknown at-rule and <code>container-type</code> as an unknown property, and the plugin's own <code>.stylelintrc.json</code> — which had been suppressing that config entirely — was deleted. Recorded here rather than dropped from the table, because a reader who remembers the behaviour needs to find out where it went.</td>
         </tr>
       </tbody>
     </table>
@@ -472,8 +491,8 @@
     <span class="k">RSP-FILTERS-COLLAPSE</span><span class="v"><b>Collapsible filters host.</b> Below 576px <code>.dims-filters-host</code> becomes <code>display:grid; grid-template-rows:0fr</code> with a <code>0.3s ease</code> transition, and <code>.dims-filters-panel-inner</code> takes <code>overflow:hidden; min-height:0</code> — the pair is what lets a height-unknown panel animate. Opening is done by <code>.dims-filters-open</code> on the <code>.block-dimensions-content</code> container, not on the host, which is why one class controls both hosts (plan and competency) at once. <span class="rule">styles.css:1444-1463; summary.mustache:86,102</span></span>
     <span class="k">RSP-PILL-SMALL</span><span class="v"><b>Smaller pills inside the panel.</b> The only thing the mobile query does to the filter bar besides collapsing it: <code>.dims-filter-tab</code> goes to <code>padding:.375rem .625rem; font-size:.8rem</code> (from <code>.5rem 1rem</code> / <code>.875rem</code>) and <code>.dims-filter-select</code> to <code>width:100%</code>. Groups keep flowing with the desktop <code>flex-wrap</code>; the 44px platter, 4px platter padding, 36px inner row and the <code>Clear filters</code> button's 0.875rem are all untouched. <span class="rule">styles.css:1465-1475; 1079-1096 (clear button); 1134-1166 (platter)</span></span>
     <span class="k">RSP-IMAGE-140</span><span class="v"><b>140px image band.</b> <code>.competency-card-image</code> is 120px by default, <b>100px</b> above 992px and <b>140px</b> below 575.98px — the widest band is the smallest screen, because on mobile it is the only thing separating stacked cards. The rule targets the competency card only: <code>.plan-card-image</code> holds 120px at every width, so the two card types diverge at both ends of the range. <span class="rule">styles.css:246-254, 294-298, 300-304, 442-449</span></span>
-    <span class="k">RSP-H-STACK</span><span class="v"><b>Horizontal card stacking.</b> Declared twice with identical bodies: once in <code>@media (max-width:575.98px)</code> and once in <code>@container dims-card-cell (max-width:360px)</code>. Card and link go <code>flex-direction:column</code>, <code>.plan-card-image-wrapper-horizontal</code> trades <code>flex:0 0 180px</code> for <code>flex:none; width:100%</code>, and <code>.plan-card-image-horizontal</code> goes from <code>height:100%; min-height:180px</code> to <code>height:160px; min-height:auto</code>. The container copy is the one that matters in a Moodle block: it fires on a wide viewport whenever the block column is narrow. <span class="rule">styles.css:594-615, 758-775 (media), 777-795 (container)</span></span>
-    <span class="k">RSP-GRID</span><span class="v"><b>The grid that replaces Bootstrap's row.</b> <code>[data-cards-type]</code> overrides <code>.row</code> with <code>display:grid; grid-template-columns:repeat(auto-fill,minmax(clamp(240px,30%,500px),1fr)); gap:1rem</code> and zeroes the Bootstrap negative margins; each <code>&gt;li</code> overrides <code>col-*</code> with <code>container-type:inline-size; container-name:dims-card-cell</code>, <code>width:100%</code>, <code>flex:none</code> and no padding or bottom margin. The clamp floor of 240px is what collapses the grid to one column in a narrow block. The competency grid re-declares itself later with a plain <code>minmax(360px,1fr)</code> and no clamp, so it does not shrink below 360px. <span class="rule">styles.css:376-405, 1650-1664</span></span>
+    <span class="k">RSP-H-STACK</span><span class="v"><b>Horizontal card stacking.</b> Declared <b>once</b> now, in <code>@media (max-width:575.98px)</code>. Card and link go <code>flex-direction:column</code>, <code>.plan-card-image-wrapper-horizontal</code> trades <code>flex:0 0 180px</code> for <code>flex:none; width:100%</code>, and <code>.plan-card-image-horizontal</code> goes from <code>height:100%; min-height:180px</code> to <code>height:160px; min-height:auto</code>. The identical container copy — the one that mattered in a Moodle block, because it fired on a wide viewport whenever the block column was narrow — is gone with the container-query layer. <span class="rule">styles.css · plan-card-horizontal responsive block</span></span>
+    <span class="k">RSP-GRID</span><span class="v"><b>The layout that replaces Bootstrap's row.</b> <code>[data-cards-type]</code> overrides <code>.row</code> with <code>display:flex; flex-wrap:wrap; gap:1rem</code> and zeroes the Bootstrap negative margins; each <code>&gt;li</code> overrides <code>col-*</code> with <code>flex:1 1 30%; min-width:15rem; max-width:100%</code> and no padding or bottom margin. A flex basis is a percentage <em>of the container</em>, so 30% caps the row at three cards (four would need 120%) while still answering to the block column rather than the viewport, and the 15rem floor is what collapses it to one column in a narrow block. The competency grid still re-declares itself later as a real grid with a plain <code>minmax(360px,1fr)</code>, which is a valid value and so survives the gate. <span class="rule">styles.css · CARD GRID and COMPETENCY CARD GRID banners</span></span>
   </div>
 </div>
 </div>

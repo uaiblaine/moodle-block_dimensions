@@ -1,14 +1,181 @@
 /**
  * Block Dimensions Styles
- * 
- * WCAG 2.2 Accessibility Compliant
+ *
+ * Written against WCAG 2.2 AA. The criteria this file addresses are cited by
+ * number beside the rules that address them; the evidence for each is the
+ * colour-token contract at the head of the file plus the measurements recorded
+ * in the comments. It is not a claim of blanket conformance for the plugin.
  * Uses Bootstrap 4 conventions to match Moodle Boost theme.
  * All selectors scoped under .block_dimensions to avoid namespace collisions.
- * 
+ *
  * @package    block_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+/* ============================================
+   COLOUR TOKENS - THE WHOLE COLOUR CONTRACT
+   ============================================
+
+   Thirty-four tokens, declared once, on bare :root. The suffix set is byte-identical to
+   local_dimensions' --local-dimensions-* set; only the frankenstyle prefix differs. That is what
+   makes the two plugins one system, while keeping their declarations apart inside the single
+   stylesheet Moodle compiles from every installed plugin.
+
+   Thirty of them are three-rung chains - var(--bs-NEW, var(--BS4-OLD, #literal)). Moodle 4.5
+   declares ZERO --bs-* custom properties and Moodle 5.2 declares ZERO BS4 legacy names, so one
+   chain is correct on every supported branch with no branch test anywhere. And because 5.1 and
+   5.2 already compile a complete [data-bs-theme="dark"] token block, those thirty are
+   dark-mode-correct with NO dark rule at all: the plugin's card face IS --bs-body-bg, which is
+   also the page's own background, so the two cannot disagree. Do not give them one.
+
+   :root matches the html element, the ancestor of every node in the document, so this single
+   rule covers every root the plugin can paint, including anything core relocates to
+   document.body. That completeness matters because an unresolved var() does NOT fall back to
+   the literal - the whole declaration is invalid at computed-value time, so a background set
+   from an undeclared token is no background at all.
+
+   Custom properties substitute at computed-value time on the element CARRYING the declaration.
+   These compute on html, from html's own --bs-* values, and inherit downwards as already
+   substituted strings - which is why a dark-scoped descendant such as a navbar can never reach
+   them, whatever selector a theme uses.
+
+   Two names are deliberately absent because they are not design tokens at all:
+   --dimension-custombgcolor and --dimension-customtextcolor carry admin instance data across
+   the plugin boundary (templates/competency_card.mustache writes them inline). The mode layer
+   reads them and never declares or overrides them, in either mode: a site's chosen brand colour
+   stays its colour when the page goes dark, and only the neutrals around it adapt.
+   ============================================ */
+:root {
+    /* Tier 1 - surfaces, hairline, ink, accent. */
+    --block-dimensions-surface: var(--bs-body-bg, var(--white, #fff));
+    --block-dimensions-surface-alt: var(--bs-tertiary-bg, var(--light, #f8f9fa));
+    --block-dimensions-surface-inset: var(--bs-secondary-bg, #e9ecef);
+    --block-dimensions-line: var(--bs-border-color, #dee2e6);
+    --block-dimensions-ink: var(--bs-body-color, #1d2125);
+    --block-dimensions-ink-muted: var(--bs-secondary-color, #495057);
+    --block-dimensions-ink-faint: var(--bs-tertiary-color, #6a737b);
+    --block-dimensions-ink-strong: var(--bs-emphasis-color, var(--gray-dark, #343a40));
+    --block-dimensions-accent: var(--bs-link-color, var(--primary, #0f6cbf));
+    --block-dimensions-accent-hover: var(--bs-link-hover-color, #0c5699);
+
+    /* Tier 1b - the six tone families. Each is core's own -text-emphasis / -bg-subtle /
+       -border-subtle triple, so a plugin chip is byte-for-byte core's own alert on the same
+       page. Meaning rides these; a solid --bs-<tone> never carries state, because none of the
+       solids flip and each fails 3:1 on one branch or the other. */
+    --block-dimensions-brand-ink: var(--bs-primary-text-emphasis, #062b4c);
+    --block-dimensions-brand-tint: var(--bs-primary-bg-subtle, #cfe2f2);
+    --block-dimensions-brand-edge: var(--bs-primary-border-subtle, #9fc4e5);
+    --block-dimensions-success-ink: var(--bs-success-text-emphasis, #153114);
+    --block-dimensions-success-tint: var(--bs-success-bg-subtle, #d7e4d6);
+    --block-dimensions-success-edge: var(--bs-success-border-subtle, #aecaad);
+    --block-dimensions-warning-ink: var(--bs-warning-text-emphasis, #60451f);
+    --block-dimensions-warning-tint: var(--bs-warning-bg-subtle, #fcefdc);
+    --block-dimensions-warning-edge: var(--bs-warning-border-subtle, #f9deb8);
+    --block-dimensions-danger-ink: var(--bs-danger-text-emphasis, #51140d);
+    --block-dimensions-danger-tint: var(--bs-danger-bg-subtle, #f4d6d2);
+    --block-dimensions-danger-edge: var(--bs-danger-border-subtle, #eaada6);
+    --block-dimensions-info-ink: var(--bs-info-text-emphasis, #00343c);
+    --block-dimensions-info-tint: var(--bs-info-bg-subtle, #cce6ea);
+    --block-dimensions-info-edge: var(--bs-info-border-subtle, #99cdd5);
+    --block-dimensions-neutral-ink: var(--bs-secondary-text-emphasis, #525557);
+    --block-dimensions-neutral-tint: var(--bs-secondary-bg-subtle, #f5f6f8);
+    --block-dimensions-neutral-edge: var(--bs-secondary-border-subtle, #ebeef0);
+
+    /* Tier 1c - brand as a SOLID fill, under on-brand-fill text, and nothing else.
+       --bs-primary does not flip: as ink on the dark page it measures 1.10:1 on the fleet's
+       own m502 theme. As a fill under white it is 5.36:1 on Boost and 14.68:1 there, which is
+       exactly .btn-primary's contract. Never an ink, never a stateful border, never a ring. */
+    --block-dimensions-brand-fill: var(--bs-primary, var(--primary, #0f6cbf));
+    --block-dimensions-on-brand-fill: #fff;
+
+    /* Tier 2 - the four core cannot supply. focus-ring chains --bs-emphasis-color, which
+       flips, and deliberately NOT --bs-focus-ring-color, which core fails to flip (measured
+       1.02:1 on the dark page). The other three are the ONLY plugin-authored values in the
+       system with a dark counterpart, and that bound is what makes it impossible for this
+       plugin to paint a dark surface on a light page: the worst a wrongly firing activation
+       block can do is deepen a shadow, darken a veil and brighten a star. */
+    --block-dimensions-focus-ring: var(--bs-emphasis-color, var(--gray-dark, #343a40));
+    --block-dimensions-shadow: rgb(0 0 0 / 10%);
+    --block-dimensions-scrim: rgb(255 255 255 / 72%);
+    --block-dimensions-favourite: #e8590c;
+}
+
+/* ============================================
+   DARK MODE - ACTIVATION
+   ============================================
+
+   ONE selector, and it is the host's own signal. data-bs-theme is Bootstrap 5.3's native
+   colour-mode attribute and it is what Moodle itself writes: theme_boost's
+   before_html_attributes listener adds it to the html tag, and the head script it injects
+   resolves "auto" with window.matchMedia and writes the result back to
+   document.documentElement. Gated behind theme_boost/enablecolourmodes, off by default.
+
+   ANCHORED AT :root ON PURPOSE. A bare [data-bs-theme="dark"] matches through ANY ancestor at
+   any depth, and CSS descendant combinators have no nearest-ancestor-wins rule. That is not
+   hypothetical: theme_boost_union_fundaseg sets data-bs-theme="dark" on the navbar element
+   itself, and theme_boost_union then re-pins data-bs-theme="light" by hand on five nested
+   templates to stop the dark scope leaking into its own submenus. A bare selector would ignore
+   those re-pins. :root restricts the match to the html element and forecloses the whole class
+   at zero cost. It is also (0,2,0) against the token block's (0,1,0), so it wins on
+   specificity rather than on source order.
+
+   .theme-dark and body.dark are NOT accepted. Nothing in Moodle 4.5, 5.1, 5.2 or 5.3-dev, and
+   nothing in theme_boost_union or theme_boost_union_fundaseg, has ever emitted either. This
+   plugin's 77 + 77 rules keyed off them were dead code and have been deleted, not rewired.
+
+   ONLY the three plugin-owned decorative tokens are assigned here. The other 31 follow core's
+   own --bs-* values and need no rule, which is why this block cannot make the plugin dark on a
+   light page even if it fires on a branch that has no dark palette.
+   ============================================ */
+:root[data-bs-theme="dark"] {
+    --block-dimensions-shadow: rgb(0 0 0 / 55%);
+    --block-dimensions-scrim: rgb(29 33 37 / 72%);
+    --block-dimensions-favourite: #fd7e14;
+}
+
+/* ============================================
+   OS-PREFERENCE FALLBACK - WRITTEN, READY, AND DELIBERATELY INERT
+   ============================================
+
+   This block must not fire today, and today it cannot: its selector requires
+   [data-dimensions-media-optin] on the html element, and nothing in either plugin - no PHP, no
+   AMD module, no Mustache template, no Behat step, no test - ever writes that attribute.
+
+   INERT BECAUSE THE OS PREFERENCE IS THE WRONG SIGNAL ON ITS OWN. Moodle 5.3's theme_boost
+   reads prefers-color-scheme in a head script and writes the RESULT into data-bs-theme on the
+   html element, and only when the user's stored mode is auto. Core treats the OS preference as
+   an INPUT to the attribute, never as an independent trigger. Firing on the media query
+   directly would override an explicit user choice with an OS setting, and would let this
+   plugin be dark inside a light page - which is exactly the defect this block replaces.
+
+   :not([data-bs-theme="light"]) is belt and braces: a host that has explicitly chosen light
+   must win over the OS even after the gate is removed.
+
+   IT CONTAINS ONLY THE THREE PLUGIN-OWNED DECORATIVE TOKENS, AND THAT IS DELIBERATE. The other
+   31 follow core's own --bs-* values. On any host that is genuinely dark those are already dark
+   and already correct; on any host that is light, re-pointing them here is precisely the defect
+   above. A host that paints dark WITHOUT its --bs-* tokens being dark is a host whose own CSS
+   this plugin cannot see, and the supported fix for that host is to set data-bs-theme, not to
+   widen this block. So even fully switched on, this block cannot produce a dark plugin on a
+   light page. That bound is a second, independent guarantee, and it is why this fallback is not
+   a second palette to keep in step.
+
+   TO SWITCH ON - one line, one edit: delete "[data-dimensions-media-optin]" from the selector
+   below. Nothing else changes anywhere.
+
+   TO RETIRE - preferred, once the plugin's supported MINIMUM reaches 503: delete this block
+   outright. Core resolves auto itself from 5.3 on, so the fallback has nothing left to cover.
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+
+    /* Switch-on line: remove [data-dimensions-media-optin] and nothing else. */
+    :root[data-dimensions-media-optin]:not([data-bs-theme="light"]) {
+        --block-dimensions-shadow: rgb(0 0 0 / 55%);
+        --block-dimensions-scrim: rgb(29 33 37 / 72%);
+        --block-dimensions-favourite: #fd7e14;
+    }
+}
 
 /* ============================================
    BLOCK HEADER - Heading + Search
@@ -54,7 +221,7 @@
 .block_dimensions .dims-block-search-icon {
     position: absolute;
     left: 0.625rem;
-    color: #6c757d;
+    color: var(--block-dimensions-ink-muted);
     font-size: 0.75rem;
     pointer-events: none;
     z-index: 1;
@@ -63,24 +230,36 @@
 .block_dimensions .dims-block-search-input {
     width: 100%;
     padding: 0.375rem 1.75rem 0.375rem 1.875rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--block-dimensions-line);
     border-radius: 999px;
-    background: #f8f9fa;
+    background: var(--block-dimensions-surface-alt);
     font-size: 0.8125rem;
-    color: #212529;
-    outline: none;
+    color: var(--block-dimensions-ink);
     transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
     line-height: 1.3;
 }
 
+/* ink-muted, not ink-faint. ink-faint is the token for inactive-control text
+   and placeholders, but it measures 3.04:1 on this input's own surface-alt
+   ground in LIGHT mode, where ink-muted measures 6.74:1. The placeholder is
+   exempt from 1.4.3 as incidental text; taking the exemption when a compliant
+   token is available buys nothing. Was #5c636a, 5.78:1. */
 .block_dimensions .dims-block-search-input::placeholder {
-    color: #5c636a;
+    color: var(--block-dimensions-ink-muted);
 }
 
+/* A real outline replaces the brand-tinted glow this used to draw. Two
+   reasons, both measured: a box-shadow is not rendered at all under
+   forced-colors: active, so a control whose only focus signal is one has no
+   indicator in Windows High Contrast Mode; and a 3:1 obligation cannot be
+   delegated to a colour the site owner picks - the site primary as a ring on
+   the dark card measures 2.33:1 on the fleet's own theme. focus-ring chains
+   --bs-emphasis-color, which flips: 21.0:1 light, 16.2:1 dark, 11.5:1 on 4.5. */
 .block_dimensions .dims-block-search-input:focus {
-    border-color: #0f6cbf;
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(15, 108, 191, 0.15);
+    border-color: var(--block-dimensions-accent);
+    background: var(--block-dimensions-surface);
+    outline: 2px solid var(--block-dimensions-focus-ring);
+    outline-offset: 2px;
 }
 
 .block_dimensions .dims-block-search-clear {
@@ -94,18 +273,21 @@
     border: none;
     border-radius: 50%;
     background: transparent;
-    color: #6c757d;
+    color: var(--block-dimensions-ink-muted);
     cursor: pointer;
     padding: 0;
     transition: background 0.15s ease;
 }
 
+/* The wash is surface-inset, not surface-alt: this button sits ON the input,
+   whose own rest background IS surface-alt, so an alt-on-alt hover would be
+   invisible. surface-inset is the next rung in both modes. */
 .block_dimensions .dims-block-search-clear:hover {
-    background: rgba(0, 0, 0, 0.06);
+    background: var(--block-dimensions-surface-inset);
 }
 
 .block_dimensions .dims-block-search-clear:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--block-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
@@ -122,7 +304,7 @@
         position: sticky;
         top: 60px;
         z-index: 10;
-        background: rgba(255, 255, 255, 0.7);
+        background: var(--block-dimensions-scrim);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
         padding-bottom: 1rem;
@@ -139,49 +321,6 @@
     }
 }
 
-/* Dark mode */
-@media (max-width: 575.98px) {
-
-    .theme-dark .block_dimensions .dims-block-header,
-    body.dark .block_dimensions .dims-block-header {
-        background: rgba(33, 37, 41, 0.97);
-    }
-}
-
-.theme-dark .block_dimensions .dims-block-search-input,
-body.dark .block_dimensions .dims-block-search-input {
-    background: #212529;
-    border-color: #495057;
-    color: #dee2e6;
-}
-
-.theme-dark .block_dimensions .dims-block-search-input::placeholder,
-body.dark .block_dimensions .dims-block-search-input::placeholder {
-    color: #adb5bd;
-}
-
-.theme-dark .block_dimensions .dims-block-search-input:focus,
-body.dark .block_dimensions .dims-block-search-input:focus {
-    background: #212529;
-    border-color: #6ea8fe;
-    box-shadow: 0 0 0 3px rgba(110, 168, 254, 0.2);
-}
-
-.theme-dark .block_dimensions .dims-block-search-icon,
-body.dark .block_dimensions .dims-block-search-icon {
-    color: #adb5bd;
-}
-
-.theme-dark .block_dimensions .dims-block-search-clear,
-body.dark .block_dimensions .dims-block-search-clear {
-    color: #adb5bd;
-}
-
-.theme-dark .block_dimensions .dims-block-search-clear:hover,
-body.dark .block_dimensions .dims-block-search-clear:hover {
-    background: rgba(255, 255, 255, 0.08);
-}
-
 /* ============================================
    COMPETENCY CARD - Main Container
    ============================================ */
@@ -191,10 +330,10 @@ body.dark .block_dimensions .dims-block-search-clear:hover {
     position: relative;
     border-radius: 0.5rem;
     overflow: hidden;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    box-shadow: 0 0.125rem 0.25rem var(--block-dimensions-shadow);
     transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-    border: 1px solid rgba(0, 0, 0, 0.125);
-    background-color: #fff;
+    border: 1px solid var(--block-dimensions-line);
+    background-color: var(--block-dimensions-surface);
 }
 
 /* ============================================
@@ -211,32 +350,52 @@ body.dark .block_dimensions .dims-block-search-clear:hover {
 
 .block_dimensions .competency-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0.5rem 1rem var(--block-dimensions-shadow);
 }
 
 /* ============================================
    FOCUS STATES - WCAG 2.4.7 Focus Visible
    Minimum 3:1 contrast ratio for focus indicator
-   ============================================ */
-.block_dimensions .competency-card-link:focus {
-    outline: none;
-}
+   ============================================
 
-.block_dimensions .competency-card-link:focus-visible {
-    outline: none;
-}
+   ONE SHAPE, EVERYWHERE, IN BOTH PLUGINS OF THIS FAMILY:
 
+       outline: 2px solid var(--block-dimensions-focus-ring);
+       outline-offset: 2px;
+
+   Two exceptions, each with its reason beside it, and both keep a REAL
+   outline: the filter tab and the tabs indicator draw at outline-offset -2px
+   because their platter is overflow: hidden and would clip an outset ring.
+   Nothing else in this file may deviate, and nothing may draw a focus
+   indicator with a box-shadow, because a box-shadow is not painted at all
+   under forced-colors: active.
+
+   The card ring was 3px here and 2px on every other control, which put two
+   ring widths on one page for one meaning. It is 2px now. The token is the
+   emphasis extreme (near-black in light, near-white in dark, 21.0 / 16.2 /
+   11.5 to one), so the ring is far more visible than the brand blue it
+   replaced at either width.
+
+   The card link's own two outline: none rules are gone. An author outline:
+   none is not restored by the browser under forced-colors: active, so a rule
+   that suppresses the outline and puts nothing in its place leaves the control
+   with no focus indicator at all in Windows High Contrast Mode. Both templates
+   give every card link .stretched-link, and that class's own :focus-visible
+   rule near the end of this file draws a real ring, so nothing is lost.
+
+   The 4px brand glow that rode alongside the ring is gone for the same reason
+   the search input's is: a box-shadow does not survive forced colours, and a
+   focus indicator must not be brand-coloured. The outline is the indicator.
+
+   The rule that used to sit below this one, labelled a fallback for browsers
+   without :focus-visible support, is deleted. Neither half of it could ever do
+   any work. Its first selector required .competency-card to be a DESCENDANT of
+   a focused .competency-card-link, and competency_card.mustache nests them the
+   other way round: the link is inside the article. Its second selector,
+   the :has() form, matched only when :focus-within already had - and :has() is
+   the NEWER feature of the two, so it could not be a fallback for anything. */
 .block_dimensions .competency-card:focus-within {
-    outline: 3px solid #0f6cbf;
-    /* High contrast blue */
-    outline-offset: 2px;
-    box-shadow: 0 0 0 4px rgba(15, 108, 191, 0.25);
-}
-
-/* Fallback for browsers without :focus-visible support */
-.block_dimensions .competency-card-link:focus .competency-card,
-.block_dimensions .competency-card:has(.competency-card-link:focus) {
-    outline: 3px solid #0f6cbf;
+    outline: 2px solid var(--block-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
@@ -253,12 +412,36 @@ body.dark .block_dimensions .dims-block-search-clear:hover {
     flex-shrink: 0;
 }
 
-/* Gradient Fallback (decorative - hidden from AT) */
+/* Gradient Fallback (decorative - hidden from AT).
+   The warm three-stop art that stands in for a missing card image. It carries
+   no contrast obligation of its own - everything drawn on it (the access pill,
+   the favourite disc, the dimension chip) paints its own ground - so the tokens
+   here are chosen to hold the warm family in both modes rather than to clear a
+   floor. The plan card's twin below is the cool half of the same pairing. */
 .block_dimensions .competency-card-gradient {
-    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 50%, #e8590c 100%);
+    background:
+        linear-gradient(
+            135deg,
+            var(--block-dimensions-warning-edge) 0%,
+            var(--block-dimensions-favourite) 50%,
+            var(--block-dimensions-warning-ink) 100%
+        );
 }
 
-/* Halftone Pattern Overlay (decorative) */
+/* The admin-chosen fill arrives as a custom property on the article and is
+   applied here rather than inline, so the print and high-contrast overrides
+   below can win at equal specificity without !important. */
+.block_dimensions .competency-card-gradient.has-custom-bg {
+    background: var(--dimension-custombgcolor);
+}
+
+/* Halftone Pattern Overlay (decorative).
+   The #00000082 fallback is deliberately NOT a token. These dots composite on
+   the admin's own fill (--dimension-custombgcolor) or on the decorative
+   gradient above, never on the page surface, so they are inside a branded
+   island: "the mode layer may not touch it, and inside it nothing may
+   reference a mode token". This is the same exemption class as the plugin
+   family's photo and gradient overlay blacks. */
 .block_dimensions .competency-card-gradient::after {
     content: '';
     position: absolute;
@@ -266,7 +449,7 @@ body.dark .block_dimensions .dims-block-search-clear:hover {
     left: 0;
     right: 0;
     bottom: 0;
-    background-image: radial-gradient(circle, var(--dimension-customtextcolor, #00000082) 0px, transparent 1px);
+    background-image: radial-gradient(circle, var(--dimension-customtextcolor, #00000082) 0, transparent 1px);
     background-size: 5px 5px;
     pointer-events: none;
     filter: opacity(0.5);
@@ -305,22 +488,49 @@ body.dark .block_dimensions .dims-block-search-clear:hover {
 
 /* ============================================
    HIGH CONTRAST MODE - WCAG 1.4.11
-   ============================================ */
+   ============================================
+   prefers-contrast and the colour mode are two independent preference axes,
+   and a remedy written for one can regress the other: a #000 border is the
+   strongest edge available on a white page and is 1.30:1 - invisible - on the
+   dark one. So every remedy in this block that names an EXTREME is now a
+   token, and the one that names a MIDDLE stays a literal, with its numbers.
+
+   What is NOT done here, deliberately: this block still fires on the soft
+   preference alone. It does not compensate for a site whose own palette is
+   low-contrast, and it is not Windows High Contrast Mode - that is
+   forced-colors: active, a different media feature with its own block further
+   down this file. */
 @media (prefers-contrast: high) {
+    /* ink-strong is --bs-emphasis-color: #000 on the light page (21.0:1
+       against the card face) and #fff on the dark one (16.2:1). The literal
+       this replaces was correct in exactly one of the two. */
     .block_dimensions .competency-card {
-        border: 2px solid #000;
+        border: 2px solid var(--block-dimensions-ink-strong);
     }
 
-    .block_dimensions .competency-card:focus-within {
-        outline: 3px solid #000;
-        outline-offset: 2px;
-    }
-
+    /* The card's focus ring used to be restated here at a different width.
+       It is not restated any more: the base rule already draws the same 2px
+       ink-extreme outline, so the restatement had become a verbatim duplicate,
+       and a duplicate rule is how the next reader concludes the two must
+       differ for a reason nobody wrote down. */
     .block_dimensions .competency-card .card-title {
-        color: #000 !important;
+        color: var(--block-dimensions-ink-strong);
     }
 
-    .block_dimensions .competency-card-gradient {
+    /* This one stays a literal, and the measurement is the reason. It replaces
+       the decorative gradient with a flat fill, and a flat fill in the image
+       slot has to separate from the card face in BOTH modes at once, so it can
+       be neither extreme: #6c757d is 4.69:1 on the light card face and 3.45:1
+       on the dark one. A token that flips would turn the image area light on a
+       dark page, inverting the card. Nothing here carries meaning - the card's
+       title, tags and pill all paint their own ground - so no floor applies to
+       the fill itself; it only has to stay visible as a shape.
+
+       This literal is also what keeps the prefers-contrast entry on the token
+       contract's exemption list honest: an entry that matches no live literal
+       has rotted into a blanket, and the contract fails the build for it. */
+    .block_dimensions .competency-card-gradient,
+    .block_dimensions .competency-card-gradient.has-custom-bg {
         background: #6c757d;
     }
 }
@@ -339,28 +549,15 @@ body.dark .block_dimensions .dims-block-search-clear:hover {
 }
 
 /* ============================================
-   DARK MODE SUPPORT
-   ============================================ */
-.theme-dark .block_dimensions .competency-card,
-body.dark .block_dimensions .competency-card {
-    background-color: #343a40;
-    border-color: #495057;
-}
-
-.theme-dark .block_dimensions .competency-card .card-title,
-body.dark .block_dimensions .competency-card .card-title {
-    color: #f8f9fa !important;
-}
-
-.theme-dark .block_dimensions .competency-card:focus-within,
-body.dark .block_dimensions .competency-card:focus-within {
-    outline-color: #6ea8fe;
-    box-shadow: 0 0 0 4px rgba(110, 168, 254, 0.25);
-}
-
-/* ============================================
-   PRINT STYLES - WCAG 1.4.10
-   ============================================ */
+   PRINT STYLES
+   ============================================
+   No WCAG 2.x success criterion governs print output; this section used to
+   cite 1.4.10 Reflow, which is about 320 CSS px / 400% zoom and has nothing to
+   do with paper. The rules are good practice, not conformance evidence. */
+/* Paper is white whatever the screen is doing, and data-bs-theme stays on the
+   html element while printing - so ink resolved through a mode token would
+   print #dee2e6 on white from a dark page. Every literal in a @media print
+   block in this file is deliberate and mode-invariant for that reason. */
 @media print {
     .block_dimensions .competency-card {
         break-inside: avoid;
@@ -368,40 +565,41 @@ body.dark .block_dimensions .competency-card:focus-within {
         border: 1px solid #000;
     }
 
-    .block_dimensions .competency-card-gradient {
-        background: #ced4da !important;
+    .block_dimensions .competency-card-gradient,
+    .block_dimensions .competency-card-gradient.has-custom-bg {
+        background: #ced4da;
     }
 }
 
 /* ============================================
-   CARD GRID — Layout adaptativo ao container
-   Substitui colunas Bootstrap (col-sm-6 col-lg-4) que respondem
-   ao viewport. CSS Grid responde à largura real do container.
-   clamp(240px, 30%, 400px): mínimo cresce ~1/3 do container,
-   limitando naturalmente a 3 colunas em containers típicos do Moodle.
+   CARD GRID - layout driven by the container, not the viewport
+   Replaces the Bootstrap columns (col-sm-6 col-lg-4), which answer to the
+   viewport, while a block is normally much narrower than the window. A flex
+   basis is a percentage OF THE CONTAINER, so a 30% basis caps the row at
+   three cards (four would need 120%) and the rem floor keeps a column
+   readable in a narrow block.
    ============================================ */
 
-/* Override Bootstrap .row: CSS Grid em vez de flex */
+/* Override Bootstrap .row: flex-wrap rather than the negative-margin grid. */
 .block_dimensions [data-cards-type] {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(clamp(240px, 30%, 500px), 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
-    /* Remove margens negativas do Bootstrap .row */
+    /* Drop the Bootstrap .row negative margins. */
     margin-left: 0;
     margin-right: 0;
 }
 
-/* Override col-* Bootstrap nos itens: container para @container queries */
-.block_dimensions [data-cards-type]>li {
-    container-type: inline-size;
-    container-name: dims-card-cell;
-    width: 100%;
+/* Override col-* on the items: the basis caps the column count, the
+   min-width sets the floor a column may not shrink below. */
+.block_dimensions [data-cards-type] > li {
+    flex: 1 1 30%;
+    min-width: 15rem;
     max-width: 100%;
-    flex: none;
     padding-left: 0;
     padding-right: 0;
     margin-bottom: 0;
-    /* gap do grid substitui mb-3 */
+    /* The grid gap replaces mb-3. */
 }
 
 /* ============================================
@@ -413,10 +611,10 @@ body.dark .block_dimensions .competency-card:focus-within {
     position: relative;
     border-radius: 0.5rem;
     overflow: hidden;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    box-shadow: 0 0.125rem 0.25rem var(--block-dimensions-shadow);
     transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-    border: 1px solid rgba(0, 0, 0, 0.125);
-    background-color: #fff;
+    border: 1px solid var(--block-dimensions-line);
+    background-color: var(--block-dimensions-surface);
 }
 
 .block_dimensions .plan-card-link {
@@ -430,13 +628,14 @@ body.dark .block_dimensions .competency-card:focus-within {
 
 .block_dimensions .plan-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0.5rem 1rem var(--block-dimensions-shadow);
 }
 
+/* Same convergence as the competency card above: a real, mode-flipping
+   outline and no brand-coloured glow. */
 .block_dimensions .plan-card:focus-within {
-    outline: 3px solid #0f6cbf;
+    outline: 2px solid var(--block-dimensions-focus-ring);
     outline-offset: 2px;
-    box-shadow: 0 0 0 4px rgba(15, 108, 191, 0.25);
 }
 
 .block_dimensions .plan-card-image {
@@ -448,8 +647,23 @@ body.dark .block_dimensions .competency-card:focus-within {
     flex-shrink: 0;
 }
 
+/* The cool half of the decorative pairing (see the competency twin above).
+   brand-fill is the site's own primary and does not flip; brand-ink is core's
+   --bs-primary-text-emphasis, which does. Light reads #0f6cbf to #062b4c,
+   within a hair of the #0f6cbf/#0a5aa0 it replaces. */
 .block_dimensions .plan-card-gradient {
-    background: linear-gradient(135deg, #0f6cbf 0%, #0a5aa0 100%);
+    background:
+        linear-gradient(
+            135deg,
+            var(--block-dimensions-brand-fill) 0%,
+            var(--block-dimensions-brand-ink) 100%
+        );
+}
+
+/* See the competency twin above: applied from a class so an override can
+   reach it. */
+.block_dimensions .plan-card-gradient.has-custom-bg {
+    background: var(--dimension-custombgcolor);
 }
 
 .block_dimensions .plan-card .card-title {
@@ -461,7 +675,7 @@ body.dark .block_dimensions .competency-card:focus-within {
     margin: 0;
     font-size: 0.82rem;
     line-height: 1.3;
-    color: #6c757d;
+    color: var(--block-dimensions-ink-muted);
     font-weight: 600;
 }
 
@@ -495,7 +709,14 @@ body.dark .block_dimensions .competency-card:focus-within {
     right: 50%;
     width: 34px;
     height: 2px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 2' preserveAspectRatio='none'%3E%3Cpath d='M1 1H8M13 1H20M25 1H32' stroke='%23ced4da' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-image:
+        repeating-linear-gradient(
+            to right,
+            var(--block-dimensions-line) 0,
+            var(--block-dimensions-line) 9px,
+            transparent 9px,
+            transparent 12px
+        );
     background-repeat: no-repeat;
     background-size: 34px 2px;
     z-index: 0;
@@ -508,7 +729,14 @@ body.dark .block_dimensions .competency-card:focus-within {
     left: 50%;
     width: 34px;
     height: 2px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 2' preserveAspectRatio='none'%3E%3Cpath d='M1 1H8M13 1H20M25 1H32' stroke='%23ced4da' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-image:
+        repeating-linear-gradient(
+            to right,
+            var(--block-dimensions-line) 0,
+            var(--block-dimensions-line) 9px,
+            transparent 9px,
+            transparent 12px
+        );
     background-repeat: no-repeat;
     background-size: 34px 2px;
     z-index: 0;
@@ -522,12 +750,12 @@ body.dark .block_dimensions .competency-card:focus-within {
     left: 50%;
     width: 100%;
     height: 2px;
-    background-color: #e9ecef;
+    background-color: var(--block-dimensions-surface-inset);
     z-index: 0;
 }
 
 .block_dimensions .competency-trail:not(.competency-trail-vertical) .trail-item.completed:not(.last)::after {
-    background-color: #198754;
+    background-color: var(--block-dimensions-success-ink);
 }
 
 /* Trail marker */
@@ -541,23 +769,27 @@ body.dark .block_dimensions .competency-card:focus-within {
     justify-content: center;
 }
 
+/* The glyph carried Bootstrap's .text-success in the markup, which is
+   !important and beat this rule (and, in dark mode, its counterpart); the
+   utility is gone and the plugin owns the tone. */
 .block_dimensions .trail-marker .fa-check-circle {
     font-size: 18px;
-    color: #198754;
+    color: var(--block-dimensions-success-ink);
 }
 
 .block_dimensions .trail-marker .empty-circle {
     width: 14px;
     height: 14px;
-    /* WCAG 1.4.11 — non-text contrast: #6c757d on #fff is 4.69:1 (floor is 3:1).
-       The ring was #adb5bd at 2px, which measured only 2.07:1. Darkening it
-       alone would have made every pending step read heavier than the completed
-       ones, so the stroke drops to 1px in the same change: 1.4.11 sets no
-       minimum thickness, only a ratio, and the extra headroom over 3:1 absorbs
-       the antialiasing a 1px ring picks up around a full circle. */
-    border: 1px solid #6c757d;
+    /* WCAG 1.4.11 — non-text contrast. The ring was #adb5bd at 2px, which
+       measured 2.07:1 against the card; it then became #6c757d at 1px, 4.69:1.
+       It is now ink-muted, which is 7.10:1 on the card surface in light and
+       clears the 3:1 floor by a wide margin in dark too. The stroke stays at
+       1px: darkening it alone would make every pending step read heavier than
+       the completed ones, 1.4.11 sets no minimum thickness, and the headroom
+       over 3:1 absorbs the antialiasing a 1px ring picks up around a circle. */
+    border: 1px solid var(--block-dimensions-ink-muted);
     border-radius: 50%;
-    background-color: #fff;
+    background-color: var(--block-dimensions-surface);
 }
 
 /* Trail label */
@@ -568,11 +800,11 @@ body.dark .block_dimensions .competency-card:focus-within {
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 60px;
-    color: #6c757d;
+    color: var(--block-dimensions-ink-muted);
 }
 
-.block_dimensions .trail-label.text-success {
-    color: #0f5132 !important;
+.block_dimensions .trail-item.completed .trail-label {
+    color: var(--block-dimensions-success-ink);
     font-weight: 600;
 }
 
@@ -588,7 +820,7 @@ body.dark .block_dimensions .competency-card:focus-within {
 
 .block_dimensions .trail-item.clickable:hover .trail-label {
     text-decoration: underline;
-    color: #0f6cbf;
+    color: var(--block-dimensions-accent);
 }
 
 /* ============================================
@@ -649,14 +881,14 @@ body.dark .block_dimensions .competency-card:focus-within {
     align-items: center;
     gap: 6px;
     padding: 6px 16px;
-    background: #fff;
-    color: #212529;
+    background: var(--block-dimensions-surface);
+    color: var(--block-dimensions-ink);
     font-size: 0.85rem;
     font-weight: 600;
     line-height: 1.3;
     border-radius: 8px;
     white-space: nowrap;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 8px var(--block-dimensions-shadow);
     pointer-events: none;
     transition: box-shadow 0.2s ease, transform 0.2s ease;
     width: fit-content;
@@ -701,12 +933,12 @@ body.dark .block_dimensions .competency-card:focus-within {
     top: calc(50% + 10px);
     width: 2px;
     height: calc(100% - 10px);
-    background-color: #e9ecef;
+    background-color: var(--block-dimensions-surface-inset);
     z-index: 0;
 }
 
 .block_dimensions .trail-item-vertical.completed:not(.last)::after {
-    background-color: #198754;
+    background-color: var(--block-dimensions-success-ink);
 }
 
 .block_dimensions .trail-item-vertical .trail-marker {
@@ -734,9 +966,20 @@ body.dark .block_dimensions .competency-card:focus-within {
     bottom: 50%;
     width: 2px;
     height: 20px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 2 2 20' preserveAspectRatio='none'%3E%3Cpath d='M1 1V6M1 10V15M1 19V24' stroke='%23ced4da' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    /* The dashed stub the SVG drew: a 9px period of 7px dash and 2px gap,
+       shown through a 2px window offset so the phase matches the original
+       viewBox exactly (dashes at 0-5, 7-14 and 16-20 down the 20px stub). */
+    background-image:
+        repeating-linear-gradient(
+            to bottom,
+            var(--block-dimensions-line) 0,
+            var(--block-dimensions-line) 7px,
+            transparent 7px,
+            transparent 9px
+        );
     background-repeat: no-repeat;
-    background-size: 2px 20px;
+    background-position: 0 -2px;
+    background-size: 2px 22px;
     z-index: 0;
 }
 
@@ -747,34 +990,25 @@ body.dark .block_dimensions .competency-card:focus-within {
     top: 50%;
     width: 2px;
     height: 20px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 2 2 20' preserveAspectRatio='none'%3E%3Cpath d='M1 1V6M1 10V15M1 19V24' stroke='%23ced4da' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    /* The dashed stub the SVG drew: a 9px period of 7px dash and 2px gap,
+       shown through a 2px window offset so the phase matches the original
+       viewBox exactly (dashes at 0-5, 7-14 and 16-20 down the 20px stub). */
+    background-image:
+        repeating-linear-gradient(
+            to bottom,
+            var(--block-dimensions-line) 0,
+            var(--block-dimensions-line) 7px,
+            transparent 7px,
+            transparent 9px
+        );
     background-repeat: no-repeat;
-    background-size: 2px 20px;
+    background-position: 0 -2px;
+    background-size: 2px 22px;
     z-index: 0;
 }
 
 /* Responsive — horizontal card stacks on mobile */
 @media (max-width: 575.98px) {
-
-    .block_dimensions .plan-card-horizontal,
-    .block_dimensions .plan-card-horizontal .plan-card-link {
-        flex-direction: column;
-    }
-
-    .block_dimensions .plan-card-image-wrapper-horizontal {
-        flex: none;
-        width: 100%;
-    }
-
-    .block_dimensions .plan-card-image-horizontal {
-        height: 160px;
-        min-height: auto;
-    }
-}
-
-/* Container query: card horizontal empilha quando a célula é estreita.
-   Complementa o @media acima para containers Moodle narrow (viewport largo, bloco estreito) */
-@container dims-card-cell (max-width: 360px) {
 
     .block_dimensions .plan-card-horizontal,
     .block_dimensions .plan-card-horizontal .plan-card-link {
@@ -816,104 +1050,6 @@ body.dark .block_dimensions .competency-card:focus-within {
     }
 }
 
-/* Dark mode for plan cards and trail */
-.theme-dark .block_dimensions .plan-card,
-body.dark .block_dimensions .plan-card {
-    background-color: #343a40;
-    border-color: #495057;
-}
-
-.theme-dark .block_dimensions .plan-card .card-title,
-body.dark .block_dimensions .plan-card .card-title {
-    color: #f8f9fa !important;
-}
-
-.theme-dark .block_dimensions .competency-trail,
-body.dark .block_dimensions .competency-trail {
-    border-top-color: rgba(255, 255, 255, 0.1);
-}
-
-.theme-dark .block_dimensions .trail-marker,
-body.dark .block_dimensions .trail-marker {
-    background-color: #343a40;
-}
-
-.theme-dark .block_dimensions .trail-label,
-body.dark .block_dimensions .trail-label {
-    color: #adb5bd;
-}
-
-.theme-dark .block_dimensions .trail-label.text-success,
-body.dark .block_dimensions .trail-label.text-success {
-    color: #75b798 !important;
-}
-
-.theme-dark .block_dimensions .competency-count-text,
-body.dark .block_dimensions .competency-count-text {
-    color: #adb5bd;
-}
-
-/* Dark needs the ring lighter, not darker: #6c757d on the #343a40 card was
-   2.45:1. #adb5bd is 5.55:1 and is already the muted tone used by the trail
-   label beside it. The 1px stroke is inherited from the light rule. */
-.theme-dark .block_dimensions .trail-marker .empty-circle,
-body.dark .block_dimensions .trail-marker .empty-circle {
-    border-color: #adb5bd;
-    background-color: #343a40;
-}
-
-/* The completed marker and its connector: #198754 on #343a40 is 2.54:1.
-   #75b798 is 4.92:1 and matches the success tone the label already uses. */
-.theme-dark .block_dimensions .trail-marker .fa-check-circle,
-body.dark .block_dimensions .trail-marker .fa-check-circle {
-    color: #75b798;
-}
-
-.theme-dark .block_dimensions .competency-trail:not(.competency-trail-vertical) .trail-item.completed:not(.last)::after,
-body.dark .block_dimensions .competency-trail:not(.competency-trail-vertical) .trail-item.completed:not(.last)::after,
-.theme-dark .block_dimensions .trail-item-vertical.completed:not(.last)::after,
-body.dark .block_dimensions .trail-item-vertical.completed:not(.last)::after {
-    background-color: #75b798;
-}
-
-/* Trail-label hover: #0f6cbf on #343a40 is 2.15:1; the dark accent is 4.76:1. */
-.theme-dark .block_dimensions .trail-item.clickable:hover .trail-label,
-body.dark .block_dimensions .trail-item.clickable:hover .trail-label {
-    color: #6ea8fe;
-}
-
-.theme-dark .block_dimensions .trail-item:not(.last)::after,
-body.dark .block_dimensions .trail-item:not(.last)::after {
-    background-color: #495057;
-}
-
-.theme-dark .block_dimensions .competency-trail:not(.competency-trail-vertical).has-before .trail-item.first::before,
-body.dark .block_dimensions .competency-trail:not(.competency-trail-vertical).has-before .trail-item.first::before,
-.theme-dark .block_dimensions .competency-trail:not(.competency-trail-vertical).has-after .trail-item.last::after,
-body.dark .block_dimensions .competency-trail:not(.competency-trail-vertical).has-after .trail-item.last::after {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 2' preserveAspectRatio='none'%3E%3Cpath d='M1 1H8M13 1H20M25 1H32' stroke='%23495057' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
-}
-
-/* Dark mode — Horizontal card button */
-.theme-dark .block_dimensions .dims-card-access-btn-horizontal,
-body.dark .block_dimensions .dims-card-access-btn-horizontal {
-    background: #343a40;
-    color: #f8f9fa;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-}
-
-.theme-dark .block_dimensions .trail-item-vertical:not(.last)::after,
-body.dark .block_dimensions .trail-item-vertical:not(.last)::after {
-    background-color: #495057;
-}
-
-.theme-dark .block_dimensions .competency-trail-vertical.has-before .trail-item-vertical.first::before,
-body.dark .block_dimensions .competency-trail-vertical.has-before .trail-item-vertical.first::before,
-.theme-dark .block_dimensions .competency-trail-vertical.has-after .trail-item-vertical.last::after,
-body.dark .block_dimensions .competency-trail-vertical.has-after .trail-item-vertical.last::after {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 2 2 20' preserveAspectRatio='none'%3E%3Cpath d='M1 1V6M1 10V15M1 19V24' stroke='%23495057' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
-}
-
 /* ============================================
    IMAGE WRAPPER - For tag positioning
    ============================================ */
@@ -935,14 +1071,14 @@ body.dark .block_dimensions .competency-trail-vertical.has-after .trail-item-ver
     align-items: center;
     gap: 6px;
     padding: 6px 16px;
-    background: #fff;
-    color: #212529;
+    background: var(--block-dimensions-surface);
+    color: var(--block-dimensions-ink);
     font-size: 0.85rem;
     font-weight: 600;
     line-height: 1.3;
     border-radius: 8px;
     white-space: nowrap;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 8px var(--block-dimensions-shadow);
     pointer-events: none;
     /* decorative — parent <a> is the link */
     transition: box-shadow 0.2s ease, transform 0.2s ease;
@@ -965,14 +1101,6 @@ body.dark .block_dimensions .competency-trail-vertical.has-after .trail-item-ver
         border: 2px solid currentColor;
         box-shadow: none;
     }
-}
-
-/* Dark mode */
-.theme-dark .block_dimensions .dims-card-access-btn,
-body.dark .block_dimensions .dims-card-access-btn {
-    background: #343a40;
-    color: #f8f9fa;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 /* Reduced motion */
@@ -1015,33 +1143,53 @@ body.dark .block_dimensions .dims-card-access-btn {
     border-radius: 999px;
     /* Pill shape — 999px matches every other pill in this file */
     white-space: nowrap;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    /* Chrome converges with the family's status pills: no drop shadow, a 1px
+       edge instead. The shadow was this chip's only separation from the card
+       art behind it, and swapping it for a border is not a downgrade of that
+       job - it is an upgrade, because a box-shadow is not painted at all under
+       forced-colors: active while a border is remapped to a system colour, so
+       the chip had no edge whatever in Windows High Contrast Mode.
+
+       currentcolor, not a tone -edge token, and that is the one place this
+       chip cannot follow the status pills. It has no tone: its fill is the
+       admin's own colour, arriving as --dimension-custombgcolor. currentcolor
+       resolves to the chip's own text colour, which the admin chose against
+       that fill (or, unconfigured, is ink on surface-inset at 13.66:1), so the
+       edge is guaranteed to contrast with the thing it encloses whatever the
+       admin picked. It is also the colour this file's own high-contrast block
+       already used for the same chip, so the two agree now instead of only
+       under a preference. */
+    border: 1px solid currentcolor;
 }
 
-/* Competency card tags — inherit custom colors from .competency-card CSS variables */
+/* Card tags carry the admin's own colours, written inline on the article by
+   competency_card.mustache / plan_card.mustache. Those two properties are
+   instance data, not design tokens: the mode layer reads them and never
+   declares or overrides them, so a site's chosen colour stays its colour when
+   the page goes dark.
+
+   The FALLBACK slot is a different thing and is tokenised. Both templates emit
+   the properties only inside {{#hasbgcolor}} / {{#hastextcolor}}, so the
+   fallback is what an unconfigured chip actually renders - and an unconfigured
+   chip is not a branded island at all, it is page furniture. It was #212529 on
+   #fd7e14, 6.00:1, frozen light; it is now ink on surface-inset, 13.66:1 light
+   and 8.84:1 dark. ink on the old orange would have been 1.97:1 in dark. */
 .block_dimensions .competency-card .dimension-tag.cm-tag {
-    background-color: var(--dimension-custombgcolor, #fd7e14);
-    color: var(--dimension-customtextcolor, #212529);
+    background-color: var(--dimension-custombgcolor, var(--block-dimensions-surface-inset));
+    color: var(--dimension-customtextcolor, var(--block-dimensions-ink));
 }
 
-/* Plan card tags — inherit custom colors from .plan-card CSS variables */
 .block_dimensions .plan-card .dimension-tag.plan-tag {
-    background-color: var(--dimension-custombgcolor, #fd7e14);
-    color: var(--dimension-customtextcolor, #212529);
+    background-color: var(--dimension-custombgcolor, var(--block-dimensions-surface-inset));
+    color: var(--dimension-customtextcolor, var(--block-dimensions-ink));
 }
 
-/* High contrast mode for tags */
+/* High contrast mode for tags: the edge is already there and already
+   currentcolor, so the preference only thickens it. */
 @media (prefers-contrast: high) {
     .block_dimensions .dimension-tag {
-        border: 2px solid currentColor;
-        box-shadow: none;
+        border-width: 2px;
     }
-}
-
-/* Dark mode for tags */
-.theme-dark .block_dimensions .dimension-tag,
-body.dark .block_dimensions .dimension-tag {
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 /* Print styles for tags */
@@ -1070,12 +1218,12 @@ body.dark .block_dimensions .dimension-tag {
     align-items: center;
     gap: 0.375rem;
     padding: 0.5rem 1rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--block-dimensions-line);
     border-radius: 999px;
     background: transparent;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #6c757d;
+    color: var(--block-dimensions-ink-muted);
     cursor: pointer;
     white-space: nowrap;
     transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
@@ -1084,14 +1232,18 @@ body.dark .block_dimensions .dimension-tag {
     flex-shrink: 0;
 }
 
+/* The destructive hover is core's own danger alert: -text-emphasis on
+   -bg-subtle, 10.58:1 light and 6.74:1 dark, against 7.42:1 for the
+   #842029-on-#f8d7da pair it replaces. The border stays on the ink rather
+   than dropping to danger-edge so the boundary keeps the weight it has now. */
 .block_dimensions .dims-clear-filters-btn:hover {
-    color: #842029;
-    border-color: #842029;
-    background: #f8d7da;
+    color: var(--block-dimensions-danger-ink);
+    border-color: var(--block-dimensions-danger-ink);
+    background: var(--block-dimensions-danger-tint);
 }
 
 .block_dimensions .dims-clear-filters-btn:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--block-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
@@ -1124,13 +1276,6 @@ body.dark .block_dimensions .dimension-tag {
     --dims-tabs-height: 44px;
     --dims-tabs-inner-height: 36px;
     --dims-tabs-platter-padding: 4px;
-    --dims-tabs-platter-bg: #e9ecef;
-    --dims-tabs-indicator-bg: #fff;
-    --dims-tabs-indicator-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-    --dims-tabs-item-color: #495057;
-    --dims-tabs-item-color-active: #0f6cbf;
-    --dims-tabs-paddle-color: rgba(0, 0, 0, 0.56);
-    --dims-tabs-paddle-color-hover: rgba(0, 0, 0, 0.72);
     --dims-tabs-paddle-icon-opacity-disabled: 0.42;
     --dims-tabs-scroll-duration: 320ms;
     --dims-tabs-indicator-duration: 320ms;
@@ -1140,7 +1285,7 @@ body.dark .block_dimensions .dimension-tag {
     --dims-tabs-mask-color-left: transparent;
     --dims-tabs-mask-color-right: transparent;
     --dims-tabs-indicator-start: var(--dims-tabs-platter-padding);
-    --dims-tabs-indicator-width: 0px;
+    --dims-tabs-indicator-width: 0;
 
     position: relative;
     display: inline-flex;
@@ -1148,7 +1293,12 @@ body.dark .block_dimensions .dimension-tag {
     max-width: 100%;
     height: calc(var(--dims-tabs-height));
     padding: var(--dims-tabs-platter-padding);
-    background: var(--dims-tabs-platter-bg);
+    /* The platter's seven colour variables are gone; the use sites read the
+       tokens directly. They were a second naming layer over the same values,
+       and every one of them had a hard-coded light literal that no dark rule
+       could have reached. The metric variables that remain are read by
+       amd/src/filter_tabs_nav.js and stay. */
+    background: var(--block-dimensions-surface-inset);
     border-radius: 999px;
     overflow: hidden;
     box-sizing: border-box;
@@ -1164,10 +1314,12 @@ body.dark .block_dimensions .dimension-tag {
     --dims-tabs-mask-color-right: black;
 }
 
-/* Disable all transitions when class is applied (resize, init) */
-.block_dimensions .dims-filter-tabs.dims-filter-tabs-no-transition,
-.block_dimensions .dims-filter-tabs.dims-filter-tabs-no-transition * {
-    transition: none !important;
+/* Disable all transitions when the class is applied (resize, init). The
+   class is repeated so the rule outranks the later same-specificity
+   transitions on the tabs and the paddles. */
+.block_dimensions .dims-filter-tabs.dims-filter-tabs-no-transition.dims-filter-tabs-no-transition,
+.block_dimensions .dims-filter-tabs.dims-filter-tabs-no-transition.dims-filter-tabs-no-transition * {
+    transition: none;
 }
 
 /* --- Mask: clipping layer with edge fade gradients --- */
@@ -1179,21 +1331,25 @@ body.dark .block_dimensions .dimension-tag {
     overflow-x: hidden;
     overscroll-behavior: none;
     -webkit-mask-image:
-        linear-gradient(90deg,
+        linear-gradient(
+            90deg,
             var(--dims-tabs-mask-color-left) 0,
             var(--dims-tabs-mask-color-left) var(--dims-tabs-mask-opaque-width),
             black calc(var(--dims-tabs-mask-opaque-width) + var(--dims-tabs-mask-gradient-width)),
             black calc(100% - var(--dims-tabs-mask-opaque-width) - var(--dims-tabs-mask-gradient-width)),
             var(--dims-tabs-mask-color-right) calc(100% - var(--dims-tabs-mask-opaque-width)),
-            var(--dims-tabs-mask-color-right));
+            var(--dims-tabs-mask-color-right)
+        );
     mask-image:
-        linear-gradient(90deg,
+        linear-gradient(
+            90deg,
             var(--dims-tabs-mask-color-left) 0,
             var(--dims-tabs-mask-color-left) var(--dims-tabs-mask-opaque-width),
             black calc(var(--dims-tabs-mask-opaque-width) + var(--dims-tabs-mask-gradient-width)),
             black calc(100% - var(--dims-tabs-mask-opaque-width) - var(--dims-tabs-mask-gradient-width)),
             var(--dims-tabs-mask-color-right) calc(100% - var(--dims-tabs-mask-opaque-width)),
-            var(--dims-tabs-mask-color-right));
+            var(--dims-tabs-mask-color-right)
+        );
 }
 
 /* When no scroll needed, remove mask and display as normal */
@@ -1227,7 +1383,7 @@ body.dark .block_dimensions .dimension-tag {
     border-radius: 999px;
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--dims-tabs-item-color, #495057);
+    color: var(--block-dimensions-ink-muted);
     cursor: pointer;
     white-space: nowrap;
     position: relative;
@@ -1242,18 +1398,25 @@ body.dark .block_dimensions .dimension-tag {
     opacity: 1;
 }
 
-.block_dimensions .block-dimensions-content .dims-filter-tab:focus {
-    outline: none;
-}
-
+/* The inset box-shadow ring became a real outline with a negative offset,
+   which draws in the same place and, unlike a box-shadow, is still rendered
+   under forced-colors: active. The paired :focus { outline: none } rule that
+   used to sit above it is deleted: an author outline: none is not restored by
+   the browser, so the two together left this control with no focus indicator
+   at all in Windows High Contrast Mode. The offset is negative rather than
+   positive because the platter is overflow: hidden and would clip an outset
+   ring. */
 .block_dimensions .block-dimensions-content .dims-filter-tab:focus-visible {
-    box-shadow: inset 0 0 0 2px #0f6cbf;
-    outline: none;
+    outline: 2px solid var(--block-dimensions-focus-ring);
+    outline-offset: -2px;
 }
 
+/* The active label sits on the indicator pill, which paints surface: accent on
+   surface is 5.36:1 light and 6.33:1 dark. accent on the platter itself would
+   be 4.495:1 in dark, below AA - which is why the pill is what carries it. */
 .block_dimensions .block-dimensions-content .dims-filter-tab.active {
     background: transparent;
-    color: var(--dims-tabs-item-color-active, #0f6cbf);
+    color: var(--block-dimensions-accent);
     opacity: 1;
     cursor: default;
 }
@@ -1267,8 +1430,8 @@ body.dark .block_dimensions .dimension-tag {
     width: var(--dims-tabs-indicator-width);
     height: calc(100% - var(--dims-tabs-platter-padding) * 2);
     border-radius: 999px;
-    background-color: var(--dims-tabs-indicator-bg, #fff);
-    box-shadow: var(--dims-tabs-indicator-shadow);
+    background-color: var(--block-dimensions-surface);
+    box-shadow: 0 1px 3px var(--block-dimensions-shadow);
     pointer-events: none;
     z-index: 0;
     transition:
@@ -1299,18 +1462,18 @@ body.dark .block_dimensions .dimension-tag {
     justify-content: center;
     border: none;
     background: transparent;
-    color: var(--dims-tabs-paddle-color);
+    color: var(--block-dimensions-ink-muted);
     cursor: pointer;
     pointer-events: auto;
     padding: 0;
     transition:
         color 100ms ease-in-out,
-        opacity 80ms ease-out 40ms,
-        visibility 80ms step-start 40ms;
+        opacity 100ms ease-out 100ms,
+        visibility 100ms step-start 100ms;
 }
 
 .block_dimensions .dims-filter-tabs-paddle:hover {
-    color: var(--dims-tabs-paddle-color-hover);
+    color: var(--block-dimensions-ink);
 }
 
 .block_dimensions .dims-filter-tabs-paddle svg {
@@ -1332,8 +1495,8 @@ body.dark .block_dimensions .dimension-tag {
     visibility: hidden;
     pointer-events: none;
     transition:
-        opacity 80ms ease-out 200ms,
-        visibility 80ms step-end 200ms;
+        opacity 100ms ease-out 200ms,
+        visibility 100ms step-end 200ms;
 }
 
 .block_dimensions .dims-filter-tabs-paddle:disabled:not(.dims-filter-tabs-paddle-hidden) svg {
@@ -1353,30 +1516,39 @@ body.dark .block_dimensions .dimension-tag {
     -webkit-appearance: none;
     -moz-appearance: none;
     padding: 0.5rem 2rem 0.5rem 1rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--block-dimensions-line);
     border-radius: 999px;
-    background-color: #e9ecef;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236c757d' d='M3.4 4.2L6 6.8l2.6-2.6.8.8L6 8.4 2.6 5z'/%3E%3C/svg%3E");
+    background-color: var(--block-dimensions-surface-inset);
+    /* Two 4px triangles meeting edge to edge draw the drop-down glyph.
+       currentcolor makes it follow the control's own text colour, so the
+       dark skin needs no second image. */
+    background-image:
+        linear-gradient(45deg, transparent 50%, currentcolor 50%),
+        linear-gradient(135deg, currentcolor 50%, transparent 50%);
     background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-    background-size: 12px;
+    background-position: right 1rem center, right 0.75rem center;
+    background-size: 4px 4px;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #495057;
+    color: var(--block-dimensions-ink-muted);
     cursor: pointer;
     transition: all 0.2s ease;
     min-width: 120px;
 }
 
+/* The hover is one neutral rung past the rest state in both modes: the fill
+   takes the hairline value (#dee2e6 light, #495057 dark - exactly the step
+   this used to make by hand) and the border moves up to ink-muted so it stays
+   distinguishable from the fill it now shares a token family with. */
 .block_dimensions .dims-filter-select:hover {
-    background-color: #dee2e6;
-    border-color: #ced4da;
+    background-color: var(--block-dimensions-line);
+    border-color: var(--block-dimensions-ink-muted);
 }
 
 .block_dimensions .dims-filter-select:focus {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--block-dimensions-focus-ring);
     outline-offset: 2px;
-    border-color: #0f6cbf;
+    border-color: var(--block-dimensions-accent);
 }
 
 /* ============================================
@@ -1394,10 +1566,10 @@ body.dark .block_dimensions .dimension-tag {
         flex-shrink: 0;
         width: 36px;
         height: 36px;
-        border: 1.5px solid #dee2e6;
+        border: 1.5px solid var(--block-dimensions-line);
         border-radius: 50%;
-        background: #f8f9fa;
-        color: #5c636a;
+        background: var(--block-dimensions-surface-alt);
+        color: var(--block-dimensions-ink-muted);
         cursor: pointer;
         transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
         font-size: 0.9rem;
@@ -1405,39 +1577,14 @@ body.dark .block_dimensions .dimension-tag {
 
     .block_dimensions .dims-filter-toggle-btn:hover,
     .block_dimensions .dims-filter-toggle-btn[aria-expanded="true"] {
-        background: #cfe2ff;
-        border-color: #0f4d85;
-        color: #0f4d85;
+        background: var(--block-dimensions-brand-tint);
+        border-color: var(--block-dimensions-brand-ink);
+        color: var(--block-dimensions-brand-ink);
     }
 
     .block_dimensions .dims-filter-toggle-btn:focus-visible {
-        outline: 2px solid #0f6cbf;
+        outline: 2px solid var(--block-dimensions-focus-ring);
         outline-offset: 2px;
-    }
-
-    /* This control exists only below the breakpoint, so its dark rules have to
-       live inside the same query. Without them a light #f8f9fa disc sat on the
-       dark sticky header. Rest #adb5bd on #212529 is 7.43:1; the on-state and
-       the focus ring use the dark accent at 6.39:1. */
-    .theme-dark .block_dimensions .dims-filter-toggle-btn,
-    body.dark .block_dimensions .dims-filter-toggle-btn {
-        background: #212529;
-        border-color: #495057;
-        color: #adb5bd;
-    }
-
-    .theme-dark .block_dimensions .dims-filter-toggle-btn:hover,
-    .theme-dark .block_dimensions .dims-filter-toggle-btn[aria-expanded="true"],
-    body.dark .block_dimensions .dims-filter-toggle-btn:hover,
-    body.dark .block_dimensions .dims-filter-toggle-btn[aria-expanded="true"] {
-        background: #212529;
-        border-color: #6ea8fe;
-        color: #6ea8fe;
-    }
-
-    .theme-dark .block_dimensions .dims-filter-toggle-btn:focus-visible,
-    body.dark .block_dimensions .dims-filter-toggle-btn:focus-visible {
-        outline-color: #6ea8fe;
     }
 }
 
@@ -1462,8 +1609,8 @@ body.dark .block_dimensions .dimension-tag {
         grid-template-rows: 1fr;
     }
 
-    /* Grupos fluem em linha herdando flex-wrap do desktop;
-       só reduz o tamanho dos pills para caber em telas pequenas */
+    /* The groups keep the desktop flex-wrap and simply flow; only the pill
+       size shrinks so they still fit a small screen. */
     .block_dimensions .block-dimensions-content .dims-filter-tab {
         padding: 0.375rem 0.625rem;
         font-size: 0.8rem;
@@ -1475,73 +1622,6 @@ body.dark .block_dimensions .dimension-tag {
 }
 
 /* ============================================
-   FILTER - Dark Mode
-   ============================================ */
-.theme-dark .block_dimensions .dims-filter-tabs,
-body.dark .block_dimensions .dims-filter-tabs {
-    --dims-tabs-platter-bg: #212529;
-    --dims-tabs-item-color: #adb5bd;
-    --dims-tabs-item-color-active: #dee2e6;
-    --dims-tabs-indicator-bg: #495057;
-    --dims-tabs-indicator-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --dims-tabs-paddle-color: rgba(255, 255, 255, 0.64);
-    --dims-tabs-paddle-color-hover: rgba(255, 255, 255, 0.88);
-    background: var(--dims-tabs-platter-bg);
-}
-
-.theme-dark .block_dimensions .dims-filter-tab,
-body.dark .block_dimensions .dims-filter-tab {
-    color: var(--dims-tabs-item-color, #adb5bd);
-}
-
-.theme-dark .block_dimensions .dims-filter-tab.active,
-body.dark .block_dimensions .dims-filter-tab.active {
-    color: var(--dims-tabs-item-color-active, #dee2e6);
-}
-
-.theme-dark .block_dimensions .dims-filter-select,
-body.dark .block_dimensions .dims-filter-select {
-    background-color: #212529;
-    border-color: #495057;
-    color: #dee2e6;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23adb5bd' d='M3.4 4.2L6 6.8l2.6-2.6.8.8L6 8.4 2.6 5z'/%3E%3C/svg%3E");
-}
-
-.theme-dark .block_dimensions .dims-filter-select:hover,
-body.dark .block_dimensions .dims-filter-select:hover {
-    background-color: #343a40;
-}
-
-/* The focus ring has to flip with the skin: #0f6cbf on the #212529 platter is
-   2.88:1, under the 3:1 non-text floor; the dark accent is 6.39:1. */
-.theme-dark .block_dimensions .dims-filter-select:focus,
-body.dark .block_dimensions .dims-filter-select:focus {
-    outline-color: #6ea8fe;
-    border-color: #6ea8fe;
-}
-
-/* The count badge had no dark rule at all, so it kept a light #e9ecef fill and
-   sat on the dark platter as a foreign island. #dee2e6 on #495057 is 6.28:1. */
-.theme-dark .block_dimensions .dims-filter-count,
-body.dark .block_dimensions .dims-filter-count {
-    background: #495057;
-    color: #dee2e6;
-}
-
-.theme-dark .block_dimensions .dims-clear-filters-btn,
-body.dark .block_dimensions .dims-clear-filters-btn {
-    color: #adb5bd;
-    border-color: #495057;
-}
-
-.theme-dark .block_dimensions .dims-clear-filters-btn:hover,
-body.dark .block_dimensions .dims-clear-filters-btn:hover {
-    color: #ea868f;
-    border-color: #ea868f;
-    background: #2c0b0e;
-}
-
-/* ============================================
    FILTER - High Contrast
    ============================================ */
 @media (prefers-contrast: high) {
@@ -1550,20 +1630,51 @@ body.dark .block_dimensions .dims-clear-filters-btn:hover {
     }
 
     .block_dimensions .dims-filter-tab.active {
-        border-color: #0f6cbf;
+        border-color: var(--block-dimensions-focus-ring);
     }
 
     .block_dimensions .dims-filter-tabs-indicator {
-        outline: 2px solid #0f6cbf;
+        outline: 2px solid var(--block-dimensions-focus-ring);
         outline-offset: -2px;
     }
 
+    /* ink-strong, not #000: the select sits on the page in both modes and
+       #000 disappears into the dark one. */
     .block_dimensions .dims-filter-select {
-        border: 2px solid #000;
+        border: 2px solid var(--block-dimensions-ink-strong);
     }
 
     .block_dimensions .dims-clear-filters-btn {
         border: 2px solid currentColor;
+    }
+}
+
+/* ============================================
+   FILTER - Forced colours (Windows High Contrast Mode)
+   ============================================
+   A different media feature from prefers-contrast above, and the only mode in
+   which this component loses state. Under forced-colors: active the browser
+   substitutes its own palette for every background-color on the page, so the
+   sliding white indicator behind the selected tag pill, and the filled
+   background on the active favourite / show-all pill, both flatten to the same
+   Canvas as their neighbours - and the selected filter becomes indistinguish-
+   able from the unselected ones (WCAG 1.4.1). Assistive technology is
+   unaffected either way: every one of these pills is a role="radio" carrying
+   aria-checked, kept in sync by amd/src/filters.js.
+
+   An outline is the fix because outline IS remapped under forced colours,
+   where a background is overwritten and a box-shadow is not drawn at all. The
+   offset is negative for the same reason as the tab's focus ring: the platter
+   is overflow: hidden and would clip an outset ring. The declared colour is
+   irrelevant in this mode - the browser overrides it - but it names the
+   family's ring token rather than a literal so the rule reads the same as
+   every other outline in the file. */
+@media (forced-colors: active) {
+
+    .block_dimensions .dims-filter-tabs-indicator,
+    .block_dimensions .dims-filter-tab.active {
+        outline: 2px solid var(--block-dimensions-focus-ring);
+        outline-offset: -2px;
     }
 }
 
@@ -1593,14 +1704,25 @@ body.dark .block_dimensions .dims-clear-filters-btn:hover {
 /* ============================================
    SECTION HEADERS - Card Group Titles
    ============================================ */
+/* The second stop is accent, not brand-fill. brand-fill is the site's own
+   --bs-primary and core never flips it: as ink on the dark page it measures
+   1.10:1 on the fleet's own m502 theme. accent is --bs-link-color, which does
+   flip - 5.36:1 light and 6.33:1 dark on the card surface, and this heading is
+   2rem so its floor is 3:1 anyway. In dark both stops resolve to the same
+   flipped tint and the fill reads flat, which is legible and deliberate. */
 .block_dimensions .dims-section-header {
     font-size: 2rem;
     font-weight: 600;
-    color: #212529;
+    color: var(--block-dimensions-ink);
     margin: 0 0 1.5rem;
     padding: 0;
     line-height: 1.3;
-    background-image: linear-gradient(180deg, #0f4d85 45%, #0f6cbf 90%);
+    background-image:
+        linear-gradient(
+            180deg,
+            var(--block-dimensions-brand-ink) 45%,
+            var(--block-dimensions-accent) 90%
+        );
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -1611,16 +1733,10 @@ body.dark .block_dimensions .dims-clear-filters-btn:hover {
    to target each header independently. */
 
 /* `-webkit-text-fill-color: transparent` above wins over `color`, so an
-   override that only sets `color` paints nothing. Both of these used to do
-   exactly that and had no visible effect; they now drop the gradient fill
-   first so the colour they set actually applies. */
-.theme-dark .block_dimensions .dims-section-header,
-body.dark .block_dimensions .dims-section-header {
-    background-image: none;
-    -webkit-text-fill-color: currentcolor;
-    color: #dee2e6;
-}
-
+   override that only sets `color` paints nothing. The print rule below used
+   to do exactly that and had no visible effect; it now drops the gradient
+   fill first so the colour it sets actually applies. */
+/* Literal by design - see the print block in the competency-card section. */
 @media print {
     .block_dimensions .dims-section-header {
         background-image: none;
@@ -1633,7 +1749,7 @@ body.dark .block_dimensions .dims-section-header {
    CARD VISIBILITY - Filter Hide/Show
    ============================================ */
 .block_dimensions .dims-card-hidden {
-    display: none !important;
+    display: none;
 }
 
 /* ============================================
@@ -1676,11 +1792,15 @@ body.dark .block_dimensions .dims-section-header {
     height: 32px;
     border: none;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.85);
+    /* The disc is a veil over arbitrary card art, so it is the scrim token:
+       72% white in light, 72% of the dark body ground in dark. The star that
+       sits on it measures 3.58:1 light and 6.30:1 dark against that composite,
+       both over the 3:1 floor 1.4.11 sets for an icon. */
+    background: var(--block-dimensions-scrim);
     cursor: pointer;
     padding: 0;
     transition: background 0.2s ease, transform 0.15s ease;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 1px 4px var(--block-dimensions-shadow);
     pointer-events: auto;
 }
 
@@ -1691,12 +1811,14 @@ body.dark .block_dimensions .dims-section-header {
 }
 
 .block_dimensions .dims-fav-btn:hover {
-    background: rgba(255, 255, 255, 1);
+    background: var(--block-dimensions-surface);
     transform: scale(1.1);
 }
 
-.block_dimensions .dims-fav-btn:focus {
-    outline: 2px solid #0f6cbf;
+/* :focus-visible, not :focus. The plain form fires on a mouse click too, so
+   clicking the star used to leave a ring behind on the card. */
+.block_dimensions .dims-fav-btn:focus-visible {
+    outline: 2px solid var(--block-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
@@ -1704,41 +1826,24 @@ body.dark .block_dimensions .dims-section-header {
     transform: scale(0.95);
 }
 
-/* Favourite star icons */
+/* Favourite star icons.
+   The hue changes, and it is measured rather than conventional: #ffc107 on
+   white is 1.63:1 and fails 1.4.11 outright. No single hue clears 3:1 on both
+   white and the dark platter, so the favourite token carries the only pair
+   that does - #e8590c light (3.58 / 3.40 / 3.02) and #fd7e14 dark
+   (6.30 / 5.33 / 4.48). The empty star takes ink-muted, 7.10:1 light. */
 .block_dimensions .dims-fav-icon-filled {
     font-size: 1rem;
-    color: #ffc107;
+    color: var(--block-dimensions-favourite);
 }
 
 .block_dimensions .dims-fav-icon-empty {
     font-size: 1rem;
-    color: #6c757d;
+    color: var(--block-dimensions-ink-muted);
 }
 
 .block_dimensions .dims-fav-btn:hover .dims-fav-icon-empty {
-    color: #ffc107;
-}
-
-/* Dark mode */
-.theme-dark .block_dimensions .dims-fav-btn,
-body.dark .block_dimensions .dims-fav-btn {
-    background: rgba(52, 58, 64, 0.85);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-}
-
-.theme-dark .block_dimensions .dims-fav-btn:hover,
-body.dark .block_dimensions .dims-fav-btn:hover {
-    background: #495057;
-}
-
-.theme-dark .block_dimensions .dims-fav-icon-empty,
-body.dark .block_dimensions .dims-fav-icon-empty {
-    color: #adb5bd;
-}
-
-.theme-dark .block_dimensions .dims-fav-btn:hover .dims-fav-icon-empty,
-body.dark .block_dimensions .dims-fav-btn:hover .dims-fav-icon-empty {
-    color: #ffc107;
+    color: var(--block-dimensions-favourite);
 }
 
 /* High contrast */
@@ -1777,14 +1882,24 @@ body.dark .block_dimensions .dims-fav-btn:hover .dims-fav-icon-empty {
     gap: 0.35rem;
 }
 
+/* brand-fill under on-brand-fill is exactly .btn-primary's contract: the site
+   picked its primary with core's own tooling and core bears the same risk on
+   every button on the page. #fff on Boost's #0f6cbf is 5.36:1, and 14.68:1 on
+   the fleet's live theme. */
 .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active {
-    background: #0f6cbf;
-    color: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    background: var(--block-dimensions-brand-fill);
+    color: var(--block-dimensions-on-brand-fill);
+    box-shadow: 0 1px 3px var(--block-dimensions-shadow);
 }
 
+/* The hover darkens the fill with a filter rather than swapping in another
+   token, because no token in the system means "a darker version of the site's
+   own primary". accent-hover is --bs-link-hover-color, which core flips to a
+   LIGHTER tint in dark mode - white text on it would be about 2:1. brightness
+   is relative to whatever the admin chose, so it is correct in both modes and
+   on any brand. */
 .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active:hover {
-    background: #0c5699;
+    filter: brightness(0.92);
 }
 
 .block_dimensions .dims-fav-filter-icon {
@@ -1792,41 +1907,32 @@ body.dark .block_dimensions .dims-fav-btn:hover .dims-fav-icon-empty {
 }
 
 .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active .dims-fav-filter-icon {
-    color: #fff;
+    color: var(--block-dimensions-on-brand-fill);
 }
 
-/* Dark mode */
-.theme-dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active,
-body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active {
-    background: #6ea8fe;
-    color: #212529;
-}
-
-.theme-dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active:hover,
-body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active:hover {
-    background: #9ec5fe;
-}
-
-.theme-dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active .dims-fav-filter-icon,
-body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active .dims-fav-filter-icon {
-    color: #212529;
-}
-
-/* High contrast */
+/* High contrast. The border's job is to separate the filled pill from the
+   page behind it, so it follows the page: ink-strong is #000 on the light one
+   and #fff on the dark one, and the pill's own fill is the site primary in
+   both (--bs-primary does not flip). #000 on that fill measures 3.92:1 and
+   #fff 5.36:1 on Boost's default, so the edge holds either way round. */
 @media (prefers-contrast: high) {
     .block_dimensions .dims-fav-filter-btn.active {
-        border: 2px solid #000;
+        border: 2px solid var(--block-dimensions-ink-strong);
     }
 }
 
 /* ============================================
    FILTER COUNT BADGE - N inside pills
    ============================================ */
+/* The rest badge converges on the family's answer: surface under ink-muted.
+   It used to paint surface-inset, the same value as the platter it sits on, so
+   the chip had no shape at all - only its bold text showed. surface gives it a
+   boundary and lifts ink-muted from 5.99:1 to 7.10:1 in light. */
 .block_dimensions .dims-filter-count {
     font-weight: 600;
     margin-left: 0.15rem;
-    background: #e9ecef;
-    color: #495057;
+    background: var(--block-dimensions-surface);
+    color: var(--block-dimensions-ink-muted);
     border-radius: 999px;
     padding: 0 6px;
     font-size: 0.75rem;
@@ -1835,8 +1941,8 @@ body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.activ
 .block_dimensions .dims-fav-filter-btn.active .dims-filter-count,
 .block_dimensions .dims-all-filter-btn.active .dims-filter-count {
     opacity: 1;
-    background: #cfe2ff;
-    color: #0f4d85;
+    background: var(--block-dimensions-brand-tint);
+    color: var(--block-dimensions-brand-ink);
     border-radius: 999px;
     padding: 0 6px;
     font-size: 0.75rem;
@@ -1856,7 +1962,7 @@ body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.activ
     align-items: center;
     justify-content: center;
     width: 100%;
-    border: 2px dashed #ced4da;
+    border: 2px dashed var(--block-dimensions-line);
     border-radius: 12px;
     background: transparent;
     cursor: pointer;
@@ -1866,13 +1972,20 @@ body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.activ
 }
 
 .block_dimensions .dims-ghost-card-inner:hover {
-    border-color: #0f6cbf;
-    background: rgba(15, 108, 191, 0.04);
+    border-color: var(--block-dimensions-accent);
+    /* The 4% brand wash this replaces resolved to about #f7fafd on white and
+       to nothing at all on a dark page. surface-alt is the family's quiet wash
+       and is a visible step in both modes. */
+    background: var(--block-dimensions-surface-alt);
     transform: translateY(-2px);
 }
 
-.block_dimensions .dims-ghost-card-inner:focus {
-    outline: 2px solid #0f6cbf;
+/* :focus-visible, not :focus. This is a <button>, so the plain form fires on
+   a mouse click too and paints a ring the pointer user did not ask for. The
+   favourite button, the clear-filters button, the retry button and the search
+   clear button all already use the keyboard-only form. */
+.block_dimensions .dims-ghost-card-inner:focus-visible {
+    outline: 2px solid var(--block-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
@@ -1887,77 +2000,41 @@ body.dark .block_dimensions .block-dimensions-content .dims-fav-filter-btn.activ
     justify-content: center;
     width: 50px;
     height: 50px;
-    border: 2px solid #ced4da;
+    border: 2px solid var(--block-dimensions-line);
     border-radius: 50%;
-    color: #adb5bd;
+    /* The glyph was #adb5bd, 2.07:1 on the card - below the 3:1 floor 1.4.11
+       sets for a meaningful icon. ink-faint would read as the "dimmed" token
+       but it is restricted to inactive-control text and placeholders and
+       measures 3.20:1 here, so ink-muted carries it at 7.10:1. */
+    color: var(--block-dimensions-ink-muted);
     font-size: 1.2rem;
     transition: border-color 0.2s ease, color 0.2s ease;
 }
 
 .block_dimensions .dims-ghost-card-inner:hover .dims-ghost-icon-circle {
-    border-color: #0f6cbf;
-    color: #0f6cbf;
+    border-color: var(--block-dimensions-accent);
+    color: var(--block-dimensions-accent);
 }
 
 /* Title: "Mostrar tudo (N)" */
 .block_dimensions .dims-ghost-card-title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #6c757d;
+    color: var(--block-dimensions-ink-muted);
     text-align: center;
     transition: color 0.2s ease;
 }
 
 .block_dimensions .dims-ghost-card-inner:hover .dims-ghost-card-title {
-    color: #0f6cbf;
+    color: var(--block-dimensions-accent);
 }
 
-/* Subtitle: "Explore além dos favoritos." */
+/* Subtitle line under the ghost card heading. */
 .block_dimensions .dims-ghost-card-subtitle {
     font-size: 0.85rem;
     font-weight: 400;
-    color: #6c757d;
+    color: var(--block-dimensions-ink-muted);
     text-align: center;
-}
-
-/* Dark mode */
-.theme-dark .block_dimensions .dims-ghost-card-inner,
-body.dark .block_dimensions .dims-ghost-card-inner {
-    background: #212529;
-    border-color: #495057;
-}
-
-.theme-dark .block_dimensions .dims-ghost-card-inner:hover,
-body.dark .block_dimensions .dims-ghost-card-inner:hover {
-    border-color: #6ea8fe;
-    background: rgba(110, 168, 254, 0.08);
-}
-
-.theme-dark .block_dimensions .dims-ghost-icon-circle,
-body.dark .block_dimensions .dims-ghost-icon-circle {
-    border-color: #495057;
-    color: #6c757d;
-}
-
-.theme-dark .block_dimensions .dims-ghost-card-inner:hover .dims-ghost-icon-circle,
-body.dark .block_dimensions .dims-ghost-card-inner:hover .dims-ghost-icon-circle {
-    border-color: #6ea8fe;
-    color: #6ea8fe;
-}
-
-.theme-dark .block_dimensions .dims-ghost-card-title,
-body.dark .block_dimensions .dims-ghost-card-title {
-    color: #adb5bd;
-}
-
-.theme-dark .block_dimensions .dims-ghost-card-inner:hover .dims-ghost-card-title,
-body.dark .block_dimensions .dims-ghost-card-inner:hover .dims-ghost-card-title {
-    color: #6ea8fe;
-}
-
-.theme-dark .block_dimensions .dims-ghost-card-subtitle,
-body.dark .block_dimensions .dims-ghost-card-subtitle {
-    color: #adb5bd;
 }
 
 /* High contrast */
@@ -2006,21 +2083,20 @@ body.dark .block_dimensions .dims-ghost-card-subtitle {
     padding: 0.5rem 0.75rem;
     font-size: 1rem;
     line-height: 1.4;
-    color: #212529;
-    background: #fff3cd;
-    border: 1px solid #ffe69c;
+    /* The ground and hairline are core's own warning alert (-bg-subtle and
+       -border-subtle), so this reads as the page's own notice in either mode.
+       The text stays on ink rather than warning-ink on purpose: this is the
+       only message a JS-disabled user ever sees and the block above demands
+       strong contrast, so it keeps 14.28:1 light and 11.74:1 dark instead of
+       the 7.82 / 10.32 the tone ink would give. */
+    color: var(--block-dimensions-ink);
+    background: var(--block-dimensions-warning-tint);
+    border: 1px solid var(--block-dimensions-warning-edge);
     border-radius: 0.25rem;
 }
 
-.theme-dark .block_dimensions .dims-noscript,
-body.dark .block_dimensions .dims-noscript {
-    color: #dee2e6;
-    background: #332701;
-    border-color: #664d03;
-}
-
 /* ============================================
-   PSEUDO-LINK CARD (WCAG 2.4.4 / 2.5.3 / 4.1.1)
+   PSEUDO-LINK CARD (WCAG 2.4.4 / 2.5.3)
    ----------------------------------------------
    The card title is the real <a class="stretched-link">. A CSS ::after
    pseudo-element on that link covers the visible card area so the entire
@@ -2049,17 +2125,21 @@ body.dark .block_dimensions .dims-noscript {
 
 /* Belt-and-suspenders focus indicator on the title link itself, in addition
    to the parent's :focus-within rule (WCAG 2.4.7). Useful when the article
-   sits inside layouts that disrupt :focus-within bubbling. */
+   sits inside layouts that disrupt :focus-within bubbling.
+
+   The offset was 4px, the only one in the file that was not 2px. When both
+   rings paint - the article's and this one's - two different offsets read as a
+   drawing error rather than as two indicators. */
 .block_dimensions .plan-card-link.stretched-link:focus-visible,
 .block_dimensions .competency-card-link.stretched-link:focus-visible {
-    outline: 2px solid #0f6cbf;
-    outline-offset: 4px;
+    outline: 2px solid var(--block-dimensions-focus-ring);
+    outline-offset: 2px;
     border-radius: 2px;
 }
 
 /* Retry button inside the error alert (WCAG 2.4.7). */
 .block_dimensions .dims-error-retry:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--block-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
@@ -2070,7 +2150,7 @@ body.dark .block_dimensions .dims-noscript {
     inset: 0;
     z-index: 1;
     content: "";
-    background-color: rgba(0, 0, 0, 0);
+    background-color: transparent;
     pointer-events: auto;
 }
 
@@ -2117,12 +2197,12 @@ body.dark .block_dimensions .dims-noscript {
     text-decoration: underline;
 }
 
-.block_dimensions .trail-item-link:focus {
-    outline: none;
-}
-
+/* The :focus { outline: none } that used to sit here is deleted. Browsers
+   only paint their own ring for :focus-visible now, so it suppressed nothing a
+   mouse user would have seen - but an author outline: none IS honoured under
+   forced-colors: active, where it took the indicator away entirely. */
 .block_dimensions .trail-item-link:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--block-dimensions-focus-ring);
     outline-offset: 2px;
     border-radius: 4px;
 }
@@ -2137,10 +2217,17 @@ body.dark .block_dimensions .dims-noscript {
    the article, where stretched-link makes :hover and :focus-within bubble.
 
    Hover and keyboard focus share one treatment on purpose. The article already
-   draws the focus indicator (a 3px ring plus a 4px glow around the whole card),
-   so giving the pill a second ring of its own would put two rings on screen for
-   one focus event. The pill is `aria-hidden` + `pointer-events: none`
-   decoration; the card's ring is the accessible indicator.
+   draws the focus indicator - a 2px outline around the whole card - so giving
+   the pill a second ring of its own would put two rings on screen for one focus
+   event. The pill is `aria-hidden` + `pointer-events: none` decoration; the
+   card's ring is the accessible indicator.
+
+   NOTE FOR THE FOCUS-INDICATOR SCAN: this is the one rule in the file whose
+   selector mentions focus and which sets a box-shadow. It is not a focus
+   indicator and must not be read as one - it raises a decorative pill's
+   elevation when the card that OWNS the indicator takes focus. It draws no
+   outline on purpose, and the shadow disappearing under forced colours costs
+   nothing, because the article's own outline is what is being followed.
    ============================================ */
 .block_dimensions .plan-card:hover .dims-card-access-btn,
 .block_dimensions .competency-card:hover .dims-card-access-btn,
@@ -2149,25 +2236,15 @@ body.dark .block_dimensions .dims-noscript {
 .block_dimensions .plan-card:hover .dims-card-access-btn-horizontal,
 .block_dimensions .plan-card:focus-within .dims-card-access-btn-horizontal {
     opacity: 1;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+    /* The ink goes to accent, which is what the sibling plugin's inline
+       "Continue" link paints at rest. The two controls keep their different
+       SHAPES - a filled pill has to stay legible over arbitrary photo art, a
+       quiet inline link must not compete with the section list beside it - but
+       from here on they answer a hover with the same colour. accent on surface
+       measures 5.36:1 light and 6.33:1 dark. */
+    color: var(--block-dimensions-accent);
+    box-shadow: 0 4px 14px var(--block-dimensions-shadow);
     transform: translateY(-1px);
-}
-
-/* The dark rest state is already a deeper 0 2px 8px/.35, so the light hover
-   shadow would read *flatter* than rest. Deepen it instead. */
-.theme-dark .block_dimensions .plan-card:hover .dims-card-access-btn,
-.theme-dark .block_dimensions .competency-card:hover .dims-card-access-btn,
-.theme-dark .block_dimensions .plan-card:focus-within .dims-card-access-btn,
-.theme-dark .block_dimensions .competency-card:focus-within .dims-card-access-btn,
-.theme-dark .block_dimensions .plan-card:hover .dims-card-access-btn-horizontal,
-.theme-dark .block_dimensions .plan-card:focus-within .dims-card-access-btn-horizontal,
-body.dark .block_dimensions .plan-card:hover .dims-card-access-btn,
-body.dark .block_dimensions .competency-card:hover .dims-card-access-btn,
-body.dark .block_dimensions .plan-card:focus-within .dims-card-access-btn,
-body.dark .block_dimensions .competency-card:focus-within .dims-card-access-btn,
-body.dark .block_dimensions .plan-card:hover .dims-card-access-btn-horizontal,
-body.dark .block_dimensions .plan-card:focus-within .dims-card-access-btn-horizontal {
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
 }
 
 /* The lift is motion, so it goes with prefers-reduced-motion like every other
@@ -2190,57 +2267,41 @@ body.dark .block_dimensions .plan-card:focus-within .dims-card-access-btn-horizo
         transition: none;
     }
 }
+
 /* ============================================
-   FOCUS RING - Dark Mode
-   ----------------------------------------------
-   The migration consolidated every focus indicator onto one blue, but only
-   three of them had ever been restated for dark mode. #0f6cbf measures 2.15:1
-   on the #343a40 card and 2.88:1 on the #212529 page/platter — both under the
-   3:1 WCAG 1.4.11 floor for a focus indicator. #6ea8fe is 4.76:1 and 6.39:1.
+   BOOTSTRAP 4 UTILITY POLYFILL (Moodle 4.5 only)
+   ============================================
+   Same contract as local_dimensions/styles.css: BS4 names resolve on both
+   branches, BS5 names only on 5.x, and the fix is to polyfill the BS5 name
+   rather than write the BS4 one - 5.x wraps every back-ported BS4 name in
+   @include deprecated-styles() (a red outline under behat-site and
+   themedesignermode) and Moodle 6.0 removes the compat sheet entirely
+   (MDL-84465). This plugin used to sit on the wrong side of that asymmetry:
+   seven sr-only spans and one ml-2, all of them BS4 spellings.
 
-   Kept as one block rather than scattered through the per-area dark sections:
-   the invariant is "every focus ring flips with the skin", and it is far easier
-   to see that it still holds when the rings are listed together.
+   GATED on .block-dimensions-bs4, added to the block's OWN ROOT by the summary
+   renderable when the site's branch is below 500. A block cannot use a body
+   class: theme/boost/layout/columns2.php calls body_attributes() one line
+   before it calls blocks('side-pre'), which is what invokes get_content(). The
+   reason is written out in full in block_dimensions\local\bootstrap. The gate
+   is not optional: plugin CSS loads after core's, so an ungated rule would
+   outrank core's own definition on 5.x and freeze 4.5's metrics onto the newer
+   branch.
 
-   The access pill is deliberately absent: it no longer carries a ring of its
-   own. Its feedback is the article-scoped lift near the end of this file, which
-   fires for :hover and :focus-within alike, so the card's ring is the single
-   focus indicator rather than one of two competing rings.
-   ============================================ */
-.theme-dark .block_dimensions .dims-block-search-clear:focus-visible,
-.theme-dark .block_dimensions .competency-card:has(.competency-card-link:focus),
-.theme-dark .block_dimensions .dims-clear-filters-btn:focus-visible,
-.theme-dark .block_dimensions .dims-fav-btn:focus,
-.theme-dark .block_dimensions .dims-ghost-card-inner:focus,
-.theme-dark .block_dimensions .plan-card-link.stretched-link:focus-visible,
-.theme-dark .block_dimensions .competency-card-link.stretched-link:focus-visible,
-.theme-dark .block_dimensions .dims-error-retry:focus-visible,
-.theme-dark .block_dimensions .trail-item-link:focus-visible,
-body.dark .block_dimensions .dims-block-search-clear:focus-visible,
-body.dark .block_dimensions .competency-card:has(.competency-card-link:focus),
-body.dark .block_dimensions .dims-clear-filters-btn:focus-visible,
-body.dark .block_dimensions .dims-fav-btn:focus,
-body.dark .block_dimensions .dims-ghost-card-inner:focus,
-body.dark .block_dimensions .plan-card-link.stretched-link:focus-visible,
-body.dark .block_dimensions .competency-card-link.stretched-link:focus-visible,
-body.dark .block_dimensions .dims-error-retry:focus-visible,
-body.dark .block_dimensions .trail-item-link:focus-visible {
-    outline-color: #6ea8fe;
-}
+   Bootstrap marks .visually-hidden !important; the gate supplies the extra
+   specificity instead, because Moodle's stylelint forbids !important.
 
-/* The plan card carries a glow alongside its ring; the competency card's dark
-   equivalent is already restated in the card section. */
-.theme-dark .block_dimensions .plan-card:focus-within,
-body.dark .block_dimensions .plan-card:focus-within {
-    outline-color: #6ea8fe;
-    box-shadow: 0 0 0 4px rgba(110, 168, 254, 0.25);
-}
-
-/* The filter pill draws its ring as an inset shadow, so it needs the whole
-   declaration rather than an outline-color override. The `.block-dimensions-content`
-   step mirrors the light rule's selector so this wins on specificity rather than
-   on source order alone. */
-.theme-dark .block_dimensions .block-dimensions-content .dims-filter-tab:focus-visible,
-body.dark .block_dimensions .block-dimensions-content .dims-filter-tab:focus-visible {
-    box-shadow: inset 0 0 0 2px #6ea8fe;
+   ml-2 needs no rule here: ms-2 is one of the handful of names Moodle 4.5's
+   own 116-line forward bridge already covers, so the BS5 spelling is correct
+   on both branches with nothing added. */
+.block-dimensions-bs4 .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }

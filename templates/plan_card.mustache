@@ -80,8 +80,7 @@
         {{/hasimage}}
         {{^hasimage}}
         <div class="plan-card-image plan-card-gradient{{#hasbgcolor}} has-custom-bg{{/hasbgcolor}}"
-             aria-hidden="true"
-             style="{{#hasbgcolor}}background: var(--dimension-custombgcolor);{{/hasbgcolor}}"></div>
+             aria-hidden="true"></div>
         {{/hasimage}}
         {{#hastags}}
         <div class="dimension-tags" role="group" aria-label="{{#str}}cardtags, block_dimensions{{/str}}">
@@ -95,8 +94,8 @@
         </span>
     </div>
     <div class="card-body p-3">
-        <h4 class="card-title mb-2 font-weight-bold text-dark" id="plan-title-{{id}}">
-            <a href="{{url}}" class="plan-card-link stretched-link text-decoration-none text-dark">{{name}}</a>
+        <h4 class="card-title mb-2 font-weight-bold" id="plan-title-{{id}}">
+            <a href="{{url}}" class="plan-card-link stretched-link text-decoration-none">{{name}}</a>
         </h4>
         <p class="competency-count-text">{{competencycounttext}}</p>
         {{#hastrail}}
@@ -107,20 +106,20 @@
                 {{#trailclickable}}
                 <a href="{{url}}" class="trail-item-link" data-trail-planid="{{planid}}">
                     <span class="trail-marker" aria-hidden="true">
-                        {{#iscompleted}}<i class="fa fa-check-circle text-success"></i>{{/iscompleted}}
+                        {{#iscompleted}}<i class="fa fa-check-circle"></i>{{/iscompleted}}
                         {{^iscompleted}}<span class="empty-circle"></span>{{/iscompleted}}
                     </span>
-                    <span class="trail-label {{#iscompleted}}text-success{{/iscompleted}}">{{shortname}}</span>
-                    <span class="sr-only"> — {{#iscompleted}}{{#str}}status_completed, block_dimensions{{/str}}{{/iscompleted}}{{^iscompleted}}{{#str}}status_pending, block_dimensions{{/str}}{{/iscompleted}}</span>
+                    <span class="trail-label">{{shortname}}</span>
+                    <span class="visually-hidden"> — {{#iscompleted}}{{#str}}status_completed, block_dimensions{{/str}}{{/iscompleted}}{{^iscompleted}}{{#str}}status_pending, block_dimensions{{/str}}{{/iscompleted}}</span>
                 </a>
                 {{/trailclickable}}
                 {{^trailclickable}}
                 <span class="trail-marker" aria-hidden="true">
-                    {{#iscompleted}}<i class="fa fa-check-circle text-success"></i>{{/iscompleted}}
+                    {{#iscompleted}}<i class="fa fa-check-circle"></i>{{/iscompleted}}
                     {{^iscompleted}}<span class="empty-circle"></span>{{/iscompleted}}
                 </span>
-                <span class="trail-label {{#iscompleted}}text-success{{/iscompleted}}">{{shortname}}</span>
-                <span class="sr-only"> — {{#iscompleted}}{{#str}}status_completed, block_dimensions{{/str}}{{/iscompleted}}{{^iscompleted}}{{#str}}status_pending, block_dimensions{{/str}}{{/iscompleted}}</span>
+                <span class="trail-label">{{shortname}}</span>
+                <span class="visually-hidden"> — {{#iscompleted}}{{#str}}status_completed, block_dimensions{{/str}}{{/iscompleted}}{{^iscompleted}}{{#str}}status_pending, block_dimensions{{/str}}{{/iscompleted}}</span>
                 {{/trailclickable}}
             </li>
             {{/trail}}
@@ -154,8 +153,7 @@
         {{/hasimage}}
         {{^hasimage}}
         <div class="plan-card-image plan-card-image-horizontal plan-card-gradient{{#hasbgcolor}} has-custom-bg{{/hasbgcolor}}"
-             aria-hidden="true"
-             style="{{#hasbgcolor}}background: var(--dimension-custombgcolor);{{/hasbgcolor}}"></div>
+             aria-hidden="true"></div>
         {{/hasimage}}
         <span class="dims-card-access-btn dims-card-access-btn-horizontal" aria-hidden="true">
             {{buttonlabel}} <i class="fa fa-arrow-right" aria-hidden="true"></i>
@@ -169,8 +167,8 @@
         {{/hastags}}
     </div>
     <div class="card-body plan-card-body-horizontal p-3">
-        <h4 class="card-title mb-1 font-weight-bold text-dark" id="plan-title-{{id}}">
-            <a href="{{url}}" class="plan-card-link stretched-link text-decoration-none text-dark">{{name}}</a>
+        <h4 class="card-title mb-1 font-weight-bold" id="plan-title-{{id}}">
+            <a href="{{url}}" class="plan-card-link stretched-link text-decoration-none">{{name}}</a>
         </h4>
         <p class="competency-count-text mb-2">{{competencycounttext}}</p>
         {{#hastrail}}
@@ -181,20 +179,20 @@
                 {{#trailclickable}}
                 <a href="{{url}}" class="trail-item-link" data-trail-planid="{{planid}}">
                     <span class="trail-marker" aria-hidden="true">
-                        {{#iscompleted}}<i class="fa fa-check-circle text-success"></i>{{/iscompleted}}
+                        {{#iscompleted}}<i class="fa fa-check-circle"></i>{{/iscompleted}}
                         {{^iscompleted}}<span class="empty-circle"></span>{{/iscompleted}}
                     </span>
-                    <span class="trail-label {{#iscompleted}}text-success{{/iscompleted}}">{{shortname}}</span>
-                    <span class="sr-only"> — {{#iscompleted}}{{#str}}status_completed, block_dimensions{{/str}}{{/iscompleted}}{{^iscompleted}}{{#str}}status_pending, block_dimensions{{/str}}{{/iscompleted}}</span>
+                    <span class="trail-label">{{shortname}}</span>
+                    <span class="visually-hidden"> — {{#iscompleted}}{{#str}}status_completed, block_dimensions{{/str}}{{/iscompleted}}{{^iscompleted}}{{#str}}status_pending, block_dimensions{{/str}}{{/iscompleted}}</span>
                 </a>
                 {{/trailclickable}}
                 {{^trailclickable}}
                 <span class="trail-marker" aria-hidden="true">
-                    {{#iscompleted}}<i class="fa fa-check-circle text-success"></i>{{/iscompleted}}
+                    {{#iscompleted}}<i class="fa fa-check-circle"></i>{{/iscompleted}}
                     {{^iscompleted}}<span class="empty-circle"></span>{{/iscompleted}}
                 </span>
-                <span class="trail-label {{#iscompleted}}text-success{{/iscompleted}}">{{shortname}}</span>
-                <span class="sr-only"> — {{#iscompleted}}{{#str}}status_completed, block_dimensions{{/str}}{{/iscompleted}}{{^iscompleted}}{{#str}}status_pending, block_dimensions{{/str}}{{/iscompleted}}</span>
+                <span class="trail-label">{{shortname}}</span>
+                <span class="visually-hidden"> — {{#iscompleted}}{{#str}}status_completed, block_dimensions{{/str}}{{/iscompleted}}{{^iscompleted}}{{#str}}status_pending, block_dimensions{{/str}}{{/iscompleted}}</span>
                 {{/trailclickable}}
             </li>
             {{/trail}}

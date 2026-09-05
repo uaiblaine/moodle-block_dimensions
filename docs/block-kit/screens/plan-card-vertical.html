@@ -2,59 +2,67 @@
 <style>
 /* ============================================================================
    Canonical block-kit scaffold (shared by every screen file).
-   AS-IS token values live on .kit (light, the default skin); .panel.dark
-   overrides only the tokens `.theme-dark` / `body.dark` really swap in
-   styles.css. Markup is written once with var(--bk-*) so the two panels
-   differ by token values alone. See tokens.html / token-migration.md.
-   Palette migrated to Moodle DS on 2026-07-27 — these ARE the shipped values.
+   AS-IS token values live on .kit (light) and .panel.dark (dark). The plugin
+   no longer ships a skin of its own: styles.css declares 34 tokens on bare
+   :root as var(--bs-NEW, var(--BS4-OLD, #literal)) chains, so 31 of them ARE
+   core's own Bootstrap values and flip because core's [data-bs-theme="dark"]
+   block flips them. Only shadow, scrim and favourite are plugin-authored and
+   restated under :root[data-bs-theme="dark"]. So the two --bk-* blocks below
+   are the two RESOLUTIONS of one contract, not two hand-written palettes: the
+   light column is core's :root/[data-bs-theme="light"] values and the dark
+   column is core's [data-bs-theme="dark"] values, both read out of the running
+   m502 stack's compiled Boost sheet on 2026-09-05. Markup is written once with
+   var(--bk-*) so the two panels differ by token values alone.
+   See tokens.html / token-migration.md.
+   Re-based 2026-09-05; the 2026-07-27 Moodle DS values it replaces are gone.
    ============================================================================ */
 .kit{
-  --bk-page:#f4f5f7;--bk-surface:#fff;--bk-surface-2:#f8f9fa;
+  --bk-page:#fff;--bk-surface:#fff;--bk-surface-2:#f8f9fa;
   --bk-card-bg:#fff;--bk-plan-card-bg:#fff;
-  --bk-card-border:rgba(0,0,0,.125);--bk-plan-card-border:rgba(0,0,0,.125);
-  --bk-text:#212529;--bk-muted:#6c757d;
-  --bk-line:#e9ecef;--bk-line-2:#ced4da;--bk-line-3:#dee2e6;--bk-line-4:#ced4da;
-  --bk-accent:#0f6cbf;--bk-accent-dark:#0c5699;--bk-accent-deep:#0f4d85;
-  --bk-pill-platter:#e9ecef;--bk-pill-text:#495057;--bk-pill-indicator:#fff;
-  --bk-counter-bg:#e9ecef;--bk-counter-fg:#495057;--bk-counter-active-bg:#cfe2ff;--bk-counter-active-fg:#0f4d85;
-  --bk-search-border:#dee2e6;--bk-search-icon:#6c757d;--bk-search-placeholder:#5c636a;
-  --bk-search-glow:rgba(15,108,191,.15);
-  --bk-select-hover-bg:#dee2e6;--bk-select-hover-border:#ced4da;
-  --bk-paddle:rgba(0,0,0,.56);--bk-paddle-hover:rgba(0,0,0,.72);
-  --bk-btn-bg:#fff;--bk-btn-fg:#212529;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.15);
-  --bk-section-from:#0f4d85;--bk-section-to:#0f6cbf;
-  --bk-plan-grad-a:#0f6cbf;--bk-plan-grad-b:#0a5aa0;
-  --bk-comp-grad-a:#ffc107;--bk-comp-grad-b:#fd7e14;--bk-comp-grad-c:#e8590c;
-  --bk-tag-bg:#fd7e14;--bk-tag-fg:#212529;--bk-halftone:#00000082;
-  --bk-success:#198754;--bk-success-text:#0f5132;--bk-star:#ffc107;
-  --bk-focus:#0f6cbf;--bk-focus-glow:rgba(15,108,191,.25);--bk-focus-btn:#0f6cbf;
-  --bk-danger-fg:#842029;--bk-danger-bg:#f8d7da;
-  --bk-warn-fg:#212529;--bk-warn-bg:#fff3cd;--bk-warn-border:#ffe69c;
-  --bk-empty-circle:#6c757d;--bk-empty-ring:1px;--bk-ghost-fg:#6c757d;--bk-ghost-circle:#adb5bd;
+  --bk-card-border:#dee2e6;--bk-plan-card-border:#dee2e6;
+  --bk-text:#1d2125;--bk-muted:rgba(29,33,37,.75);
+  --bk-line:#e9ecef;--bk-line-2:#dee2e6;--bk-line-3:#dee2e6;--bk-line-4:#dee2e6;
+  --bk-accent:#0f6cbf;--bk-accent-dark:#0c5699;--bk-accent-deep:#062b4c;
+  --bk-pill-platter:#e9ecef;--bk-pill-text:rgba(29,33,37,.75);--bk-pill-indicator:#fff;
+  --bk-counter-bg:#fff;--bk-counter-fg:rgba(29,33,37,.75);--bk-counter-active-bg:#cfe2f2;--bk-counter-active-fg:#062b4c;
+  --bk-search-border:#dee2e6;--bk-search-icon:rgba(29,33,37,.75);--bk-search-placeholder:rgba(29,33,37,.75);
+  --bk-search-glow:transparent;
+  --bk-select-hover-bg:#dee2e6;--bk-select-hover-border:rgba(29,33,37,.75);
+  --bk-paddle:rgba(29,33,37,.75);--bk-paddle-hover:#1d2125;
+  --bk-btn-bg:#fff;--bk-btn-fg:#1d2125;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.1);
+  --bk-section-from:#062b4c;--bk-section-to:#0f6cbf;
+  --bk-plan-grad-a:#0f6cbf;--bk-plan-grad-b:#062b4c;
+  --bk-comp-grad-a:#f9deb8;--bk-comp-grad-b:#e8590c;--bk-comp-grad-c:#60451f;
+  --bk-tag-bg:#e9ecef;--bk-tag-fg:#1d2125;--bk-halftone:#00000082;
+  --bk-success:#153114;--bk-success-text:#153114;--bk-star:#e8590c;
+  --bk-focus:#000;--bk-focus-glow:transparent;--bk-focus-btn:#000;
+  --bk-danger-fg:#51140d;--bk-danger-bg:#f4d6d2;
+  --bk-warn-fg:#1d2125;--bk-warn-bg:#fcefdc;--bk-warn-border:#f9deb8;
+  --bk-empty-circle:rgba(29,33,37,.75);--bk-empty-ring:1px;--bk-ghost-fg:rgba(29,33,37,.75);--bk-ghost-circle:#dee2e6;
   --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:ui-monospace,Menlo,Consolas,monospace;
   color-scheme:light;font-family:var(--font);color:var(--bk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
 }
 .kit *{box-sizing:border-box;}
 .panel.dark{
-  --bk-page:#212529;--bk-surface:#212529;--bk-surface-2:#212529;
-  --bk-card-bg:#343a40;--bk-plan-card-bg:#343a40;
+  --bk-page:#1d2125;--bk-surface:#1d2125;--bk-surface-2:#292e33;
+  --bk-card-bg:#1d2125;--bk-plan-card-bg:#1d2125;
   --bk-card-border:#495057;--bk-plan-card-border:#495057;
-  --bk-text:#f8f9fa;--bk-muted:#adb5bd;
-  --bk-line:#495057;--bk-line-2:#495057;--bk-line-3:#495057;--bk-line-4:#495057;
-  --bk-accent:#6ea8fe;--bk-accent-dark:#9ec5fe;
-  --bk-pill-platter:#212529;--bk-pill-text:#adb5bd;--bk-pill-indicator:#495057;
-  --bk-search-border:#495057;--bk-search-icon:#adb5bd;--bk-search-placeholder:#adb5bd;
-  --bk-search-glow:rgba(110,168,254,.2);
-  --bk-select-hover-bg:#343a40;
-  --bk-paddle:rgba(255,255,255,.64);--bk-paddle-hover:rgba(255,255,255,.88);
-  --bk-btn-bg:#343a40;--bk-btn-fg:#f8f9fa;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.35);
-  --bk-success:#75b798;--bk-success-text:#75b798;
-  --bk-counter-bg:#495057;--bk-counter-fg:#dee2e6;
-  --bk-focus:#6ea8fe;--bk-focus-glow:rgba(110,168,254,.25);--bk-focus-btn:#6ea8fe;
-  --bk-danger-fg:#ea868f;--bk-danger-bg:#2c0b0e;
-  --bk-warn-fg:#dee2e6;--bk-warn-bg:#332701;--bk-warn-border:#664d03;
-  --bk-empty-circle:#adb5bd;--bk-ghost-fg:#adb5bd;--bk-ghost-circle:#6c757d;
+  --bk-text:#dee2e6;--bk-muted:rgba(222,226,230,.75);
+  --bk-line:#343a40;--bk-line-2:#495057;--bk-line-3:#495057;--bk-line-4:#495057;
+  --bk-accent:#6fa7d9;--bk-accent-dark:#8cb9e1;
+  --bk-pill-platter:#343a40;--bk-pill-text:rgba(222,226,230,.75);--bk-pill-indicator:#1d2125;
+  --bk-search-border:#495057;--bk-search-icon:rgba(222,226,230,.75);--bk-search-placeholder:rgba(222,226,230,.75);
+  --bk-search-glow:transparent;
+  --bk-select-hover-bg:#495057;
+  --bk-paddle:rgba(222,226,230,.75);--bk-paddle-hover:#dee2e6;
+  --bk-btn-bg:#1d2125;--bk-btn-fg:#dee2e6;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.55);
+  --bk-success:#86af84;--bk-success-text:#86af84;
+  --bk-counter-bg:#1d2125;--bk-counter-fg:rgba(222,226,230,.75);
+  --bk-focus:#fff;--bk-focus-glow:transparent;--bk-focus-btn:#fff;
+  --bk-danger-fg:#df8379;--bk-danger-bg:#280a06;
+  --bk-warn-fg:#dee2e6;--bk-warn-bg:#302310;--bk-warn-border:#90682f;
+  --bk-empty-circle:rgba(222,226,230,.75);--bk-ghost-fg:rgba(222,226,230,.75);--bk-ghost-circle:#495057;
   color:var(--bk-text);
 }
 .screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
@@ -81,21 +89,29 @@
 /* ---- screen-local values styles.css hardcodes and the token block lacks ---- */
 .kit{
   --pln-photo-a:#2f5d7c;--pln-photo-b:#6f9fb8;--pln-photo-c:#e0cfa8;   /* stand-in for a real background-image */
-  --pln-fav-bg:rgba(255,255,255,.85);--pln-fav-shadow:0 1px 4px rgba(0,0,0,.18);
-  --pln-star-empty:#6c757d;--pln-tag-shadow:0 1px 3px rgba(0,0,0,.2);
-  --pln-card-shadow:0 .125rem .25rem rgba(0,0,0,.075);
+  --pln-fav-bg:rgba(255,255,255,.72);--pln-fav-shadow:0 1px 4px rgba(0,0,0,.1);
+  --pln-star-empty:rgba(29,33,37,.75);--pln-tag-shadow:0 1px 3px rgba(0,0,0,.2);
+  --pln-card-shadow:0 .125rem .25rem rgba(0,0,0,.1);
   --pln-custom-bg:#0f6cbf;--pln-custom-fg:#ffffff;
-  --pln-trail-focus:#0f6cbf;   /* .trail-item-link:focus-visible — NOT flipped by .theme-dark */
-  --pln-btn-lift-shadow:0 4px 14px rgba(0,0,0,.22);   /* pill lift on card hover / focus-within */
+  /* The focus ring is the family token in both modes; it is listed here only
+     because the replica needs a name for it, not because styles.css restates it. */
+  --pln-trail-focus:#000;
+  --pln-btn-lift-shadow:0 4px 14px rgba(0,0,0,.1);   /* pill lift on card hover / focus-within */
 }
 .panel.dark{
-  --pln-fav-bg:rgba(52,58,64,.85);--pln-fav-shadow:0 1px 4px rgba(0,0,0,.4);
-  --pln-star-empty:#adb5bd;--pln-tag-shadow:0 1px 3px rgba(0,0,0,.4);
-  --pln-btn-lift-shadow:0 4px 14px rgba(0,0,0,.5);   /* deeper: dark rest is already .35 */
+  --pln-fav-bg:rgba(29,33,37,.72);--pln-fav-shadow:0 1px 4px rgba(0,0,0,.55);
+  --pln-star-empty:rgba(222,226,230,.75);--pln-tag-shadow:0 1px 3px rgba(0,0,0,.4);
+  --pln-card-shadow:0 .125rem .25rem rgba(0,0,0,.55);
+  --pln-trail-focus:#fff;
+  --pln-btn-lift-shadow:0 4px 14px rgba(0,0,0,.55);
 }
-/* ---- card grid: the real [data-cards-type] rule (styles.css:385-392) ---- */
-.pcgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(240px,30%,500px),1fr));gap:1rem;list-style:none;margin:0;padding:10px 20px 2px;}
-.pcgrid>li{container-type:inline-size;width:100%;max-width:100%;}
+/* ---- card grid: the real [data-cards-type] rule. Flex, not grid, and no
+       container query: stylelint rejects container-type as an unknown property
+       and @container as an unknown at-rule, and minmax(clamp(...)) as an
+       invalid value, so the shipped rule caps the column count with a
+       percentage flex-basis and a rem floor instead. ---- */
+.pcgrid{display:flex;flex-wrap:wrap;gap:1rem;list-style:none;margin:0;padding:10px 20px 2px;}
+.pcgrid>li{flex:1 1 30%;min-width:15rem;max-width:100%;}
 .pcstrip{padding:10px 20px 2px;max-width:340px;}
 .kit .h-100{height:100%;}
 /* ---- .plan-card (styles.css:410-449) ---- */
@@ -148,7 +164,7 @@
 .kit .trail-item-link.is-focus{outline:2px solid var(--pln-trail-focus);outline-offset:2px;border-radius:4px;}
 .kit .trail-item-link.is-focus .trail-marker{transform:scale(1.2);}
 .kit .trail-item-link.is-focus .trail-label{text-decoration:underline;}
-.kit .sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+.kit .visually-hidden{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 /* ---- trail anatomy strip (kit chrome) ---- */
 .anat{padding:8px 20px 2px;}
 .anat .anat-trail{max-width:100%;margin-top:0;}
@@ -185,11 +201,11 @@
             <h4 class="card-title" id="plan-title-10"><a href="#" class="plan-card-link stretched-link">Data literacy pathway</a></h4>
             <p class="competency-count-text">12 competencies</p>
             <ul class="competency-trail has-before has-after" aria-label="Competency progress trail">
-              <li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Sources</span><span class="sr-only"> — completed</span></li>
-              <li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Cleaning</span><span class="sr-only"> — completed</span></li>
-              <li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Modelling</span><span class="sr-only"> — pending</span></li>
-              <li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Charts</span><span class="sr-only"> — pending</span></li>
-              <li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Storytelling</span><span class="sr-only"> — pending</span></li>
+              <li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Sources</span><span class="visually-hidden"> — completed</span></li>
+              <li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Cleaning</span><span class="visually-hidden"> — completed</span></li>
+              <li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Modelling</span><span class="visually-hidden"> — pending</span></li>
+              <li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Charts</span><span class="visually-hidden"> — pending</span></li>
+              <li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Storytelling</span><span class="visually-hidden"> — pending</span></li>
             </ul>
           </div>
         </article>
@@ -210,9 +226,9 @@
             <h4 class="card-title" id="plan-title-11"><a href="#" class="plan-card-link stretched-link">First 90 days</a></h4>
             <p class="competency-count-text">3 skills</p>
             <ul class="competency-trail" aria-label="Competency progress trail">
-              <li class="trail-item first"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Welcome</span><span class="sr-only"> — pending</span></li>
-              <li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Policies</span><span class="sr-only"> — pending</span></li>
-              <li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Team</span><span class="sr-only"> — pending</span></li>
+              <li class="trail-item first"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Welcome</span><span class="visually-hidden"> — pending</span></li>
+              <li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Policies</span><span class="visually-hidden"> — pending</span></li>
+              <li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Team</span><span class="visually-hidden"> — pending</span></li>
             </ul>
           </div>
         </article>
@@ -251,9 +267,9 @@
           <h4 class="card-title" id="plan-title-12"><a href="#" class="plan-card-link stretched-link">Leading teams</a></h4>
           <p class="competency-count-text">7 competencies</p>
           <ul class="competency-trail has-after" aria-label="Competency progress trail">
-            <li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Feedback</span><span class="sr-only"> — completed</span></li>
-            <li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Delegation</span><span class="sr-only"> — pending</span></li>
-            <li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Coaching</span><span class="sr-only"> — pending</span></li>
+            <li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Feedback</span><span class="visually-hidden"> — completed</span></li>
+            <li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Delegation</span><span class="visually-hidden"> — pending</span></li>
+            <li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Coaching</span><span class="visually-hidden"> — pending</span></li>
           </ul>
         </div>
       </article>
@@ -263,11 +279,11 @@
     <div class="divlbl">Trail anatomy — clickable variant, real sizes <span class="idb">PLN-TRAIL-ITEM</span> <span class="idb">PLN-TRAIL-LINK</span></div>
     <div class="anat">
       <ul class="competency-trail anat-trail has-before has-after" aria-label="Competency progress trail">
-        <li class="trail-item completed first clickable"><a href="#" class="trail-item-link" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Sources</span><span class="sr-only"> — completed</span></a></li>
-        <li class="trail-item completed clickable"><a href="#" class="trail-item-link" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Cleaning</span><span class="sr-only"> — completed</span></a></li>
-        <li class="trail-item clickable"><a href="#" class="trail-item-link is-focus" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Modelling</span><span class="sr-only"> — pending</span></a></li>
-        <li class="trail-item clickable"><a href="#" class="trail-item-link" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Charts</span><span class="sr-only"> — pending</span></a></li>
-        <li class="trail-item last clickable"><a href="#" class="trail-item-link" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Storytelling and visual reporting</span><span class="sr-only"> — pending</span></a></li>
+        <li class="trail-item completed first clickable"><a href="#" class="trail-item-link" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Sources</span><span class="visually-hidden"> — completed</span></a></li>
+        <li class="trail-item completed clickable"><a href="#" class="trail-item-link" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Cleaning</span><span class="visually-hidden"> — completed</span></a></li>
+        <li class="trail-item clickable"><a href="#" class="trail-item-link is-focus" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Modelling</span><span class="visually-hidden"> — pending</span></a></li>
+        <li class="trail-item clickable"><a href="#" class="trail-item-link" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Charts</span><span class="visually-hidden"> — pending</span></a></li>
+        <li class="trail-item last clickable"><a href="#" class="trail-item-link" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Storytelling and visual reporting</span><span class="visually-hidden"> — pending</span></a></li>
       </ul>
     </div>
     <div class="specs">
@@ -284,7 +300,7 @@
 
   <!-- ============ AS-IS · DARK ============ -->
   <div class="panel dark">
-    <div class="plabel"><span class="pdot" style="background:#6ea8fe"></span>As-is · dark (.theme-dark)</div>
+    <div class="plabel"><span class="pdot" style="background:#6fa7d9"></span>As-is · dark (host data-bs-theme="dark")</div>
 
     <div class="bk-cap">Vertical plan cards — image on top, trail under the count <span class="idb">PLN-CARD</span></div>
     <ul class="pcgrid">
@@ -304,11 +320,11 @@
             <h4 class="card-title" id="plan-title-10"><a href="#" class="plan-card-link stretched-link">Data literacy pathway</a></h4>
             <p class="competency-count-text">12 competencies</p>
             <ul class="competency-trail has-before has-after" aria-label="Competency progress trail">
-              <li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Sources</span><span class="sr-only"> — completed</span></li>
-              <li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Cleaning</span><span class="sr-only"> — completed</span></li>
-              <li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Modelling</span><span class="sr-only"> — pending</span></li>
-              <li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Charts</span><span class="sr-only"> — pending</span></li>
-              <li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Storytelling</span><span class="sr-only"> — pending</span></li>
+              <li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Sources</span><span class="visually-hidden"> — completed</span></li>
+              <li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Cleaning</span><span class="visually-hidden"> — completed</span></li>
+              <li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Modelling</span><span class="visually-hidden"> — pending</span></li>
+              <li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Charts</span><span class="visually-hidden"> — pending</span></li>
+              <li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Storytelling</span><span class="visually-hidden"> — pending</span></li>
             </ul>
           </div>
         </article>
@@ -329,9 +345,9 @@
             <h4 class="card-title" id="plan-title-11"><a href="#" class="plan-card-link stretched-link">First 90 days</a></h4>
             <p class="competency-count-text">3 skills</p>
             <ul class="competency-trail" aria-label="Competency progress trail">
-              <li class="trail-item first"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Welcome</span><span class="sr-only"> — pending</span></li>
-              <li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Policies</span><span class="sr-only"> — pending</span></li>
-              <li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Team</span><span class="sr-only"> — pending</span></li>
+              <li class="trail-item first"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Welcome</span><span class="visually-hidden"> — pending</span></li>
+              <li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Policies</span><span class="visually-hidden"> — pending</span></li>
+              <li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Team</span><span class="visually-hidden"> — pending</span></li>
             </ul>
           </div>
         </article>
@@ -351,7 +367,7 @@
     <div class="note">Hovering a clickable trail label flips it to <code>#6ea8fe</code> (4.76:1) rather than the light <code>#0f6cbf</code>, which measured 2.15:1 on the card grey.</div>
     <div class="note">The favourite button's platter darkens to <code>rgba(52,58,64,.85)</code> with a heavier shadow; the empty star lightens from <code>#6c757d</code> to <code>#adb5bd</code>, and both skins turn it gold on hover.</div>
     <div class="note">The access pill becomes <code>#f8f9fa</code> on <code>#343a40</code> — still decorative, still <code>aria-hidden</code>, and it still lifts on card hover and <code>:focus-within</code>. Only the lift shadow is re-tuned: <code>rgba(0,0,0,.5)</code> instead of the light <code>.22</code>, because the dark rest shadow is already <code>0 2px 8px rgba(0,0,0,.35)</code> and the light hover value would have read <em>flatter</em> than rest.</div>
-    <div class="note">The dashed continuation stubs re-encode their inline SVG with a <code>#495057</code> stroke; everything else about the window logic is skin-independent.</div>
+    <div class="note">The dashed continuation stubs need no dark counterpart any more: they are a <code>repeating-linear-gradient</code> painted in the <code>line</code> token, so the stroke follows the host. The inline SVG they replace had to be re-encoded by hand with a second stroke colour — and could not have passed the gate in any case, since Moodle's stylelint bans image data URIs. Everything else about the window logic is mode-independent.</div>
 
     <div class="divlbl">Custom colour — <code>--dimension-custombgcolor</code> set on the article <span class="idb">PLN-GRADIENT</span> <span class="idb">PLN-TAGS</span></div>
     <div class="pcstrip">
@@ -370,23 +386,23 @@
           <h4 class="card-title" id="plan-title-12"><a href="#" class="plan-card-link stretched-link">Leading teams</a></h4>
           <p class="competency-count-text">7 competencies</p>
           <ul class="competency-trail has-after" aria-label="Competency progress trail">
-            <li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Feedback</span><span class="sr-only"> — completed</span></li>
-            <li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Delegation</span><span class="sr-only"> — pending</span></li>
-            <li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Coaching</span><span class="sr-only"> — pending</span></li>
+            <li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Feedback</span><span class="visually-hidden"> — completed</span></li>
+            <li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Delegation</span><span class="visually-hidden"> — pending</span></li>
+            <li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Coaching</span><span class="visually-hidden"> — pending</span></li>
           </ul>
         </div>
       </article>
     </div>
-    <div class="note">The custom pair is the same in both skins — nothing in <code>.theme-dark</code> touches <code>--dimension-custombgcolor</code>, so a light-tuned template colour keeps its contrast burden on the site admin who set it.</div>
+    <div class="note">The custom pair is the same in both modes, and now by rule rather than by omission: <code>--dimension-custombgcolor</code> and <code>--dimension-customtextcolor</code> are admin instance data crossing the plugin boundary, not design tokens, so the mode layer reads them and never declares or overrides them in either mode. A site's chosen brand colour stays its colour when the page goes dark and only the neutrals around it adapt — which also means a light-tuned template colour keeps its contrast burden on the admin who set it. <code>colour_tokens_test</code> fails the build if any mode block ever assigns one.</div>
 
     <div class="divlbl">Trail anatomy — clickable variant, real sizes <span class="idb">PLN-TRAIL-ITEM</span> <span class="idb">PLN-TRAIL-LINK</span></div>
     <div class="anat">
       <ul class="competency-trail anat-trail has-before has-after" aria-label="Competency progress trail">
-        <li class="trail-item completed first clickable"><a href="#" class="trail-item-link" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Sources</span><span class="sr-only"> — completed</span></a></li>
-        <li class="trail-item completed clickable"><a href="#" class="trail-item-link" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Cleaning</span><span class="sr-only"> — completed</span></a></li>
-        <li class="trail-item clickable"><a href="#" class="trail-item-link is-focus" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Modelling</span><span class="sr-only"> — pending</span></a></li>
-        <li class="trail-item clickable"><a href="#" class="trail-item-link" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Charts</span><span class="sr-only"> — pending</span></a></li>
-        <li class="trail-item last clickable"><a href="#" class="trail-item-link" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Storytelling and visual reporting</span><span class="sr-only"> — pending</span></a></li>
+        <li class="trail-item completed first clickable"><a href="#" class="trail-item-link" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Sources</span><span class="visually-hidden"> — completed</span></a></li>
+        <li class="trail-item completed clickable"><a href="#" class="trail-item-link" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></svg></span><span class="trail-label text-success">Cleaning</span><span class="visually-hidden"> — completed</span></a></li>
+        <li class="trail-item clickable"><a href="#" class="trail-item-link is-focus" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Modelling</span><span class="visually-hidden"> — pending</span></a></li>
+        <li class="trail-item clickable"><a href="#" class="trail-item-link" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Charts</span><span class="visually-hidden"> — pending</span></a></li>
+        <li class="trail-item last clickable"><a href="#" class="trail-item-link" data-trail-planid="10"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Storytelling and visual reporting</span><span class="visually-hidden"> — pending</span></a></li>
       </ul>
     </div>
     <div class="specs">
@@ -421,7 +437,7 @@
     <span class="k">PLN-TRAIL-LINK</span><span class="v"><b>Clickable trail item</b> — rendered only when the admin turns on <code>enable_trail_links</code> (<code>trailclickable</code>); carries <code>data-trail-planid</code>, sits at <code>z-index:2</code> above the stretched-link overlay, focus ring <code>2px #0f6cbf</code>/offset 2. The handler calls <code>block_dimensions_set_return_context</code> first and falls back to navigating after 1.5s. <span class="rule">plan_card.mustache:107-115; styles.css:2081-2128; dataset_provider.php:657; filters.js:920-940</span></span>
     <span class="k">PLN-TRAIL-BEFORE</span><span class="v"><b>Leading continuation stub</b> — <code>.has-before</code> on the list draws a 34×2px dashed <code>#ced4da</code> SVG to the left of the first marker, meaning "earlier competencies exist above this window". Set when the window's start index is greater than zero. <span class="rule">plan_card.mustache:103; styles.css:491-502,892-897; dataset_provider.php:720</span></span>
     <span class="k">PLN-TRAIL-AFTER</span><span class="v"><b>Trailing continuation stub</b> — <code>.has-after</code> mirrors it to the right of the last marker; set when start + window size is still short of the total. Both flags are pure presentation — the hidden competencies are never in the payload. <span class="rule">plan_card.mustache:103; styles.css:504-515; dataset_provider.php:721</span></span>
-    <span class="k">PLN-SR-STATUS</span><span class="v"><b>Screen-reader status suffix</b> — a <code>.sr-only</code> span appending " — completed" / " — pending" to every trail item (lang strings <code>status_completed</code> / <code>status_pending</code>), because the markers themselves are <code>aria-hidden</code> and colour alone must not carry the meaning (WCAG 1.4.1). <span class="rule">plan_card.mustache:114,123; lang/en/block_dimensions.php:113-114</span></span>
+    <span class="k">PLN-SR-STATUS</span><span class="v"><b>Screen-reader status suffix</b> — a <code>.visually-hidden</code> span appending " — completed" / " — pending" to every trail item (lang strings <code>status_completed</code> / <code>status_pending</code>), because the markers themselves are <code>aria-hidden</code> and colour alone must not carry the meaning (WCAG 1.4.1). <span class="rule">plan_card.mustache:114,123; lang/en/block_dimensions.php:113-114</span></span>
   </div>
 </div>
 </div>
