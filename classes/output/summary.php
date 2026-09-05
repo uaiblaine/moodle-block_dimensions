@@ -27,6 +27,7 @@ namespace block_dimensions\output;
 use renderable;
 use renderer_base;
 use templatable;
+use block_dimensions\local\bootstrap;
 use block_dimensions\local\dataset_provider;
 
 /**
@@ -86,6 +87,10 @@ class summary implements renderable, templatable {
 
         return [
             'containerid' => $containerid,
+            /* Gates the Bootstrap 4 utility polyfill in styles.css. A block cannot use a body
+               class - see block_dimensions\local\bootstrap for why - so the marker rides the
+               block's own root element instead. */
+            'isbs4' => bootstrap::is_bs4(),
             'showheading' => $uiconfig['showheading'],
             'showsearch' => $uiconfig['showsearch'],
             'showsectionheaders' => $uiconfig['showsectionheaders'],
