@@ -178,8 +178,12 @@ class behat_block_dimensions extends behat_base {
      */
     public function the_colour_token_should_resolve_to(string $token, string $value): void {
         $escaped = str_replace(["\\", "'"], ["\\\\", "\\'"], $token);
+        /* Read at body, which is where the token block is declared. Custom properties inherit
+           DOWNWARDS only, so reading at documentElement returns the empty string for every one
+           of them. body is also correct against the older contract, when the block sat on
+           :root: the values were visible there by inheritance. */
         $actual = $this->evaluate_colour(
-            "window.getComputedStyle(document.documentElement).getPropertyValue('--" . $escaped . "')"
+            "window.getComputedStyle(document.body).getPropertyValue('--" . $escaped . "')"
         );
         $expected = strtolower(trim(preg_replace('/\s+/', ' ', $value)));
         if ($actual !== $expected) {
