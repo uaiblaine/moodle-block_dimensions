@@ -17,7 +17,7 @@
    COLOUR TOKENS - THE WHOLE COLOUR CONTRACT
    ============================================
 
-   Thirty-four tokens, declared once, on bare :root. The suffix set is byte-identical to
+   Thirty-four tokens, declared once, on bare body. The suffix set is byte-identical to
    local_dimensions' --local-dimensions-* set; only the frankenstyle prefix differs. That is what
    makes the two plugins one system, while keeping their declarations apart inside the single
    stylesheet Moodle compiles from every installed plugin.
@@ -29,16 +29,20 @@
    dark-mode-correct with NO dark rule at all: the plugin's card face IS --bs-body-bg, which is
    also the page's own background, so the two cannot disagree. Do not give them one.
 
-   :root matches the html element, the ancestor of every node in the document, so this single
-   rule covers every root the plugin can paint, including anything core relocates to
-   document.body. That completeness matters because an unresolved var() does NOT fall back to
-   the literal - the whole declaration is invalid at computed-value time, so a background set
-   from an undeclared token is no background at all.
+   body is the ancestor of every node this plugin can paint, including anything core relocates
+   to document.body - core/modal appends its dialogue there, as a SIBLING of the page container.
+   That completeness matters because an unresolved var() does NOT fall back to the literal - the
+   whole declaration is invalid at computed-value time, so a background set from an undeclared
+   token is no background at all.
 
-   Custom properties substitute at computed-value time on the element CARRYING the declaration.
-   These compute on html, from html's own --bs-* values, and inherit downwards as already
-   substituted strings - which is why a dark-scoped descendant such as a navbar can never reach
-   them, whatever selector a theme uses.
+   Custom properties substitute at computed-value time on the element CARRYING the declaration,
+   and inherit downwards as already substituted strings. These compute on BODY, which is the
+   point: 31 of the 34 read a var(--bs-*) chain, and Bootstrap redefines the --bs-* set on
+   whatever element carries data-bs-theme. Computing on html would take a snapshot of html's
+   values and miss every scope at or below body - which is exactly what happened under
+   theme_moove, whose dark mode writes the attribute on document.body. A scope BELOW body, such
+   as the navbar one Boost Union uses, still cannot reach these, because inheritance runs
+   downwards only.
 
    Two names are deliberately absent because they are not design tokens at all:
    --dimension-custombgcolor and --dimension-customtextcolor carry admin instance data across
@@ -46,7 +50,7 @@
    reads them and never declares or overrides them, in either mode: a site's chosen brand colour
    stays its colour when the page goes dark, and only the neutrals around it adapt.
    ============================================ */
-:root {
+body {
     /* Tier 1 - surfaces, hairline, ink, accent. */
     --block-dimensions-surface: var(--bs-body-bg, var(--white, #fff));
     --block-dimensions-surface-alt: var(--bs-tertiary-bg, var(--light, #f8f9fa));
@@ -111,14 +115,20 @@
    resolves "auto" with window.matchMedia and writes the result back to
    document.documentElement. Gated behind theme_boost/enablecolourmodes, off by default.
 
-   ANCHORED AT :root ON PURPOSE. A bare [data-bs-theme="dark"] matches through ANY ancestor at
-   any depth, and CSS descendant combinators have no nearest-ancestor-wins rule. That is not
-   hypothetical: theme_boost_union_fundaseg sets data-bs-theme="dark" on the navbar element
-   itself, and theme_boost_union then re-pins data-bs-theme="light" by hand on five nested
-   templates to stop the dark scope leaking into its own submenus. A bare selector would ignore
-   those re-pins. :root restricts the match to the html element and forecloses the whole class
-   at zero cost. It is also (0,2,0) against the token block's (0,1,0), so it wins on
-   specificity rather than on source order.
+   THE SUBJECT IS <body>, AND THAT IS WHAT FORECLOSES LEAKING. The hazard is unchanged: a BARE
+   [data-bs-theme="dark"] matches through ANY ancestor at any depth, and CSS descendant
+   combinators have no nearest-ancestor-wins rule - theme_boost_union_fundaseg sets the attribute
+   on the navbar element itself, and theme_boost_union re-pins data-bs-theme="light" by hand on
+   five nested templates to stop that scope reaching its own submenus. Naming body as the SUBJECT
+   answers it completely: there is exactly one body, its only ancestor is html, so
+   "[data-bs-theme="dark"] body" can only ever mean "html[data-bs-theme="dark"] body", and no
+   deeper scope can reach it. Both arms are (0,1,1) against the token block's (0,0,1), so the
+   mode layer still wins on specificity rather than on source order.
+
+   THE SECOND ARM IS MEASURED, NOT DEFENSIVE. theme_moove writes the attribute on document.body
+   (amd/src/darkmode.js:35) and redefines the whole --bs-* set there; an :root-anchored rule sees
+   only the html element's light values. Measured on m502 with moove's own switch: the page went
+   to #1d2125 while the plugin's surface stayed #f2f3f7.
 
    .theme-dark and body.dark are NOT accepted. Nothing in Moodle 4.5, 5.1, 5.2 or 5.3-dev, and
    nothing in theme_boost_union or theme_boost_union_fundaseg, has ever emitted either. This
@@ -128,7 +138,8 @@
    own --bs-* values and need no rule, which is why this block cannot make the plugin dark on a
    light page even if it fires on a branch that has no dark palette.
    ============================================ */
-:root[data-bs-theme="dark"] {
+body[data-bs-theme="dark"],
+[data-bs-theme="dark"] body {
     --block-dimensions-shadow: rgb(0 0 0 / 55%);
     --block-dimensions-scrim: rgb(29 33 37 / 72%);
     --block-dimensions-favourite: #fd7e14;
@@ -139,8 +150,12 @@
    ============================================
 
    This block must not fire today, and today it cannot: its selector requires
-   [data-dimensions-media-optin] on the html element, and nothing in either plugin - no PHP, no
-   AMD module, no Mustache template, no Behat step, no test - ever writes that attribute.
+   [data-dimensions-media-optin] on the BODY element - the element the token block itself is
+   declared on, so that switching this on would reach the same tokens - and nothing in either
+   plugin, no PHP, no AMD module, no Mustache template, no Behat step, no test, ever writes that
+   attribute. The :root:not([data-bs-theme="light"]) half in front of it is the second guard: a
+   host that has explicitly chosen light on the html element must win over the OS preference even
+   after the gate is removed, and body alone could not express that.
 
    INERT BECAUSE THE OS PREFERENCE IS THE WRONG SIGNAL ON ITS OWN. Moodle 5.3's theme_boost
    reads prefers-color-scheme in a head script and writes the RESULT into data-bs-theme on the
@@ -170,7 +185,8 @@
 @media (prefers-color-scheme: dark) {
 
     /* Switch-on line: remove [data-dimensions-media-optin] and nothing else. */
-    :root[data-dimensions-media-optin]:not([data-bs-theme="light"]) {
+    :root:not([data-bs-theme="light"])
+    body[data-dimensions-media-optin]:not([data-bs-theme="light"]) {
         --block-dimensions-shadow: rgb(0 0 0 / 55%);
         --block-dimensions-scrim: rgb(29 33 37 / 72%);
         --block-dimensions-favourite: #fd7e14;
