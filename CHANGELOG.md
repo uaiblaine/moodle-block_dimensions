@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Changed
+- **The colour token layer moved from `:root` to `body`, and the dark rule grew a second arm.**
+  Thirty-one of the 34 are DERIVED tokens - each resolves a `var(--bs-*)` chain; the other three,
+  `shadow`, `scrim` and `favourite`, are plugin-owned literals - and Bootstrap redefines the
+  `--bs-*` set on whatever element carries `data-bs-theme`: its own `color-mode` mixin emits an
+  UNANCHORED `[data-bs-theme="..."]` (`bootstrap/mixins/_color-mode.scss:16`), which is what makes
+  scoped colour modes work at all. A derived layer pinned at `:root` takes a snapshot of the root's
+  values and is then immune to every scope, including core's own; Bootstrap's own components never
+  build one, they read `--bs-*` at the component. Counted in the compiled 5.2 sheet: of 32
+  `[data-bs-theme="dark"]` rules, 28 are unanchored (Bootstrap and core) and the 4 anchored at
+  `:root` were all this fleet's own plugins.
+
+  The defect that exposed it is measured, not theoretical. `theme_moove` writes the attribute on
+  `document.body` (`amd/src/darkmode.js:35`) and redefines the whole `--bs-*` set there. Under the
+  old `:root` anchor, measured on m502 at 1440x900 through moove's own switch: the page went to
+  `#1d2125` while `local_dimensions`' surface stayed `#f2f3f7`, and text inheriting the page's
+  dark-mode colour sat at **1.17:1** on the plugin's own card, against a 4.5:1 AA floor. After the
+  move, the same measurement reads **12.44:1** and every token flips.
+
+  `body` rather than the plugin's surfaces because it is the one ancestor every surface has,
+  including `core/modal`'s dialogue - which core appends to `document.body` as a SIBLING of the
+  page container, the exact case that once left a dialogue with no background at all.
+
+  The activation rule is now `body[data-bs-theme="dark"], [data-bs-theme="dark"] body`, and naming
+  body as the SUBJECT is what still forecloses the leak the `:root` anchor existed to prevent:
+  there is exactly one body and its only ancestor is html, so the second arm can only ever mean
+  `html[data-bs-theme="dark"] body`. Both arms verified in the browser - the first through moove's
+  switch, the second with the attribute on `<html>` as core writes it.
+
+  `colour_tokens_test` moved with the contract: `token_block()` and `token_block_text()` read the
+  `body` rule, `activation_block()` reads the new selector from a single `DARK_ACTIVATION_SELECTOR`
+  constant shared with `contract_block_selectors()`, and
+  `test_activation_selectors_are_root_anchored` was re-founded as
+  `test_activation_selectors_have_body_as_subject` - same hazard, an answer that no longer costs
+  the plugin every body-scoped host. Mutation-checked: a bare attribute selector reddens it, and so
+  does putting the token block back on `:root`.
+
 - **A 34-token colour layer, declared once on bare `:root`.** Prefix `--block-dimensions-*`, with
   a suffix set byte-identical to `local_dimensions`' — same names, different frankenstyle prefix,
   which is what makes the two plugins one system without letting either overwrite the other inside

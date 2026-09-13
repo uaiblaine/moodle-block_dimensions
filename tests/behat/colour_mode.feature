@@ -56,9 +56,10 @@ Feature: The block's colours follow the host page and nothing else
   # is the nearest thing it has, and the claim is the same one: the access pill is a nested
   # element inside a card amd/src/filters.js builds from a web-service response, inside a block
   # region the theme renders as its own off-canvas drawer - the far end of everything this
-  # plugin paints. Tokens declared on bare :root reach it for the reason they reach a dialogue,
-  # because html is the ancestor of every node in the document, and an enumeration of roots is
-  # exactly what would have missed it. Observed here rather than argued.
+  # plugin paints. Tokens declared on bare body reach it for the reason they reach a dialogue,
+  # because body is the ancestor of every node this plugin paints - core/modal appends its
+  # dialogue there too - and an enumeration of roots is exactly what would have missed it.
+  # Observed here rather than argued.
   @B3
   Scenario: A pill deep inside a card built after page load follows the host too
     Given I log in as "student1"
