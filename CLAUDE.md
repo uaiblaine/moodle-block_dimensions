@@ -112,9 +112,12 @@ markers in **any** file (docs included — never write those tokens literally),
 node container pinned to the version Moodle expects; never hand-edit minified
 output. `amd/build/**` is **tracked in git** — Moodle serves the compiled
 output. Every `amd/src` edit must ship its rebuilt `.min.js` + `.map` in the
-same commit, plus a `version.php` bump so the cache revision changes. The
-stacks run with `cachejs = false`, so during development just edit `amd/src`
-and reload.
+same commit, plus a `version.php` bump so the cache revision changes.
+**`cachejs = false` on the stacks does not serve `amd/src`.** Moodle always
+loads `amd/build/*.min.js` and reads `amd/src` only when the `.map` beside it is
+missing, so an `amd/src` edit reaches the page only after
+`mdl grunt m502 blocks/dimensions`. A JS mutation test that skips the rebuild
+silently tests the old build.
 
 **Do not add a `.stylelintrc.json` back.** The repo used to carry one, and it
 was deleted on 2026-09-05 because it had **no `extends`** — stylelint replaces
