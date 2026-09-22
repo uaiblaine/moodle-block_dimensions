@@ -65,19 +65,126 @@ class dataset_provider {
         }
     }
 
+    /** @var string The plans the learner is working on. */
+    public const BUCKET_ACTIVE = 'active';
+
+    /** @var string Plans waiting for a review and plans a reviewer has already opened. */
+    public const BUCKET_REVIEW = 'review';
+
+    /** @var string Plans that have been completed. */
+    public const BUCKET_COMPLETE = 'complete';
+
     /**
-     * Whether the user has active plans.
+     * @var array The statuses each status bucket carries, keyed by bucket name.
+     *
+     * A plain draft belongs to no bucket on purpose: nothing would render it, so a learner whose
+     * only plan is a draft would open a block with nothing in it. The two review statuses share a
+     * bucket the way core groups its own draft statuses.
+     */
+    protected const BUCKET_STATUSES = [
+        self::BUCKET_ACTIVE => [plan::STATUS_ACTIVE],
+        self::BUCKET_REVIEW => [plan::STATUS_WAITING_FOR_REVIEW, plan::STATUS_IN_REVIEW],
+        self::BUCKET_COMPLETE => [plan::STATUS_COMPLETE],
+    ];
+
+    /**
+     * The bucket a plan status belongs to, or null when the block has nowhere to show it.
+     *
+     * @param int $status A plan status constant.
+     * @return string|null
+     */
+    protected static function bucket_of(int $status): ?string {
+        foreach (self::BUCKET_STATUSES as $bucket => $statuses) {
+            if (in_array($status, $statuses, true)) {
+                return $bucket;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Whether the given string names a status bucket.
+     *
+     * @param string $bucket Bucket name.
+     * @return bool
+     */
+    public static function is_bucket(string $bucket): bool {
+        return isset(self::BUCKET_STATUSES[$bucket]);
+    }
+
+    /**
+     * The bucket the block opens on: the first one, in bucket order, that holds a plan.
+     *
+     * A learner whose plans have all finished must land on them, not on an empty Active bucket
+     * with a notice - that is the whole reason the render gate was widened beyond active plans.
+     * With no plan at all the answer is the active bucket, whose own empty state is the honest
+     * one, and the block does not render for such a learner anyway.
+     *
+     * @return string One of the BUCKET_* constants.
+     */
+    public function opening_bucket(): string {
+        $counts = $this->count_plans_by_bucket();
+        foreach (array_keys(self::BUCKET_STATUSES) as $bucket) {
+            if ($counts[$bucket] > 0) {
+                return $bucket;
+            }
+        }
+
+        return self::BUCKET_ACTIVE;
+    }
+
+    /**
+     * Whether the user holds a plan this block can show, in any of its status buckets.
      *
      * @return bool
      */
-    public function has_active_plans(): bool {
+    public function has_displayable_plans(): bool {
         foreach ($this->plans as $plan) {
-            if ($plan->get('status') == plan::STATUS_ACTIVE) {
+            if (self::bucket_of((int) $plan->get('status')) !== null) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * How many plans the learner holds in each status bucket.
+     *
+     * The constructor already read the whole plan list, so this costs no query: it is what lets
+     * the first response carry every bucket's count while building only one bucket's cards.
+     *
+     * @return array{active: int, review: int, complete: int}
+     */
+    public function count_plans_by_bucket(): array {
+        $counts = [
+            self::BUCKET_ACTIVE => 0,
+            self::BUCKET_REVIEW => 0,
+            self::BUCKET_COMPLETE => 0,
+        ];
+
+        foreach ($this->plans as $plan) {
+            $bucket = self::bucket_of((int) $plan->get('status'));
+            if ($bucket === null) {
+                continue;
+            }
+
+            /* In the active bucket a competencies-mode template becomes competency cards in the
+               section below, never a plan card, so counting it here would promise the grid a card
+               it does not show - and the count would disagree with the "Show all" pill beside it.
+               Every other bucket renders every plan as a plan card. */
+            if ($bucket === self::BUCKET_ACTIVE) {
+                [, $displaymode] = $this->resolve_plan_display_context($plan->get('templateid'));
+                if ($displaymode != constants::DISPLAYMODE_PLAN) {
+                    continue;
+                }
+            }
+
+            $counts[$bucket]++;
+        }
+
+        return $counts;
     }
 
     /**
@@ -92,14 +199,30 @@ class dataset_provider {
      * can fetch the missing group without re-processing the group that was
      * already loaded with favourites in Phase 1.
      *
+     * $planstatus names the status bucket to build cards for. Only the active bucket is loaded
+     * with the page; the others are built when the learner asks for them, which is what keeps a
+     * finished plan's images, metadata and trail off the first render. Outside the active bucket
+     * every plan renders as a plan card whatever its template's display mode, and no competency
+     * cards are built: the competency section is about work in progress.
+     *
      * @param bool $favouritesonly If true, only return favourited cards.
      * @param string $loadgroup Limit card building: 'plan', 'competency', or '' for both.
+     * @param string $planstatus Status bucket to build, or '' to open on the first one with plans.
      * @return array<string, mixed>
      */
-    public function get_dataset(bool $favouritesonly = false, string $loadgroup = ''): array {
+    public function get_dataset(
+        bool $favouritesonly = false,
+        string $loadgroup = '',
+        string $planstatus = ''
+    ): array {
         global $USER;
 
-        $activeplans = $this->get_active_plans();
+        if (!self::is_bucket($planstatus)) {
+            $planstatus = $this->opening_bucket();
+        }
+        $isactivebucket = $planstatus === self::BUCKET_ACTIVE;
+        $bucketplans = $this->get_plans_in_bucket($planstatus);
+        $plancounts = $this->count_plans_by_bucket();
 
         // Pre-load favourite IDs if the feature is enabled.
         $favouritesenabled = self::is_favourites_enabled();
@@ -115,13 +238,13 @@ class dataset_provider {
         $totalplans = 0;
         $totalcompetencies = 0;
 
-        foreach ($activeplans as $plan) {
+        foreach ($bucketplans as $plan) {
             $planid = $plan->get('id');
             $templateid = $plan->get('templateid');
 
             [$templatemetadata, $displaymode] = $this->resolve_plan_display_context($templateid);
 
-            if ($displaymode == constants::DISPLAYMODE_PLAN) {
+            if (!$isactivebucket || $displaymode == constants::DISPLAYMODE_PLAN) {
                 $totalplans++;
 
                 // Skip building plan cards when only loading competencies.
@@ -134,8 +257,8 @@ class dataset_provider {
                     $templateid,
                     $planid,
                     $templatemetadata,
-                    $favouritesonly,
-                    $planfavids
+                    $favouritesonly && $isactivebucket,
+                    $isactivebucket ? $planfavids : []
                 );
                 if (!empty($card)) {
                     $plancards[] = $card;
@@ -163,7 +286,9 @@ class dataset_provider {
         }
 
         return [
-            'hasactiveplans' => !empty($activeplans),
+            'planstatus' => $planstatus,
+            'plancounts' => $plancounts,
+            'hasactiveplans' => $plancounts[self::BUCKET_ACTIVE] > 0,
             'hasplancards' => !empty($plancards),
             'hascompetencies' => !empty($competencycards),
             'plancards' => $plancards,
@@ -176,19 +301,20 @@ class dataset_provider {
     }
 
     /**
-     * Get only active plans from the current plan list.
+     * Get the plans of one status bucket from the current plan list.
      *
+     * @param string $bucket One of the BUCKET_* constants.
      * @return array<int, \core_competency\plan>
      */
-    protected function get_active_plans(): array {
-        $activeplans = [];
+    protected function get_plans_in_bucket(string $bucket): array {
+        $plans = [];
         foreach ($this->plans as $plan) {
-            if ($plan->get('status') == plan::STATUS_ACTIVE) {
-                $activeplans[] = $plan;
+            if (self::bucket_of((int) $plan->get('status')) === $bucket) {
+                $plans[] = $plan;
             }
         }
 
-        return $activeplans;
+        return $plans;
     }
 
     /**
@@ -630,7 +756,10 @@ class dataset_provider {
             }
         }
 
-        $trailpayload = $this->build_plan_trail_payload($planid, $templateid, $imageurl);
+        $status = (int) $plan->get('status');
+        $bucket = self::bucket_of($status);
+        $iscomplete = $status === plan::STATUS_COMPLETE;
+        $trailpayload = $this->build_plan_trail_payload($planid, $templateid, $imageurl, $iscomplete);
         $imageurl = $this->sanitize_image_url($trailpayload['imageurl']);
         $totalcompetencies = $trailpayload['totalcompetencies'];
         $hasitemsbeforetrail = $trailpayload['hasitemsbeforetrail'];
@@ -640,7 +769,8 @@ class dataset_provider {
         $haspartialtrail = $this->has_partial_trail($competencytrail);
 
         $planname = format_string($plan->get('name'), true, ['context' => \context_system::instance()]);
-        $buttondata = $this->get_plan_button_data($planname, $haspartialtrail);
+        $buttondata = $this->get_plan_button_data($planname, $haspartialtrail, $bucket);
+        $statuslabel = $this->get_plan_status_label($plan, $status);
         $buttonlabel = $buttondata['buttonlabel'];
         $buttonarialabel = $buttondata['buttonarialabel'];
 
@@ -649,6 +779,11 @@ class dataset_provider {
         return [
             'id' => $planid,
             'name' => $planname,
+            'statuslabel' => $statuslabel,
+            'hasstatuslabel' => $statuslabel !== '',
+            'iscompleteplan' => $iscomplete,
+            'isreviewplan' => $bucket === self::BUCKET_REVIEW,
+            'showfavourite' => $bucket === self::BUCKET_ACTIVE,
             'url' => $viewurl->out(false),
             'imageurl' => $imageurl,
             'hasimage' => !empty($imageurl),
@@ -677,14 +812,49 @@ class dataset_provider {
     }
 
     /**
+     * The chip a card shows for a plan that is not simply active.
+     *
+     * A completed plan carries the date it closed. Core refuses to edit a completed plan
+     * (api::update_plan throws 'Completed plan cannot be edited'), so its timemodified is the
+     * moment it was completed - reopening and completing it again moves the date to the later
+     * completion, which is still the truth the chip states.
+     *
+     * @param \core_competency\plan $plan Plan object.
+     * @param int $status The plan's status.
+     * @return string Empty for an active plan, which needs no chip.
+     */
+    protected function get_plan_status_label(\core_competency\plan $plan, int $status): string {
+        switch ($status) {
+            case plan::STATUS_COMPLETE:
+                $completedon = userdate((int) $plan->get('timemodified'), get_string('strftimedatefullshort'));
+                return get_string('planstatuscompleted', 'block_dimensions', $completedon);
+            case plan::STATUS_WAITING_FOR_REVIEW:
+                return get_string('planstatuswaitingreview', 'block_dimensions');
+            case plan::STATUS_IN_REVIEW:
+                return get_string('planstatusinreview', 'block_dimensions');
+            default:
+                return '';
+        }
+    }
+
+    /**
      * Build trail-related payload for a plan card.
+     *
+     * A completed plan reads the ratings core froze at completion instead of the learner's
+     * current ones - local_dimensions owns that switch, and the flag is how it is asked for.
      *
      * @param int $planid Plan id.
      * @param int|null $templateid Template id.
      * @param string|null $imageurl Current image url.
+     * @param bool $iscomplete Whether the plan's status is complete.
      * @return array
      */
-    protected function build_plan_trail_payload(int $planid, ?int $templateid, ?string $imageurl): array {
+    protected function build_plan_trail_payload(
+        int $planid,
+        ?int $templateid,
+        ?string $imageurl,
+        bool $iscomplete = false
+    ): array {
         $payload = [
             'imageurl' => $imageurl,
             'totalcompetencies' => 0,
@@ -694,7 +864,7 @@ class dataset_provider {
         ];
 
         try {
-            $traildata = plan_trail_cache::get_trail_data($planid, $this->userid, $templateid);
+            $traildata = plan_trail_cache::get_trail_data($planid, $this->userid, $templateid, $iscomplete);
             $payload['totalcompetencies'] = $traildata['total'];
 
             if ($payload['totalcompetencies'] <= 0) {
@@ -790,9 +960,19 @@ class dataset_provider {
      *
      * @param string $planname Formatted plan name.
      * @param bool $haspartialtrail Whether trail is partially completed.
+     * @param string|null $bucket The plan's status bucket, or null for the active wording.
      * @return array
      */
-    protected function get_plan_button_data(string $planname, bool $haspartialtrail): array {
+    protected function get_plan_button_data(string $planname, bool $haspartialtrail, ?string $bucket = null): array {
+        if ($bucket !== null && $bucket !== self::BUCKET_ACTIVE) {
+            /* Outside the active bucket there is nothing to continue: the plan is finished or in
+               someone else's hands, and the card opens it to be read. */
+            return [
+                'buttonlabel' => get_string('viewplancard', 'block_dimensions'),
+                'buttonarialabel' => get_string('viewplancardaria', 'block_dimensions', $planname),
+            ];
+        }
+
         if ($haspartialtrail) {
             return [
                 'buttonlabel' => get_string('continuecard', 'block_dimensions'),

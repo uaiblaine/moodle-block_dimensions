@@ -34,13 +34,17 @@ draw its pages in light colours. There is also an `@media (prefers-color-scheme:
 `[data-dimensions-media-optin]`, which nothing in either plugin ever writes, and a PHPUnit test fails
 the build if it ever becomes reachable.
 
-**As-is only — and the as-is has moved twice.** There are no to-be panels. On **2026-07-27** the
+**As-is only — and the as-is has moved three times.** There are no to-be panels. On **2026-07-27** the
 plugin's palette was migrated to Moodle DS (every colour, both card gradients, one consolidated focus
 ring) and the horizontal card's title/star collision was fixed. On **2026-09-05** the literals that
 migration produced were replaced wholesale by the 34-token `:root` contract above, the dead
 `.theme-dark` / `body.dark` layer was deleted, the focus indicator converged on one outline shape,
 and the container-query layer went with the plugin's own `.stylelintrc.json`. The kit was re-baselined
-after each, so what the panels show is what `styles.css` ships today. `token-migration.md` is the
+after each, so what the panels show is what `styles.css` ships today. On **2026-09-22** the status
+filter arrived (its own screen, `screens/plan-status.html`), both card grids moved from a flex row
+to `repeat(auto-fill, minmax(...))` tracks - a flex row stretched the last card of an odd row to the
+full width - and the tag strip's `position: absolute` was restored, which a later stacking rule had
+overwritten with `relative`, cutting the strip in half on the horizontal card. `token-migration.md` is the
 record of both changes, and of which of the first migration's open questions the second one closed.
 
 **Two behaviours the second re-baseline genuinely lost**, recorded here rather than quietly dropped:
@@ -67,6 +71,7 @@ the card list's column count is now capped by a percentage flex basis rather tha
 | `screens/competency-card.html` | Competency card (`CMP`) — gradient plus halftone, custom colours, tags, access pill, 2-line clamped title |
 | `screens/empty-error.html` | States (`BLK` · `GST`) — loading, error, both empty states, the assertive favourite-error announcement, no-JS, and the two-phase-loading ghost card |
 | `screens/responsive.html` | Responsive (`RSP`) — the 575.98px breakpoint, the collapsible filter panel, and the container queries that respond to the block column rather than the viewport |
+| `screens/plan-status.html` | Plan status (`FLT-STATUS` · `PLN-STATUS`) — the three status buckets: the pill radiogroup, the busy pill and its skeleton cards, a bucket that is not drawn, and the three card chips |
 
 `screens/states.html` also lives in this folder but is grouped as a **Foundation** (see the table
 above), because it documents the interaction vocabulary rather than a surface. Its `@dsCard` group
@@ -109,7 +114,9 @@ resolves to a row; the twelve `STA-*` badges resolve to `states.html` itself.
 ## Code mapping
 - `block_dimensions.php` → `\block_dimensions\output\summary` → `summary.mustache`. The block renders
   only for logged-in non-guests and only when `core_competency` is enabled; `has_content()` returns
-  false when the user has no active plan, so the block does not appear at all.
+  false when the user has no active plan, so the block does not appear at all - except in editing
+  mode, where core keeps an empty block on the page with its controls so it can still be moved or
+  removed.
 - `summary.mustache` is a **shell**. `export_for_template()` ships `labelsjson`,
   `filtersettingsjson` and a handful of flags — no cards.
 - `amd/src/filters.js` calls the web service `block_dimensions_get_block_dataset` and renders
