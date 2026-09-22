@@ -58,6 +58,13 @@ class get_block_dataset extends external_api {
                 VALUE_DEFAULT,
                 ''
             ),
+            'planstatus' => new external_value(
+                PARAM_ALPHA,
+                'Status bucket to build plan cards for: "active", "review", "complete", or empty'
+                    . ' to let the block open on the first bucket that has plans',
+                VALUE_DEFAULT,
+                ''
+            ),
         ]);
     }
 
@@ -66,21 +73,34 @@ class get_block_dataset extends external_api {
      *
      * @param bool $favouritesonly Whether only favourites should be returned.
      * @param string $loadgroup Limit card building: 'plan', 'competency', or '' for both.
+     * @param string $planstatus Status bucket to build, or '' to open on the first one with plans.
      * @return array<string, mixed>
      */
-    public static function execute(bool $favouritesonly = false, string $loadgroup = '') {
+    public static function execute(
+        bool $favouritesonly = false,
+        string $loadgroup = '',
+        string $planstatus = ''
+    ) {
         global $USER;
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'favouritesonly' => $favouritesonly,
             'loadgroup' => $loadgroup,
+            'planstatus' => $planstatus,
         ]);
         $favouritesonly = (bool) $params['favouritesonly'];
         $loadgroup = $params['loadgroup'];
+        $planstatus = $params['planstatus'];
 
         // Validate loadgroup value.
         if ($loadgroup !== '' && $loadgroup !== 'plan' && $loadgroup !== 'competency') {
             throw new \invalid_parameter_exception('loadgroup must be "", "plan", or "competency"');
+        }
+
+        /* Validate the status bucket the same way, rather than silently serving another one.
+           The empty string is the block's own first load, where the server picks the bucket. */
+        if ($planstatus !== '' && !dataset_provider::is_bucket($planstatus)) {
+            throw new \invalid_parameter_exception('planstatus must be "active", "review", "complete" or empty');
         }
 
         require_login();
@@ -92,6 +112,12 @@ class get_block_dataset extends external_api {
 
         if (!get_config('core_competency', 'enabled')) {
             return [
+                'planstatus' => $planstatus,
+                'plancounts' => [
+                    'active' => 0,
+                    'review' => 0,
+                    'complete' => 0,
+                ],
                 'hasactiveplans' => false,
                 'hasplancards' => false,
                 'hascompetencies' => false,
@@ -110,9 +136,11 @@ class get_block_dataset extends external_api {
         self::validate_context($usercontext);
 
         $provider = new dataset_provider((int)$USER->id);
-        $dataset = $provider->get_dataset($favouritesonly, $loadgroup);
+        $dataset = $provider->get_dataset($favouritesonly, $loadgroup, $planstatus);
 
         return [
+            'planstatus' => $dataset['planstatus'],
+            'plancounts' => $dataset['plancounts'],
             'hasactiveplans' => $dataset['hasactiveplans'],
             'hasplancards' => $dataset['hasplancards'],
             'hascompetencies' => $dataset['hascompetencies'],
@@ -133,6 +161,10 @@ class get_block_dataset extends external_api {
      * @return external_single_structure
      */
     public static function execute_returns() {
+        $cardtag = new external_single_structure([
+            'value' => new external_value(PARAM_TEXT, 'Tag text shown on the card'),
+        ]);
+
         $trailitem = new external_single_structure([
             'id' => new external_value(PARAM_INT, 'Competency id'),
             'planid' => new external_value(PARAM_INT, 'Plan id'),
@@ -148,6 +180,11 @@ class get_block_dataset extends external_api {
             'id' => new external_value(PARAM_INT, 'Plan id'),
             'name' => new external_value(PARAM_TEXT, 'Plan name'),
             'url' => new external_value(PARAM_URL, 'Plan url'),
+            'statuslabel' => new external_value(PARAM_TEXT, 'Status chip text, empty for an active plan'),
+            'hasstatuslabel' => new external_value(PARAM_BOOL, 'Whether the card shows a status chip'),
+            'iscompleteplan' => new external_value(PARAM_BOOL, 'Whether the plan is completed'),
+            'isreviewplan' => new external_value(PARAM_BOOL, 'Whether the plan is waiting for or under review'),
+            'showfavourite' => new external_value(PARAM_BOOL, 'Whether the card offers the favourite toggle'),
             'imageurl' => new external_value(PARAM_URL, 'Image url', VALUE_OPTIONAL),
             'hasimage' => new external_value(PARAM_BOOL, 'Has image'),
             'hastrail' => new external_value(PARAM_BOOL, 'Has trail'),
@@ -164,6 +201,8 @@ class get_block_dataset extends external_api {
             'hastag1' => new external_value(PARAM_BOOL, 'Has tag 1'),
             'tag2' => new external_value(PARAM_TEXT, 'Tag 2', VALUE_OPTIONAL),
             'hastag2' => new external_value(PARAM_BOOL, 'Has tag 2'),
+            'tags' => new external_multiple_structure($cardtag, 'Tag pills drawn on the card'),
+            'hastags' => new external_value(PARAM_BOOL, 'Whether the card draws tag pills'),
             'showcardtitle' => new external_value(PARAM_BOOL, 'Show card title'),
             'buttonlabel' => new external_value(PARAM_TEXT, 'Button label'),
             'buttonarialabel' => new external_value(PARAM_TEXT, 'Button aria label'),
@@ -184,6 +223,8 @@ class get_block_dataset extends external_api {
             'hastag1' => new external_value(PARAM_BOOL, 'Has tag 1'),
             'tag2' => new external_value(PARAM_TEXT, 'Tag 2', VALUE_OPTIONAL),
             'hastag2' => new external_value(PARAM_BOOL, 'Has tag 2'),
+            'tags' => new external_multiple_structure($cardtag, 'Tag pills drawn on the card'),
+            'hastags' => new external_value(PARAM_BOOL, 'Whether the card draws tag pills'),
             'bgcolor' => new external_value(PARAM_TEXT, 'Background color', VALUE_OPTIONAL),
             'hasbgcolor' => new external_value(PARAM_BOOL, 'Has background color'),
             'textcolor' => new external_value(PARAM_TEXT, 'Text color', VALUE_OPTIONAL),
@@ -240,6 +281,12 @@ class get_block_dataset extends external_api {
         ]);
 
         return new external_single_structure([
+            'planstatus' => new external_value(PARAM_ALPHA, 'The status bucket these plan cards belong to'),
+            'plancounts' => new external_single_structure([
+                'active' => new external_value(PARAM_INT, 'Number of active plans'),
+                'review' => new external_value(PARAM_INT, 'Number of plans waiting for or under review'),
+                'complete' => new external_value(PARAM_INT, 'Number of completed plans'),
+            ], 'How many plans the learner holds in each status bucket'),
             'hasactiveplans' => new external_value(PARAM_BOOL, 'Has active plans'),
             'hasplancards' => new external_value(PARAM_BOOL, 'Has plan cards'),
             'hascompetencies' => new external_value(PARAM_BOOL, 'Has competency cards'),

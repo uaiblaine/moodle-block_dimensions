@@ -68,6 +68,12 @@ define([], function() {
                 plan: false,
                 competency: false
             },
+            // The status axis. planStatus is the bucket on screen; statusCards keeps each
+            // bucket's cards once they have been fetched, so coming back costs no request.
+            planStatus: 'active',
+            planCounts: {active: 0, review: 0, complete: 0},
+            statusCards: {active: null, review: null, complete: null},
+            statusLoading: null,
             favouritesEnabled: !!(options && options.favouritesenabled),
             filterSettings: (options && options.filtersettings) || {},
             renderToken: 0,

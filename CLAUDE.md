@@ -132,8 +132,10 @@ relaxing, extend Moodle's config; do not shadow it.
 
 ```
 block_dimensions.php         Block class — content renders only for logged-in
-                             non-guests, gated on get_config('core_competency',
-                             'enabled'); can_block_be_added() enforces the same
+                             non-guests holding a plan the block can show
+                             (summary::has_content()), gated on
+                             get_config('core_competency', 'enabled');
+                             can_block_be_added() enforces the same
 settings.php                 Admin settings (visibility, filters, favourites,
                              plan-card layout)
 version.php                  component / version / requires / supported / dependencies
@@ -169,6 +171,9 @@ tests/                       PHPUnit: dataset_provider (double pattern),
 tests/behat/                 colour_mode.feature + behat_block_dimensions.php
 docs/block-kit/              As-is visual replica of the block (excluded from
                              the release zip via .gitattributes)
+docs/proposals/              To-be designs and the decisions behind them, one
+                             dated folder each; block-kit stays as-is and must
+                             not describe a proposal until it ships
 ```
 
 ## Architecture gotchas
@@ -181,6 +186,131 @@ docs/block-kit/              As-is visual replica of the block (excluded from
 `favouritesonly` first, then `loadgroup` (`plan` / `competency`) fetches the
 missing group. **Don't add server-side card building back into `summary.php`**
 — an earlier refactor removed exactly that dead path.
+
+### No plan the block can show, no block — like block_lp
+
+`get_content()` returns empty content unless `summary::has_content()` is true,
+which is `dataset_provider::has_displayable_plans()`: the same plan list the web
+service builds its dataset from, so the gate and the dataset cannot disagree.
+Core then drops the block from the page (`block_base::get_content_for_output()`
+returns null for an empty block), except in editing mode, where the block keeps
+its controls — that is how a user with no plan still finds it to move or remove
+it.
+
+**"Can show" means one of the status buckets the filter carries** — active,
+waiting for review, in review, completed — and the list is the
+`BUCKET_STATUSES` constant beside the method. A plain **draft** is
+deliberately excluded: no bucket renders one, so the block would open with
+nothing in it. The gate started narrower, at active plans only (2026-09-22), and
+was widened the same day when the owner chose option B of the status-filter
+proposal: a learner whose plans have all finished must still reach them, which
+an active-only gate made impossible. `docs/proposals/2026-09-22-status-filter/`
+records that decision. block_lp is broader still — any plan it can read, plus a
+non-empty review queue — because its body carries a link to the plans page,
+which this block does not.
+
+**This gate was silently lost once.** The move to web-service rendering
+(`f4806ef`, 2026-03-13, before the 1.0 release) deleted the two lines calling
+`has_content()` and left the method in place — and `docs/block-kit`, written four
+and a half months later, described the gate from the method alone, because
+nothing showed it was never called. A method existing is not a gate running.
+`tests/dimensions_test.php` pins it now. One trap in that test worth keeping: a
+learner cannot read their own drafts by default
+(`moodle/competency:planviewowndraft` has no archetype), so a draft or in-review
+plan is filtered out by `api::list_user_plans()` before its status is ever
+looked at. Both the test and `visibility.feature` grant that capability, and the
+test asserts the plan reaches the list; without that, the draft case passes
+while testing nothing — it would be excluded by a permission rather than by the
+bucket rule it exists to prove.
+
+**The gate fails open, and logs with `error_log()` on purpose.** The block
+renders inline with the page and core's block manager catches nothing, so an
+exception from the plan read (a lost connection, a read timeout) would replace
+the whole Dashboard with an error page. `summary::has_content()` catches
+`\Throwable`, logs, and answers **true**: the shell renders exactly as it did
+before the gate existed, and the web service reads the plans again and, if that
+fails too, shows its own error box with a retry button. Failing closed would
+hide the block silently for everyone on a failure that repeats. Two traps:
+
+- `debugging()` is not an option in that catch. With `debugdisplay` on and
+  pretty exceptions (the default), `debugging()` calls `trigger_error()` and
+  Whoops turns it into an `ErrorException` during a page render; AJAX and CLI
+  are exempt (`get_whoops()` returns null for them), a page is not. So the
+  "correct" fix a reviewer would suggest throws the page-killing exception from
+  inside the catch. moodle-cs forbids `error_log()` in favour of `debugging()`,
+  hence the one targeted `phpcs:ignore` on that line; do not "fix" it.
+- The catch is in `summary`, not in `dataset_provider`'s constructor. The web
+  service uses the provider too, and there a failure must stay an error the
+  client can retry, not become an empty plan list.
+
+`tests/output/summary_test.php` forces the failure through the
+`create_dataset_provider()` seam; removing the catch, failing closed and
+dropping the log line each redden it.
+
+### The status filter: three buckets, one loaded with the page
+
+The plan grid is scoped by a status bucket - `dataset_provider::BUCKET_ACTIVE` / `BUCKET_REVIEW`
+(both review statuses) / `BUCKET_COMPLETE`, with `BUCKET_STATUSES` as the only map between a core
+status and a bucket. The web service takes `planstatus` and **refuses an unknown value** rather
+than quietly serving the active one. Facts worth keeping:
+
+- **The block opens on the first bucket that has plans.** `opening_bucket()` walks the buckets
+  in order and the web service resolves an EMPTY `planstatus` through it, so a learner whose
+  plans have all finished lands on them instead of on an empty Active bucket with a notice —
+  which is the whole reason the render gate was widened beyond active plans. Every later request
+  carries `state.planStatus` explicitly: leaving it out again would pull the grid back to the
+  opening bucket mid-session.
+- **The pills belong to the filter bar.** `renderStatusPills()` pushes them first into the bar
+  `renderFilterControls()` builds, beside the favourites pills and the tag filters, so on a phone
+  they appear with everything else when the panel is opened. They were briefly given a host of
+  their own outside that panel (2026-09-22) and the owner asked for them back in the bar: the
+  block keeps one place where filtering happens.
+- **Only the active bucket is loaded with the page.** `filters.js` keeps each fetched bucket in
+  `state.statusCards`, so switching back costs no request; the first switch to a bucket draws
+  skeleton cards while it loads.
+- **The counts are free, and they count what the grid will show.** The provider already holds the
+  whole plan list, so `count_plans_by_bucket()` adds no query - but the active count skips a
+  competencies-mode template, which becomes competency cards rather than a plan card. Without that
+  the pill said 5 while the "Show all" pill beside it said 4.
+- **A bucket with no plans is not drawn.** An empty *In review* would read as "you have none",
+  while on most sites it means "you cannot see them": the review statuses are core's draft
+  statuses, and a learner needs `moodle/competency:planviewowndraft`, which no archetype holds.
+- **Outside the active bucket** every plan renders as a plan card whatever its display mode, with a
+  status chip, *View plan* instead of *Continue*, and no favourite star. Competency cards belong to
+  the active plans and are not rebuilt when the bucket changes.
+- **A completed plan's trail comes from the frozen archive**, which is `local_dimensions`
+  2026092200 (`get_trail_data(..., $iscomplete)`) - hence the dependency bump. Reading live there
+  makes the card disagree with core's own plan page about a plan that closed months ago.
+- **Every label the pills draw ships in `labelsjson`.** The pills are built by JavaScript from that
+  payload alone: a label missing there does not fail anything, it draws the bucket key at the
+  learner. That shipped once; `summary_test` now asserts the payload.
+
+### Two card-layout invariants a browser found and no gate can see
+
+Both defects below were in the repo, both were invisible to phpcs, the mustache lint and
+stylelint - they read syntax, and what broke was geometry - and both are now pinned by
+`tests/local/card_layout_test.php`.
+
+- **The card grids lay out on `repeat(auto-fill, minmax(...))` tracks, never a flex row.** A flex
+  item grows to fill its line, so the last card of an odd row stretched to the full width while the
+  row above kept three columns. `auto-fill` keeps the empty tracks. The item rule must also
+  neutralise the Bootstrap column classes the client puts on each `<li>`, or the card shrinks
+  inside its own track.
+- **`.dimension-tags` stays `position: absolute`.** A rule lifting it above the stretched-link
+  overlay re-declared `position: relative`, which returned it to the flow, where the image
+  wrapper's `overflow: hidden` cut the pills in half on the horizontal card. Put stacking in that
+  rule, never position. The test strips CSS comments before matching, because its own first draft
+  read a comment naming the selector as though it were the rule.
+
+### The screenshots in `docs/screenshots/` are real, and reproducible
+
+They are the running block on m502, captured headless over the DevTools protocol, not mockups: the
+learner is a seeded fixture (`alex.morgan`), the site is stock Boost in English, and the session
+came from a token-gated helper deleted right after. The seeding and capture scripts are not in the
+repo; what matters here is the rule: **a screenshot in the README is a claim about the plugin, so
+re-take the affected ones whenever a surface moves.** Every defect fixed in the 2026-09-22 round -
+the stretched card, the clipped tag strip, the missing tag pills, the pills drawing their own keys -
+was found by looking at those captures, not by a gate.
 
 ### The colour system: 34 tokens, one activation rule, three plugin-owned values
 

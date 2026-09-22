@@ -83,6 +83,12 @@ class summary implements renderable, templatable {
             'paddleright' => get_string('paddleright', 'block_dimensions'),
             'filterbyplan' => get_string('filterbyplan', 'block_dimensions'),
             'filterbycompetency' => get_string('filterbycompetency', 'block_dimensions'),
+            'statusfilter' => get_string('statusfilter', 'block_dimensions'),
+            'statusactive' => get_string('statusactive', 'block_dimensions'),
+            'statusreview' => get_string('statusreview', 'block_dimensions'),
+            'statuscomplete' => get_string('statuscomplete', 'block_dimensions'),
+            'statusloadingreview' => get_string('statusloadingreview', 'block_dimensions'),
+            'statusloadingcomplete' => get_string('statusloadingcomplete', 'block_dimensions'),
         ];
 
         return [
@@ -102,12 +108,44 @@ class summary implements renderable, templatable {
     }
 
     /**
-     * Returns whether there is content in the summary.
+     * Whether the block has anything to show: the user holds a plan in one of the status buckets
+     * the block renders - active, in review or completed.
      *
-     * @return boolean
+     * A plain draft does not count: no bucket shows one, so the block would open empty. The plan
+     * list comes from the same provider the web service uses, so this gate and the dataset cannot
+     * disagree about the same user.
+     *
+     * A failure reading the plan list must never take the page down: the block is rendered inline
+     * with the page, and core's block manager catches nothing, so an exception here would replace
+     * the whole Dashboard with an error page. On any failure the gate answers true, which renders
+     * the shell exactly as the block did before the gate existed; the web service then reads the
+     * plans again and, if that fails too, shows its own error with a retry button. Failing open is
+     * deliberate: failing closed would hide the block silently, for everyone, on a failure that
+     * repeats. The failure is logged with error_log() and not debugging(), because on a site with
+     * developer debugging and pretty exceptions, debugging() during a page render is turned into
+     * an ErrorException by Whoops - the very page-killing throw this catch exists to prevent.
+     *
+     * @return bool
      */
     public function has_content() {
-        $provider = new dataset_provider((int)$this->user->id);
-        return $provider->has_active_plans();
+        try {
+            return $this->create_dataset_provider()->has_displayable_plans();
+        } catch (\Throwable $e) {
+            // The suggested debugging() throws under Whoops during a page render; see the docblock.
+            // phpcs:ignore moodle.PHP.ForbiddenFunctions.FoundWithAlternative
+            error_log('block_dimensions: reading the plan list for the block gate failed: ' . $e->getMessage());
+            return true;
+        }
+    }
+
+    /**
+     * Build the provider the gate reads the plan list from.
+     *
+     * Extracted so a test can make the read fail without breaking the database.
+     *
+     * @return dataset_provider
+     */
+    protected function create_dataset_provider(): dataset_provider {
+        return new dataset_provider((int)$this->user->id);
     }
 }

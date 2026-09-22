@@ -1,0 +1,208 @@
+<!-- @dsCard group="Block screens · Plan status (FLT-STATUS · PLN-STATUS)" name="Status filter — pills, busy state, chips, skeleton" subtitle="filters.js + plan_card.mustache — the three status buckets · as-is light │ dark" -->
+<style>
+/* ============================================================================
+   Canonical block-kit scaffold (shared by every screen file).
+   AS-IS token values live on .kit (light) and .panel.dark (dark). The plugin
+   no longer ships a skin of its own: styles.css declares 34 tokens on bare
+   :root as var(--bs-NEW, var(--BS4-OLD, #literal)) chains, so 31 of them ARE
+   core's own Bootstrap values and flip because core's [data-bs-theme="dark"]
+   block flips them. Only shadow, scrim and favourite are plugin-authored and
+   restated under :root[data-bs-theme="dark"]. So the two --bk-* blocks below
+   are the two RESOLUTIONS of one contract, not two hand-written palettes: the
+   light column is core's :root/[data-bs-theme="light"] values and the dark
+   column is core's [data-bs-theme="dark"] values, both read out of the running
+   m502 stack's compiled Boost sheet on 2026-09-05. Markup is written once with
+   var(--bk-*) so the two panels differ by token values alone.
+   See tokens.html / token-migration.md.
+   Re-based 2026-09-05; the 2026-07-27 Moodle DS values it replaces are gone.
+   ============================================================================ */
+.kit{
+  --bk-page:#fff;--bk-surface:#fff;--bk-surface-2:#f8f9fa;
+  --bk-card-bg:#fff;--bk-plan-card-bg:#fff;
+  --bk-card-border:#dee2e6;--bk-plan-card-border:#dee2e6;
+  --bk-text:#1d2125;--bk-muted:rgba(29,33,37,.75);
+  --bk-line:#e9ecef;--bk-line-2:#dee2e6;--bk-line-3:#dee2e6;--bk-line-4:#dee2e6;
+  --bk-accent:#0f6cbf;--bk-accent-dark:#0c5699;--bk-accent-deep:#062b4c;
+  --bk-pill-platter:#e9ecef;--bk-pill-text:rgba(29,33,37,.75);--bk-pill-indicator:#fff;
+  --bk-counter-bg:#fff;--bk-counter-fg:rgba(29,33,37,.75);--bk-counter-active-bg:#cfe2f2;--bk-counter-active-fg:#062b4c;
+  --bk-search-border:#dee2e6;--bk-search-icon:rgba(29,33,37,.75);--bk-search-placeholder:rgba(29,33,37,.75);
+  --bk-search-glow:transparent;
+  --bk-select-hover-bg:#dee2e6;--bk-select-hover-border:rgba(29,33,37,.75);
+  --bk-paddle:rgba(29,33,37,.75);--bk-paddle-hover:#1d2125;
+  --bk-btn-bg:#fff;--bk-btn-fg:#1d2125;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.1);
+  --bk-section-from:#062b4c;--bk-section-to:#0f6cbf;
+  --bk-plan-grad-a:#0f6cbf;--bk-plan-grad-b:#062b4c;
+  --bk-comp-grad-a:#f9deb8;--bk-comp-grad-b:#e8590c;--bk-comp-grad-c:#60451f;
+  --bk-tag-bg:#e9ecef;--bk-tag-fg:#1d2125;--bk-halftone:#00000082;
+  --bk-success:#153114;--bk-success-text:#153114;--bk-star:#e8590c;
+  --bk-focus:#000;--bk-focus-glow:transparent;--bk-focus-btn:#000;
+  --bk-danger-fg:#51140d;--bk-danger-bg:#f4d6d2;
+  --bk-warn-fg:#1d2125;--bk-warn-bg:#fcefdc;--bk-warn-border:#f9deb8;
+  --bk-empty-circle:rgba(29,33,37,.75);--bk-empty-ring:1px;--bk-ghost-fg:rgba(29,33,37,.75);--bk-ghost-circle:#dee2e6;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--bk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
+}
+.kit *{box-sizing:border-box;}
+.panel.dark{
+  --bk-page:#1d2125;--bk-surface:#1d2125;--bk-surface-2:#292e33;
+  --bk-card-bg:#1d2125;--bk-plan-card-bg:#1d2125;
+  --bk-card-border:#495057;--bk-plan-card-border:#495057;
+  --bk-text:#dee2e6;--bk-muted:rgba(222,226,230,.75);
+  --bk-line:#343a40;--bk-line-2:#495057;--bk-line-3:#495057;--bk-line-4:#495057;
+  --bk-accent:#6fa7d9;--bk-accent-dark:#8cb9e1;
+  --bk-pill-platter:#343a40;--bk-pill-text:rgba(222,226,230,.75);--bk-pill-indicator:#1d2125;
+  --bk-search-border:#495057;--bk-search-icon:rgba(222,226,230,.75);--bk-search-placeholder:rgba(222,226,230,.75);
+  --bk-search-glow:transparent;
+  --bk-select-hover-bg:#495057;
+  --bk-paddle:rgba(222,226,230,.75);--bk-paddle-hover:#dee2e6;
+  --bk-btn-bg:#1d2125;--bk-btn-fg:#dee2e6;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.55);
+  --bk-success:#86af84;--bk-success-text:#86af84;
+  --bk-counter-bg:#1d2125;--bk-counter-fg:rgba(222,226,230,.75);
+  --bk-focus:#fff;--bk-focus-glow:transparent;--bk-focus-btn:#fff;
+  --bk-danger-fg:#df8379;--bk-danger-bg:#280a06;
+  --bk-warn-fg:#dee2e6;--bk-warn-bg:#302310;--bk-warn-border:#90682f;
+  --bk-empty-circle:rgba(222,226,230,.75);--bk-ghost-fg:rgba(222,226,230,.75);--bk-ghost-circle:#495057;
+  color:var(--bk-text);
+}
+.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
+.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--bk-page);padding:0 0 18px;overflow:hidden;}
+.panel.dark{border-color:#343a40;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--bk-text);padding:12px 20px 0;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--mono);font-size:10px;color:var(--bk-pill-text);background:var(--bk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
+.idb.r{border-color:#c9a3a3;color:#a3552d;}
+.panel.dark .idb{color:#adb5bd;border-color:#495057;}
+.bk-cap{font-size:11px;color:var(--bk-muted);padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.bk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
+.divlbl{font-size:11px;color:var(--bk-muted);margin:14px 20px 4px;border-top:1px solid var(--bk-line);padding-top:10px;}
+.note{font-size:10px;color:var(--bk-muted);padding:2px 20px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+.legend{max-width:1100px;margin:16px auto 0;background:#fff;border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
+.leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
+.leg .v b{color:#212529;font-weight:600;}
+.leg .v{color:#495057;}
+.leg .rule{color:#8a8980;}
+.kit{
+  --flt-tab-active-fg:var(--bk-accent);          /* --dims-tabs-item-color-active */
+  --flt-fav-active-fg:#fff;                      /* .dims-fav-filter-btn.active colour */
+  --flt-ind-shadow:0 1px 3px rgba(0,0,0,.12);    /* --dims-tabs-indicator-shadow */
+  --flt-fav-shadow:0 1px 3px rgba(0,0,0,.12);    /* no dark override in styles.css */
+  --flt-select-fg:var(--bk-pill-text);
+  --flt-mask-on:black;                           /* mask alpha, not a UI colour */
+  --flt-mask-off:transparent;
+  /* Two 4px triangles meeting edge to edge, both currentcolor, so the glyph
+     follows the control's own text colour and needs no second image in dark.
+     The inline SVG data URI this replaces could not survive the gate at all:
+     Moodle's stylelint bans image data URIs (function-url-scheme-disallowed-list). */
+  --flt-select-chevron:linear-gradient(45deg,transparent 50%,currentcolor 50%),linear-gradient(135deg,currentcolor 50%,transparent 50%);
+}
+.panel.dark{
+  --flt-tab-active-fg:#6fa7d9;
+  --flt-fav-active-fg:#212529;
+  --flt-ind-shadow:0 1px 3px rgba(0,0,0,.3);
+  --flt-select-fg:rgba(222,226,230,.75);
+  /* No dark twin needed: currentcolor already followed the flipped ink. */
+}
+
+/* ---- .dims-filters-bar (styles.css:1216-1233) ---- */
+.flt-wrap{padding:6px 20px 2px;}
+.flt-bar{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;}
+
+/* ---- .dims-filter-tabs platter (styles.css:1275-1305); real custom properties:
+       height 44px · inner 36px · padding 4px · paddle 40px · mask gradient 22px ---- */
+.flt-tabs{position:relative;display:inline-flex;width:fit-content;max-width:100%;height:44px;padding:4px;
+  background:var(--bk-pill-platter);border-radius:999px;overflow:hidden;}
+.flt-mask{position:relative;width:100%;height:100%;z-index:1;overflow-x:hidden;}
+.flt-mask.fade{
+  -webkit-mask-image:linear-gradient(90deg,var(--flt-mask-off) 0,var(--flt-mask-off) 36px,var(--flt-mask-on) 58px,
+    var(--flt-mask-on) calc(100% - 58px),var(--flt-mask-off) calc(100% - 36px),var(--flt-mask-off));
+  mask-image:linear-gradient(90deg,var(--flt-mask-off) 0,var(--flt-mask-off) 36px,var(--flt-mask-on) 58px,
+    var(--flt-mask-on) calc(100% - 58px),var(--flt-mask-off) calc(100% - 36px),var(--flt-mask-off));
+}
+.flt-items{display:flex;align-items:center;width:fit-content;height:100%;margin:0;padding:0;white-space:nowrap;position:relative;z-index:1;}
+
+/* ---- .dims-filter-tab (styles.css:1376-1422) ---- */
+.flt-tab{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.5rem 1rem;border:none;
+  background:transparent;border-radius:999px;font-family:var(--font);font-size:.875rem;font-weight:500;
+  color:var(--bk-pill-text);cursor:pointer;white-space:nowrap;position:relative;z-index:2;opacity:.8;
+  transition:color 120ms ease-out,opacity 100ms ease-in-out;-webkit-user-select:none;user-select:none;}
+.flt-tab:hover{opacity:1;}
+.flt-tab.active{background:transparent;color:var(--flt-tab-active-fg);opacity:1;cursor:default;}
+/* Deterministic widths so the hand-placed indicator lines up in any font. */
+.w-all{min-width:52px;}.w-val{min-width:66px;}.w-fav{min-width:178px;}.w-show{min-width:140px;}
+
+/* ---- favourite pill (styles.css:1879-1911) ---- */
+.flt-tab.fav{gap:.35rem;}
+.flt-tab.fav.active{background:var(--bk-accent);color:var(--flt-fav-active-fg);box-shadow:var(--flt-fav-shadow);}
+.flt-tab.fav .ic.st{width:.8rem;height:.8rem;fill:currentColor;stroke:none;}
+
+/* ---- .dims-filter-count (styles.css:1942-1972, rest state 1931-1939); both skins are
+       named by the scaffold now, so the badge needs no screen-local token ---- */
+.flt-count{font-weight:600;margin-left:.15rem;background:var(--bk-counter-bg);color:var(--bk-counter-fg);
+  border-radius:999px;padding:0 6px;font-size:.75rem;}
+.flt-tab.fav.active .flt-count,.flt-tab.show.active .flt-count{background:var(--bk-counter-active-bg);color:var(--bk-counter-active-fg);}
+
+/* ---- .dims-filter-tabs-indicator (styles.css:1425-1440) ---- */
+.flt-ind{position:absolute;top:4px;bottom:4px;height:calc(100% - 8px);border-radius:999px;
+  background-color:var(--bk-pill-indicator);box-shadow:var(--flt-ind-shadow);pointer-events:none;z-index:0;}
+
+/* ---- .dims-filter-tabs-paddle (styles.css:1443-1504) ---- */
+.flt-paddles{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:3;}
+.flt-paddle{position:absolute;top:4px;bottom:4px;width:40px;min-height:36px;z-index:3;display:flex;align-items:center;
+  justify-content:center;border:none;background:transparent;color:var(--bk-paddle);cursor:pointer;pointer-events:auto;padding:0;}
+.flt-paddle:hover{color:var(--bk-paddle-hover);}
+.flt-paddle.l{left:0;}.flt-paddle.r{right:0;}
+.flt-paddle svg{pointer-events:none;width:8px;height:14px;}
+
+/* ---- .dims-filter-select (styles.css:1514-1552, hover/focus 1543-1552) ---- */
+.flt-select{appearance:none;-webkit-appearance:none;padding:.5rem 2rem .5rem 1rem;border:1px solid var(--bk-line-3);
+  border-radius:999px;background-color:var(--bk-pill-platter);background-image:var(--flt-select-chevron);
+  background-repeat:no-repeat;background-position:right .75rem center;background-size:12px;font-family:var(--font);
+  font-size:.875rem;font-weight:500;color:var(--flt-select-fg);cursor:pointer;min-width:120px;transition:all .2s ease;}
+.flt-select:hover{background-color:var(--bk-select-hover-bg);border-color:var(--bk-select-hover-border);}
+
+/* ---- .dims-clear-filters-btn (styles.css:1216-1252, hover 1239-1243) ---- */
+.flt-clear{display:inline-flex;align-items:center;gap:.375rem;padding:.5rem 1rem;border:1px solid var(--bk-line-3);
+  border-radius:999px;background:transparent;font-family:var(--font);font-size:.875rem;font-weight:500;
+  color:var(--bk-muted);cursor:pointer;white-space:nowrap;flex-shrink:0;
+  transition:color .15s ease,border-color .15s ease,background .15s ease;}
+.flt-clear:hover,.flt-clear.hov{color:var(--bk-danger-fg);border-color:var(--bk-danger-fg);background:var(--bk-danger-bg);}
+.flt-clear .ic{width:.8rem;height:.8rem;}
+/* ---- screen-local: the tone triples the chip reads (styles.css:70-87), resolved for both
+        modes, plus the skeleton greys ---- */
+.kit{
+  --bk-success-ink:#153114;--bk-success-tint:#d7e4d6;--bk-success-edge:#aecaad;
+  --bk-warning-ink:#60451f;--bk-warning-tint:#fcefdc;--bk-warning-edge:#f9deb8;
+}
+.panel.dark{
+  --bk-success-ink:#86af84;--bk-success-tint:#0b180a;--bk-success-edge:#20491e;
+  --bk-warning-ink:#f6ce95;--bk-warning-tint:#302310;--bk-warning-edge:#90682f;
+}
+/* ---- status pills: the platter and pill of the filter bar, one more radiogroup
+        (filters.js:74-108) ---- */
+.flt-wrap{padding:6px 20px 2px;}
+.flt-bar{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;}
+.w-st-a{min-width:104px;}.w-st-r{min-width:132px;}.w-st-c{min-width:136px;}
+.flt-tab.st{gap:.4rem;padding:.5rem .75rem;}
+.flt-tab.st.active .flt-count{background:var(--bk-counter-active-bg);color:var(--bk-counter-active-fg);}
+/* ---- the status chip a card carries outside the active bucket (styles.css:701-724) ---- */
+.chipdemo{display:flex;flex-wrap:wrap;gap:12px;padding:10px 20px 2px;}
+.dims-plan-status{display:inline-flex;align-items:center;gap:.3rem;width:fit-content;padding:.15rem .625rem;
+  border:1px solid transparent;border-radius:999px;font-size:.75rem;font-weight:600;line-height:1.3;}
+.dims-plan-status .ic{width:.8rem;height:.8rem;stroke-width:2.4;}
+.dims-plan-status.is-complete{border-color:var(--bk-success-edge);background:var(--bk-success-tint);color:var(--bk-success-ink);}
+.dims-plan-status.is-review{border-color:var(--bk-warning-edge);background:var(--bk-warning-tint);color:var(--bk-warning-ink);}
+/* ---- skeleton cards, drawn while a bucket loads (styles.css:729-...) ---- */
+.skgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(19rem,1fr));gap:1rem;list-style:none;margin:0;padding:10px 20px 2px;}
+.dims-skeleton-card{overflow:hidden;border:1px solid var(--bk-line);border-radius:.5rem;background:var(--bk-surface);}
+.dims-skeleton-media{height:120px;background:var(--bk-line);}
+.dims-skeleton-body{display:flex;flex-direction:column;gap:.6rem;padding:1rem;}
+.dims-skeleton-line{display:block;width:90%;height:.7rem;border-radius:999px;background:var(--bk-line);}
+.dims-skeleton-line-sm{width:40%;}
+.dims-skeleton-line-md{width:60%;}
+.loadline{font-size:.875rem;color:var(--bk-muted);padding:8px 20px 0;margin:0;}
+</style>
+<div class="kit"><div class="screens"><div class="panel"><div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>Light</div><div class="bk-cap">1 · Status pills — one radiogroup per bucket <span class="idb">FLT-STATUS</span> <span class="idb">FLT-COUNT</span></div><div class="flt-wrap"><div class="flt-bar" role="toolbar" aria-label="Filter learning plans"><div class="flt-tabs" role="radiogroup" aria-label="Plan status"><div class="flt-mask"><div class="flt-items"><button type="button" class="flt-tab st w-st-a active" role="radio" aria-checked="true" tabindex="0" aria-busy="false">Active <span class="flt-count">4</span></button><button type="button" class="flt-tab st w-st-r" role="radio" aria-checked="false" tabindex="-1" aria-busy="false">In review <span class="flt-count">2</span></button><button type="button" class="flt-tab st w-st-c" role="radio" aria-checked="false" tabindex="-1" aria-busy="false">Completed <span class="flt-count">3</span></button></div></div></div></div><div class="note">Built by <code>renderStatusPills()</code> as the first group of the filter bar, before the favourites pills - so on a phone they appear with the rest when the panel is opened. From <code>plancounts</code> in the dataset. The active count leaves out a competencies-mode template, which renders competency cards rather than a plan card.</div><div class="divlbl">2 · A bucket being fetched <span class="idb">FLT-STATUS-BUSY</span> <span class="idb">BLK-SKELETON</span></div><div class="flt-wrap"><div class="flt-bar" role="toolbar" aria-label="Filter learning plans"><div class="flt-tabs" role="radiogroup" aria-label="Plan status"><div class="flt-mask"><div class="flt-items"><button type="button" class="flt-tab st w-st-a" role="radio" aria-checked="false" tabindex="-1" aria-busy="false">Active <span class="flt-count">4</span></button><button type="button" class="flt-tab st w-st-r" role="radio" aria-checked="false" tabindex="-1" aria-busy="false">In review <span class="flt-count">2</span></button><button type="button" class="flt-tab st w-st-c active" role="radio" aria-checked="true" tabindex="0" aria-busy="true">Completed <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.56"></path></svg></button></div></div></div></div><p class="loadline" role="status" aria-live="polite">Loading completed plans...</p><ul class="skgrid" role="list"><li><div class="dims-skeleton-card" aria-hidden="true"><div class="dims-skeleton-media"></div><div class="dims-skeleton-body"><span class="dims-skeleton-line dims-skeleton-line-sm"></span><span class="dims-skeleton-line"></span><span class="dims-skeleton-line dims-skeleton-line-md"></span></div></div></li><li><div class="dims-skeleton-card" aria-hidden="true"><div class="dims-skeleton-media"></div><div class="dims-skeleton-body"><span class="dims-skeleton-line dims-skeleton-line-sm"></span><span class="dims-skeleton-line"></span><span class="dims-skeleton-line dims-skeleton-line-md"></span></div></div></li><li><div class="dims-skeleton-card" aria-hidden="true"><div class="dims-skeleton-media"></div><div class="dims-skeleton-body"><span class="dims-skeleton-line dims-skeleton-line-sm"></span><span class="dims-skeleton-line"></span><span class="dims-skeleton-line dims-skeleton-line-md"></span></div></div></li></ul><div class="note">The pill carries <code>aria-busy</code> and swaps its count for a spinner; the grid keeps its shape with placeholder cards while the request is in flight. They are <code>aria-hidden</code>: the loading line is what a screen reader hears.</div><div class="divlbl">3 · A bucket with no plans is not drawn <span class="idb">FLT-STATUS-EMPTY</span></div><div class="flt-wrap"><div class="flt-bar" role="toolbar" aria-label="Filter learning plans"><div class="flt-tabs" role="radiogroup" aria-label="Plan status"><div class="flt-mask"><div class="flt-items"><button type="button" class="flt-tab st w-st-a active" role="radio" aria-checked="true" tabindex="0" aria-busy="false">Active <span class="flt-count">4</span></button><button type="button" class="flt-tab st w-st-c" role="radio" aria-checked="false" tabindex="-1" aria-busy="false">Completed <span class="flt-count">3</span></button></div></div></div></div><div class="note">An empty <i>In review</i> would read as "you have none", while on most sites it means "you cannot see them": the review statuses are core draft statuses and need <code>moodle/competency:planviewowndraft</code>, which no archetype holds.</div><div class="divlbl">4 · The chip a card carries outside the active bucket <span class="idb">PLN-STATUS</span></div><div class="chipdemo"><span class="dims-plan-status is-complete"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Completed on 14/08/26</span><span class="dims-plan-status is-review"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Waiting for review</span><span class="dims-plan-status is-review"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>In review</span></div><div class="note">Tone triples — core's own <code>-text-emphasis</code> / <code>-bg-subtle</code> / <code>-border-subtle</code> — so the chip is core's alert on the same page and flips with it. The completed chip states the date the plan closed, which core freezes at completion.</div></div><div class="panel dark"><div class="plabel"><span class="pdot" style="background:#1d2125"></span>Dark</div><div class="bk-cap">1 · Status pills — one radiogroup per bucket <span class="idb">FLT-STATUS</span> <span class="idb">FLT-COUNT</span></div><div class="flt-wrap"><div class="flt-bar" role="toolbar" aria-label="Filter learning plans"><div class="flt-tabs" role="radiogroup" aria-label="Plan status"><div class="flt-mask"><div class="flt-items"><button type="button" class="flt-tab st w-st-a active" role="radio" aria-checked="true" tabindex="0" aria-busy="false">Active <span class="flt-count">4</span></button><button type="button" class="flt-tab st w-st-r" role="radio" aria-checked="false" tabindex="-1" aria-busy="false">In review <span class="flt-count">2</span></button><button type="button" class="flt-tab st w-st-c" role="radio" aria-checked="false" tabindex="-1" aria-busy="false">Completed <span class="flt-count">3</span></button></div></div></div></div><div class="note">Built by <code>renderStatusPills()</code> as the first group of the filter bar, before the favourites pills - so on a phone they appear with the rest when the panel is opened. From <code>plancounts</code> in the dataset. The active count leaves out a competencies-mode template, which renders competency cards rather than a plan card.</div><div class="divlbl">2 · A bucket being fetched <span class="idb">FLT-STATUS-BUSY</span> <span class="idb">BLK-SKELETON</span></div><div class="flt-wrap"><div class="flt-bar" role="toolbar" aria-label="Filter learning plans"><div class="flt-tabs" role="radiogroup" aria-label="Plan status"><div class="flt-mask"><div class="flt-items"><button type="button" class="flt-tab st w-st-a" role="radio" aria-checked="false" tabindex="-1" aria-busy="false">Active <span class="flt-count">4</span></button><button type="button" class="flt-tab st w-st-r" role="radio" aria-checked="false" tabindex="-1" aria-busy="false">In review <span class="flt-count">2</span></button><button type="button" class="flt-tab st w-st-c active" role="radio" aria-checked="true" tabindex="0" aria-busy="true">Completed <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.56"></path></svg></button></div></div></div></div><p class="loadline" role="status" aria-live="polite">Loading completed plans...</p><ul class="skgrid" role="list"><li><div class="dims-skeleton-card" aria-hidden="true"><div class="dims-skeleton-media"></div><div class="dims-skeleton-body"><span class="dims-skeleton-line dims-skeleton-line-sm"></span><span class="dims-skeleton-line"></span><span class="dims-skeleton-line dims-skeleton-line-md"></span></div></div></li><li><div class="dims-skeleton-card" aria-hidden="true"><div class="dims-skeleton-media"></div><div class="dims-skeleton-body"><span class="dims-skeleton-line dims-skeleton-line-sm"></span><span class="dims-skeleton-line"></span><span class="dims-skeleton-line dims-skeleton-line-md"></span></div></div></li><li><div class="dims-skeleton-card" aria-hidden="true"><div class="dims-skeleton-media"></div><div class="dims-skeleton-body"><span class="dims-skeleton-line dims-skeleton-line-sm"></span><span class="dims-skeleton-line"></span><span class="dims-skeleton-line dims-skeleton-line-md"></span></div></div></li></ul><div class="note">The pill carries <code>aria-busy</code> and swaps its count for a spinner; the grid keeps its shape with placeholder cards while the request is in flight. They are <code>aria-hidden</code>: the loading line is what a screen reader hears.</div><div class="divlbl">3 · A bucket with no plans is not drawn <span class="idb">FLT-STATUS-EMPTY</span></div><div class="flt-wrap"><div class="flt-bar" role="toolbar" aria-label="Filter learning plans"><div class="flt-tabs" role="radiogroup" aria-label="Plan status"><div class="flt-mask"><div class="flt-items"><button type="button" class="flt-tab st w-st-a active" role="radio" aria-checked="true" tabindex="0" aria-busy="false">Active <span class="flt-count">4</span></button><button type="button" class="flt-tab st w-st-c" role="radio" aria-checked="false" tabindex="-1" aria-busy="false">Completed <span class="flt-count">3</span></button></div></div></div></div><div class="note">An empty <i>In review</i> would read as "you have none", while on most sites it means "you cannot see them": the review statuses are core draft statuses and need <code>moodle/competency:planviewowndraft</code>, which no archetype holds.</div><div class="divlbl">4 · The chip a card carries outside the active bucket <span class="idb">PLN-STATUS</span></div><div class="chipdemo"><span class="dims-plan-status is-complete"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Completed on 14/08/26</span><span class="dims-plan-status is-review"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Waiting for review</span><span class="dims-plan-status is-review"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>In review</span></div><div class="note">Tone triples — core's own <code>-text-emphasis</code> / <code>-bg-subtle</code> / <code>-border-subtle</code> — so the chip is core's alert on the same page and flips with it. The completed chip states the date the plan closed, which core freezes at completion.</div></div></div><div class="legend"><h3>Status filter</h3><div class="leg"><span class="k">FLT-STATUS</span><span class="v"><b>Status radiogroup</b> — the filter bar's platter and pill, one radio per bucket, drawn only from two buckets up.</span><span class="k">FLT-STATUS-BUSY</span><span class="v"><b>Fetching</b> — <code>aria-busy</code> plus a spinner in place of the count, while the bucket loads for the first time.</span><span class="k">BLK-SKELETON</span><span class="v"><b>Placeholder cards</b> — decorative, <code>aria-hidden</code>; the count comes from the bucket's own pill.</span><span class="k">PLN-STATUS</span><span class="v"><b>Card chip</b> — completed with its date, waiting for review, in review. Tone triples only; no new colour.</span></div></div></div></div>
