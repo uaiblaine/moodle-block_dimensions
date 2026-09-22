@@ -4,7 +4,74 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+- **A plan status filter, with every bucket but the active one loaded on demand.** The plan grid now
+  groups plans as *Active*, *In review* (both review statuses, the way core groups its own draft
+  statuses) and *Completed*. Only the active bucket arrives with the page; another bucket is fetched
+  the first time the learner asks for it and kept afterwards, so a second visit costs no request. A
+  bucket with no plans is not drawn: an empty *In review* would read as "you have none" on the many
+  sites where it means "you cannot see them", since a learner needs
+  `moodle/competency:planviewowndraft` for that and no archetype holds it.
+
+  The counts on the pills ride the first response at no extra query, because the provider already
+  read the whole plan list; the active count leaves out a competencies-mode template, which becomes
+  competency cards rather than a plan card, so the pill cannot promise a card the grid never shows.
+  Outside the active bucket every plan renders as a plan card whatever its template's display mode,
+  carries a status chip (`Completed on <date>`, `Waiting for review`, `In review`), offers *View
+  plan* instead of *Continue*, and has no favourite star: favourites are for work in progress. A
+  completed plan's trail reads the ratings core froze at completion (`local_dimensions`
+  2026092200), so the card agrees with core's own plan page. Search scopes to the bucket on screen.
+
+  The pills are part of the filter bar, so on a phone they appear with the rest of the filters when
+  the panel is opened. The block opens on the first bucket that has plans: a learner whose plans
+  have all finished lands on them, rather than on an empty Active bucket with a notice. The web
+  service resolves an empty `planstatus` through `dataset_provider::opening_bucket()`, and every
+  later request names its bucket.
+
+  New web-service parameter `planstatus` with per-bucket counts in the response, new AMD state axis
+  with a skeleton while a bucket loads, new strings in both languages, and a `version.php` bump. The
+  status pills are pinned by `dimensions_test`, `get_block_dataset_test`, `summary_test` (the labels
+  the client draws) and a `@javascript` scenario in `visibility.feature`.
+
+### Fixed
+- **Card tag pills had not rendered since the move to the web service.** The provider builds `tags`
+  and `hastags` and both card templates draw them, but `execute_returns()` never declared either, so
+  `clean_returnvalue()` stripped them - silently, the way an allowlist always does. Declared for both
+  card types and pinned by a test that compares the raw dataset with the cleaned one.
+- **The last card of a row stretched to the full width.** The plan grid was a flex row, and a flex
+  item grows to fill the line, so a lone fourth card was three times the width of the three above it.
+  Both grids now lay out on `repeat(auto-fill, minmax(...))` tracks, which keep the empty columns.
+- **The tag strip was cut in half on the horizontal card.** A rule lifting the strip above the
+  stretched-link overlay re-declared `position: relative`, which put it back in the flow, where the
+  image wrapper's `overflow: hidden` clipped it. Only the stacking belongs in that rule.
+- **The status pills drew their internal keys.** The new labels existed in both language files but
+  were not in the payload the client renders from, so the pills read "active" and "complete".
+  `summary_test` now asserts every label the client draws is shipped.
+
 ### Changed
+- **The block renders nothing for a user with no plan it can show, as `block_lp` does.**
+  `get_content()` calls `summary::has_content()` again, and core drops the empty block from the
+  page; in editing mode it stays, with its controls, so it can still be moved or removed. The gate
+  was in the initial commit and was lost before 1.0, when the dataset moved to the web service
+  (`f4806ef`), which left the method in place; the block-kit docs, written later, described the
+  gate from that method alone.
+  A plan counts when its status is one of the buckets the status filter carries - active, waiting
+  for review, in review, completed - which is the `BUCKET_STATUSES` constant beside the check.
+  A plain draft does not: no bucket shows one, so the block would open empty. (The gate landed
+  active-only and was widened the same day, when option B of the status-filter proposal was chosen;
+  `docs/proposals/2026-09-22-status-filter/` records why.) `dimensions_test` pins every plan status,
+  another user's plan and a plan the viewer may not read; the draft case grants
+  `moodle/competency:planviewowndraft` first, since without it a learner's own draft never reaches
+  the plan list and the case would pass having tested nothing. `visibility.feature` covers the
+  Dashboard end to end, editing mode included.
+- **A failure reading the plan list can no longer take the page down.** The gate added above runs
+  during the page render, where core catches nothing, so a database error in it would have
+  replaced the whole Dashboard with an error page. `summary::has_content()` now catches it, logs it
+  with `error_log()` and fails open: the shell renders as it did before the gate, and the web
+  service's own error box, with its retry button, reports a failure that persists. `debugging()` is
+  deliberately not used there: under developer debugging with pretty exceptions, Whoops turns it
+  into an exception during a page render, which is the very throw the catch prevents.
+
 - **The colour token layer moved from `:root` to `body`, and the dark rule grew a second arm.**
   Thirty-one of the 34 are DERIVED tokens - each resolves a `var(--bs-*)` chain; the other three,
   `shadow`, `scrim` and `favourite`, are plugin-owned literals - and Bootstrap redefines the

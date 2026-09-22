@@ -1,0 +1,398 @@
+<!-- @dsCard group="Propostas · Filtro de status" name="Filtro de status do bloco (proposta)" subtitle="Ativos / Em revisão / Concluídos, com carregamento sob demanda · registro de 2026-09-22" -->
+<style>
+/* Dimensions status-filter mockup — lifted verbatim from docs/block-kit (as-is, 2026-09-05 baseline),
+   plus the NEW rules at the end. Kit spans: filters.html 3-87 (scaffold), shell.html 88-129,
+   filters.html 93-178, plan-card-vertical.html 89-167, empty-error.html 95-112 and 139-153. */
+/* ============================================================================
+   Canonical block-kit scaffold (shared by every screen file).
+   AS-IS token values live on .kit (light) and .panel.dark (dark). The plugin
+   no longer ships a skin of its own: styles.css declares 34 tokens on bare
+   :root as var(--bs-NEW, var(--BS4-OLD, #literal)) chains, so 31 of them ARE
+   core's own Bootstrap values and flip because core's [data-bs-theme="dark"]
+   block flips them. Only shadow, scrim and favourite are plugin-authored and
+   restated under :root[data-bs-theme="dark"]. So the two --bk-* blocks below
+   are the two RESOLUTIONS of one contract, not two hand-written palettes: the
+   light column is core's :root/[data-bs-theme="light"] values and the dark
+   column is core's [data-bs-theme="dark"] values, both read out of the running
+   m502 stack's compiled Boost sheet on 2026-09-05. Markup is written once with
+   var(--bk-*) so the two panels differ by token values alone.
+   See tokens.html / token-migration.md.
+   Re-based 2026-09-05; the 2026-07-27 Moodle DS values it replaces are gone.
+   ============================================================================ */
+.kit{
+  --bk-page:#fff;--bk-surface:#fff;--bk-surface-2:#f8f9fa;
+  --bk-card-bg:#fff;--bk-plan-card-bg:#fff;
+  --bk-card-border:#dee2e6;--bk-plan-card-border:#dee2e6;
+  --bk-text:#1d2125;--bk-muted:rgba(29,33,37,.75);
+  --bk-line:#e9ecef;--bk-line-2:#dee2e6;--bk-line-3:#dee2e6;--bk-line-4:#dee2e6;
+  --bk-accent:#0f6cbf;--bk-accent-dark:#0c5699;--bk-accent-deep:#062b4c;
+  --bk-pill-platter:#e9ecef;--bk-pill-text:rgba(29,33,37,.75);--bk-pill-indicator:#fff;
+  --bk-counter-bg:#fff;--bk-counter-fg:rgba(29,33,37,.75);--bk-counter-active-bg:#cfe2f2;--bk-counter-active-fg:#062b4c;
+  --bk-search-border:#dee2e6;--bk-search-icon:rgba(29,33,37,.75);--bk-search-placeholder:rgba(29,33,37,.75);
+  --bk-search-glow:transparent;
+  --bk-select-hover-bg:#dee2e6;--bk-select-hover-border:rgba(29,33,37,.75);
+  --bk-paddle:rgba(29,33,37,.75);--bk-paddle-hover:#1d2125;
+  --bk-btn-bg:#fff;--bk-btn-fg:#1d2125;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.1);
+  --bk-section-from:#062b4c;--bk-section-to:#0f6cbf;
+  --bk-plan-grad-a:#0f6cbf;--bk-plan-grad-b:#062b4c;
+  --bk-comp-grad-a:#f9deb8;--bk-comp-grad-b:#e8590c;--bk-comp-grad-c:#60451f;
+  --bk-tag-bg:#e9ecef;--bk-tag-fg:#1d2125;--bk-halftone:#00000082;
+  --bk-success:#153114;--bk-success-text:#153114;--bk-star:#e8590c;
+  --bk-focus:#000;--bk-focus-glow:transparent;--bk-focus-btn:#000;
+  --bk-danger-fg:#51140d;--bk-danger-bg:#f4d6d2;
+  --bk-warn-fg:#1d2125;--bk-warn-bg:#fcefdc;--bk-warn-border:#f9deb8;
+  --bk-empty-circle:rgba(29,33,37,.75);--bk-empty-ring:1px;--bk-ghost-fg:rgba(29,33,37,.75);--bk-ghost-circle:#dee2e6;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--bk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
+}
+.kit *{box-sizing:border-box;}
+.panel.dark{
+  --bk-page:#1d2125;--bk-surface:#1d2125;--bk-surface-2:#292e33;
+  --bk-card-bg:#1d2125;--bk-plan-card-bg:#1d2125;
+  --bk-card-border:#495057;--bk-plan-card-border:#495057;
+  --bk-text:#dee2e6;--bk-muted:rgba(222,226,230,.75);
+  --bk-line:#343a40;--bk-line-2:#495057;--bk-line-3:#495057;--bk-line-4:#495057;
+  --bk-accent:#6fa7d9;--bk-accent-dark:#8cb9e1;
+  --bk-pill-platter:#343a40;--bk-pill-text:rgba(222,226,230,.75);--bk-pill-indicator:#1d2125;
+  --bk-search-border:#495057;--bk-search-icon:rgba(222,226,230,.75);--bk-search-placeholder:rgba(222,226,230,.75);
+  --bk-search-glow:transparent;
+  --bk-select-hover-bg:#495057;
+  --bk-paddle:rgba(222,226,230,.75);--bk-paddle-hover:#dee2e6;
+  --bk-btn-bg:#1d2125;--bk-btn-fg:#dee2e6;--bk-btn-shadow:0 2px 8px rgba(0,0,0,.55);
+  --bk-success:#86af84;--bk-success-text:#86af84;
+  --bk-counter-bg:#1d2125;--bk-counter-fg:rgba(222,226,230,.75);
+  --bk-focus:#fff;--bk-focus-glow:transparent;--bk-focus-btn:#fff;
+  --bk-danger-fg:#df8379;--bk-danger-bg:#280a06;
+  --bk-warn-fg:#dee2e6;--bk-warn-bg:#302310;--bk-warn-border:#90682f;
+  --bk-empty-circle:rgba(222,226,230,.75);--bk-ghost-fg:rgba(222,226,230,.75);--bk-ghost-circle:#495057;
+  color:var(--bk-text);
+}
+.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
+.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--bk-page);padding:0 0 18px;overflow:hidden;}
+.panel.dark{border-color:#343a40;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--bk-text);padding:12px 20px 0;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--mono);font-size:10px;color:var(--bk-pill-text);background:var(--bk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
+.idb.r{border-color:#c9a3a3;color:#a3552d;}
+.panel.dark .idb{color:#adb5bd;border-color:#495057;}
+.bk-cap{font-size:11px;color:var(--bk-muted);padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.bk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
+.divlbl{font-size:11px;color:var(--bk-muted);margin:14px 20px 4px;border-top:1px solid var(--bk-line);padding-top:10px;}
+.note{font-size:10px;color:var(--bk-muted);padding:2px 20px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+.legend{max-width:1100px;margin:16px auto 0;background:#fff;border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
+.leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
+.leg .v b{color:#212529;font-weight:600;}
+.leg .v{color:#495057;}
+.leg .rule{color:#8a8980;}
+/* ===== shell.html ===== */
+
+/* ---- screen-local tokens (values styles.css states literally, plus Boost's own
+        alert pair, which the plugin never styles — absent from the shared block) ---- */
+.kit{--bk-input-fg:#1d2125;--bk-alert-fg:#60451f;--bk-alert-border:#f9deb8;--bk-section-flat:#1d2125;--bk-clear-hover:#e9ecef;}
+.panel.dark{--bk-input-fg:#dee2e6;--bk-alert-fg:#f6ce95;--bk-alert-border:#90682f;--bk-section-flat:#dee2e6;--bk-clear-hover:#343a40;}
+
+/* ---- block body: everything below lives inside .block-dimensions-content ---- */
+.sh-body{padding:6px 20px 0;background:var(--bk-page);}
+.ic.i12{width:.75rem;height:.75rem;}
+.ic.i10{width:.625rem;height:.625rem;}
+
+/* ---- dims-block-header (styles.css:183-208) ---- */
+.sh-hdr{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.75rem;flex-wrap:wrap;}
+.sh-heading{margin:0;font-weight:700;font-size:1.1rem;flex-shrink:0;color:var(--bk-text);}
+.sh-srow{display:flex;align-items:center;gap:.5rem;min-width:0;max-width:200px;flex-shrink:1;margin-left:auto;}
+.sh-swrap{position:relative;display:flex;align-items:center;min-width:0;flex:1;}
+.sh-sicon{position:absolute;left:.625rem;color:var(--bk-search-icon);display:flex;pointer-events:none;z-index:1;}
+.sh-sinput{width:100%;padding:.375rem 1.75rem .375rem 1.875rem;border:1px solid var(--bk-search-border);border-radius:999px;background:var(--bk-surface-2);font-size:.8125rem;line-height:1.3;color:var(--bk-input-fg);outline:none;font-family:inherit;}
+.sh-sinput::placeholder{color:var(--bk-search-placeholder);}
+.sh-sclear{position:absolute;right:.25rem;display:flex;align-items:center;justify-content:center;width:22px;height:22px;border:none;border-radius:50%;background:var(--bk-clear-hover);color:var(--bk-muted);cursor:pointer;padding:0;}
+.sh-ftoggle{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:36px;height:36px;border:1.5px solid var(--bk-line-3);border-radius:50%;background:var(--bk-surface-2);color:var(--bk-search-placeholder);cursor:pointer;font-size:.9rem;}
+
+/* ---- loading / error (Bootstrap utility classes, no plugin CSS of their own) ---- */
+.sh-loading{font-size:.875em;color:var(--bk-muted);margin:0 0 .5rem;}
+.sh-alert{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.75rem 1.25rem;margin:0 0 1rem;border:1px solid var(--bk-alert-border);border-radius:.25rem;background:var(--bk-warn-bg);color:var(--bk-alert-fg);font-size:.875rem;}
+.sh-retry{padding:.25rem .5rem;font-size:.875rem;line-height:1.5;border:1px solid var(--bk-muted);border-radius:.2rem;background:transparent;color:var(--bk-muted);cursor:pointer;font-family:inherit;}
+
+/* ---- dims-section-header (styles.css:1713-1746) — the dark and print overrides
+        both clear background-image and restore -webkit-text-fill-color before
+        they set a colour, mirrored literally below ---- */
+.sh-sec{font-size:2rem;font-weight:600;line-height:1.3;margin:0 0 1.5rem;padding:0;color:var(--bk-section-flat);background-image:linear-gradient(180deg,var(--bk-section-from) 45%,var(--bk-section-to) 90%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.panel.dark .sh-sec{background-image:none;-webkit-text-fill-color:currentcolor;color:var(--bk-section-flat);}
+
+/* ---- empty hosts that filters.js fills, drawn as dashed placeholders ---- */
+.sh-slot{border:1px dashed var(--bk-line-2);border-radius:.5rem;color:var(--bk-muted);font-size:10px;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;}
+.sh-host{min-height:44px;margin-bottom:.75rem;}
+.sh-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;list-style:none;margin:0 0 1rem;padding:0;}
+.sh-grid .sh-slot{min-height:96px;background:var(--bk-plan-card-bg);}
+.sh-grid.comp .sh-slot{background:var(--bk-card-bg);}
+.sh-empty{font-size:.875em;color:var(--bk-muted);margin:0 0 .75rem;}
+.sh-sr{display:block;border:1px dashed var(--bk-line-2);border-radius:.25rem;padding:4px 8px;margin-bottom:6px;font-family:var(--mono);font-size:10px;color:var(--bk-muted);}
+.sh-noscript{margin:.75rem 0;padding:.5rem .75rem;font-size:1rem;line-height:1.4;color:var(--bk-warn-fg);background:var(--bk-warn-bg);border:1px solid var(--bk-warn-border);border-radius:.25rem;}
+/* ===== filters.html ===== */
+.kit{
+  --flt-tab-active-fg:var(--bk-accent);          /* --dims-tabs-item-color-active */
+  --flt-fav-active-fg:#fff;                      /* .dims-fav-filter-btn.active colour */
+  --flt-ind-shadow:0 1px 3px rgba(0,0,0,.12);    /* --dims-tabs-indicator-shadow */
+  --flt-fav-shadow:0 1px 3px rgba(0,0,0,.12);    /* no dark override in styles.css */
+  --flt-select-fg:var(--bk-pill-text);
+  --flt-mask-on:black;                           /* mask alpha, not a UI colour */
+  --flt-mask-off:transparent;
+  /* Two 4px triangles meeting edge to edge, both currentcolor, so the glyph
+     follows the control's own text colour and needs no second image in dark.
+     The inline SVG data URI this replaces could not survive the gate at all:
+     Moodle's stylelint bans image data URIs (function-url-scheme-disallowed-list). */
+  --flt-select-chevron:linear-gradient(45deg,transparent 50%,currentcolor 50%),linear-gradient(135deg,currentcolor 50%,transparent 50%);
+}
+.panel.dark{
+  --flt-tab-active-fg:#6fa7d9;
+  --flt-fav-active-fg:#212529;
+  --flt-ind-shadow:0 1px 3px rgba(0,0,0,.3);
+  --flt-select-fg:rgba(222,226,230,.75);
+  /* No dark twin needed: currentcolor already followed the flipped ink. */
+}
+
+/* ---- .dims-filters-bar (styles.css:1216-1233) ---- */
+.flt-wrap{padding:6px 20px 2px;}
+.flt-bar{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;}
+
+/* ---- .dims-filter-tabs platter (styles.css:1275-1305); real custom properties:
+       height 44px · inner 36px · padding 4px · paddle 40px · mask gradient 22px ---- */
+.flt-tabs{position:relative;display:inline-flex;width:fit-content;max-width:100%;height:44px;padding:4px;
+  background:var(--bk-pill-platter);border-radius:999px;overflow:hidden;}
+.flt-mask{position:relative;width:100%;height:100%;z-index:1;overflow-x:hidden;}
+.flt-mask.fade{
+  -webkit-mask-image:linear-gradient(90deg,var(--flt-mask-off) 0,var(--flt-mask-off) 36px,var(--flt-mask-on) 58px,
+    var(--flt-mask-on) calc(100% - 58px),var(--flt-mask-off) calc(100% - 36px),var(--flt-mask-off));
+  mask-image:linear-gradient(90deg,var(--flt-mask-off) 0,var(--flt-mask-off) 36px,var(--flt-mask-on) 58px,
+    var(--flt-mask-on) calc(100% - 58px),var(--flt-mask-off) calc(100% - 36px),var(--flt-mask-off));
+}
+.flt-items{display:flex;align-items:center;width:fit-content;height:100%;margin:0;padding:0;white-space:nowrap;position:relative;z-index:1;}
+
+/* ---- .dims-filter-tab (styles.css:1376-1422) ---- */
+.flt-tab{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.5rem 1rem;border:none;
+  background:transparent;border-radius:999px;font-family:var(--font);font-size:.875rem;font-weight:500;
+  color:var(--bk-pill-text);cursor:pointer;white-space:nowrap;position:relative;z-index:2;opacity:.8;
+  transition:color 120ms ease-out,opacity 100ms ease-in-out;-webkit-user-select:none;user-select:none;}
+.flt-tab:hover{opacity:1;}
+.flt-tab.active{background:transparent;color:var(--flt-tab-active-fg);opacity:1;cursor:default;}
+/* Deterministic widths so the hand-placed indicator lines up in any font. */
+.w-all{min-width:52px;}.w-val{min-width:66px;}.w-fav{min-width:178px;}.w-show{min-width:140px;}
+
+/* ---- favourite pill (styles.css:1879-1911) ---- */
+.flt-tab.fav{gap:.35rem;}
+.flt-tab.fav.active{background:var(--bk-accent);color:var(--flt-fav-active-fg);box-shadow:var(--flt-fav-shadow);}
+.flt-tab.fav .ic.st{width:.8rem;height:.8rem;fill:currentColor;stroke:none;}
+
+/* ---- .dims-filter-count (styles.css:1942-1972, rest state 1931-1939); both skins are
+       named by the scaffold now, so the badge needs no screen-local token ---- */
+.flt-count{font-weight:600;margin-left:.15rem;background:var(--bk-counter-bg);color:var(--bk-counter-fg);
+  border-radius:999px;padding:0 6px;font-size:.75rem;}
+.flt-tab.fav.active .flt-count,.flt-tab.show.active .flt-count{background:var(--bk-counter-active-bg);color:var(--bk-counter-active-fg);}
+
+/* ---- .dims-filter-tabs-indicator (styles.css:1425-1440) ---- */
+.flt-ind{position:absolute;top:4px;bottom:4px;height:calc(100% - 8px);border-radius:999px;
+  background-color:var(--bk-pill-indicator);box-shadow:var(--flt-ind-shadow);pointer-events:none;z-index:0;}
+
+/* ---- .dims-filter-tabs-paddle (styles.css:1443-1504) ---- */
+.flt-paddles{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:3;}
+.flt-paddle{position:absolute;top:4px;bottom:4px;width:40px;min-height:36px;z-index:3;display:flex;align-items:center;
+  justify-content:center;border:none;background:transparent;color:var(--bk-paddle);cursor:pointer;pointer-events:auto;padding:0;}
+.flt-paddle:hover{color:var(--bk-paddle-hover);}
+.flt-paddle.l{left:0;}.flt-paddle.r{right:0;}
+.flt-paddle svg{pointer-events:none;width:8px;height:14px;}
+
+/* ---- .dims-filter-select (styles.css:1514-1552, hover/focus 1543-1552) ---- */
+.flt-select{appearance:none;-webkit-appearance:none;padding:.5rem 2rem .5rem 1rem;border:1px solid var(--bk-line-3);
+  border-radius:999px;background-color:var(--bk-pill-platter);background-image:var(--flt-select-chevron);
+  background-repeat:no-repeat;background-position:right .75rem center;background-size:12px;font-family:var(--font);
+  font-size:.875rem;font-weight:500;color:var(--flt-select-fg);cursor:pointer;min-width:120px;transition:all .2s ease;}
+.flt-select:hover{background-color:var(--bk-select-hover-bg);border-color:var(--bk-select-hover-border);}
+
+/* ---- .dims-clear-filters-btn (styles.css:1216-1252, hover 1239-1243) ---- */
+.flt-clear{display:inline-flex;align-items:center;gap:.375rem;padding:.5rem 1rem;border:1px solid var(--bk-line-3);
+  border-radius:999px;background:transparent;font-family:var(--font);font-size:.875rem;font-weight:500;
+  color:var(--bk-muted);cursor:pointer;white-space:nowrap;flex-shrink:0;
+  transition:color .15s ease,border-color .15s ease,background .15s ease;}
+.flt-clear:hover,.flt-clear.hov{color:var(--bk-danger-fg);border-color:var(--bk-danger-fg);background:var(--bk-danger-bg);}
+.flt-clear .ic{width:.8rem;height:.8rem;}
+/* ===== plan-card-vertical.html ===== */
+/* ---- screen-local values styles.css hardcodes and the token block lacks ---- */
+.kit{
+  --pln-photo-a:#2f5d7c;--pln-photo-b:#6f9fb8;--pln-photo-c:#e0cfa8;   /* stand-in for a real background-image */
+  --pln-fav-bg:rgba(255,255,255,.72);--pln-fav-shadow:0 1px 4px rgba(0,0,0,.1);
+  --pln-star-empty:rgba(29,33,37,.75);--pln-tag-shadow:0 1px 3px rgba(0,0,0,.2);
+  --pln-card-shadow:0 .125rem .25rem rgba(0,0,0,.1);
+  --pln-custom-bg:#0f6cbf;--pln-custom-fg:#ffffff;
+  /* The focus ring is the family token in both modes; it is listed here only
+     because the replica needs a name for it, not because styles.css restates it. */
+  --pln-trail-focus:#000;
+  --pln-btn-lift-shadow:0 4px 14px rgba(0,0,0,.1);   /* pill lift on card hover / focus-within */
+}
+.panel.dark{
+  --pln-fav-bg:rgba(29,33,37,.72);--pln-fav-shadow:0 1px 4px rgba(0,0,0,.55);
+  --pln-star-empty:rgba(222,226,230,.75);--pln-tag-shadow:0 1px 3px rgba(0,0,0,.4);
+  --pln-card-shadow:0 .125rem .25rem rgba(0,0,0,.55);
+  --pln-trail-focus:#fff;
+  --pln-btn-lift-shadow:0 4px 14px rgba(0,0,0,.55);
+}
+/* ---- card grid: the real [data-cards-type] rule. Flex, not grid, and no
+       container query: stylelint rejects container-type as an unknown property
+       and @container as an unknown at-rule, and minmax(clamp(...)) as an
+       invalid value, so the shipped rule caps the column count with a
+       percentage flex-basis and a rem floor instead. ---- */
+.pcgrid{display:flex;flex-wrap:wrap;gap:1rem;list-style:none;margin:0;padding:10px 20px 2px;}
+.pcgrid>li{flex:1 1 30%;min-width:15rem;max-width:100%;}
+.pcstrip{padding:10px 20px 2px;max-width:340px;}
+.kit .h-100{height:100%;}
+/* ---- .plan-card (styles.css:608-648) ---- */
+.kit .plan-card{display:flex;flex-direction:column;position:relative;border-radius:.5rem;overflow:hidden;box-shadow:var(--pln-card-shadow);border:1px solid var(--bk-plan-card-border);background-color:var(--bk-plan-card-bg);}
+.kit .plan-card-image-wrapper{position:relative;flex-shrink:0;}
+.kit .plan-card-image{width:100%;height:120px;background-size:cover;background-position:center;background-repeat:no-repeat;flex-shrink:0;}
+.kit .plan-card-gradient{background:linear-gradient(135deg,var(--bk-plan-grad-a) 0%,var(--bk-plan-grad-b) 100%);}
+.kit .plan-card-gradient.has-custom-bg{background:var(--dimension-custombgcolor);}
+.kit .plan-card-photo{background-image:linear-gradient(160deg,var(--pln-photo-a) 0%,var(--pln-photo-b) 58%,var(--pln-photo-c) 100%);}
+.kit .card-body.p-3{padding:1rem;}
+.kit .plan-card .card-title{font-size:.9rem;line-height:1.4;font-weight:700;margin:0 0 .5rem;}
+.kit .plan-card-link{color:var(--bk-text);text-decoration:none;}
+.kit .competency-count-text{margin:0;font-size:.82rem;line-height:1.3;color:var(--bk-muted);font-weight:600;}
+/* ---- favourite star (styles.css:1783-1847) ---- */
+.kit .dims-fav-btn{position:absolute;top:8px;left:8px;z-index:3;display:flex;align-items:center;justify-content:center;width:32px;height:32px;border:none;border-radius:50%;background:var(--pln-fav-bg);cursor:pointer;padding:0;box-shadow:var(--pln-fav-shadow);}
+.kit .dims-fav-icon-filled{color:var(--bk-star);fill:currentColor;stroke:none;}
+.kit .dims-fav-icon-empty{color:var(--pln-star-empty);}
+/* ---- access / continue pill (styles.css:1065-1089; token-driven, no separate dark rule) ---- */
+.kit .dims-card-access-btn{position:absolute;top:10px;right:10px;z-index:2;display:inline-flex;align-items:center;gap:6px;padding:6px 16px;background:var(--bk-btn-bg);color:var(--bk-btn-fg);font-size:.85rem;font-weight:600;line-height:1.3;border-radius:8px;white-space:nowrap;box-shadow:var(--bk-btn-shadow);pointer-events:none;transition:box-shadow .2s ease,transform .2s ease;}
+.kit .dims-card-access-btn .ic{width:.8rem;height:.8rem;}
+/* ---- pill lift, article-scoped: hover AND focus-within, no ring of its own (styles.css:2211-2261) ---- */
+.kit .plan-card:hover .dims-card-access-btn,
+.kit .plan-card:focus-within .dims-card-access-btn{box-shadow:var(--pln-btn-lift-shadow);transform:translateY(-1px);}
+@media (prefers-reduced-motion:reduce){
+  .kit .plan-card:hover .dims-card-access-btn,
+  .kit .plan-card:focus-within .dims-card-access-btn{transform:none;}
+}
+/* ---- tags (styles.css:1127-1185) ---- */
+.kit .dimension-tags{position:absolute;bottom:8px;left:8px;display:flex;flex-wrap:wrap;gap:4px;z-index:2;}
+.kit .dimension-tag{display:inline-block;padding:4px 12px;font-size:.75rem;font-weight:600;line-height:1.2;border-radius:100px;white-space:nowrap;box-shadow:var(--pln-tag-shadow);}
+.kit .plan-card .dimension-tag.plan-tag{background-color:var(--dimension-custombgcolor,var(--bk-tag-bg));color:var(--dimension-customtextcolor,var(--bk-tag-fg));}
+/* ---- horizontal trail (styles.css:685-824) ---- */
+.kit .competency-trail{display:flex;flex-direction:row;align-items:flex-start;gap:0;margin:.5rem 0 0;padding:.5rem 0 0;overflow-x:auto;list-style:none;}
+.kit .trail-item{display:flex;flex-direction:column;align-items:center;position:relative;min-width:50px;flex:1;text-align:center;}
+.kit .competency-trail .trail-item:not(.last)::after{content:'';position:absolute;top:10px;left:50%;width:100%;height:2px;background-color:var(--bk-line);z-index:0;}
+.kit .competency-trail .trail-item.completed:not(.last)::after{background-color:var(--bk-success);}
+/* has-before / has-after: 34x2px dashed continuation (real rule ships an inline SVG data URI) */
+.kit .competency-trail.has-before .trail-item.first::before,
+.kit .competency-trail.has-after .trail-item.last::after{content:'';position:absolute;top:10px;width:34px;height:2px;background-color:transparent;background-image:repeating-linear-gradient(to right,var(--bk-line-2) 0 7px,transparent 7px 12px);z-index:0;}
+.kit .competency-trail.has-before .trail-item.first::before{right:50%;}
+.kit .competency-trail.has-after .trail-item.last::after{left:50%;}
+.kit .trail-marker{position:relative;z-index:1;width:20px;height:20px;display:flex;align-items:center;justify-content:center;}
+.kit .trail-marker .ic-check{width:18px;height:18px;color:var(--bk-success);}
+.kit .ic-check circle{fill:currentColor;stroke:none;}
+.kit .ic-check path{stroke:var(--bk-card-bg);stroke-width:2.6;fill:none;}
+.kit .empty-circle{width:14px;height:14px;border:var(--bk-empty-ring) solid var(--bk-empty-circle);border-radius:50%;background-color:var(--bk-card-bg);}
+.kit .trail-label{font-size:.65rem;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60px;color:var(--bk-muted);}
+.kit .trail-label.text-success{color:var(--bk-success-text);font-weight:600;}
+.kit .trail-item-link{display:flex;flex-direction:column;align-items:center;color:inherit;text-decoration:none;position:relative;z-index:2;}
+.kit .trail-item-link.is-focus{outline:2px solid var(--pln-trail-focus);outline-offset:2px;border-radius:4px;}
+.kit .trail-item-link.is-focus .trail-marker{transform:scale(1.2);}
+.kit .trail-item-link.is-focus .trail-label{text-decoration:underline;}
+.kit .visually-hidden{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+/* ===== empty-error.html ===== */
+.kit{--bk-alert-fg:#60451f;--bk-alert-bg:#fcefdc;--bk-alert-border:#f9deb8;--bk-btn-outline:#6c757d;}
+.panel.dark{--bk-alert-fg:#f6ce95;--bk-alert-bg:#302310;--bk-alert-border:#90682f;--bk-btn-outline:#adb5bd;}
+.stage{padding:6px 20px 2px;}
+.blockish{background:var(--bk-surface);border:1px solid var(--bk-line);border-radius:8px;padding:12px 14px;}
+.panel.dark .blockish{background:var(--bk-page);}
+
+/* 1 — loading: <div class="dims-loading-state text-muted small" role="status"> */
+.dims-loading-state{font-size:.875rem;color:var(--bk-muted);}
+
+/* 2 — error: alert alert-warning + btn btn-sm btn-outline-secondary */
+.dims-error-message{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;padding:.75rem 1.25rem;font-size:.9rem;
+  color:var(--bk-alert-fg);background:var(--bk-alert-bg);border:1px solid var(--bk-alert-border);border-radius:.25rem;}
+.dims-error-text{flex:1 1 auto;min-width:0;}
+.dims-error-retry{font-size:.875rem;line-height:1.5;padding:.25rem .5rem;border-radius:.2rem;background:transparent;
+  color:var(--bk-btn-outline);border:1px solid var(--bk-btn-outline);cursor:pointer;font-family:inherit;white-space:nowrap;}
+
+/* 3 & 4 — empty: <p class="text-muted small dims-empty-state" role="status"> */
+.dims-empty-state{margin:0;font-size:.875rem;color:var(--bk-muted);}
+.dims-ghost-card{display:flex;}
+.dims-ghost-card-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;gap:.75rem;
+  padding:2rem 1.5rem;border:2px dashed var(--bk-ghost-border,#ced4da);border-radius:12px;background:var(--bk-ghost-bg,transparent);
+  cursor:pointer;font-family:inherit;transition:border-color .2s ease,background .2s ease,transform .15s ease;}
+.panel.dark .dims-ghost-card-inner{--bk-ghost-border:#495057;--bk-ghost-bg:#1d2125;}
+.dims-ghost-icon-circle{display:flex;align-items:center;justify-content:center;width:50px;height:50px;
+  border:2px solid var(--bk-ghost-ring,var(--bk-line-4));border-radius:50%;color:var(--bk-ghost-circle);font-size:1.2rem;}
+.dims-ghost-icon-circle .ic{width:1.2rem;height:1.2rem;}
+.dims-ghost-card-title{font-size:1.1rem;font-weight:700;text-align:center;color:var(--bk-ghost-fg);}
+.dims-ghost-card-subtitle{font-size:.85rem;font-weight:400;text-align:center;color:var(--bk-ghost-fg);}
+/* Static hover replica: :hover on the inner button (styles.css:1992-1994 / 1941-1967). */
+.dims-ghost-card-inner.hov{border-color:var(--bk-accent);background:var(--bk-ghost-hover,rgba(15,108,191,.04));transform:translateY(-2px);}
+.panel.dark .dims-ghost-card-inner.hov{--bk-ghost-hover:#292e33;}
+.dims-ghost-card-inner.hov .dims-ghost-icon-circle{border-color:var(--bk-accent);color:var(--bk-accent);}
+.dims-ghost-card-inner.hov .dims-ghost-card-title{color:var(--bk-accent);}
+
+/* =====================================================================================
+   NEW (to-be) — status filter proposal. Everything above is the as-is kit, verbatim.
+   ===================================================================================== */
+/* Tone triples the plugin already declares (styles.css:70-87): core's own subtle-alert
+   trio (-text-emphasis / -bg-subtle / -border-subtle). Values are the two resolutions
+   tokens.html records for 5.x light and 5.x dark; nothing here is a new colour. */
+.kit{
+  --bk-success-ink:#153114;--bk-success-tint:#d7e4d6;--bk-success-edge:#aecaad;
+  --bk-warning-ink:#60451f;--bk-warning-tint:#fcefdc;--bk-warning-edge:#f9deb8;
+}
+.panel.dark{
+  --bk-success-ink:#86af84;--bk-success-tint:#0b180a;--bk-success-edge:#20491e;
+  --bk-warning-ink:#f6ce95;--bk-warning-tint:#302310;--bk-warning-edge:#90682f;
+}
+/* NEW · PLN-STATUS — plan status chip; shape of local_dimensions' .local-dimensions-grade-badge */
+.dims-plan-status{display:inline-flex;align-items:center;gap:.3rem;padding:.15rem .625rem;border-radius:999px;
+  font-size:.75rem;font-weight:600;line-height:1.3;width:fit-content;margin:0 0 .5rem;border:1px solid transparent;}
+.dims-plan-status .ic{width:.8rem;height:.8rem;stroke-width:2.4;}
+.dims-plan-status.is-complete{border-color:var(--bk-success-edge);background:var(--bk-success-tint);color:var(--bk-success-ink);}
+.dims-plan-status.is-review{border-color:var(--bk-warning-edge);background:var(--bk-warning-tint);color:var(--bk-warning-ink);}
+/* NEW · FLT-STATUS — the status radiogroup reuses the platter; fixed widths so the indicator lines up */
+.flt-tab.st{gap:.4rem;padding:.5rem .75rem;}
+.w-st-a{width:112px;}.w-st-r{width:146px;}.w-st-c{width:148px;}
+.flt-tab.st.active .flt-count{background:var(--bk-counter-active-bg);color:var(--bk-counter-active-fg);}
+.flt-tab.st .ic.spin{width:.8rem;height:.8rem;}
+@media (prefers-reduced-motion:no-preference){.flt-tab.st .ic.spin{animation:dims-spin 1s linear infinite;}}
+@keyframes dims-spin{to{transform:rotate(360deg);}}
+.flt-sep{width:1px;height:28px;background:var(--bk-line-2);flex:none;}
+/* Mobile: the status group takes the full row, three equal segments */
+.flt-tabs.st-full{width:100%;}
+.flt-tabs.st-full .flt-items{width:100%;}
+.flt-tabs.st-full .flt-tab.st{flex:1 1 0;min-width:0;padding:.5rem .25rem;font-size:.8125rem;gap:.3rem;}
+/* NEW · PLN-SKELETON — placeholder cards while a status bucket loads on demand */
+.dims-skel{border:1px solid var(--bk-plan-card-border);border-radius:.5rem;overflow:hidden;background:var(--bk-plan-card-bg);height:100%;}
+.dims-skel .sk-img{height:120px;background:var(--bk-line);}
+.dims-skel .sk-body{padding:1rem;display:flex;flex-direction:column;gap:.6rem;}
+.dims-skel .sk-line{height:.7rem;border-radius:999px;background:var(--bk-line);}
+.dims-skel .sk-w90{width:90%;}.dims-skel .sk-w60{width:60%;}.dims-skel .sk-w40{width:40%;}
+@media (prefers-reduced-motion:no-preference){.dims-skel .sk-img,.dims-skel .sk-line{animation:dims-pulse 1.4s ease-in-out infinite;}}
+@keyframes dims-pulse{50%{opacity:.55;}}
+/* Mockup chrome only: the Dashboard frame around the block */
+.mk-frame{background:var(--bk-page);border:1px solid #dcdfe3;border-radius:14px;overflow:hidden;}
+.panel.dark.mk-frame{border-color:#343a40;}
+.mk-blocktitle{font-size:1.25rem;font-weight:700;color:var(--bk-text);margin:0;padding:16px 20px 0;}
+.mk-status-line{padding:0 20px;}
+
+/* Documentation-only chrome for this proposal page. */
+.kit .screens.one{max-width:1100px;}
+.kit .screens.one .panel{flex:1 1 100%;}
+.docnote{max-width:1100px;margin:6px auto 0;font-size:12px;color:var(--bk-muted);}
+.dochead{max-width:1100px;margin:22px auto 6px;font-size:13px;font-weight:700;color:var(--bk-text);
+  text-transform:uppercase;letter-spacing:.04em;}
+</style>
+<div class="kit">
+<div class="docnote">Proposta (to-be), não o estado atual do bloco. O CSS abaixo é o do block-kit as-is, copiado sem alteração, mais as quatro regras novas listadas no fim. Registro do canvas interativo publicado em 2026-09-22.</div>
+<div class="dochead">1 · O grupo de status, com cada balde selecionado</div><div class="screens"><div class="panel"><div class="bk-cap">Ativos — o estado inicial, o único que o bloco carrega sozinho <span class="idb">FLT-STATUS</span> <span class="idb">FLT-COUNT</span></div><div class="sh-body"><div class="sh-hdr"><h2 class="sh-heading">Minhas competências</h2><div class="sh-srow"><div class="sh-swrap"><span class="sh-sicon"><svg class="ic i12" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.6-3.6"></path></svg></span><input class="sh-sinput" type="text" value="" aria-label="Pesquisar cartões" placeholder="Pesquisar..."></div></div></div></div><div class="sh-body" style="padding-top:14px"><h3 class="sh-sec">Avance em seus<br>planos de aprendizagem</h3></div><div class="flt-wrap"><div class="flt-bar" role="toolbar" aria-label="Filtrar planos de aprendizagem"><div class="flt-tabs" role="radiogroup" aria-label="Status do plano"><div class="flt-mask"><div class="flt-items"><button type="button" class="flt-tab st w-st-a active" role="radio" aria-checked="true" tabindex="0" id="a-st-active">Ativos <span class="flt-count">3</span></button><button type="button" class="flt-tab st w-st-r" role="radio" aria-checked="false" tabindex="-1" id="a-st-review">Em revisão <span class="flt-count">2</span></button><button type="button" class="flt-tab st w-st-c" role="radio" aria-checked="false" tabindex="-1" id="a-st-complete">Concluídos <span class="flt-count">3</span></button></div></div><div class="flt-ind" style="left:4px;width:112px"></div></div><div class="flt-sep" aria-hidden="true"></div><div class="flt-tabs" role="radiogroup" aria-label="Filtrar planos de aprendizagem"><div class="flt-mask"><div class="flt-items"><button type="button" class="flt-tab fav w-fav" role="radio" aria-checked="false" tabindex="-1"><svg class="ic st" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg> Meus Favoritos <span class="flt-count">1</span></button><button type="button" class="flt-tab show active w-show" role="radio" aria-checked="true" tabindex="0">Mostrar tudo <span class="flt-count">3</span></button></div></div><div class="flt-ind" style="left:182px;width:140px"></div></div></div></div><ul class="pcgrid" role="list"><li><article class="card plan-card h-100" aria-labelledby="a-plan-0"><button type="button" class="dims-fav-btn" aria-pressed="true" aria-label="Remover dos favoritos" title="Remover dos favoritos"><svg class="ic dims-fav-icon-filled" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.4-5.8-3-5.8 3 1.1-6.4L2.6 9.4l6.5-.9L12 2.6z"></path></svg></button><div class="plan-card-image-wrapper"><div class="plan-card-image plan-card-photo" aria-hidden="true"></div><div class="dimension-tags" role="group" aria-label="Etiquetas do cartão"><span class="dimension-tag plan-tag">Gestão</span><span class="dimension-tag plan-tag">2026</span></div><span class="dims-card-access-btn" aria-hidden="true">Continuar <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span></div><div class="card-body p-3"><h4 class="card-title" id="a-plan-0"><a href="#a-plan-0" class="plan-card-link">Liderança de equipes</a></h4><p class="competency-count-text">8 competências</p><ul class="competency-trail has-after" aria-label="Trilha de progresso nas competências"><li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Comunicação</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Feedback</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Delegação</span><span class="visually-hidden"> — pendente</span></li><li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Conflitos</span><span class="visually-hidden"> — pendente</span></li><li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Decisão</span><span class="visually-hidden"> — pendente</span></li></ul></div></article></li><li><article class="card plan-card h-100" aria-labelledby="a-plan-1"><button type="button" class="dims-fav-btn" aria-pressed="false" aria-label="Adicionar aos favoritos" title="Adicionar aos favoritos"><svg class="ic dims-fav-icon-empty" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.4-5.8-3-5.8 3 1.1-6.4L2.6 9.4l6.5-.9L12 2.6z"></path></svg></button><div class="plan-card-image-wrapper"><div class="plan-card-image plan-card-gradient" aria-hidden="true"></div><div class="dimension-tags" role="group" aria-label="Etiquetas do cartão"><span class="dimension-tag plan-tag">Obrigatório</span></div><span class="dims-card-access-btn" aria-hidden="true">Acessar <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span></div><div class="card-body p-3"><h4 class="card-title" id="a-plan-1"><a href="#a-plan-1" class="plan-card-link">Segurança da informação</a></h4><p class="competency-count-text">5 competências</p><ul class="competency-trail" aria-label="Trilha de progresso nas competências"><li class="trail-item first"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Senhas</span><span class="visually-hidden"> — pendente</span></li><li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Phishing</span><span class="visually-hidden"> — pendente</span></li><li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">LGPD</span><span class="visually-hidden"> — pendente</span></li><li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Incidentes</span><span class="visually-hidden"> — pendente</span></li><li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Backup</span><span class="visually-hidden"> — pendente</span></li></ul></div></article></li><li><article class="card plan-card h-100" aria-labelledby="a-plan-2"><button type="button" class="dims-fav-btn" aria-pressed="false" aria-label="Adicionar aos favoritos" title="Adicionar aos favoritos"><svg class="ic dims-fav-icon-empty" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.4-5.8-3-5.8 3 1.1-6.4L2.6 9.4l6.5-.9L12 2.6z"></path></svg></button><div class="plan-card-image-wrapper"><div class="plan-card-image plan-card-photo" aria-hidden="true"></div><div class="dimension-tags" role="group" aria-label="Etiquetas do cartão"><span class="dimension-tag plan-tag">Atendimento</span></div><span class="dims-card-access-btn" aria-hidden="true">Continuar <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span></div><div class="card-body p-3"><h4 class="card-title" id="a-plan-2"><a href="#a-plan-2" class="plan-card-link">Atendimento ao público</a></h4><p class="competency-count-text">6 competências</p><ul class="competency-trail has-after" aria-label="Trilha de progresso nas competências"><li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Escuta</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Empatia</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Clareza</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Registro</span><span class="visually-hidden"> — pendente</span></li><li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Resolução</span><span class="visually-hidden"> — pendente</span></li></ul></div></article></li></ul></div><div class="panel"><div class="bk-cap">Em revisão — sem estrela e sem os filtros de favoritos <span class="idb">PLN-STATUS</span></div><div class="sh-body" style="padding-top:14px"><h3 class="sh-sec">Avance em seus<br>planos de aprendizagem</h3></div><div class="flt-wrap"><div class="flt-bar" role="toolbar" aria-label="Filtrar planos de aprendizagem"><div class="flt-tabs" role="radiogroup" aria-label="Status do plano"><div class="flt-mask"><div class="flt-items"><button type="button" class="flt-tab st w-st-a" role="radio" aria-checked="false" tabindex="-1" id="r-st-active">Ativos <span class="flt-count">3</span></button><button type="button" class="flt-tab st w-st-r active" role="radio" aria-checked="true" tabindex="0" id="r-st-review">Em revisão <span class="flt-count">2</span></button><button type="button" class="flt-tab st w-st-c" role="radio" aria-checked="false" tabindex="-1" id="r-st-complete">Concluídos <span class="flt-count">3</span></button></div></div><div class="flt-ind" style="left:116px;width:146px"></div></div></div></div><ul class="pcgrid" role="list"><li><article class="card plan-card h-100" aria-labelledby="r-plan-0"><div class="plan-card-image-wrapper"><div class="plan-card-image plan-card-gradient" aria-hidden="true"></div><div class="dimension-tags" role="group" aria-label="Etiquetas do cartão"><span class="dimension-tag plan-tag">Dados</span></div><span class="dims-card-access-btn" aria-hidden="true">Ver plano <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span></div><div class="card-body p-3"><h4 class="card-title" id="r-plan-0"><a href="#r-plan-0" class="plan-card-link">Análise de dados</a></h4><span class="dims-plan-status is-review"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Aguardando revisão</span><p class="competency-count-text">5 competências</p><ul class="competency-trail" aria-label="Trilha de progresso nas competências"><li class="trail-item first"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Fontes</span><span class="visually-hidden"> — pendente</span></li><li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Limpeza</span><span class="visually-hidden"> — pendente</span></li><li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Modelos</span><span class="visually-hidden"> — pendente</span></li><li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Gráficos</span><span class="visually-hidden"> — pendente</span></li><li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Narrativa</span><span class="visually-hidden"> — pendente</span></li></ul></div></article></li><li><article class="card plan-card h-100" aria-labelledby="r-plan-1"><div class="plan-card-image-wrapper"><div class="plan-card-image plan-card-photo" aria-hidden="true"></div><div class="dimension-tags" role="group" aria-label="Etiquetas do cartão"><span class="dimension-tag plan-tag">Comunicação</span></div><span class="dims-card-access-btn" aria-hidden="true">Ver plano <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span></div><div class="card-body p-3"><h4 class="card-title" id="r-plan-1"><a href="#r-plan-1" class="plan-card-link">Redação oficial</a></h4><span class="dims-plan-status is-review"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Em revisão</span><p class="competency-count-text">4 competências</p><ul class="competency-trail" aria-label="Trilha de progresso nas competências"><li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Clareza</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Concisão</span><span class="visually-hidden"> — pendente</span></li><li class="trail-item"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Formato</span><span class="visually-hidden"> — pendente</span></li><li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Revisão</span><span class="visually-hidden"> — pendente</span></li></ul></div></article></li></ul></div></div><div class="dochead">2 · Concluídos, em claro e escuro</div><div class="screens"><div class="panel"><div class="bk-cap">Claro</div><div class="sh-body" style="padding-top:14px"><h3 class="sh-sec">Avance em seus<br>planos de aprendizagem</h3></div><div class="flt-wrap"><div class="flt-bar" role="toolbar" aria-label="Filtrar planos de aprendizagem"><div class="flt-tabs" role="radiogroup" aria-label="Status do plano"><div class="flt-mask"><div class="flt-items"><button type="button" class="flt-tab st w-st-a" role="radio" aria-checked="false" tabindex="-1" id="cl-st-active">Ativos <span class="flt-count">3</span></button><button type="button" class="flt-tab st w-st-r" role="radio" aria-checked="false" tabindex="-1" id="cl-st-review">Em revisão <span class="flt-count">2</span></button><button type="button" class="flt-tab st w-st-c active" role="radio" aria-checked="true" tabindex="0" id="cl-st-complete">Concluídos <span class="flt-count">3</span></button></div></div><div class="flt-ind" style="left:262px;width:148px"></div></div></div></div><ul class="pcgrid" role="list"><li><article class="card plan-card h-100" aria-labelledby="cl-plan-0"><div class="plan-card-image-wrapper"><div class="plan-card-image plan-card-photo" aria-hidden="true"></div><div class="dimension-tags" role="group" aria-label="Etiquetas do cartão"><span class="dimension-tag plan-tag">Integração</span></div><span class="dims-card-access-btn" aria-hidden="true">Ver plano <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span></div><div class="card-body p-3"><h4 class="card-title" id="cl-plan-0"><a href="#cl-plan-0" class="plan-card-link">Integração institucional</a></h4><span class="dims-plan-status is-complete"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Concluído em 14/08/2026</span><p class="competency-count-text">3 competências</p><ul class="competency-trail" aria-label="Trilha de progresso nas competências"><li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Boas-vindas</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Normas</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed last"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Equipe</span><span class="visually-hidden"> — concluída</span></li></ul></div></article></li><li><article class="card plan-card h-100" aria-labelledby="cl-plan-1"><div class="plan-card-image-wrapper"><div class="plan-card-image plan-card-gradient" aria-hidden="true"></div><div class="dimension-tags" role="group" aria-label="Etiquetas do cartão"><span class="dimension-tag plan-tag">Saúde</span></div><span class="dims-card-access-btn" aria-hidden="true">Ver plano <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span></div><div class="card-body p-3"><h4 class="card-title" id="cl-plan-1"><a href="#cl-plan-1" class="plan-card-link">Primeiros socorros</a></h4><span class="dims-plan-status is-complete"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Concluído em 02/06/2026</span><p class="competency-count-text">4 competências</p><ul class="competency-trail" aria-label="Trilha de progresso nas competências"><li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Avaliação</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">RCP</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Imobilizar</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Transporte</span><span class="visually-hidden"> — não atingida</span></li></ul></div></article></li><li><article class="card plan-card h-100" aria-labelledby="cl-plan-2"><div class="plan-card-image-wrapper"><div class="plan-card-image plan-card-photo" aria-hidden="true"></div><div class="dimension-tags" role="group" aria-label="Etiquetas do cartão"><span class="dimension-tag plan-tag">Ética</span><span class="dimension-tag plan-tag">2025</span></div><span class="dims-card-access-btn" aria-hidden="true">Ver plano <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span></div><div class="card-body p-3"><h4 class="card-title" id="cl-plan-2"><a href="#cl-plan-2" class="plan-card-link">Ética no serviço público</a></h4><span class="dims-plan-status is-complete"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Concluído em 11/03/2026</span><p class="competency-count-text">7 competências</p><ul class="competency-trail has-before" aria-label="Trilha de progresso nas competências"><li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Integridade</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Sigilo</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Conflito</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Denúncia</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed last"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Probidade</span><span class="visually-hidden"> — concluída</span></li></ul></div></article></li></ul></div><div class="panel dark"><div class="bk-cap">Escuro — os mesmos tokens de tom do plugin</div><div class="sh-body" style="padding-top:14px"><h3 class="sh-sec">Avance em seus<br>planos de aprendizagem</h3></div><div class="flt-wrap"><div class="flt-bar" role="toolbar" aria-label="Filtrar planos de aprendizagem"><div class="flt-tabs" role="radiogroup" aria-label="Status do plano"><div class="flt-mask"><div class="flt-items"><button type="button" class="flt-tab st w-st-a" role="radio" aria-checked="false" tabindex="-1" id="cd-st-active">Ativos <span class="flt-count">3</span></button><button type="button" class="flt-tab st w-st-r" role="radio" aria-checked="false" tabindex="-1" id="cd-st-review">Em revisão <span class="flt-count">2</span></button><button type="button" class="flt-tab st w-st-c active" role="radio" aria-checked="true" tabindex="0" id="cd-st-complete">Concluídos <span class="flt-count">3</span></button></div></div><div class="flt-ind" style="left:262px;width:148px"></div></div></div></div><ul class="pcgrid" role="list"><li><article class="card plan-card h-100" aria-labelledby="cd-plan-0"><div class="plan-card-image-wrapper"><div class="plan-card-image plan-card-photo" aria-hidden="true"></div><div class="dimension-tags" role="group" aria-label="Etiquetas do cartão"><span class="dimension-tag plan-tag">Integração</span></div><span class="dims-card-access-btn" aria-hidden="true">Ver plano <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span></div><div class="card-body p-3"><h4 class="card-title" id="cd-plan-0"><a href="#cd-plan-0" class="plan-card-link">Integração institucional</a></h4><span class="dims-plan-status is-complete"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Concluído em 14/08/2026</span><p class="competency-count-text">3 competências</p><ul class="competency-trail" aria-label="Trilha de progresso nas competências"><li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Boas-vindas</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Normas</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed last"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Equipe</span><span class="visually-hidden"> — concluída</span></li></ul></div></article></li><li><article class="card plan-card h-100" aria-labelledby="cd-plan-1"><div class="plan-card-image-wrapper"><div class="plan-card-image plan-card-gradient" aria-hidden="true"></div><div class="dimension-tags" role="group" aria-label="Etiquetas do cartão"><span class="dimension-tag plan-tag">Saúde</span></div><span class="dims-card-access-btn" aria-hidden="true">Ver plano <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span></div><div class="card-body p-3"><h4 class="card-title" id="cd-plan-1"><a href="#cd-plan-1" class="plan-card-link">Primeiros socorros</a></h4><span class="dims-plan-status is-complete"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Concluído em 02/06/2026</span><p class="competency-count-text">4 competências</p><ul class="competency-trail" aria-label="Trilha de progresso nas competências"><li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Avaliação</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">RCP</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Imobilizar</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Transporte</span><span class="visually-hidden"> — não atingida</span></li></ul></div></article></li><li><article class="card plan-card h-100" aria-labelledby="cd-plan-2"><div class="plan-card-image-wrapper"><div class="plan-card-image plan-card-photo" aria-hidden="true"></div><div class="dimension-tags" role="group" aria-label="Etiquetas do cartão"><span class="dimension-tag plan-tag">Ética</span><span class="dimension-tag plan-tag">2025</span></div><span class="dims-card-access-btn" aria-hidden="true">Ver plano <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span></div><div class="card-body p-3"><h4 class="card-title" id="cd-plan-2"><a href="#cd-plan-2" class="plan-card-link">Ética no serviço público</a></h4><span class="dims-plan-status is-complete"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Concluído em 11/03/2026</span><p class="competency-count-text">7 competências</p><ul class="competency-trail has-before" aria-label="Trilha de progresso nas competências"><li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Integridade</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Sigilo</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Conflito</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Denúncia</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed last"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Probidade</span><span class="visually-hidden"> — concluída</span></li></ul></div></article></li></ul></div></div><div class="dochead">3 · Carregamento sob demanda e falha</div><div class="screens one"><div class="panel"><div class="bk-cap">Primeiro clique em "Concluídos" — botão ocupado, esqueleto no lugar dos cartões <span class="idb">PLN-SKELETON</span></div><div class="flt-wrap"><div class="flt-bar" role="toolbar" aria-label="Filtrar planos de aprendizagem"><div class="flt-tabs" role="radiogroup" aria-label="Status do plano"><div class="flt-mask"><div class="flt-items"><button type="button" class="flt-tab st w-st-a" role="radio" aria-checked="false" tabindex="-1" id="l-st-active">Ativos <span class="flt-count">3</span></button><button type="button" class="flt-tab st w-st-r" role="radio" aria-checked="false" tabindex="-1" id="l-st-review">Em revisão <span class="flt-count">2</span></button><button type="button" class="flt-tab st w-st-c active" role="radio" aria-checked="true" tabindex="0" id="l-st-complete">Concluídos <svg class="ic spin" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.56"></path></svg></button></div></div><div class="flt-ind" style="left:262px;width:148px"></div></div></div></div><div class="sh-body" style="padding-top:10px"><p class="sh-loading" role="status" aria-live="polite">Carregando planos concluídos…</p></div><ul class="pcgrid" role="list"><li><div class="dims-skel" aria-hidden="true"><div class="sk-img"></div><div class="sk-body"><div class="sk-line sk-w40"></div><div class="sk-line sk-w90"></div><div class="sk-line sk-w60"></div></div></div></li><li><div class="dims-skel" aria-hidden="true"><div class="sk-img"></div><div class="sk-body"><div class="sk-line sk-w40"></div><div class="sk-line sk-w90"></div><div class="sk-line sk-w60"></div></div></div></li><li><div class="dims-skel" aria-hidden="true"><div class="sk-img"></div><div class="sk-body"><div class="sk-line sk-w40"></div><div class="sk-line sk-w90"></div><div class="sk-line sk-w60"></div></div></div></li></ul></div></div><div class="screens one"><div class="panel"><div class="bk-cap">Falha ao carregar o status — o erro e o "Tentar novamente" que o bloco já tem <span class="idb">BLK-ERROR</span> <span class="idb">BLK-ERROR-RETRY</span></div><div class="flt-wrap"><div class="flt-bar" role="toolbar" aria-label="Filtrar planos de aprendizagem"><div class="flt-tabs" role="radiogroup" aria-label="Status do plano"><div class="flt-mask"><div class="flt-items"><button type="button" class="flt-tab st w-st-a" role="radio" aria-checked="false" tabindex="-1" id="e-st-active">Ativos <span class="flt-count">3</span></button><button type="button" class="flt-tab st w-st-r" role="radio" aria-checked="false" tabindex="-1" id="e-st-review">Em revisão <span class="flt-count">2</span></button><button type="button" class="flt-tab st w-st-c active" role="radio" aria-checked="true" tabindex="0" id="e-st-complete">Concluídos <span class="flt-count">3</span></button></div></div><div class="flt-ind" style="left:262px;width:148px"></div></div></div></div><div class="stage" style="padding-top:12px"><div class="dims-error-message" role="alert"><span class="dims-error-text">Não foi possível carregar os planos concluídos agora. Tente novamente.</span><button type="button" class="dims-error-retry">Tentar novamente</button></div></div></div></div><div class="screens one"><div class="panel"><div class="bk-cap">Sem plano em revisão legível — o botão some (contagem 0)</div><div class="flt-wrap"><div class="flt-bar" role="toolbar" aria-label="Filtrar planos de aprendizagem"><div class="flt-tabs" role="radiogroup" aria-label="Status do plano"><div class="flt-mask"><div class="flt-items"><button type="button" class="flt-tab st w-st-a active" role="radio" aria-checked="true" tabindex="0" id="h-st-active">Ativos <span class="flt-count">3</span></button><button type="button" class="flt-tab st w-st-c" role="radio" aria-checked="false" tabindex="-1" id="h-st-complete">Concluídos <span class="flt-count">3</span></button></div></div><div class="flt-ind" style="left:4px;width:112px"></div></div><div class="flt-sep" aria-hidden="true"></div><div class="flt-tabs" role="radiogroup" aria-label="Filtrar planos de aprendizagem"><div class="flt-mask"><div class="flt-items"><button type="button" class="flt-tab fav w-fav" role="radio" aria-checked="false" tabindex="-1"><svg class="ic st" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg> Meus Favoritos <span class="flt-count">1</span></button><button type="button" class="flt-tab show active w-show" role="radio" aria-checked="true" tabindex="0">Mostrar tudo <span class="flt-count">3</span></button></div></div><div class="flt-ind" style="left:182px;width:140px"></div></div></div></div></div></div><div class="dochead">4 · Aluno sem plano ativo (decisão D1 = B)</div><div class="screens one"><div class="panel"><div class="bk-cap">O bloco aparece, já aberto no primeiro status com planos</div><div class="sh-body"><div class="sh-hdr"><h2 class="sh-heading">Minhas competências</h2><div class="sh-srow"><div class="sh-swrap"><span class="sh-sicon"><svg class="ic i12" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.6-3.6"></path></svg></span><input class="sh-sinput" type="text" value="" aria-label="Pesquisar cartões" placeholder="Pesquisar..."></div></div></div></div><div class="sh-body" style="padding-top:14px"><h3 class="sh-sec">Avance em seus<br>planos de aprendizagem</h3></div><div class="flt-wrap"><div class="flt-bar" role="toolbar" aria-label="Filtrar planos de aprendizagem"><div class="flt-tabs" role="radiogroup" aria-label="Status do plano"><div class="flt-mask"><div class="flt-items"><button type="button" class="flt-tab st w-st-c active" role="radio" aria-checked="true" tabindex="0" id="g-st-complete">Concluídos <span class="flt-count">3</span></button></div></div><div class="flt-ind" style="left:4px;width:148px"></div></div></div></div><div class="sh-body" style="padding-top:6px"><p class="sh-empty" role="status">Nenhum plano ativo no momento.</p></div><ul class="pcgrid" role="list"><li><article class="card plan-card h-100" aria-labelledby="g-plan-0"><div class="plan-card-image-wrapper"><div class="plan-card-image plan-card-photo" aria-hidden="true"></div><div class="dimension-tags" role="group" aria-label="Etiquetas do cartão"><span class="dimension-tag plan-tag">Integração</span></div><span class="dims-card-access-btn" aria-hidden="true">Ver plano <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span></div><div class="card-body p-3"><h4 class="card-title" id="g-plan-0"><a href="#g-plan-0" class="plan-card-link">Integração institucional</a></h4><span class="dims-plan-status is-complete"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Concluído em 14/08/2026</span><p class="competency-count-text">3 competências</p><ul class="competency-trail" aria-label="Trilha de progresso nas competências"><li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Boas-vindas</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Normas</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed last"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Equipe</span><span class="visually-hidden"> — concluída</span></li></ul></div></article></li><li><article class="card plan-card h-100" aria-labelledby="g-plan-1"><div class="plan-card-image-wrapper"><div class="plan-card-image plan-card-gradient" aria-hidden="true"></div><div class="dimension-tags" role="group" aria-label="Etiquetas do cartão"><span class="dimension-tag plan-tag">Saúde</span></div><span class="dims-card-access-btn" aria-hidden="true">Ver plano <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span></div><div class="card-body p-3"><h4 class="card-title" id="g-plan-1"><a href="#g-plan-1" class="plan-card-link">Primeiros socorros</a></h4><span class="dims-plan-status is-complete"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Concluído em 02/06/2026</span><p class="competency-count-text">4 competências</p><ul class="competency-trail" aria-label="Trilha de progresso nas competências"><li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Avaliação</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">RCP</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Imobilizar</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Transporte</span><span class="visually-hidden"> — não atingida</span></li></ul></div></article></li></ul></div></div><div class="dochead">5 · Celular — o grupo de status ocupa a linha inteira</div><div class="screens"><div class="panel" style="flex:0 0 390px;min-width:390px;max-width:390px"><div class="bk-cap">390 px</div><div class="sh-body"><div class="sh-hdr"><h2 class="sh-heading">Minhas competências</h2><div class="sh-srow" style="max-width:150px"><div class="sh-swrap"><span class="sh-sicon"><svg class="ic i12" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.6-3.6"></path></svg></span><input class="sh-sinput" type="text" value="" aria-label="Pesquisar cartões" placeholder="Pesquisar..."></div><button class="sh-ftoggle" type="button" aria-expanded="false" aria-label="Filtros" style="display:inline-flex"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11M20 7h1M3 17h1M10 17h11"></path><circle cx="17" cy="7" r="2.4"></circle><circle cx="7" cy="17" r="2.4"></circle></svg></button></div></div></div><div class="sh-body" style="padding-top:10px"><h3 class="sh-sec" style="font-size:1.6rem">Avance em seus<br>planos de aprendizagem</h3></div><div class="flt-wrap"><div class="flt-tabs st-full" role="radiogroup" aria-label="Status do plano"><div class="flt-mask"><div class="flt-items"><button type="button" class="flt-tab st" role="radio" aria-checked="false" tabindex="-1">Ativos <span class="flt-count">3</span></button><button type="button" class="flt-tab st" role="radio" aria-checked="false" tabindex="-1">Em revisão <span class="flt-count">2</span></button><button type="button" class="flt-tab st active" role="radio" aria-checked="true" tabindex="0">Concluídos <span class="flt-count">3</span></button></div></div><div class="flt-ind" style="left:232px;width:114px"></div></div></div><ul class="pcgrid" role="list"><li><article class="card plan-card h-100" aria-labelledby="m-plan-0"><div class="plan-card-image-wrapper"><div class="plan-card-image plan-card-photo" aria-hidden="true"></div><div class="dimension-tags" role="group" aria-label="Etiquetas do cartão"><span class="dimension-tag plan-tag">Integração</span></div><span class="dims-card-access-btn" aria-hidden="true">Ver plano <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span></div><div class="card-body p-3"><h4 class="card-title" id="m-plan-0"><a href="#m-plan-0" class="plan-card-link">Integração institucional</a></h4><span class="dims-plan-status is-complete"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Concluído em 14/08/2026</span><p class="competency-count-text">3 competências</p><ul class="competency-trail" aria-label="Trilha de progresso nas competências"><li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Boas-vindas</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Normas</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed last"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Equipe</span><span class="visually-hidden"> — concluída</span></li></ul></div></article></li><li><article class="card plan-card h-100" aria-labelledby="m-plan-1"><div class="plan-card-image-wrapper"><div class="plan-card-image plan-card-gradient" aria-hidden="true"></div><div class="dimension-tags" role="group" aria-label="Etiquetas do cartão"><span class="dimension-tag plan-tag">Saúde</span></div><span class="dims-card-access-btn" aria-hidden="true">Ver plano <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span></div><div class="card-body p-3"><h4 class="card-title" id="m-plan-1"><a href="#m-plan-1" class="plan-card-link">Primeiros socorros</a></h4><span class="dims-plan-status is-complete"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Concluído em 02/06/2026</span><p class="competency-count-text">4 competências</p><ul class="competency-trail" aria-label="Trilha de progresso nas competências"><li class="trail-item completed first"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Avaliação</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">RCP</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item completed"><span class="trail-marker" aria-hidden="true"><svg class="ic ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path></svg></span><span class="trail-label text-success">Imobilizar</span><span class="visually-hidden"> — concluída</span></li><li class="trail-item last"><span class="trail-marker" aria-hidden="true"><span class="empty-circle"></span></span><span class="trail-label">Transporte</span><span class="visually-hidden"> — não atingida</span></li></ul></div></article></li></ul></div></div>
+<div class="legend"><h3>Elementos novos nesta proposta</h3><div class="leg">
+<span class="k">FLT-STATUS</span><span class="v"><b>Grupo de status</b> — radiogroup na mesma bandeja de pílulas dos filtros atuais (.flt-tabs / .flt-tab / .flt-count / .flt-ind). Um balde com contagem 0 não é desenhado.</span>
+<span class="k">PLN-STATUS</span><span class="v"><b>Selo de status no cartão</b> — forma do .local-dimensions-grade-badge do plugin irmão, cores dos tons que o bloco já declara: sucesso para concluído, aviso para em revisão. Nada de paleta nova.</span>
+<span class="k">PLN-SKELETON</span><span class="v"><b>Esqueleto de carregamento</b> — ocupa a grade enquanto o status pedido chega, com a mensagem de carregamento que o bloco já tem. Sem animação quando o sistema pede movimento reduzido.</span>
+<span class="k">FLT-SEP</span><span class="v"><b>Separador</b> — 1 px entre o grupo de status e os filtros de favoritos, que só existem em "Ativos".</span>
+</div></div>
+</div>
