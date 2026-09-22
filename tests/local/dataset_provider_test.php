@@ -68,8 +68,8 @@ final class dataset_provider_test extends advanced_testcase {
                 $this->plans = $plans;
             }
 
-            public function test_get_active_plans(): array {
-                return $this->get_active_plans();
+            public function test_get_plans_in_bucket(string $bucket): array {
+                return $this->get_plans_in_bucket($bucket);
             }
 
             public function test_get_eligible_competency_ids(
@@ -346,48 +346,98 @@ final class dataset_provider_test extends advanced_testcase {
     }
 
     /**
-     * Active plans helper should keep only plans with active status.
+     * Build a fake plan that reports one status, with no database behind it.
      *
-     * @covers ::get_active_plans
+     * @param int $status Status the fake plan reports.
+     * @return object
      */
-    public function test_get_active_plans_filters_by_status(): void {
+    protected function fake_plan(int $status): object {
+        return new class ($status) {
+            /** @var int Status this fake plan reports. */
+            protected $status;
+
+            /**
+             * Constructor.
+             *
+             * @param int $status Status to report.
+             */
+            public function __construct(int $status) {
+                $this->status = $status;
+            }
+
+            /**
+             * Get a field from the fake plan object.
+             *
+             * @param string $field Field name.
+             * @return int
+             */
+            public function get(string $field): int {
+                return $field === 'status' ? $this->status : 0;
+            }
+        };
+    }
+
+    /**
+     * Read the statuses out of a list of fake plans.
+     *
+     * @param array $plans Fake plans.
+     * @return array
+     */
+    protected function statuses_of(array $plans): array {
+        return array_map(static function ($plan) {
+            return $plan->get('status');
+        }, $plans);
+    }
+
+    /**
+     * Each bucket carries its own statuses, and a plain draft belongs to none of them.
+     *
+     * @covers ::get_plans_in_bucket
+     * @covers ::count_plans_by_bucket
+     * @covers ::has_displayable_plans
+     */
+    public function test_status_buckets_partition_the_plan_list(): void {
+        $provider = $this->get_provider_double();
+        $provider->test_set_plans([
+            $this->fake_plan(plan::STATUS_DRAFT),
+            $this->fake_plan(plan::STATUS_ACTIVE),
+            $this->fake_plan(plan::STATUS_WAITING_FOR_REVIEW),
+            $this->fake_plan(plan::STATUS_IN_REVIEW),
+            $this->fake_plan(plan::STATUS_COMPLETE),
+        ]);
+
+        $this->assertSame(
+            [plan::STATUS_ACTIVE],
+            $this->statuses_of($provider->test_get_plans_in_bucket(dataset_provider::BUCKET_ACTIVE))
+        );
+        $this->assertSame(
+            [plan::STATUS_WAITING_FOR_REVIEW, plan::STATUS_IN_REVIEW],
+            $this->statuses_of($provider->test_get_plans_in_bucket(dataset_provider::BUCKET_REVIEW))
+        );
+        $this->assertSame(
+            [plan::STATUS_COMPLETE],
+            $this->statuses_of($provider->test_get_plans_in_bucket(dataset_provider::BUCKET_COMPLETE))
+        );
+        $this->assertSame(['active' => 1, 'review' => 2, 'complete' => 1], $provider->count_plans_by_bucket());
+        $this->assertTrue($provider->has_displayable_plans());
+    }
+
+    /**
+     * A learner whose only plan is a draft has nothing the block could show.
+     *
+     * @covers ::count_plans_by_bucket
+     * @covers ::has_displayable_plans
+     */
+    public function test_a_draft_alone_is_not_content(): void {
         $provider = $this->get_provider_double();
 
-        $activeplan = new class {
-            /**
-             * Get a field from fake plan object.
-             *
-             * @param string $field Field name.
-             * @return int
-             */
-            public function get(string $field): int {
-                if ($field === 'status') {
-                    return plan::STATUS_ACTIVE;
-                }
-                return 0;
-            }
-        };
+        // Control: an active plan in the same double does count.
+        $provider->test_set_plans([$this->fake_plan(plan::STATUS_ACTIVE)]);
+        $this->assertTrue($provider->has_displayable_plans());
 
-        $inactiveplan = new class {
-            /**
-             * Get a field from fake plan object.
-             *
-             * @param string $field Field name.
-             * @return int
-             */
-            public function get(string $field): int {
-                if ($field === 'status') {
-                    return plan::STATUS_COMPLETE;
-                }
-                return 0;
-            }
-        };
-
-        $provider->test_set_plans([$inactiveplan, $activeplan]);
-        $activeplans = $provider->test_get_active_plans();
-
-        $this->assertCount(1, $activeplans);
-        $this->assertSame(plan::STATUS_ACTIVE, $activeplans[0]->get('status'));
+        $provider->test_set_plans([$this->fake_plan(plan::STATUS_DRAFT)]);
+        $this->assertFalse($provider->has_displayable_plans());
+        $this->assertSame(['active' => 0, 'review' => 0, 'complete' => 0], $provider->count_plans_by_bucket());
     }
 
     /**

@@ -64,6 +64,107 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         return label + ' (' + count + ')';
     }
 
+    /**
+     * Push the plan status pills: Active, In review, Completed.
+     *
+     * They sit inside the filter bar, so on a phone they appear with the rest of the filters when
+     * the panel is opened. A bucket with no plans is not drawn at all: an empty "In review" would
+     * read as "you have none", while on most sites it means "you cannot see them" - the review
+     * statuses are core's draft statuses and need moodle/competency:planviewowndraft, which no
+     * archetype holds. One bucket alone is not a choice either, so the group appears from two.
+     *
+     * @param {Array} html Markup accumulator, appended in place.
+     * @param {Object} state Application state.
+     * @param {Object} labels Localized labels.
+     * @param {string} groupLabel Fallback accessible name for the radiogroup.
+     * @return {boolean} Whether anything was drawn.
+     */
+    function renderStatusPills(html, state, labels, groupLabel) {
+        const buckets = [
+            {key: 'active', label: labels.statusactive},
+            {key: 'review', label: labels.statusreview},
+            {key: 'complete', label: labels.statuscomplete}
+        ].filter((bucket) => (state.planCounts[bucket.key] || 0) > 0 || bucket.key === state.planStatus);
+
+        if (buckets.length < 2) {
+            return false;
+        }
+
+        html.push('<div class="dims-filter-tabs-wrapper" data-filter-group="planstatus">');
+        html.push('<div class="dims-filter-tabs" role="radiogroup" aria-label="'
+            + escapeHtml(labels.statusfilter || groupLabel) + '">');
+        buckets.forEach((bucket) => {
+            const isSelected = state.planStatus === bucket.key;
+            const isBusy = state.statusLoading === bucket.key;
+            html.push('<button type="button" class="dims-filter-tab dims-status-filter-btn'
+                + (isSelected ? ' active' : '') + '" role="radio" aria-checked="'
+                + (isSelected ? 'true' : 'false') + '" tabindex="' + (isSelected ? '0' : '-1')
+                + '" aria-busy="' + (isBusy ? 'true' : 'false')
+                + '" data-status-filter="' + bucket.key + '">'
+                + escapeHtml(bucket.label || bucket.key)
+                + (isBusy
+                    ? ' <i class="fa fa-spinner fa-spin dims-status-spinner" aria-hidden="true"></i>'
+                    : ' <span class="dims-filter-count">' + (state.planCounts[bucket.key] || 0) + '</span>')
+                + '</button>');
+        });
+        html.push('</div></div>');
+
+        return true;
+    }
+
+    /**
+     * Push the favourites / show-all pill pair for one card type.
+     *
+     * Extracted from renderFilterControls, which the lint's complexity budget had outgrown - and
+     * because the pair has a rule of its own: outside the active status bucket there are no
+     * favourites to filter, so the pills are not drawn at all.
+     *
+     * @param {Array} html Markup accumulator, appended in place.
+     * @param {string} type 'plan' or 'competency'.
+     * @param {Object} state Application state.
+     * @param {Object} labels Localized labels.
+     * @param {string} groupLabel Accessible name for the radiogroup.
+     * @return {boolean} Whether anything was drawn.
+     */
+    function renderFavouritePills(html, type, state, labels, groupLabel) {
+        if (!state.favouritesEnabled || (type === 'plan' && state.planStatus !== 'active')) {
+            return false;
+        }
+
+        const typeFavCount = type === 'plan' ? state.favouriteCountPlan : state.favouriteCountCompetency;
+        if (typeFavCount <= 0) {
+            return false;
+        }
+
+        const typeTotal = type === 'plan' ? state.totalplans : state.totalcompetencies;
+        const isFavActive = state.favouriteFilterActive[type];
+
+        html.push('<div class="dims-filter-tabs-wrapper" data-filter-group="fav_' + type + '">');
+        html.push('<div class="dims-filter-tabs" role="radiogroup" aria-label="' + escapeHtml(groupLabel) + '">');
+
+        // "My Favourites (N)" pill — radio button.
+        html.push('<button type="button" class="dims-filter-tab dims-fav-filter-btn'
+            + (isFavActive ? ' active' : '') + '" role="radio" aria-checked="'
+            + (isFavActive ? 'true' : 'false') + '" tabindex="' + (isFavActive ? '0' : '-1')
+            + '" data-fav-filter-type="' + type + '">'
+            + '<i class="fa fa-star dims-fav-filter-icon" aria-hidden="true"></i> '
+            + escapeHtml(labels.myfavourites)
+            + ' <span class="dims-filter-count">' + typeFavCount + '</span>'
+            + '</button>');
+
+        // "Show all (N)" pill — radio button.
+        html.push('<button type="button" class="dims-filter-tab dims-all-filter-btn'
+            + (!isFavActive ? ' active' : '') + '" role="radio" aria-checked="'
+            + (!isFavActive ? 'true' : 'false') + '" tabindex="' + (!isFavActive ? '0' : '-1')
+            + '" data-all-filter-type="' + type + '">'
+            + escapeHtml(labels.showallitems) + ' <span class="dims-filter-count">' + typeTotal + '</span>'
+            + '</button>');
+
+        html.push('</div></div>');
+
+        return true;
+    }
+
     function renderFilterControls(container, type, cards, state, labels) {
         const host = container.querySelector('.dims-filters-host[data-filters-type="' + type + '"]');
         if (!host) {
@@ -89,37 +190,11 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         // group is reached as a single tab stop and arrow keys navigate within
         // it (managed by filter_tabs_nav.js).
         // Counts are per-type: plan pills show plan counts, competency pills show competency counts.
-        if (state.favouritesEnabled) {
-            const typeFavCount = type === 'plan' ? state.favouriteCountPlan : state.favouriteCountCompetency;
-            const typeTotal = type === 'plan' ? state.totalplans : state.totalcompetencies;
-            const isFavActive = state.favouriteFilterActive[type];
-
-            if (typeFavCount > 0) {
-                hasAnyFilter = true;
-                html.push('<div class="dims-filter-tabs-wrapper" data-filter-group="fav_' + type + '">');
-                html.push('<div class="dims-filter-tabs" role="radiogroup" aria-label="' + escapeHtml(groupLabel) + '">');
-
-                // "My Favourites (N)" pill — radio button.
-                html.push('<button type="button" class="dims-filter-tab dims-fav-filter-btn'
-                    + (isFavActive ? ' active' : '') + '" role="radio" aria-checked="'
-                    + (isFavActive ? 'true' : 'false') + '" tabindex="' + (isFavActive ? '0' : '-1')
-                    + '" data-fav-filter-type="' + type + '">'
-                    + '<i class="fa fa-star dims-fav-filter-icon" aria-hidden="true"></i> '
-                    + escapeHtml(labels.myfavourites)
-                    + ' <span class="dims-filter-count">' + typeFavCount + '</span>'
-                    + '</button>');
-
-                // "Show all (N)" pill — radio button.
-                html.push('<button type="button" class="dims-filter-tab dims-all-filter-btn'
-                    + (!isFavActive ? ' active' : '') + '" role="radio" aria-checked="'
-                    + (!isFavActive ? 'true' : 'false') + '" tabindex="' + (!isFavActive ? '0' : '-1')
-                    + '" data-all-filter-type="' + type + '">'
-                    + escapeHtml(labels.showallitems) + ' <span class="dims-filter-count">' + typeTotal + '</span>'
-                    + '</button>');
-
-                html.push('</div></div>');
-            }
+        if (type === 'plan') {
+            hasAnyFilter = renderStatusPills(html, state, labels, groupLabel) || hasAnyFilter;
         }
+
+        hasAnyFilter = renderFavouritePills(html, type, state, labels, groupLabel) || hasAnyFilter;
 
         ['tag1', 'tag2'].forEach((tag) => {
             const enabledKey = tag + 'enabled';
@@ -201,7 +276,9 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         // Tag-value radios. Each radiogroup keeps a single tab stop: the
         // currently checked radio gets tabindex="0", the others tabindex="-1"
         // (roving tabindex pattern, WCAG 2.1.1 + 2.4.3).
-        container.querySelectorAll('.dims-filter-tab:not(.dims-fav-filter-btn):not(.dims-all-filter-btn)').forEach(function(tab) {
+        container.querySelectorAll(
+            '.dims-filter-tab:not(.dims-fav-filter-btn):not(.dims-all-filter-btn):not(.dims-status-filter-btn)'
+        ).forEach(function(tab) {
             var field = tab.dataset.filterField;
             var value = tab.dataset.filterValue || '';
             var isActive = (state.activeFilters[field] || '') === value;
@@ -423,7 +500,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
 
         empty.style.display = 'none';
 
-        if (!state.rawDataset.hasactiveplans) {
+        if (state.planStatus === 'active' && !state.rawDataset.hasactiveplans) {
             empty.textContent = labels.noactiveplans;
             empty.style.display = '';
             return;
@@ -754,6 +831,139 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
     }
 
     /**
+     * Draw placeholder cards while a status bucket is on its way.
+     *
+     * The grid keeps its shape and the learner sees where the cards will land, instead of an
+     * empty block that looks broken. The count comes from the bucket's own pill.
+     *
+     * @param {HTMLElement} container Block container.
+     * @param {Object} state Application state.
+     * @param {Object} labels Localized labels.
+     */
+    function renderStatusSkeleton(container, state, labels) {
+        const list = container.querySelector('[data-cards-type="plan"]');
+        const loading = container.querySelector('.dims-loading-state');
+        const wanted = Math.min(3, Math.max(1, state.planCounts[state.planStatus] || 1));
+        const items = [];
+
+        for (let i = 0; i < wanted; i++) {
+            items.push('<li class="col-12 col-sm-6 col-lg-4 mb-3 dims-card-item dims-skeleton-card" aria-hidden="true">'
+                + '<div class="dims-skeleton-media"></div>'
+                + '<div class="dims-skeleton-body">'
+                + '<span class="dims-skeleton-line dims-skeleton-line-sm"></span>'
+                + '<span class="dims-skeleton-line"></span>'
+                + '<span class="dims-skeleton-line dims-skeleton-line-md"></span>'
+                + '</div></li>');
+        }
+
+        if (list) {
+            list.innerHTML = items.join('');
+            list.setAttribute('aria-busy', 'true');
+        }
+
+        if (loading) {
+            if (typeof loading.dataset.defaultText === 'undefined') {
+                loading.dataset.defaultText = loading.textContent;
+            }
+            const message = state.planStatus === 'complete'
+                ? labels.statusloadingcomplete
+                : labels.statusloadingreview;
+            loading.textContent = message || loading.dataset.defaultText;
+            loading.style.display = '';
+        }
+    }
+
+    /**
+     * Put the loading line and the grid back the way they were.
+     *
+     * @param {HTMLElement} container Block container.
+     */
+    function clearStatusSkeleton(container) {
+        const list = container.querySelector('[data-cards-type="plan"]');
+        const loading = container.querySelector('.dims-loading-state');
+
+        if (list) {
+            list.removeAttribute('aria-busy');
+        }
+        if (loading) {
+            if (typeof loading.dataset.defaultText !== 'undefined') {
+                loading.textContent = loading.dataset.defaultText;
+            }
+            loading.style.display = 'none';
+        }
+    }
+
+    /**
+     * Switch the plan grid to another status bucket, fetching it the first time.
+     *
+     * Only the active bucket arrives with the page; every other bucket is built when it is
+     * asked for and kept afterwards, so a second visit costs nothing. Competency cards are
+     * untouched: they are about work in progress and belong to the active plans alone.
+     *
+     * @param {HTMLElement} container Block container.
+     * @param {Object} state Application state.
+     * @param {Object} options Init options.
+     * @param {string} bucket 'active', 'review' or 'complete'.
+     * @return {Promise}
+     */
+    function pickStatus(container, state, options, bucket) {
+        if (!bucket || bucket === state.planStatus || state.statusLoading) {
+            return Promise.resolve();
+        }
+
+        // Leaving a bucket keeps its cards, so coming back needs no request.
+        state.statusCards[state.planStatus] = state.rawDataset.plancards;
+        state.planStatus = bucket;
+        state.favouriteFilterActive.plan = false;
+        /* eslint-disable camelcase */
+        state.activeFilters.plan_tag1 = '';
+        state.activeFilters.plan_tag2 = '';
+        /* eslint-enable camelcase */
+        state.filtersRendered = false;
+        state.cardsRendered.plan = false;
+        clearError(container);
+
+        if (state.statusCards[bucket]) {
+            state.rawDataset.plancards = state.statusCards[bucket];
+            state.rawDataset.hasplancards = state.rawDataset.plancards.length > 0;
+            updateFavouriteCounts(state);
+            rerender(container, state, options);
+            return Promise.resolve();
+        }
+
+        state.statusLoading = bucket;
+        renderFilterControls(container, 'plan', state.rawDataset.plancards, state, options.labels);
+        renderStatusSkeleton(container, state, options.labels);
+
+        return fetchDataset(options.endpointmethod, {
+            favouritesonly: false,
+            loadgroup: 'plan',
+            planstatus: bucket
+        }).then((dataset) => {
+            state.statusLoading = null;
+            clearStatusSkeleton(container);
+            state.statusCards[bucket] = dataset.plancards || [];
+            state.rawDataset.plancards = state.statusCards[bucket];
+            state.rawDataset.hasplancards = !!dataset.hasplancards;
+            if (dataset.plancounts) {
+                state.planCounts = dataset.plancounts;
+            }
+            state.filtersRendered = false;
+            state.cardsRendered.plan = false;
+            updateFavouriteCounts(state);
+            rerender(container, state, options);
+            return null;
+        }).catch(() => {
+            state.statusLoading = null;
+            clearStatusSkeleton(container);
+            state.filtersRendered = false;
+            state.cardsRendered.plan = false;
+            rerender(container, state, options);
+            showError(container, options.labels.loaderror);
+        });
+    }
+
+    /**
      * Load the dataset for a specific group or all groups (Phase 2).
      *
      * @param {HTMLElement} container Block container.
@@ -774,7 +984,13 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
 
         showLoading(container, true);
 
-        return fetchDataset(options.endpointmethod, {favouritesonly: false, loadgroup: group})
+        /* The bucket travels with the request: leaving it out asks the server to pick the bucket
+           to open on, which would pull the plan grid back to the active one mid-session. */
+        return fetchDataset(options.endpointmethod, {
+            favouritesonly: false,
+            loadgroup: group,
+            planstatus: state.planStatus
+        })
             .then((dataset) => {
                 state.rawDataset.hasactiveplans = !!dataset.hasactiveplans;
 
@@ -786,9 +1002,14 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                     state.favouritesEnabled = !!dataset.favouritesenabled;
                 }
 
+                if (dataset.plancounts) {
+                    state.planCounts = dataset.plancounts;
+                }
+
                 // Merge: only update the group(s) that were loaded.
                 if (group !== 'competency') {
                     state.rawDataset.plancards = dataset.plancards || [];
+                    state.statusCards[state.planStatus] = state.rawDataset.plancards;
                     state.rawDataset.hasplancards = !!dataset.hasplancards;
                     state.totalplans = dataset.totalplans || state.totalplans;
                     state.hasnonfavouriteplans = false;
@@ -881,7 +1102,9 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
 
                     // If full dataset not yet loaded for all groups, fetch remaining.
                     const bothLoaded = state.fullDatasetLoaded.plan && state.fullDatasetLoaded.competency;
-                    const searchNeedsLoad = state.normalizedSearch && !bothLoaded
+                    /* Search scopes to the bucket on screen, so only the active one may need the
+                       rest of its cards fetched first. */
+                    const searchNeedsLoad = state.normalizedSearch && !bothLoaded && state.planStatus === 'active'
                         && (state.hasnonfavouriteplans || state.hasnonfavouritecompetencies);
                     if (searchNeedsLoad) {
                         return loadGroupDataset(container, state, options, '').then(() => {
@@ -943,6 +1166,14 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                 return;
             }
 
+            // Handle a status pill click: swap the plan grid to that bucket.
+            const statusBtn = e.target.closest('.dims-status-filter-btn');
+            if (statusBtn) {
+                e.preventDefault();
+                pickStatus(container, state, options, statusBtn.dataset.statusFilter);
+                return;
+            }
+
             // Handle "Clear filters" button click (scoped to one section).
             const clearBtn = e.target.closest('.dims-clear-filters-btn');
             if (clearBtn) {
@@ -955,7 +1186,8 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
 
                 // If full dataset not loaded and needed, load it.
                 const typeHasNonFavs = clearType === 'plan'
-                    ? state.hasnonfavouriteplans : state.hasnonfavouritecompetencies;
+                    ? state.hasnonfavouriteplans && state.planStatus === 'active'
+                    : state.hasnonfavouritecompetencies;
                 if (!state.fullDatasetLoaded[clearType] && typeHasNonFavs) {
                     loadGroupDataset(container, state, options, clearType);
                     return;
@@ -1018,7 +1250,8 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
 
             // Handle tag filter tab clicks.
             const tab = e.target.closest('.dims-filter-tab');
-            if (!tab || tab.classList.contains('dims-fav-filter-btn') || tab.classList.contains('dims-all-filter-btn')) {
+            if (!tab || tab.classList.contains('dims-fav-filter-btn') || tab.classList.contains('dims-all-filter-btn')
+                    || tab.classList.contains('dims-status-filter-btn')) {
                 return;
             }
 
@@ -1106,6 +1339,13 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                 if (typeof dataset.favouritesenabled !== 'undefined') {
                     state.favouritesEnabled = !!dataset.favouritesenabled;
                 }
+
+                // The status axis: every bucket's count rides this first response.
+                if (dataset.plancounts) {
+                    state.planCounts = dataset.plancounts;
+                }
+                state.planStatus = dataset.planstatus || 'active';
+                state.statusCards[state.planStatus] = state.rawDataset.plancards;
 
                 // Store totals and per-group non-favourite flags.
                 state.totalplans = dataset.totalplans || 0;

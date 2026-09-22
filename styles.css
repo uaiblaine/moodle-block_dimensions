@@ -596,26 +596,37 @@ body[data-bs-theme="dark"],
    readable in a narrow block.
    ============================================ */
 
-/* Override Bootstrap .row: flex-wrap rather than the negative-margin grid. */
+/* Override Bootstrap .row: an auto-fill track grid rather than the negative-margin grid.
+   auto-fill, not flex: a flex row grows its items to fill the line, so the last card of an
+   odd row stretched to the full width while the row above it kept three columns - the same
+   card in two sizes on one screen. auto-fill keeps the empty tracks, so every card is the
+   width of its column whatever the row holds. The competency grid below has always worked
+   this way; the plan grid now matches it. */
 .block_dimensions [data-cards-type] {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
     gap: 1rem;
     /* Drop the Bootstrap .row negative margins. */
     margin-left: 0;
     margin-right: 0;
 }
 
-/* Override col-* on the items: the basis caps the column count, the
-   min-width sets the floor a column may not shrink below. */
+/* Override col-* on the items: the track owns the width, so the Bootstrap column widths the
+   client puts on each item must not shrink the card inside its own track. */
 .block_dimensions [data-cards-type] > li {
-    flex: 1 1 30%;
-    min-width: 15rem;
-    max-width: 100%;
+    width: 100%;
+    max-width: none;
+    flex: none;
     padding-left: 0;
     padding-right: 0;
     margin-bottom: 0;
     /* The grid gap replaces mb-3. */
+}
+
+/* A horizontal plan card carries a 180px image column beside its body, so it needs a wider
+   track before it is worth splitting the row. */
+.block_dimensions [data-cards-type="plan"]:has(.dims-plan-item-horizontal) {
+    grid-template-columns: repeat(auto-fill, minmax(26rem, 1fr));
 }
 
 /* ============================================
@@ -693,6 +704,90 @@ body[data-bs-theme="dark"],
     line-height: 1.3;
     color: var(--block-dimensions-ink-muted);
     font-weight: 600;
+}
+
+/* Plan status chip. Meaning rides the -ink / -tint / -edge triples, which are core's own
+   subtle-alert colours, so the chip is core's alert on the same page and flips with it in dark
+   mode without a rule of its own. Same geometry as the sibling plugin's grade badge. */
+.block_dimensions .dims-plan-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    width: fit-content;
+    margin: 0 0 0.5rem;
+    padding: 0.15rem 0.625rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.block_dimensions .dims-plan-status.is-complete {
+    border-color: var(--block-dimensions-success-edge);
+    background: var(--block-dimensions-success-tint);
+    color: var(--block-dimensions-success-ink);
+}
+
+.block_dimensions .dims-plan-status.is-review {
+    border-color: var(--block-dimensions-warning-edge);
+    background: var(--block-dimensions-warning-tint);
+    color: var(--block-dimensions-warning-ink);
+}
+
+/* Placeholder cards, drawn while a status bucket is being fetched. They are decorative and
+   aria-hidden; the loading line beside them is what a screen reader hears. */
+.block_dimensions .dims-skeleton-card {
+    overflow: hidden;
+    border: 1px solid var(--block-dimensions-line);
+    border-radius: 0.5rem;
+    background: var(--block-dimensions-surface);
+}
+
+.block_dimensions .dims-skeleton-media {
+    height: 120px;
+    background: var(--block-dimensions-line);
+}
+
+.block_dimensions .dims-skeleton-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 1rem;
+}
+
+.block_dimensions .dims-skeleton-line {
+    display: block;
+    width: 90%;
+    height: 0.7rem;
+    border-radius: 999px;
+    background: var(--block-dimensions-line);
+}
+
+.block_dimensions .dims-skeleton-line-sm {
+    width: 40%;
+}
+
+.block_dimensions .dims-skeleton-line-md {
+    width: 60%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .block_dimensions .dims-skeleton-media,
+    .block_dimensions .dims-skeleton-line {
+        animation: block-dimensions-skeleton-pulse 1400ms ease-in-out infinite;
+    }
+}
+
+@keyframes block-dimensions-skeleton-pulse {
+    50% {
+        opacity: 0.55;
+    }
+}
+
+.block_dimensions .dims-status-spinner {
+    margin-left: 0.15rem;
+    font-size: 0.75rem;
 }
 
 /* ============================================
@@ -1632,6 +1727,17 @@ body[data-bs-theme="dark"],
         font-size: 0.8rem;
     }
 
+    /* Each group takes a row of its own on a phone, so centre them and give the rows a little
+       more air than the gap between pills inside one group - otherwise the stack reads as one
+       block of pills with no grouping at all. */
+    .block_dimensions .dims-filters-bar {
+        justify-content: center;
+        row-gap: 0.625rem;
+        column-gap: 0.5rem;
+        margin-bottom: 0.75rem;
+        padding-top: 0.25rem;
+    }
+
     .block_dimensions .dims-filter-select {
         width: 100%;
     }
@@ -2173,10 +2279,17 @@ body[data-bs-theme="dark"],
 /* Sibling controls must remain clickable above the overlay.
    Note: .dims-fav-btn is intentionally excluded — it's already
    position:absolute; z-index:3 in its own block; including it here
-   would override that and break its top-left/top-right placement. */
-.block_dimensions .trail-item-link,
-.block_dimensions .dimension-tags {
+   would override that and break its top-left/top-right placement.
+   .dimension-tags is excluded from the position for the same reason, and it was not:
+   the strip is position:absolute over the image, and re-declaring it relative here put it
+   back in the flow, where the image wrapper's overflow:hidden cut the pills in half on the
+   horizontal card. Only the stacking belongs here. */
+.block_dimensions .trail-item-link {
     position: relative;
+    z-index: 2;
+}
+
+.block_dimensions .dimension-tags {
     z-index: 2;
 }
 

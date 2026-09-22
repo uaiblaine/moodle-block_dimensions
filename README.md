@@ -7,6 +7,8 @@ Your learning path, one glance away.
 
 A Moodle block plugin that turns the learner's active learning plans into a dashboard of visual cards: **learning plan cards** with a competency progress trail, and **competency cards** giving direct access to each competency's courses. Tag filters, instant search and per-user favourites keep even large sets of plans manageable. The block is the companion of the [Competency Dimensions](https://moodle.org/plugins/local_dimensions) plugin (`local_dimensions`) — cards carry the images, colours, tags and display modes managed there — and it creates no database tables of its own.
 
+![The Dimensions block on a learner's Dashboard, showing the status filter, the favourites pills and a learning plan card with its competency trail](docs/screenshots/01-dashboard.png)
+
 
 Requirements
 ------------
@@ -47,15 +49,45 @@ What learners see
 
 ### Learning plan cards
 
-Templates configured (in `local_dimensions`) with the *plan* display mode render as a single card per plan: cover image or colour identity, tag chips, competency count with the template's type label, and an **Access/Continue** button — the label switches to *Continue* once the plan is under way. Each card carries a **competency progress trail**: a five-step window centred on the last completed competency, with indicators when more steps exist before or after the window. Trail steps can optionally be real links; opening one first arms the "Return to plan" context so `local_dimensions`' floating button can bring the learner back from the course. Cards come in a vertical or horizontal layout, chosen by the administrator.
+Templates configured (in `local_dimensions`) with the *plan* display mode render as a single card per plan: cover image or colour identity, tag chips, competency count with the template's type label, and an **Access/Continue** button — the label switches to *Continue* once the plan is under way. Each card carries a **competency progress trail**: a five-step window centred on the last completed competency, with indicators when more steps exist before or after the window. Trail steps can optionally be real links; opening one first arms the "Return to plan" context so `local_dimensions`' floating button can bring the learner back from the course.
+
+![Four learning plan cards in the vertical layout, each with its tags, competency count and progress trail](docs/screenshots/02-plan-cards.png)
+
+Cards come in a vertical or horizontal layout, chosen by the administrator. The horizontal layout gives the trail a column of its own, so every competency name is readable at a glance:
+
+![The same plans in the horizontal layout, with the progress trail listed down the right-hand side of each card](docs/screenshots/03-plan-card-horizontal.png)
 
 ### Competency cards
 
 Templates in *competencies* display mode expand into one card per competency, showing only competencies linked to at least one visible course and deduplicating competencies that appear in several plans. Each card links straight into the `local_dimensions` learner views.
 
+![Six competency cards, each with its colour identity, tags and Access button](docs/screenshots/04-competency-cards.png)
+
+### Plan status filter
+
+Learning plans do not stop existing when they are finished. The block groups them in three buckets — **Active**, **In review** and **Completed** — and only the active one is loaded with the page; the others are fetched the first time the learner asks for them, and kept afterwards. A bucket with no plans is not drawn at all.
+
+![The Completed bucket, each card carrying a green "Completed on" chip and a View plan button](docs/screenshots/05-status-completed.png)
+
+A completed plan shows the ratings Moodle froze when the plan was completed, not the learner's current ones, so the card always agrees with the core plan page. Plans waiting for a review, or already under review, carry their own chip:
+
+![The In review bucket, with cards marked "Waiting for review" and "In review"](docs/screenshots/06-status-review.png)
+
+Note that a learner needs the `moodle/competency:planviewowndraft` capability to see their own plan while it is under review — that is core's rule, not the block's, and no role holds it by default. Without it the *In review* bucket stays empty and its pill is not drawn.
+
 ### Filters and search
 
-Each card group can offer up to two tag filters (the same tag custom fields managed in `local_dimensions`), rendered either as accessible pill radiogroups — with an animated indicator and scroll paddles when they overflow — or as native dropdowns. Filter labels reuse the admin-configured custom field names. An optional search field matches card names with a 120 ms debounce, accent- and case-insensitively ("lingua" finds "língua"). A clear-filters button appears whenever a filter is active, and on mobile the whole filter bar collapses behind a toggle.
+Each card group can offer up to two tag filters (the same tag custom fields managed in `local_dimensions`), rendered either as accessible pill radiogroups — with an animated indicator and scroll paddles when they overflow — or as native dropdowns. Filter labels reuse the admin-configured custom field names. An optional search field matches card names with a 120 ms debounce, accent- and case-insensitively ("lingua" finds "língua"). A clear-filters button appears whenever a filter is active.
+
+![The filter bar: status pills, favourites pills, two tag filters and a clear-filters button](docs/screenshots/07-filters.png)
+
+On a phone the block keeps one card per row and collapses the whole filter bar behind a toggle, status pills included, so the cards get the screen. One tap opens it:
+
+<p>
+<img src="docs/screenshots/09-mobile.png" alt="The block on a phone: one card per row, with the filter bar behind a toggle" width="330">
+&nbsp;&nbsp;
+<img src="docs/screenshots/10-mobile-filters.png" alt="The same phone view with the filter bar open, showing the status pills, the favourites pills and both tag filters" width="330">
+</p>
 
 
 Favourites
@@ -87,6 +119,8 @@ Settings
 
 All settings live under *Site administration → Plugins → Blocks → Dimensions*:
 
+![The block's settings page, grouped into display settings, competency filters, learning plan filters and favourites](docs/screenshots/08-settings.png)
+
 - **Appearance**: show the "My competencies" heading (`show_heading`), hide the block title bar (`hide_block_title`), show a customisable heading above each card group (`enable_section_headers`), and choose the plan card layout (`plancard_layout`, vertical or horizontal).
 - **Search**: enable the search field (`enable_search`).
 - **Filters**: enable each of the four tag filters independently (`enable_plan_tag1_filter`, `enable_plan_tag2_filter`, `enable_competency_tag1_filter`, `enable_competency_tag2_filter`) and pick each one's control style (`*_displaymode`, pills or dropdown).
@@ -113,7 +147,7 @@ Web services
 
 Three AJAX-only external functions back the block (all require login, reject guests and validate the user context):
 
-- `block_dimensions_get_block_dataset` — returns the card dataset; supports favourites-only and per-group loading.
+- `block_dimensions_get_block_dataset` — returns the card dataset; supports favourites-only loading, per-group loading and one plan status bucket at a time, plus the per-bucket counts every pill needs.
 - `block_dimensions_toggle_favourite` — stars/unstars a plan or competency after validating ownership.
 - `block_dimensions_set_return_context` — arms `local_dimensions`' "Return to plan" button before trail navigation.
 

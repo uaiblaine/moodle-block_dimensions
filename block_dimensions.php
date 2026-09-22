@@ -78,6 +78,14 @@ class block_dimensions extends block_base {
         // Block needs a valid, non-guest user to be logged-in in order to display the user's learning plans.
         if (isloggedin() && !isguestuser()) {
             $summary = new \block_dimensions\output\summary();
+            /* Like block_lp, render nothing at all when there is nothing to show: without an active
+               plan the whole body would be the "no active plans" notice. Core drops an empty block
+               from the page, except in editing mode, where it keeps its controls so it can still be
+               moved or removed. */
+            if (!$summary->has_content()) {
+                return $this->content;
+            }
+
             $renderer = $this->page->get_renderer('block_dimensions');
             $this->content->text = $renderer->render($summary);
             $this->content->footer = '';
