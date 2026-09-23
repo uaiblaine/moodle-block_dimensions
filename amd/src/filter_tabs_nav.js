@@ -21,7 +21,7 @@
  * - Animated indicator that follows the active tab.
  * - Left/right paddle (arrow) buttons with auto-hide at edges.
  * - ResizeObserver for responsive re-centering.
- * - Keyboard navigation (ArrowLeft / ArrowRight).
+ * - Keyboard navigation (ArrowLeft / ArrowRight, Home, End) following the WAI-ARIA radiogroup pattern.
  * - Reduced-motion support.
  *
  * @module     block_dimensions/filter_tabs_nav
@@ -66,10 +66,9 @@ define([], function() {
     /**
      * Wrap the inner content of a .dims-filter-tabs element with mask/indicator/paddles.
      *
-     * Transforms a `role="radiogroup"` (or legacy `role="tablist"`) container
-     * containing `<button class="dims-filter-tab">` children into the
-     * scrollable structure with paddles. Accessibility roles on the children
-     * are preserved.
+     * Transforms a `role="radiogroup"` container of `<button class="dims-filter-tab">`
+     * children into the scrollable structure with paddles. Accessibility roles on the
+     * children are preserved.
      *
      * @param {HTMLElement} tabsEl The .dims-filter-tabs element.
      * @param {Object} [labels] Localized strings; reads `paddleleft`/`paddleright`.
@@ -186,7 +185,7 @@ define([], function() {
         this.paddleLeftEl.addEventListener('click', this._onPaddleLeftClick);
         this.paddleRightEl.addEventListener('click', this._onPaddleRightClick);
 
-        // Keyboard navigation within tablist.
+        // Keyboard navigation within the radiogroup.
         this.platterEl.addEventListener('keydown', this._onKeyDown);
 
         // Initial setup — disable transitions, position, then enable.
@@ -480,6 +479,12 @@ define([], function() {
         }
 
         e.preventDefault();
+        // A radio marked aria-busy is still loading what it checked, and filters.js ignores a click
+        // on any other one until then. Moving focus alone would leave it on an unchecked radio, so
+        // the keys do nothing while the group is busy.
+        if (this.itemsEl.querySelector('.dims-filter-tab[aria-busy="true"]')) {
+            return;
+        }
         var nextIndex;
         if (e.key === 'ArrowRight') {
             nextIndex = (focusedIndex + 1) % tabs.length;

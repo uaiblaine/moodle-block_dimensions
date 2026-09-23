@@ -50,7 +50,7 @@ class provider implements
     /** @var string Frankenstyle component name used by this plugin. */
     private const COMPONENT = 'block_dimensions';
 
-    /** @var string[] Item types stored by this plugin in core_favourites. */
+    /** @var string[] Item types in core_favourites; keep in step with {@see \block_dimensions\external\toggle_favourite}. */
     private const ITEMTYPES = ['plan', 'competency'];
 
     /**

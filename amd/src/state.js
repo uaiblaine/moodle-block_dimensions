@@ -16,7 +16,8 @@
 /**
  * Pure state-management functions for block_dimensions filters.
  *
- * No DOM access. All functions accept and return plain objects.
+ * No DOM access: createState() builds a plain state object, the other functions read or update it,
+ * and normalizeText() works on plain strings.
  *
  * @module     block_dimensions/state
  * @copyright  2026 Anderson Blaine
@@ -57,8 +58,8 @@ define([], function() {
             searchTerm: '',
             normalizedSearch: '',
             activeFilters: {
-                // Keys mirror the `{type}_tag{n}` data-filter-field contract
-                // (filters.mustache + dynamic access) — keep snake_case.
+                // Keys are the data-filter-field values filters.js writes (type + '_' + tag)
+                // and are also built dynamically, so they stay snake_case.
                 'plan_tag1': '',
                 'plan_tag2': '',
                 'competency_tag1': '',
@@ -74,8 +75,17 @@ define([], function() {
             planCounts: {active: 0, review: 0, complete: 0},
             statusCards: {active: null, review: null, complete: null},
             statusLoading: null,
+            // Group loads in flight: the first request and every fetch of the rest of a card type.
+            // The loading line is shown while this or statusLoading says something is on its way.
+            groupLoads: 0,
+            // Whether this session's first dataset has arrived. Before it the lists are empty because
+            // nothing has been fetched, not because the learner has nothing to show.
+            datasetReady: false,
             favouritesEnabled: !!(options && options.favouritesenabled),
             filterSettings: (options && options.filtersettings) || {},
+            // Counts the dataset loads: a response is applied only while the session that sent it
+            // is still the current one. See resetSession().
+            session: 0,
             renderToken: 0,
             filtersRendered: false,
             cardsRendered: {
@@ -93,6 +103,32 @@ define([], function() {
             favouriteCountPlan: 0,
             favouriteCountCompetency: 0
         };
+    }
+
+    /**
+     * Start a new session: put the state back to where the block opens, before the dataset is
+     * fetched again.
+     *
+     * Everything earlier responses built is dropped: the cards, the kept status buckets, a bucket
+     * still loading, the count of group loads in flight (their responses are dropped too), the
+     * flags saying the dataset arrived or a group or a card list is complete, the favourites
+     * filter and the tag filters. A flag left set would make the next load skip a fetch or a
+     * render it needs. Kept are the search term, which its input still holds, the settings the
+     * server sent last, and renderToken, which must never repeat. session goes up by one, so a
+     * response to a request of the previous session can be told apart and dropped.
+     *
+     * @param {Object} state Application state (mutated in place).
+     */
+    function resetSession(state) {
+        const fresh = createState({
+            favouritesenabled: state.favouritesEnabled,
+            filtersettings: state.filterSettings
+        });
+        fresh.searchTerm = state.searchTerm;
+        fresh.normalizedSearch = state.normalizedSearch;
+        fresh.renderToken = state.renderToken;
+        fresh.session = state.session + 1;
+        Object.assign(state, fresh);
     }
 
     /**
@@ -171,6 +207,7 @@ define([], function() {
     return {
         normalizeText,
         createState,
+        resetSession,
         isCardVisible,
         applyFilters,
         hasActiveFiltersForType,

@@ -3,11 +3,12 @@
 /* ============================================================================
    Canonical block-kit scaffold (shared by every screen file).
    AS-IS token values live on .kit (light) and .panel.dark (dark). The plugin
-   no longer ships a skin of its own: styles.css declares 34 tokens on bare
-   :root as var(--bs-NEW, var(--BS4-OLD, #literal)) chains, so 31 of them ARE
+   no longer ships a skin of its own: styles.css declares 34 tokens on body
+   as var(--bs-NEW, var(--BS4-OLD, #literal)) chains, so 31 of them ARE
    core's own Bootstrap values and flip because core's [data-bs-theme="dark"]
    block flips them. Only shadow, scrim and favourite are plugin-authored and
-   restated under :root[data-bs-theme="dark"]. So the two --bk-* blocks below
+   restated under body[data-bs-theme="dark"] / [data-bs-theme="dark"] body.
+   So the two --bk-* blocks below
    are the two RESOLUTIONS of one contract, not two hand-written palettes: the
    light column is core's :root/[data-bs-theme="light"] values and the dark
    column is core's [data-bs-theme="dark"] values, both read out of the running
@@ -63,6 +64,10 @@
   --bk-danger-fg:#df8379;--bk-danger-bg:#280a06;
   --bk-warn-fg:#dee2e6;--bk-warn-bg:#302310;--bk-warn-border:#90682f;
   --bk-empty-circle:rgba(222,226,230,.75);--bk-ghost-fg:rgba(222,226,230,.75);--bk-ghost-circle:#495057;
+  --bk-accent-deep:#6fa7d9;--bk-counter-active-bg:#031626;--bk-counter-active-fg:#6fa7d9;--bk-select-hover-border:rgba(222,226,230,.75);
+  --bk-section-from:#6fa7d9;--bk-section-to:#6fa7d9;--bk-plan-grad-b:#6fa7d9;
+  --bk-comp-grad-a:#90682f;--bk-comp-grad-b:#fd7e14;--bk-comp-grad-c:#f6ce95;
+  --bk-tag-bg:#343a40;--bk-tag-fg:#dee2e6;--bk-star:#fd7e14;
   color:var(--bk-text);
 }
 .screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
@@ -89,9 +94,9 @@
 /* ============================================================================
    Screen-local rules — states + ghost card
    ============================================================================ */
-/* Bootstrap 4 .alert-warning, the only skin the error box gets (summary.mustache:74). The light
-   trio is Bootstrap's own and the palette migration never touched it; the dark pair has no
-   Bootstrap 4 counterpart and tracks the plugin's dark warn fill (styles.css:2015-2020). */
+/* Boost's own .alert-warning, the only skin the error box gets (summary.mustache:76). The
+   plugin never styles it; the values are core's warning emphasis / subtle / border-subtle trio,
+   the same triple the no-JS notice reads through its tokens (styles.css:2131-2146). */
 .kit{--bk-alert-fg:#60451f;--bk-alert-bg:#fcefdc;--bk-alert-border:#f9deb8;--bk-btn-outline:#6c757d;}
 .panel.dark{--bk-alert-fg:#f6ce95;--bk-alert-bg:#302310;--bk-alert-border:#90682f;--bk-btn-outline:#adb5bd;}
 .stage{padding:6px 20px 2px;}
@@ -117,38 +122,39 @@
 .srchip .ic{width:.85rem;height:.85rem;}
 .srtag{font-family:var(--mono);font-size:9px;color:var(--bk-pill-text);}
 
-/* 6 — .dims-noscript (styles.css:2081-2096) */
+/* 6 — .dims-noscript (styles.css:2131-2146) */
 .dims-noscript{margin:.75rem 0;padding:.5rem .75rem;font-size:1rem;line-height:1.4;
   color:var(--bk-warn-fg);background:var(--bk-warn-bg);border:1px solid var(--bk-warn-border);border-radius:.25rem;}
 
-/* 7 — card grid + ghost card at true scale (styles.css:1955-1957) */
+/* 7 — card grid + ghost card at true scale (styles.css:2009-2011) */
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:1rem;list-style:none;margin:0;padding:0;}
 .plan-card{position:relative;display:flex;flex-direction:column;border-radius:.5rem;overflow:hidden;
-  border:1px solid var(--bk-plan-card-border);background:var(--bk-plan-card-bg);box-shadow:0 .125rem .25rem rgba(0,0,0,.075);}
+  border:1px solid var(--bk-plan-card-border);background:var(--bk-plan-card-bg);box-shadow:0 .125rem .25rem rgba(0,0,0,.1);}
+.panel.dark .plan-card{box-shadow:0 .125rem .25rem rgba(0,0,0,.55);}
 .plan-card-image{height:120px;flex-shrink:0;background:linear-gradient(135deg,var(--bk-plan-grad-a) 0%,var(--bk-plan-grad-b) 100%);}
 .dims-card-access-btn{position:absolute;top:10px;right:10px;display:inline-flex;align-items:center;gap:6px;padding:6px 16px;
   font-size:.85rem;font-weight:600;line-height:1.3;border-radius:8px;white-space:nowrap;
   background:var(--bk-btn-bg);color:var(--bk-btn-fg);box-shadow:var(--bk-btn-shadow);}
 .dims-card-access-btn .ic{width:.8rem;height:.8rem;}
 .dims-fav-btn{position:absolute;top:8px;left:8px;width:32px;height:32px;border-radius:50%;border:none;
-  display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.92);color:var(--bk-star);cursor:pointer;}
+  display:flex;align-items:center;justify-content:center;background:var(--bk-surface);color:var(--bk-star);cursor:pointer;
+  box-shadow:0 1px 4px rgba(0,0,0,.1);}
+.panel.dark .dims-fav-btn{box-shadow:0 1px 4px rgba(0,0,0,.55);}
 .dims-fav-btn .ic{fill:currentColor;stroke:currentColor;stroke-width:1.5;}
 .card-body{padding:1rem;}
 .card-title{margin:0 0 .5rem;font-size:.9rem;line-height:1.4;font-weight:700;color:var(--bk-text);}
 .competency-count-text{margin:0;font-size:.82rem;line-height:1.3;font-weight:600;color:var(--bk-muted);}
 .dims-ghost-card{display:flex;}
 .dims-ghost-card-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;gap:.75rem;
-  padding:2rem 1.5rem;border:2px dashed var(--bk-ghost-border,#ced4da);border-radius:12px;background:var(--bk-ghost-bg,transparent);
+  padding:2rem 1.5rem;border:2px dashed var(--bk-line-2);border-radius:12px;background:transparent;
   cursor:pointer;font-family:inherit;transition:border-color .2s ease,background .2s ease,transform .15s ease;}
-.panel.dark .dims-ghost-card-inner{--bk-ghost-border:#495057;--bk-ghost-bg:#1d2125;}
 .dims-ghost-icon-circle{display:flex;align-items:center;justify-content:center;width:50px;height:50px;
-  border:2px solid var(--bk-ghost-ring,var(--bk-line-4));border-radius:50%;color:var(--bk-ghost-circle);font-size:1.2rem;}
+  border:2px solid var(--bk-line-4);border-radius:50%;color:var(--bk-ghost-fg);font-size:1.2rem;}
 .dims-ghost-icon-circle .ic{width:1.2rem;height:1.2rem;}
 .dims-ghost-card-title{font-size:1.1rem;font-weight:700;text-align:center;color:var(--bk-ghost-fg);}
 .dims-ghost-card-subtitle{font-size:.85rem;font-weight:400;text-align:center;color:var(--bk-ghost-fg);}
-/* Static hover replica: :hover on the inner button (styles.css:1992-1994 / 1941-1967). */
-.dims-ghost-card-inner.hov{border-color:var(--bk-accent);background:var(--bk-ghost-hover,rgba(15,108,191,.04));transform:translateY(-2px);}
-.panel.dark .dims-ghost-card-inner.hov{--bk-ghost-hover:#292e33;}
+/* Static hover replica: :hover on the inner button (styles.css:2028-2033). */
+.dims-ghost-card-inner.hov{border-color:var(--bk-accent);background:var(--bk-surface-2);transform:translateY(-2px);}
 .dims-ghost-card-inner.hov .dims-ghost-icon-circle{border-color:var(--bk-accent);color:var(--bk-accent);}
 .dims-ghost-card-inner.hov .dims-ghost-card-title{color:var(--bk-accent);}
 </style>
@@ -162,7 +168,7 @@
     <div class="stage"><div class="blockish">
       <div class="dims-loading-state" role="status" aria-live="polite">Loading</div>
     </div></div>
-    <div class="note">Server-rendered in the shell and visible before any fetch resolves; <code>showLoading()</code> only flips <code>display</code>. The string is core <code>loading</code>, not a plugin string.</div>
+    <div class="note">Server-rendered in the shell and visible before any fetch resolves; afterwards <code>syncLoadingLine()</code> shows it while anything is still on its way and hides it when nothing is. The string is core <code>loading</code>, not a plugin string; only a status bucket loading on its own swaps in a plugin string.</div>
 
     <div class="divlbl">2 · Error — warning alert + Retry <span class="idb">BLK-ERROR</span> <span class="idb">BLK-ERROR-RETRY</span></div>
     <div class="stage">
@@ -171,25 +177,31 @@
         <button type="button" class="dims-error-retry">Retry</button>
       </div>
     </div>
-    <div class="note">Only <code>loadData().catch()</code> reaches here. <code>showError()</code> blanks the text, unhides the box, then writes the message on the next frame — a <code>role="alert"</code> that was <code>display:none</code> does not announce reliably otherwise (WCAG 4.1.3).</div>
+    <div class="note">Any rejected fetch reaches here — the first load, a phase-2 load or a status bucket — and so does a failed render. <code>showError()</code> blanks the text, unhides the box, then writes the message on the next frame — a <code>role="alert"</code> that was <code>display:none</code> does not announce reliably otherwise (WCAG 4.1.3). Retry starts a new session, so a response of the old one that lands late is dropped, and it moves a focused Retry's focus to the block's region root before the box hides.</div>
 
     <div class="divlbl">3 · Empty — no active plans <span class="idb">BLK-EMPTY-NOPLANS</span></div>
     <div class="stage"><div class="blockish">
       <p class="dims-empty-state" role="status" aria-live="polite">No active plans at the moment.</p>
     </div></div>
-    <div class="note">The one state the block class can pre-empt: <code>has_content()</code> returns false and the block never renders. This text appears when plans existed at page build but the dataset comes back with <code>hasactiveplans</code> false — it is checked first and returns early, so it always wins over the competency message.</div>
+    <div class="note">Shown only once the session's first dataset has arrived, while the active bucket is on screen and the dataset says <code>hasactiveplans</code> is false (before that, the empty lists mean nothing has been fetched yet, and the block says nothing); it is checked first and returns early, so it wins over the other two messages. The block class pre-empts it: <code>has_content()</code> returns false for a learner with no plan in any bucket, and the block opens on the first bucket that holds one, so this text appears only when the plan list changed between the page load and the web-service call, or when the gate failed open.</div>
 
     <div class="divlbl">4 · Empty — no competencies <span class="idb">BLK-EMPTY-NOCOMP</span></div>
     <div class="stage"><div class="blockish">
       <p class="dims-empty-state" role="status" aria-live="polite">No competencies in your plans.</p>
     </div></div>
-    <div class="note">Shown when filters or search reduce both lists to zero <b>and</b> no ghost card is on screen. <code>updateEmptyState</code> deliberately stays silent while a ghost card is visible — "no competencies" would be a lie when more are one click away.</div>
+    <div class="note">Shown when both lists are empty with nothing filtered away — the loaded dataset holds no card at all — <b>and</b> no ghost card is on screen. <code>updateEmptyState</code> deliberately stays silent while a ghost card is visible — "no competencies" would be a lie when more are one click away.</div>
+
+    <div class="divlbl">4b · Empty — nothing matched <span class="idb">BLK-EMPTY-NORESULTS</span></div>
+    <div class="stage"><div class="blockish">
+      <p class="dims-empty-state" role="status" aria-live="polite">No results found.</p>
+    </div></div>
+    <div class="note">Shown when the search or a filter hides every card while the loaded dataset still holds some: the cards exist, so the message says nothing matched rather than that there is nothing. It is the same <code>resultsnonefound</code> string the polite live region announces for a zero count.</div>
 
     <div class="divlbl">5 · Favourite-toggle error — announced, never drawn <span class="idb">BLK-LIVE-FAV</span></div>
     <div class="stage">
       <span class="srchip"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 22h20L12 2z"/><path d="M12 9v5M12 18h.01"/></svg>Could not update favourites. Please try again.<span class="srtag">visually-hidden · assertive</span></span>
     </div>
-    <div class="note">Written into the <code>data-fav-status</code> region, blanked then re-set on the next frame so an identical message still fires, and self-cleared after 5000&nbsp;ms so it does not linger in the AT cursor. Its sibling <code>data-results-status</code> is polite and debounced by 600&nbsp;ms so typing in the search box does not flood a screen reader.</div>
+    <div class="note">Written into the <code>data-fav-status</code> region, blanked then re-set on the next frame so an identical message still fires, and self-cleared after 5000&nbsp;ms so it does not linger in the AT cursor. Its sibling <code>data-results-status</code> is polite and debounced by 600&nbsp;ms, on a timer of each block's own, so typing in the search box does not flood a screen reader and two blocks on a page do not cancel each other.</div>
 
     <div class="divlbl">6 · No JavaScript <span class="idb">BLK-NOSCRIPT</span></div>
     <div class="stage">
@@ -241,7 +253,7 @@
         </li>
       </ul>
     </div>
-    <div class="note">Hover recolours border, circle and title to the accent and lifts the shell by 2px; focus swaps to a 2px accent outline at 2px offset. Reduced motion drops both the transition and the lift; high contrast forces a 3px <code>currentColor</code> border; print hides the ghost card entirely. The kit grid uses a 205px minimum so both cards fit the panel — the shipped grid is <code>minmax(clamp(240px,30%,500px),1fr)</code> at a 1rem gap.</div>
+    <div class="note">Hover recolours border, circle and title to the accent and lifts the shell by 2px; <code>:focus-visible</code> draws the 2px <code>focus-ring</code> outline at a 2px offset. Reduced motion drops both the transition and the lift; high contrast forces a 3px <code>currentColor</code> border; print hides the ghost card entirely. The kit grid uses a 205px minimum so both cards fit the panel — the shipped grid is <code>repeat(auto-fill,minmax(min(19rem,100%),1fr))</code> at a 1rem gap, the floor carried in <code>--dims-card-track-min</code>.</div>
   </div>
 
   <!-- ============ AS-IS · DARK ============ -->
@@ -252,7 +264,7 @@
     <div class="stage"><div class="blockish">
       <div class="dims-loading-state" role="status" aria-live="polite">Loading</div>
     </div></div>
-    <div class="note">Server-rendered in the shell and visible before any fetch resolves; <code>showLoading()</code> only flips <code>display</code>. The string is core <code>loading</code>, not a plugin string.</div>
+    <div class="note">Server-rendered in the shell and visible before any fetch resolves; afterwards <code>syncLoadingLine()</code> shows it while anything is still on its way and hides it when nothing is. The string is core <code>loading</code>, not a plugin string; only a status bucket loading on its own swaps in a plugin string.</div>
 
     <div class="divlbl">2 · Error — warning alert + Retry <span class="idb">BLK-ERROR</span> <span class="idb">BLK-ERROR-RETRY</span></div>
     <div class="stage">
@@ -261,25 +273,31 @@
         <button type="button" class="dims-error-retry">Retry</button>
       </div>
     </div>
-    <div class="note">Only <code>loadData().catch()</code> reaches here. <code>showError()</code> blanks the text, unhides the box, then writes the message on the next frame — a <code>role="alert"</code> that was <code>display:none</code> does not announce reliably otherwise (WCAG 4.1.3).</div>
+    <div class="note">Any rejected fetch reaches here — the first load, a phase-2 load or a status bucket — and so does a failed render. <code>showError()</code> blanks the text, unhides the box, then writes the message on the next frame — a <code>role="alert"</code> that was <code>display:none</code> does not announce reliably otherwise (WCAG 4.1.3). Retry starts a new session, so a response of the old one that lands late is dropped, and it moves a focused Retry's focus to the block's region root before the box hides.</div>
 
     <div class="divlbl">3 · Empty — no active plans <span class="idb">BLK-EMPTY-NOPLANS</span></div>
     <div class="stage"><div class="blockish">
       <p class="dims-empty-state" role="status" aria-live="polite">No active plans at the moment.</p>
     </div></div>
-    <div class="note">The one state the block class can pre-empt: <code>has_content()</code> returns false and the block never renders. This text appears when plans existed at page build but the dataset comes back with <code>hasactiveplans</code> false — it is checked first and returns early, so it always wins over the competency message.</div>
+    <div class="note">Shown only once the session's first dataset has arrived, while the active bucket is on screen and the dataset says <code>hasactiveplans</code> is false (before that, the empty lists mean nothing has been fetched yet, and the block says nothing); it is checked first and returns early, so it wins over the other two messages. The block class pre-empts it: <code>has_content()</code> returns false for a learner with no plan in any bucket, and the block opens on the first bucket that holds one, so this text appears only when the plan list changed between the page load and the web-service call, or when the gate failed open.</div>
 
     <div class="divlbl">4 · Empty — no competencies <span class="idb">BLK-EMPTY-NOCOMP</span></div>
     <div class="stage"><div class="blockish">
       <p class="dims-empty-state" role="status" aria-live="polite">No competencies in your plans.</p>
     </div></div>
-    <div class="note">Shown when filters or search reduce both lists to zero <b>and</b> no ghost card is on screen. <code>updateEmptyState</code> deliberately stays silent while a ghost card is visible — "no competencies" would be a lie when more are one click away.</div>
+    <div class="note">Shown when both lists are empty with nothing filtered away — the loaded dataset holds no card at all — <b>and</b> no ghost card is on screen. <code>updateEmptyState</code> deliberately stays silent while a ghost card is visible — "no competencies" would be a lie when more are one click away.</div>
+
+    <div class="divlbl">4b · Empty — nothing matched <span class="idb">BLK-EMPTY-NORESULTS</span></div>
+    <div class="stage"><div class="blockish">
+      <p class="dims-empty-state" role="status" aria-live="polite">No results found.</p>
+    </div></div>
+    <div class="note">Shown when the search or a filter hides every card while the loaded dataset still holds some: the cards exist, so the message says nothing matched rather than that there is nothing. It is the same <code>resultsnonefound</code> string the polite live region announces for a zero count.</div>
 
     <div class="divlbl">5 · Favourite-toggle error — announced, never drawn <span class="idb">BLK-LIVE-FAV</span></div>
     <div class="stage">
       <span class="srchip"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 22h20L12 2z"/><path d="M12 9v5M12 18h.01"/></svg>Could not update favourites. Please try again.<span class="srtag">visually-hidden · assertive</span></span>
     </div>
-    <div class="note">Written into the <code>data-fav-status</code> region, blanked then re-set on the next frame so an identical message still fires, and self-cleared after 5000&nbsp;ms so it does not linger in the AT cursor. Its sibling <code>data-results-status</code> is polite and debounced by 600&nbsp;ms so typing in the search box does not flood a screen reader.</div>
+    <div class="note">Written into the <code>data-fav-status</code> region, blanked then re-set on the next frame so an identical message still fires, and self-cleared after 5000&nbsp;ms so it does not linger in the AT cursor. Its sibling <code>data-results-status</code> is polite and debounced by 600&nbsp;ms, on a timer of each block's own, so typing in the search box does not flood a screen reader and two blocks on a page do not cancel each other.</div>
 
     <div class="divlbl">6 · No JavaScript <span class="idb">BLK-NOSCRIPT</span></div>
     <div class="stage">
@@ -317,7 +335,7 @@
       <span class="idb">GST-TITLE · 1.1rem / 700</span>
       <span class="idb">GST-SUBTITLE · 0.85rem / 400</span>
     </div>
-    <div class="note">Dark is the one place the ghost shell stops being transparent: it fills <code>#212529</code> — a step <b>below</b> the <code>#343a40</code> card surface, so the ghost recedes instead of competing — with a <code>#495057</code> dashed border, and the circle, title and subtitle all collapse onto the muted greys. Everything else — 12px radius, 2rem&nbsp;1.5rem padding, 50px circle, 0.75rem gap — is identical to light.</div>
+    <div class="note">Dark restates nothing: the shell stays transparent over the page, the dashed border and the circle's ring are <code>line</code> (<code>#495057</code>), and the glyph, title and subtitle are <code>ink-muted</code>, all tokens that flip with the host. Everything else — 12px radius, 2rem&nbsp;1.5rem padding, 50px circle, 0.75rem gap — is identical to light.</div>
 
     <div class="divlbl">7b · Ghost card, hover / focus <span class="idb">GST-CARD</span></div>
     <div class="stage">
@@ -331,7 +349,7 @@
         </li>
       </ul>
     </div>
-    <div class="note">Hover recolours border, circle and title to the accent and lifts the shell by 2px; focus swaps to a 2px accent outline at 2px offset. Reduced motion drops both the transition and the lift; high contrast forces a 3px <code>currentColor</code> border; print hides the ghost card entirely. The kit grid uses a 205px minimum so both cards fit the panel — the shipped grid is <code>minmax(clamp(240px,30%,500px),1fr)</code> at a 1rem gap.</div>
+    <div class="note">Hover recolours border, circle and title to the accent and lifts the shell by 2px; <code>:focus-visible</code> draws the 2px <code>focus-ring</code> outline at a 2px offset. Reduced motion drops both the transition and the lift; high contrast forces a 3px <code>currentColor</code> border; print hides the ghost card entirely. The kit grid uses a 205px minimum so both cards fit the panel — the shipped grid is <code>repeat(auto-fill,minmax(min(19rem,100%),1fr))</code> at a 1rem gap, the floor carried in <code>--dims-card-track-min</code>.</div>
   </div>
 
 </div>
@@ -339,17 +357,18 @@
 <div class="legend">
   <h3>ID legend — Block states &amp; the ghost card (summary.mustache + filters.js)</h3>
   <div class="leg">
-    <span class="k">BLK-LOADING</span><span class="v"><b>Loading line</b> — <code>.dims-loading-state.text-muted.small</code>, <code>role="status" aria-live="polite"</code>, core string <code>loading</code>. Rendered visible by the shell and toggled by <code>showLoading()</code>; hidden on both the success and the failure branch of <code>loadData</code> <span class="rule">summary.mustache:70-72; filters.js:443-448, 1157-1162</span></span>
-    <span class="k">BLK-ERROR</span><span class="v"><b>Error alert</b> — <code>.dims-error-message.alert.alert-warning</code> with <code>role="alert"</code>, <code>display:none</code> until needed; holds <code>.dims-error-text</code> with the <code>loaderror</code> string. <code>showError()</code> blanks the text, unhides, then writes on the next animation frame so the alert role fires <span class="rule">summary.mustache:74-79; filters.js:450-477; lang/en:76</span></span>
-    <span class="k">BLK-ERROR-RETRY</span><span class="v"><b>Retry button</b> — <code>btn btn-sm btn-outline-secondary .dims-error-retry.ms-2</code>, string <code>retry</code> (<code>ms-2</code>, not <code>ml-2</code>: the BS4 spelling resolves on 5.x only through <code>bs4-compat.scss</code>, which paints a deprecation outline under themedesignermode and which Moodle 6.0 removes, while <code>ms-2</code> is one of the handful of names 4.5's own 116-line forward bridge already covers — so the BS5 name alone is correct on both branches); re-runs <code>loadData</code>, which calls <code>clearError()</code> before it starts <span class="rule">summary.mustache:76-78; filters.js:1080-1082; lang/en:101</span></span>
-    <span class="k">BLK-EMPTY-NOPLANS</span><span class="v"><b>No active plans</b> — the <code>noactiveplans</code> string in the shared <code>&lt;p class="text-muted small dims-empty-state"&gt;</code>. First branch of <code>updateEmptyState</code>, returns early. Normally unreachable because the block class refuses to render at all when there are no plans <span class="rule">summary.mustache:107; filters.js:426-430; lang/en:79</span></span>
-    <span class="k">BLK-EMPTY-NOCOMP</span><span class="v"><b>No competencies</b> — the <code>nocompetencies</code> string in the same paragraph; set only when both filtered lists are empty <b>and</b> no visible <code>.dims-ghost-card</code> is present <span class="rule">filters.js:432-440; lang/en:80</span></span>
-    <span class="k">BLK-LIVE-FAV</span><span class="v"><b>Assertive live region</b> — <code>&lt;span class="visually-hidden" data-fav-status role="status" aria-live="assertive"&gt;</code>; carries the <code>favouriteerror</code> string, is never painted, and self-clears after 5s. The polite twin <code>data-results-status</code> carries <code>resultsfound</code> / <code>resultsnonefound</code> on a 600ms debounce <span class="rule">summary.mustache:109-110; filters.js:507-558; lang/en:64, 99-100</span></span>
-    <span class="k">BLK-NOSCRIPT</span><span class="v"><b>No-JS notice</b> — <code>&lt;noscript&gt;&lt;p class="dims-noscript" role="status"&gt;</code> with <code>javascriptrequired</code>; 1rem / 1.4 on <code>--block-dimensions-warning-tint</code> inside a <code>--block-dimensions-warning-edge</code> border at <code>.25rem</code>, text <code>--block-dimensions-ink</code> — all three flip in dark on their own, no separate dark rule left <span class="rule">summary.mustache:112-114; styles.css:2081-2096; lang/en:73</span></span>
-    <span class="k">GST-CARD</span><span class="v"><b>Ghost card</b> — <code>li.dims-card-item.dims-ghost-card</code> holding a real <code>&lt;button class="dims-ghost-card-inner"&gt;</code>: 2px dashed <code>#ced4da</code>, radius 12px, transparent, padding <code>2rem 1.5rem</code>, gap <code>.75rem</code>. Built by string concatenation, one per type, appended to that type's <code>[data-cards-type]</code> grid; the <code>aria-label</code> repeats the visible title <span class="rule">filters.js:337-398; styles.css:1955-1994</span></span>
-    <span class="k">GST-ICON</span><span class="v"><b>Icon circle</b> — <code>.dims-ghost-icon-circle</code>, 50&times;50px, 2px solid <code>#ced4da</code>, colour <code>#adb5bd</code>, 1.2rem plus glyph; goes accent on hover; both the rest and hover colours are <code>--block-dimensions-*</code> tokens that flip in dark on their own <span class="rule">styles.css:1997-2017</span></span>
-    <span class="k">GST-TITLE</span><span class="v"><b>Ghost title</b> — <code>.dims-ghost-card-title</code>, 1.1rem / 700, <code>#6c757d</code>, centred; text is <code>ghostcardtitle</code> plus <code>' (' + count + ')'</code> from <code>labelWithCount()</code>. Accent on hover, <code>#adb5bd</code> in dark <span class="rule">styles.css:2020-2030; filters.js:63-65, 381; lang/en:70</span></span>
-    <span class="k">GST-SUBTITLE</span><span class="v"><b>Ghost subtitle</b> — <code>.dims-ghost-card-subtitle</code>, 0.85rem / 400, <code>#6c757d</code>, centred; the <code>ghostcardsubtitle</code> string, unchanged on hover — there is no hover-scoped selector for it at all <span class="rule">styles.css:2033-2038; lang/en:69</span></span>
+    <span class="k">BLK-LOADING</span><span class="v"><b>Loading line</b> — <code>.dims-loading-state.text-muted.small</code>, <code>role="status" aria-live="polite"</code>, core string <code>loading</code>. Rendered visible by the shell; from then on <code>syncLoadingLine()</code> derives it from <code>state.groupLoads</code>, the group loads in flight, and <code>state.statusLoading</code>, a bucket being fetched: the core text while any group load is pending, the bucket's own string while it loads alone, hidden with neither. <code>loadData</code> counts its request in before the fetch and out on both the success and the failure branch, after it has started any fetch of the rest <span class="rule">summary.mustache:72-74; filters.js:555-617, 1583, 1679, 1686</span></span>
+    <span class="k">BLK-ERROR</span><span class="v"><b>Error alert</b> — <code>.dims-error-message.alert.alert-warning</code> with <code>role="alert"</code>, <code>display:none</code> until needed; holds <code>.dims-error-text</code> with the <code>loaderror</code> string. <code>showError()</code> blanks the text, unhides, then writes on the next animation frame so the alert role fires <span class="rule">summary.mustache:76-81; filters.js:619-646; lang/en:76</span></span>
+    <span class="k">BLK-ERROR-RETRY</span><span class="v"><b>Retry button</b> — <code>btn btn-sm btn-outline-secondary .dims-error-retry.ms-2</code>, string <code>retry</code> (<code>ms-2</code>, not <code>ml-2</code>: the BS4 spelling resolves on 5.x only through <code>bs4-compat.scss</code>, which paints a deprecation outline under themedesignermode and which Moodle 6.0 removes, while <code>ms-2</code> is one of the handful of names 4.5's own 116-line forward bridge already covers — so the BS5 name alone is correct on both branches); re-runs <code>loadData</code> as a new session: every flag and filter goes back to the opening state, a response still on its way from before is dropped, and <code>clearError()</code> runs before the fetch starts. When the button holds focus, focus first moves to the block's <code>role="region"</code> root, with <code>tabindex="-1"</code> only until it leaves, so hiding the box does not drop it to the page; no plugin rule styles that focus <span class="rule">summary.mustache:78-80; filters.js:1469-1479, 1500-1515, 1568-1571; state.js:108-132; lang/en:104</span></span>
+    <span class="k">BLK-EMPTY-NOPLANS</span><span class="v"><b>No active plans</b> — the <code>noactiveplans</code> string in the shared <code>&lt;p class="text-muted small dims-empty-state"&gt;</code>. First branch of <code>updateEmptyState</code>, taken only once the session's first dataset has arrived and while the active bucket is on screen; returns early. Normally unreachable because the block class refuses to render for a learner with no plan in any bucket and opens on the first bucket that holds one <span class="rule">summary.mustache:109; filters.js:536-540; lang/en:79</span></span>
+    <span class="k">BLK-EMPTY-NOCOMP</span><span class="v"><b>No competencies</b> — the <code>nocompetencies</code> string in the same paragraph; set only when both filtered lists are empty, no visible <code>.dims-ghost-card</code> is present <b>and</b> neither loaded list holds a card <span class="rule">filters.js:542-552; lang/en:80</span></span>
+    <span class="k">BLK-EMPTY-NORESULTS</span><span class="v"><b>No results</b> — the <code>resultsnonefound</code> string in the same paragraph; set when both filtered lists are empty but the loaded dataset holds cards, i.e. the search or a filter hid all of them <span class="rule">filters.js:548-550; lang/en:103</span></span>
+    <span class="k">BLK-LIVE-FAV</span><span class="v"><b>Assertive live region</b> — <code>&lt;span class="visually-hidden" data-fav-status role="status" aria-live="assertive"&gt;</code>; carries the <code>favouriteerror</code> string, is never painted, and self-clears after 5s. The polite twin <code>data-results-status</code> carries <code>resultsfound</code> / <code>resultsnonefound</code> on a 600ms debounce <span class="rule">summary.mustache:111-112; filters.js:675-735; lang/en:64, 102-103</span></span>
+    <span class="k">BLK-NOSCRIPT</span><span class="v"><b>No-JS notice</b> — <code>&lt;noscript&gt;&lt;p class="dims-noscript" role="status"&gt;</code> with <code>javascriptrequired</code>; 1rem / 1.4 on <code>--block-dimensions-warning-tint</code> inside a <code>--block-dimensions-warning-edge</code> border at <code>.25rem</code>, text <code>--block-dimensions-ink</code> — all three flip in dark on their own, no separate dark rule left <span class="rule">summary.mustache:114-116; styles.css:2131-2146; lang/en:73</span></span>
+    <span class="k">GST-CARD</span><span class="v"><b>Ghost card</b> — <code>li.dims-card-item.dims-ghost-card</code> holding a real <code>&lt;button class="dims-ghost-card-inner"&gt;</code>: 2px dashed <code>line</code>, radius 12px, transparent, padding <code>2rem 1.5rem</code>, gap <code>.75rem</code>. Built by string concatenation, one per type, appended to that type's <code>[data-cards-type]</code> grid; the <code>aria-label</code> repeats the visible title <span class="rule">filters.js:437-502; styles.css:2009-2044</span></span>
+    <span class="k">GST-ICON</span><span class="v"><b>Icon circle</b> — <code>.dims-ghost-icon-circle</code>, 50&times;50px, 2px solid <code>line</code>, glyph <code>ink-muted</code>, 1.2rem plus; goes accent on hover; both the rest and hover colours are <code>--block-dimensions-*</code> tokens that flip in dark on their own <span class="rule">styles.css:2047-2067</span></span>
+    <span class="k">GST-TITLE</span><span class="v"><b>Ghost title</b> — <code>.dims-ghost-card-title</code>, 1.1rem / 700, <code>ink-muted</code>, centred; text is <code>ghostcardtitle</code> plus <code>' (' + count + ')'</code> from <code>labelWithCount()</code>. <code>accent</code> on hover; both tokens flip in dark on their own <span class="rule">styles.css:2070-2080; filters.js:65-67, 485; lang/en:70</span></span>
+    <span class="k">GST-SUBTITLE</span><span class="v"><b>Ghost subtitle</b> — <code>.dims-ghost-card-subtitle</code>, 0.85rem / 400, <code>ink-muted</code>, centred; the <code>ghostcardsubtitle</code> string, unchanged on hover — there is no hover-scoped selector for it at all <span class="rule">styles.css:2083-2088; lang/en:69</span></span>
   </div>
 </div>
 </div>

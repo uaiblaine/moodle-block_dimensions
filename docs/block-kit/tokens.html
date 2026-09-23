@@ -1,8 +1,8 @@
-<!-- @dsCard group="Foundations" name="Tokens (Dimensions block) — as-is" subtitle="The 34-token :root contract styles.css ships, resolved three ways — Moodle 5.x light, Moodle 5.x dark and the Moodle 4.5 fallback — and tokenized as --bk-*" -->
+<!-- @dsCard group="Foundations" name="Tokens (Dimensions block) — as-is" subtitle="The 34-token contract styles.css declares on body, resolved three ways — Moodle 5.x light, Moodle 5.x dark and the Moodle 4.5 fallback — and tokenized as --bk-*" -->
 <style>
 .bk-tok{
   /* ---- Canonical --bk-* block: the shipped tokens RESOLVED on a Moodle 5.x light page ----
-     Not a palette. styles.css declares 34 custom properties on bare :root, 30 of them
+     Not a palette. styles.css declares 34 custom properties on body, 30 of them
      three-rung chains var(--bs-NEW, var(--BS4-OLD, #literal)), and the values below are what
      those chains land on when core's own :root / [data-bs-theme="light"] block is in force.
      Read out of the running m502 stack's compiled Boost sheet on 2026-09-05. ---- */
@@ -37,7 +37,8 @@
    This is not an override the plugin writes. Moodle 5.1 and 5.2 already compile a complete
    [data-bs-theme="dark"] token block, so 31 of the 34 flip because core's --bs-* values flip
    underneath them, with no rule in styles.css at all. The plugin's own activation rule,
-   :root[data-bs-theme="dark"], assigns exactly three: shadow, scrim and favourite. Every other
+   body[data-bs-theme="dark"] / [data-bs-theme="dark"] body, assigns exactly three: shadow,
+   scrim and favourite. Every other
    difference between this block and the one above is core's, not the plugin's.
    The .theme-dark / body.dark rules that used to produce a dark panel here are gone: 77 + 77 of
    them, keyed off selectors nothing in Moodle 4.5 / 5.0 / 5.1 / 5.2 / 5.3-dev and nothing in
@@ -58,6 +59,10 @@
   --bk-danger-fg:#df8379;--bk-danger-bg:#280a06;
   --bk-warn-fg:#dee2e6;--bk-warn-bg:#302310;--bk-warn-border:#90682f;
   --bk-empty-circle:rgba(222,226,230,.75);--bk-ghost-fg:rgba(222,226,230,.75);--bk-ghost-circle:#495057;
+  --bk-accent-deep:#6fa7d9;--bk-counter-active-bg:#031626;--bk-counter-active-fg:#6fa7d9;--bk-select-hover-border:rgba(222,226,230,.75);
+  --bk-section-from:#6fa7d9;--bk-section-to:#6fa7d9;--bk-plan-grad-b:#6fa7d9;
+  --bk-comp-grad-a:#90682f;--bk-comp-grad-b:#fd7e14;--bk-comp-grad-c:#f6ce95;
+  --bk-tag-bg:#343a40;--bk-tag-fg:#dee2e6;--bk-star:#fd7e14;
   color:var(--bk-text);background:var(--bk-page);
 }
 .bk-tok h1{font-size:17px;font-weight:700;margin:0 0 2px;}
@@ -95,8 +100,8 @@
 </style>
 <div class="bk-tok">
   <h1>Tokens — Dimensions block</h1>
-  <p class="sub">The plugin's whole colour contract is <b>34 custom properties declared once, on bare <code>:root</code></b>, with the suffix set byte-identical to <code>local_dimensions</code>' <code>--local-dimensions-*</code> set — only the frankenstyle prefix differs, which is what makes the two plugins one system. <b>Thirty of the 34 are three-rung chains</b>, <code>var(--bs-NEW, var(--BS4-OLD, #literal))</code>: Moodle 4.5 declares zero <code>--bs-*</code> names and Moodle 5.2 declares zero BS4 legacy names, so one chain is correct on every supported branch with no branch test anywhere. Everything below is tokenized as <code>--bk-*</code> for the replica, and the two columns are <b>one contract resolved twice</b> — not two palettes. Measured on the running m502 and m405 stacks on <b>2026-09-05</b>; the record of both migrations that got here is in <code>token-migration.md</code>.</p>
-  <p class="sub"><b>The plugin authors three colours and no more.</b> <code>shadow</code>, <code>scrim</code> and <code>favourite</code> are the only tokens with a plugin-written dark counterpart, and they are the entire contents of the one activation rule, <code>:root[data-bs-theme="dark"]</code>. That bound is a guarantee, not a coincidence: the worst a wrongly-firing activation block can do is deepen a shadow, darken a veil and brighten a star — it cannot paint a dark surface on a light page. There is also an <code>@media (prefers-color-scheme: dark)</code> block in the file, and it is <b>deliberately inert</b>: every selector in it is gated on <code>[data-dimensions-media-optin]</code>, which nothing in either plugin ever writes, and a test fails the build if it ever becomes reachable. Core treats the OS preference as an <em>input</em> to <code>data-bs-theme</code>, never as an independent trigger, and firing on the media query directly is exactly how a plugin ends up dark inside a light page.</p>
+  <p class="sub">The plugin's whole colour contract is <b>34 custom properties declared once, on <code>body</code></b>, with the suffix set byte-identical to <code>local_dimensions</code>' <code>--local-dimensions-*</code> set — only the frankenstyle prefix differs, which is what makes the two plugins one system. <b>Thirty of the 34 are three-rung chains</b>, <code>var(--bs-NEW, var(--BS4-OLD, #literal))</code>: Moodle 4.5 declares zero <code>--bs-*</code> names and Moodle 5.2 declares zero BS4 legacy names, so one chain is correct on every supported branch with no branch test anywhere. Everything below is tokenized as <code>--bk-*</code> for the replica, and the two columns are <b>one contract resolved twice</b> — not two palettes. Measured on the running m502 and m405 stacks on <b>2026-09-05</b>; the record of both migrations that got here is in <code>token-migration.md</code>.</p>
+  <p class="sub"><b>The plugin authors three colours and no more.</b> <code>shadow</code>, <code>scrim</code> and <code>favourite</code> are the only tokens with a plugin-written dark counterpart, and they are the entire contents of the one activation rule, <code>body[data-bs-theme="dark"], [data-bs-theme="dark"] body</code>: the attribute on <code>body</code> (theme_moove writes it there) or on <code>html</code> (Moodle 5.3 does), never on an element below <code>body</code>. The tokens sit on <code>body</code> rather than <code>:root</code> for the same reason: Bootstrap redefines the <code>--bs-*</code> set on whichever element carries <code>data-bs-theme</code>, and a token declared on <code>html</code> would keep html's light values under a theme that writes the attribute on <code>body</code>. That bound is a guarantee, not a coincidence: the worst a wrongly-firing activation block can do is deepen a shadow, darken a veil and brighten a star — it cannot paint a dark surface on a light page. There is also an <code>@media (prefers-color-scheme: dark)</code> block in the file, and it is <b>deliberately inert</b>: every selector in it is gated on <code>[data-dimensions-media-optin]</code>, which nothing in either plugin ever writes, and a test fails the build if it ever becomes reachable. Core treats the OS preference as an <em>input</em> to <code>data-bs-theme</code>, never as an independent trigger, and firing on the media query directly is exactly how a plugin ends up dark inside a light page.</p>
 
   <p class="note" style="margin-bottom:14px"><b>How to read every row below.</b> Three values, in one column: <b>5.x light</b>, then <b>5.x dark</b>, then the <b>Moodle 4.5</b> resolution. They are one declaration seen three ways, not three declarations. On 4.5 a chain lands on its <em>middle</em> rung wherever Boost declares the BS4 legacy name (<code>--white</code>, <code>--light</code>, <code>--gray-dark</code>, <code>--primary</code>) and on the terminal literal otherwise; every literal in the block was chosen to equal the middle rung it stands behind, so the two readings agree today and a test fails the build the day one drifts.</p>
 
@@ -104,21 +109,21 @@
   <div class="bk-cols">
     <div class="bk-col">
       <h3><span class="dot" style="background:#8a8980"></span>Surfaces and the hairline</h3>
-      <div class="tk"><span class="sw" style="background:#fff"></span><span class="nm">surface <small>--bs-body-bg · card face, indicator pill, marker backing, count badge</small></span><span class="hex">#ffffff<br>#1d2125<br>#fff</span></div>
-      <div class="tk"><span class="sw" style="background:#f8f9fa"></span><span class="nm">surface-alt <small>--bs-tertiary-bg · search field, filter toggle, ghost hover wash</small></span><span class="hex">#f8f9fa<br>#292e33<br>#f8f9fa</span></div>
-      <div class="tk"><span class="sw" style="background:#e9ecef"></span><span class="nm">surface-inset <small>--bs-secondary-bg · pill platter, select fill, trail connector, tag fallback</small></span><span class="hex">#e9ecef<br>#343a40<br>#e9ecef</span></div>
-      <div class="tk"><span class="sw" style="background:#dee2e6"></span><span class="nm">line <small>--bs-border-color · every card and control border, dashed stubs, ghost circle</small></span><span class="hex">#dee2e6<br>#495057<br>#dee2e6</span></div>
+      <div class="tk"><span class="sw" style="background:#fff"></span><span class="nm">surface <small>--bs-body-bg · card face, access pill, favourite disc, indicator pill, marker backing, count badge, skeleton card</small></span><span class="hex">#ffffff<br>#1d2125<br>#fff</span></div>
+      <div class="tk"><span class="sw" style="background:#f8f9fa"></span><span class="nm">surface-alt <small>--bs-tertiary-bg · search field, filter toggle, favourite disc on hover, ghost hover wash</small></span><span class="hex">#f8f9fa<br>#292e33<br>#f8f9fa</span></div>
+      <div class="tk"><span class="sw" style="background:#e9ecef"></span><span class="nm">surface-inset <small>--bs-secondary-bg · pill platter, select fill, trail connector, tag fallback, search-clear hover</small></span><span class="hex">#e9ecef<br>#343a40<br>#e9ecef</span></div>
+      <div class="tk"><span class="sw" style="background:#dee2e6"></span><span class="nm">line <small>--bs-border-color · every card and control border, dashed stubs, ghost circle, skeleton fill</small></span><span class="hex">#dee2e6<br>#495057<br>#dee2e6</span></div>
       <p class="note"><b>The card face and the page are the same value now.</b> <code>surface</code> IS <code>--bs-body-bg</code>, which is also the page's own background, so the two cannot disagree — the card is separated from the page by its 1px <code>line</code> border and its shadow, and by nothing else. That is what the block's Behat scenarios assert directly: the plan card's computed background must still match the host page's, in light and after the host goes dark. The kit's panels show it faithfully, which is why they look flatter than the old ones.</p>
     </div>
     <div class="bk-col">
       <h3><span class="dot" style="background:#8a8980"></span>Ink and accent</h3>
-      <div class="tk"><span class="sw" style="background:#1d2125"></span><span class="nm">ink <small>--bs-body-color · card titles, access pill, input text, no-JS notice</small></span><span class="hex">#1d2125<br>#dee2e6<br>#1d2125</span></div>
+      <div class="tk"><span class="sw" style="background:#1d2125"></span><span class="nm">ink <small>--bs-body-color · access pill, input text, tag fallback text, section-header base, no-JS notice</small></span><span class="hex">#1d2125<br>#dee2e6<br>#1d2125</span></div>
       <div class="tk"><span class="sw" style="background:#6b6f73"></span><span class="nm">ink-muted <small>--bs-secondary-color · count text, trail labels, pill text, ghost text, empty star</small></span><span class="hex">rgba(29,33,37,.75)<br>rgba(222,226,230,.75)<br>#495057</span></div>
-      <div class="tk"><span class="sw" style="background:#8f9295"></span><span class="nm">ink-faint <small>--bs-tertiary-color · inactive text only — see the note</small></span><span class="hex">rgba(29,33,37,.5)<br>rgba(222,226,230,.5)<br>#6a737b</span></div>
+      <div class="tk"><span class="sw" style="background:#8f9295"></span><span class="nm">ink-faint <small>--bs-tertiary-color · declared, read by no rule — see the note</small></span><span class="hex">rgba(29,33,37,.5)<br>rgba(222,226,230,.5)<br>#6a737b</span></div>
       <div class="tk"><span class="sw" style="background:#000"></span><span class="nm">ink-strong <small>--bs-emphasis-color · the extremes: high-contrast borders and titles</small></span><span class="hex">#000000<br>#ffffff<br>#343a40</span></div>
-      <div class="tk"><span class="sw" style="background:#0f6cbf"></span><span class="nm">accent <small>--bs-link-color · active pill, trail-label hover, ghost hover, section-header stop</small></span><span class="hex">#0f6cbf<br>#6fa7d9<br>#0f6cbf</span></div>
-      <div class="tk"><span class="sw" style="background:#0c5699"></span><span class="nm">accent-hover <small>--bs-link-hover-color</small></span><span class="hex">#0c5699<br>#8cb9e1<br>#0c5699</span></div>
-      <p class="note"><code>ink-faint</code> is restricted to <b>inactive</b> text by rule and a test enforces it: it measures 2.70:1 on <code>surface-inset</code> in light, which WCAG 1.4.3's incidental exception covers only for a disabled control. Three more pairings are banned outright rather than asserted — <code>accent</code>, <code>brand-ink</code> and <code>danger-ink</code> as normal text on <code>surface-inset</code>, which measure 4.50, 4.50 and 4.20 in dark. Those are core's own values failing against core's own surface, so the same arithmetic applies to every core component on the page; the plugin's answer is not to use that pairing.</p>
+      <div class="tk"><span class="sw" style="background:#0f6cbf"></span><span class="nm">accent <small>--bs-link-color · active pill, trail-label hover, ghost hover, section-header stop, access-pill lift, search and select focus border</small></span><span class="hex">#0f6cbf<br>#6fa7d9<br>#0f6cbf</span></div>
+      <div class="tk"><span class="sw" style="background:#0c5699"></span><span class="nm">accent-hover <small>--bs-link-hover-color · declared, read by no rule</small></span><span class="hex">#0c5699<br>#8cb9e1<br>#0c5699</span></div>
+      <p class="note"><code>ink-faint</code> is restricted to <b>inactive</b> text by rule and a test enforces it: it measures 3.07:1 on <code>surface-inset</code> in light, which WCAG 1.4.3's incidental exception covers only for a disabled control. Three more pairings are banned outright rather than asserted — <code>accent</code>, <code>brand-ink</code> and <code>danger-ink</code> as normal text on <code>surface-inset</code>, which measure 4.50, 4.50 and 4.20 in dark. Those are core's own values failing against core's own surface, so the same arithmetic applies to every core component on the page; the plugin's answer is not to use that pairing.</p>
     </div>
   </div>
 
@@ -127,15 +132,15 @@
   <div class="bk-cols">
     <div class="bk-col">
       <h3><span class="dot" style="background:#0f6cbf"></span>brand · success · warning</h3>
-      <div class="tk"><span class="sw" style="background:#062b4c"></span><span class="nm">brand-ink <small>plan-card gradient end, section-header first stop, active count badge text</small></span><span class="hex">#062b4c<br>#6fa7d9<br>#062b4c</span></div>
+      <div class="tk"><span class="sw" style="background:#062b4c"></span><span class="nm">brand-ink <small>plan-card gradient end, section-header first stop, active count badge text, mobile toggle on-state</small></span><span class="hex">#062b4c<br>#6fa7d9<br>#062b4c</span></div>
       <div class="tk"><span class="sw" style="background:#cfe2f2"></span><span class="nm">brand-tint <small>active count badge, mobile filter toggle on-state</small></span><span class="hex">#cfe2f2<br>#031626<br>#cfe2f2</span></div>
       <div class="tk"><span class="sw" style="background:#9fc4e5"></span><span class="nm">brand-edge <small>reserved — no live use</small></span><span class="hex">#9fc4e5<br>#094173<br>#9fc4e5</span></div>
-      <div class="tk"><span class="sw" style="background:#153114"></span><span class="nm">success-ink <small>completed trail marker, completed connectors, completed label</small></span><span class="hex">#153114<br>#86af84<br>#153114</span></div>
-      <div class="tk"><span class="sw" style="background:#d7e4d6"></span><span class="nm">success-tint <small>reserved</small></span><span class="hex">#d7e4d6<br>#0b180a<br>#d7e4d6</span></div>
-      <div class="tk"><span class="sw" style="background:#aecaad"></span><span class="nm">success-edge <small>reserved</small></span><span class="hex">#aecaad<br>#20491e<br>#aecaad</span></div>
-      <div class="tk"><span class="sw" style="background:#60451f"></span><span class="nm">warning-ink <small>competency-gradient third stop</small></span><span class="hex">#60451f<br>#f6ce95<br>#60451f</span></div>
-      <div class="tk"><span class="sw" style="background:#fcefdc"></span><span class="nm">warning-tint <small>no-JS notice ground</small></span><span class="hex">#fcefdc<br>#302310<br>#fcefdc</span></div>
-      <div class="tk"><span class="sw" style="background:#f9deb8"></span><span class="nm">warning-edge <small>no-JS notice hairline, competency-gradient first stop</small></span><span class="hex">#f9deb8<br>#90682f<br>#f9deb8</span></div>
+      <div class="tk"><span class="sw" style="background:#153114"></span><span class="nm">success-ink <small>completed trail marker, completed connectors, completed label, completed status chip</small></span><span class="hex">#153114<br>#86af84<br>#153114</span></div>
+      <div class="tk"><span class="sw" style="background:#d7e4d6"></span><span class="nm">success-tint <small>completed status chip ground</small></span><span class="hex">#d7e4d6<br>#0b180a<br>#d7e4d6</span></div>
+      <div class="tk"><span class="sw" style="background:#aecaad"></span><span class="nm">success-edge <small>completed status chip hairline</small></span><span class="hex">#aecaad<br>#20491e<br>#aecaad</span></div>
+      <div class="tk"><span class="sw" style="background:#60451f"></span><span class="nm">warning-ink <small>competency-gradient third stop, review status chip text</small></span><span class="hex">#60451f<br>#f6ce95<br>#60451f</span></div>
+      <div class="tk"><span class="sw" style="background:#fcefdc"></span><span class="nm">warning-tint <small>no-JS notice ground, review status chip ground</small></span><span class="hex">#fcefdc<br>#302310<br>#fcefdc</span></div>
+      <div class="tk"><span class="sw" style="background:#f9deb8"></span><span class="nm">warning-edge <small>no-JS notice hairline, review status chip hairline, competency-gradient first stop</small></span><span class="hex">#f9deb8<br>#90682f<br>#f9deb8</span></div>
     </div>
     <div class="bk-col">
       <h3><span class="dot" style="background:#51140d"></span>danger · info · neutral</h3>
@@ -167,14 +172,14 @@
   <div class="bk-cols">
     <div class="bk-col">
       <div class="tk"><span class="sw" style="background:#000"></span><span class="nm">focus-ring <small>every focus indicator in the plugin, one shape</small></span><span class="hex">#000000<br>#ffffff<br>#343a40</span></div>
-      <div class="tk"><span class="sw" style="background:rgba(0,0,0,.35)"></span><span class="nm">shadow <small>card rest and hover, access-pill lift, indicator, favourite disc</small></span><span class="hex">rgb(0 0 0 / 10%)<br>rgb(0 0 0 / 55%)<br>same as light</span></div>
-      <div class="tk"><span class="sw" style="background:rgba(120,120,120,.5)"></span><span class="nm">scrim <small>favourite-button veil over the card image, mobile sticky header</small></span><span class="hex">rgb(255 255 255 / 72%)<br>rgb(29 33 37 / 72%)<br>same as light</span></div>
+      <div class="tk"><span class="sw" style="background:rgba(0,0,0,.35)"></span><span class="nm">shadow <small>card rest and hover, access-pill rest and lift, indicator, favourite disc, active favourite pill</small></span><span class="hex">rgb(0 0 0 / 10%)<br>rgb(0 0 0 / 55%)<br>same as light</span></div>
+      <div class="tk"><span class="sw" style="background:rgba(120,120,120,.5)"></span><span class="nm">scrim <small>mobile sticky header veil</small></span><span class="hex">rgb(255 255 255 / 72%)<br>rgb(29 33 37 / 72%)<br>same as light</span></div>
       <div class="tk"><span class="sw" style="background:#e8590c"></span><span class="nm">favourite <small>the filled star, the empty star on hover, competency-gradient middle stop</small></span><span class="hex">#e8590c<br>#fd7e14<br>same as light</span></div>
     </div>
     <div class="bk-col">
       <p class="note"><b>The focus ring chains <code>--bs-emphasis-color</code> on purpose, and deliberately NOT <code>--bs-focus-ring-color</code></b>, which core fails to flip — that value measures 1.02:1 on the dark page. One shape everywhere: <code>outline: 2px solid var(--block-dimensions-focus-ring); outline-offset: 2px</code>, with two documented exceptions at <code>-2px</code> whose platter is <code>overflow: hidden</code>. Nothing draws a focus indicator with a <code>box-shadow</code>, because a <code>box-shadow</code> is not painted at all under <code>forced-colors: active</code>. Ratios: 21.0 : 1 light, 16.2 : 1 dark, 11.5 : 1 on 4.5.</p>
-      <p class="note"><b>These are the only three values with a plugin-authored dark counterpart</b>, and they are the entire body of <code>:root[data-bs-theme="dark"]</code>. The bound matters: the worst a wrongly-firing activation block can do is deepen a shadow, darken a veil and brighten a star.</p>
-      <p class="note"><b>The star moved off <code>#ffc107</code> and the reason is arithmetic.</b> Bootstrap warning yellow is 1.7 : 1 on white — a non-text indicator under the 3 : 1 floor. <code>favourite</code> is <code>#e8590c</code> light and <code>#fd7e14</code> dark, both clearing 3 : 1 on all three surfaces.</p>
+      <p class="note"><b>These are the only three values with a plugin-authored dark counterpart</b>, and they are the entire body of <code>body[data-bs-theme="dark"], [data-bs-theme="dark"] body</code>. The bound matters: the worst a wrongly-firing activation block can do is deepen a shadow, darken a veil and brighten a star.</p>
+      <p class="note"><b>The star moved off <code>#ffc107</code> and the reason is arithmetic.</b> Bootstrap warning yellow is 1.63 : 1 on white — a non-text indicator under the 3 : 1 floor. <code>favourite</code> is <code>#e8590c</code> light and <code>#fd7e14</code> dark, both clearing 3 : 1 on the opaque disc the star sits on and on its hover step: 3.58 and 3.40 : 1 light, 6.30 and 5.33 : 1 dark.</p>
     </div>
   </div>
 
@@ -183,7 +188,7 @@
     <span class="pair" style="background:#0f6cbf;color:#fff">--dimension-custombgcolor</span>
     <span class="pair" style="background:#e9ecef;color:#1d2125">--dimension-customtextcolor</span>
   </div>
-  <p class="note">These two carry admin-configured colour across the plugin boundary — <code>competency_card.mustache</code> writes them inline on the article, hex-validated by <code>dataset_provider::sanitize_color()</code>. <b>The mode layer reads them and never declares or overrides them, in either mode</b>, and a test fails the build if any mode block ever assigns one. So a site's chosen brand colour stays its colour when the page goes dark and only the neutrals around it adapt. The same exemption covers the halftone's <code>#00000082</code> fallback and the print block's literals: dots composite on the admin's own fill or on the decorative gradient, never on the page surface, and paper is white whatever the screen is doing.</p>
+  <p class="note">These two carry admin-configured colour across the plugin boundary — both card templates write them inline on the article, hex-validated by <code>dataset_provider::sanitize_color()</code>. <b>The mode layer reads them and never declares or overrides them, in either mode</b>, and a test fails the build if any mode block ever assigns one. So a site's chosen brand colour stays its colour when the page goes dark and only the neutrals around it adapt. The same exemption covers the halftone's <code>#00000082</code> fallback and the print block's literals: dots composite on the admin's own fill or on the decorative gradient, never on the page surface, and paper is white whatever the screen is doing.</p>
 
   <h2>Card gradients — now built from tone tokens, mechanism kept <span class="flag keep">halftone kept</span></h2>
   <div class="bk-cols">
@@ -198,8 +203,8 @@
   </div>
   <p class="note">Keeping one card warm and the other cool is what distinguishes a competency card from a plan card at a glance, and it survived both migrations. The gradient carries <b>no contrast obligation of its own</b> — the access pill, the favourite disc and the dimension chip all paint their own ground — so the stops are chosen to hold the family in both modes rather than to clear a floor.</p>
   <div class="line" style="margin-top:8px">
-    <span class="pair" style="background:#e9ecef;color:#1d2125;border-radius:100px;box-shadow:0 1px 3px rgba(0,0,0,.2)">Tag, unconfigured — surface-inset / ink</span>
-    <span class="pair" style="background:#0f6cbf;color:#fff;border-radius:100px">Tag, admin-configured</span>
+    <span class="pair" style="background:#e9ecef;color:#1d2125;border-radius:999px;border:1px solid currentcolor">Tag, unconfigured — surface-inset / ink</span>
+    <span class="pair" style="background:#0f6cbf;color:#fff;border-radius:999px;border:1px solid currentcolor">Tag, admin-configured</span>
     <span class="pair" style="background:linear-gradient(180deg,#062b4c 45%,#0f6cbf 90%);color:#fff">Section header — brand-ink → accent</span>
   </div>
   <p class="note"><b>The tag chip's default fill is now page furniture, and that closes an open question.</b> It reads <code>var(--dimension-custombgcolor, var(--block-dimensions-surface-inset))</code> / <code>var(--dimension-customtextcolor, var(--block-dimensions-ink))</code>. The old default was <code>#fd7e14</code> on the competency card's own <code>#fd7e14</code> middle stop — <b>1.00:1</b>, a chip with no edge at all, which <code>token-migration.md</code> logged as open question 2. The unconfigured chip is a neutral now and separates from every stop of either gradient; the configured chip is unchanged, and its contrast is still the admin's to own. The section header's second stop is <code>accent</code> rather than <code>brand-fill</code> on purpose: <code>--bs-primary</code> as ink on the dark page is 1.10:1, while <code>--bs-link-color</code> flips to 6.33:1. In dark both stops resolve to the same flipped tint and the fill reads flat, which is legible and deliberate.</p>
@@ -234,13 +239,13 @@
     <span class="px">2rem / 600</span><span><b>Section header</b> — gradient-clipped, two lines from two lang strings</span><span></span>
     <span class="px">1.1rem / 700</span><span><b>Block heading</b> ("My competencies") · <b>ghost card title</b></span><span></span>
     <span class="px">0.9rem / 700</span><span><b>Card title</b> — competency clamps to 2 lines, <code>min-height:2.8em</code></span><span></span>
-    <span class="px">0.875rem / 500</span><span><b>Filter tab</b> · select · clear button <small>(0.8rem below 576px)</small></span><span></span>
+    <span class="px">0.875rem / 500</span><span><b>Filter tab</b> · select · clear button <small>(the tab alone drops to 0.8rem below 576px)</small></span><span></span>
     <span class="px">0.85rem / 600</span><span><b>Access / Continue pill</b> · ghost subtitle (400)</span><span></span>
     <span class="px">0.82rem / 600</span><span><b>Competency count text</b></span><span></span>
     <span class="px">0.8125rem</span><span><b>Search input</b></span><span></span>
-    <span class="px">0.75rem / 600</span><span><b>Tag chip</b> · filter count badge</span><span></span>
+    <span class="px">0.75rem / 600</span><span><b>Tag chip</b> · filter count badge · plan status chip</span><span></span>
     <span class="px">0.72rem</span><span><b>Trail label, vertical</b> — 2-line clamp</span><span></span>
     <span class="px">0.65rem</span><span><b>Trail label, horizontal</b> — ellipsis at 60px <small>(0.6rem / 45px below 576px)</small></span><span></span>
   </div>
-  <p class="note">Font is inherited from Boost — the block sets no family of its own. Fixed geometry worth knowing: card image <b>120px</b> (100px ≥992px, 140px ≤576px); horizontal card image column <b>180px</b> (min-height 180px, 160px stacked); favourite button <b>32px</b> circle at 8px; trail marker <b>20px</b> with a <b>14px</b> empty circle; pill platter <b>44px</b> tall with a <b>36px</b> inner row and 4px padding; card list wrapping flex with <code>flex: 1 1 30%; min-width: 15rem</code> per item, competency grid <code>repeat(auto-fill,minmax(360px,1fr))</code>, both with a 1rem gap — the <code>clamp()</code> the first one used is rejected by Moodle's stylelint inside a length-valued property, and a percentage flex basis is the spelling that keeps the column count governed by the block column rather than the viewport. The horizontal card's title now carries <code>padding-right:1.75rem</code> so it clears the favourite star.</p>
+  <p class="note">Font is inherited from Boost — the block sets no family of its own. Fixed geometry worth knowing: card image <b>120px</b> (100px ≥992px, 140px ≤576px); horizontal card image column <b>180px</b> (min-height 180px, 160px stacked); favourite button <b>32px</b> circle at 8px; trail marker <b>20px</b> with a <b>14px</b> empty circle; pill platter <b>44px</b> tall with a <b>36px</b> inner row and 4px padding; both card lists on <code>repeat(auto-fill,minmax(var(--dims-card-track-min),1fr))</code> tracks with a 1rem gap, the floor <code>min(19rem,100%)</code> for plan cards, <code>min(26rem,100%)</code> once the list holds horizontal plan cards and <code>min(360px,100%)</code> for competencies — the width sets the column count against the block column rather than the viewport, and the <code>100%</code> cap keeps a single track inside a block narrower than the floor. The horizontal card's title now carries <code>padding-right:1.75rem</code> so it clears the favourite star.</p>
 </div>

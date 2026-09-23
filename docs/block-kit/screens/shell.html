@@ -3,11 +3,12 @@
 /* ============================================================================
    Canonical block-kit scaffold (shared by every screen file).
    AS-IS token values live on .kit (light) and .panel.dark (dark). The plugin
-   no longer ships a skin of its own: styles.css declares 34 tokens on bare
-   :root as var(--bs-NEW, var(--BS4-OLD, #literal)) chains, so 31 of them ARE
+   no longer ships a skin of its own: styles.css declares 34 tokens on body
+   as var(--bs-NEW, var(--BS4-OLD, #literal)) chains, so 31 of them ARE
    core's own Bootstrap values and flip because core's [data-bs-theme="dark"]
    block flips them. Only shadow, scrim and favourite are plugin-authored and
-   restated under :root[data-bs-theme="dark"]. So the two --bk-* blocks below
+   restated under body[data-bs-theme="dark"] / [data-bs-theme="dark"] body.
+   So the two --bk-* blocks below
    are the two RESOLUTIONS of one contract, not two hand-written palettes: the
    light column is core's :root/[data-bs-theme="light"] values and the dark
    column is core's [data-bs-theme="dark"] values, both read out of the running
@@ -63,6 +64,10 @@
   --bk-danger-fg:#df8379;--bk-danger-bg:#280a06;
   --bk-warn-fg:#dee2e6;--bk-warn-bg:#302310;--bk-warn-border:#90682f;
   --bk-empty-circle:rgba(222,226,230,.75);--bk-ghost-fg:rgba(222,226,230,.75);--bk-ghost-circle:#495057;
+  --bk-accent-deep:#6fa7d9;--bk-counter-active-bg:#031626;--bk-counter-active-fg:#6fa7d9;--bk-select-hover-border:rgba(222,226,230,.75);
+  --bk-section-from:#6fa7d9;--bk-section-to:#6fa7d9;--bk-plan-grad-b:#6fa7d9;
+  --bk-comp-grad-a:#90682f;--bk-comp-grad-b:#fd7e14;--bk-comp-grad-c:#f6ce95;
+  --bk-tag-bg:#343a40;--bk-tag-fg:#dee2e6;--bk-star:#fd7e14;
   color:var(--bk-text);
 }
 .screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
@@ -86,8 +91,8 @@
 .leg .v{color:#495057;}
 .leg .rule{color:#8a8980;}
 
-/* ---- screen-local tokens (values styles.css states literally, plus Boost's own
-        alert pair, which the plugin never styles — absent from the shared block) ---- */
+/* ---- screen-local tokens (token values the shared block has no name for, plus
+        Boost's own alert pair, which the plugin never styles) ---- */
 .kit{--bk-input-fg:#1d2125;--bk-alert-fg:#60451f;--bk-alert-border:#f9deb8;--bk-section-flat:#1d2125;--bk-clear-hover:#e9ecef;}
 .panel.dark{--bk-input-fg:#dee2e6;--bk-alert-fg:#f6ce95;--bk-alert-border:#90682f;--bk-section-flat:#dee2e6;--bk-clear-hover:#343a40;}
 
@@ -96,7 +101,7 @@
 .ic.i12{width:.75rem;height:.75rem;}
 .ic.i10{width:.625rem;height:.625rem;}
 
-/* ---- dims-block-header (styles.css:183-208) ---- */
+/* ---- dims-block-header (styles.css:178-203) ---- */
 .sh-hdr{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.75rem;flex-wrap:wrap;}
 .sh-heading{margin:0;font-weight:700;font-size:1.1rem;flex-shrink:0;color:var(--bk-text);}
 .sh-srow{display:flex;align-items:center;gap:.5rem;min-width:0;max-width:200px;flex-shrink:1;margin-left:auto;}
@@ -104,7 +109,7 @@
 .sh-sicon{position:absolute;left:.625rem;color:var(--bk-search-icon);display:flex;pointer-events:none;z-index:1;}
 .sh-sinput{width:100%;padding:.375rem 1.75rem .375rem 1.875rem;border:1px solid var(--bk-search-border);border-radius:999px;background:var(--bk-surface-2);font-size:.8125rem;line-height:1.3;color:var(--bk-input-fg);outline:none;font-family:inherit;}
 .sh-sinput::placeholder{color:var(--bk-search-placeholder);}
-.sh-sclear{position:absolute;right:.25rem;display:flex;align-items:center;justify-content:center;width:22px;height:22px;border:none;border-radius:50%;background:var(--bk-clear-hover);color:var(--bk-muted);cursor:pointer;padding:0;}
+.sh-sclear{position:absolute;right:.25rem;display:flex;align-items:center;justify-content:center;width:22px;height:22px;border:none;border-radius:50%;background:transparent;color:var(--bk-muted);cursor:pointer;padding:0;}
 .sh-ftoggle{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:36px;height:36px;border:1.5px solid var(--bk-line-3);border-radius:50%;background:var(--bk-surface-2);color:var(--bk-search-placeholder);cursor:pointer;font-size:.9rem;}
 
 /* ---- loading / error (Bootstrap utility classes, no plugin CSS of their own) ---- */
@@ -112,11 +117,11 @@
 .sh-alert{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.75rem 1.25rem;margin:0 0 1rem;border:1px solid var(--bk-alert-border);border-radius:.25rem;background:var(--bk-warn-bg);color:var(--bk-alert-fg);font-size:.875rem;}
 .sh-retry{padding:.25rem .5rem;font-size:.875rem;line-height:1.5;border:1px solid var(--bk-muted);border-radius:.2rem;background:transparent;color:var(--bk-muted);cursor:pointer;font-family:inherit;}
 
-/* ---- dims-section-header (styles.css:1713-1746) — the dark and print overrides
-        both clear background-image and restore -webkit-text-fill-color before
-        they set a colour, mirrored literally below ---- */
+/* ---- dims-section-header (styles.css:1776-1807) — one rule in both modes: the
+        gradient stops are brand-ink and accent, which resolve to the same tint in
+        dark, so the dark panel paints a flat fill through the same clip. Only
+        print clears background-image and restores -webkit-text-fill-color ---- */
 .sh-sec{font-size:2rem;font-weight:600;line-height:1.3;margin:0 0 1.5rem;padding:0;color:var(--bk-section-flat);background-image:linear-gradient(180deg,var(--bk-section-from) 45%,var(--bk-section-to) 90%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.panel.dark .sh-sec{background-image:none;-webkit-text-fill-color:currentcolor;color:var(--bk-section-flat);}
 
 /* ---- empty hosts that filters.js fills, drawn as dashed placeholders ---- */
 .sh-slot{border:1px dashed var(--bk-line-2);border-radius:.5rem;color:var(--bk-muted);font-size:10px;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;}
@@ -187,7 +192,7 @@
         <li class="sh-slot">competency_card</li>
       </ul>
     </div>
-    <div class="note">Each grid sits inside its own <code>&lt;nav&gt;</code> with a type-specific <code>aria-label</code> so the two landmarks are distinguishable. Real columns are <code>repeat(auto-fill,minmax(clamp(240px,30%,500px),1fr))</code>, overridden for competencies to <code>minmax(360px,1fr)</code>, both with a <code>1rem</code> gap — flattened to two columns here.</div>
+    <div class="note">Each grid sits inside its own <code>&lt;nav&gt;</code> with a type-specific <code>aria-label</code> so the two landmarks are distinguishable. Real columns are <code>repeat(auto-fill,minmax(var(--dims-card-track-min),1fr))</code> with the floor <code>min(19rem,100%)</code>, raised for competencies to <code>min(360px,100%)</code>, both with a <code>1rem</code> gap — flattened to two columns here.</div>
 
     <div class="divlbl">5 · Empty state, live regions, no-JS <span class="idb">BLK-EMPTY</span> <span class="idb">BLK-NOSCRIPT</span></div>
     <div class="sh-body">
@@ -200,7 +205,7 @@
       <span class="idb">BLK-LIVE-RESULTS · polite</span>
       <span class="idb">BLK-LIVE-FAV · assertive</span>
     </div>
-    <div class="note">The two live regions are genuinely <code>.visually-hidden</code> — the dashed strips exist only so this replica shows them. <code>updateEmptyState()</code> prefers <code>noactiveplans</code> over <code>nocompetencies</code>, and stays silent while a ghost card is visible. The no-JS notice lives inside <code>&lt;noscript&gt;</code> and is the only thing a scriptless user ever sees.</div>
+    <div class="note">The two live regions are genuinely <code>.visually-hidden</code> — the dashed strips exist only so this replica shows them. <code>updateEmptyState()</code> shows <code>noactiveplans</code> first, when the active bucket is on screen and the learner has no active plan; otherwise, with both lists filtered to nothing, <code>resultsnonefound</code> when the search or a filter hid cards that exist and <code>nocompetencies</code> when there are none to hide. It stays silent until the session's first dataset has arrived, while a ghost card is visible, and while a status bucket is loading. The no-JS notice lives inside <code>&lt;noscript&gt;</code> and is the only thing a scriptless user ever sees.</div>
   </div>
 
   <!-- ============ AS-IS · DARK ============ -->
@@ -226,7 +231,7 @@
       <span class="idb">BLK-SEARCH-CLEAR · right:0.25rem</span>
       <span class="idb">BLK-FILTER-TOGGLE · aria-expanded</span>
     </div>
-    <div class="note">Same markup, different tokens: the field goes <code>#212529</code> on a <code>#495057</code> border with <code>#dee2e6</code> text, and on focus keeps that same <code>#212529</code> — the two recessed surfaces collapsed onto one value — with a <code>#6ea8fe</code> border and a <code>rgba(110,168,254,.2)</code> glow. Below 576px the sticky header backdrop becomes <code>rgba(33,37,41,.97)</code>.</div>
+    <div class="note">Same markup, different token values: the field is <code>surface-alt</code> (<code>#292e33</code>) inside a <code>line</code> (<code>#495057</code>) border with <code>ink</code> (<code>#dee2e6</code>) text, and on focus it steps to <code>surface</code> (<code>#1d2125</code>) with an <code>accent</code> (<code>#6fa7d9</code>) border and the 2px <code>focus-ring</code> (<code>#fff</code>) outline at 2px — no glow in either mode. Below 576px the sticky header backdrop is the <code>scrim</code> token, <code>rgb(29 33 37 / 72%)</code> in dark.</div>
 
     <div class="divlbl">2 · Loading line and error alert <span class="idb">BLK-LOADING</span> <span class="idb">BLK-ERROR</span></div>
     <div class="sh-body">
@@ -248,7 +253,7 @@
         <li class="sh-slot">plan_card rendered by core/templates</li>
       </ul>
     </div>
-    <div class="note">The base rule paints the title with <code>-webkit-text-fill-color:transparent</code>, which outranks any plain <code>color</code> — dark no longer needs an override to work around that at all: it is the same rule, and its `color` and gradient stops are `--block-dimensions-*` tokens that flip on their own (<code>styles.css:1713-1729</code>). Print is the one mode that still needs a literal escape, because it forces a real colour regardless of theme: it resets <code>background-image:none</code> and <code>-webkit-text-fill-color:currentcolor</code> first, so <code>#000</code> lands (<code>styles.css:1740-1746</code>) — that override used to be inert for the identical clip reason and was repaired the same way the base rule now works for dark.</div>
+    <div class="note">The base rule paints the title with <code>-webkit-text-fill-color:transparent</code>, which outranks any plain <code>color</code> — dark no longer needs an override to work around that at all: it is the same rule, and its <code>color</code> and gradient stops are <code>--block-dimensions-*</code> tokens that flip on their own (<code>styles.css:1776-1792</code>); on Boost both stops resolve to <code>#6fa7d9</code> in dark, so the fill reads flat. Print is the one mode that still needs a literal escape, because it forces a real colour regardless of theme: it resets <code>background-image:none</code> and <code>-webkit-text-fill-color:currentcolor</code> first, so <code>#000</code> lands (<code>styles.css:1801-1807</code>) — that override used to be inert for the identical clip reason and was repaired the same way the base rule now works for dark.</div>
 
     <div class="divlbl">4 · Competency section <span class="idb">BLK-SECTION-COMP</span> <span class="idb">BLK-GRID-COMP</span></div>
     <div class="sh-body">
@@ -259,7 +264,7 @@
         <li class="sh-slot">competency_card</li>
       </ul>
     </div>
-    <div class="note">Both card backgrounds are one grey in dark (<code>#343a40</code> on a <code>#495057</code> border), and since the palette migration light does the same with a plain <code>#fff</code> — plan and competency cards no longer differ by surface in either skin, only by their gradient placeholder.</div>
+    <div class="note">Both card types are the <code>surface</code> token inside a <code>line</code> border — <code>#1d2125</code> on <code>#495057</code> in dark, <code>#fff</code> on <code>#dee2e6</code> in light — so plan and competency cards do not differ by surface in either mode, only by their gradient placeholder, and the card face is the page's own background.</div>
 
     <div class="divlbl">5 · Empty state, live regions, no-JS <span class="idb">BLK-EMPTY</span> <span class="idb">BLK-NOSCRIPT</span></div>
     <div class="sh-body">
@@ -272,7 +277,7 @@
       <span class="idb">BLK-LIVE-RESULTS · polite</span>
       <span class="idb">BLK-LIVE-FAV · assertive</span>
     </div>
-    <div class="note">The no-JS notice is the one alert the plugin styles itself in both skins: <code>#fff3cd</code>/<code>#ffe69c</code> in light, <code>#332701</code>/<code>#664d03</code> with <code>#dee2e6</code> text in dark, at a deliberate <code>1rem</code> so it stays legible.</div>
+    <div class="note">The no-JS notice is the one alert the plugin styles itself: <code>ink</code> on <code>warning-tint</code> inside a <code>warning-edge</code> border — <code>#1d2125</code> on <code>#fcefdc</code> / <code>#f9deb8</code> in light, <code>#dee2e6</code> on <code>#302310</code> / <code>#90682f</code> in dark — at a deliberate <code>1rem</code> so it stays legible.</div>
   </div>
 
 </div>
@@ -280,23 +285,23 @@
 <div class="legend">
   <h3>ID legend — Block shell (summary.mustache)</h3>
   <div class="leg">
-    <span class="k">BLK-HEADING</span><span class="v"><b>Block heading</b> — <code>h2.dims-block-heading</code>, "My competencies", <code>1.1rem</code>/700, id <code>block-dimensions-heading-{containerid}</code>; rendered only under <code>showheading</code> <span class="rule">summary.mustache:39-43 · styles.css:192-197</span></span>
-    <span class="k">BLK-SEARCH</span><span class="v"><b>Search input</b> — <code>input.dims-block-search-input</code>, pill (<code>999px</code>), <code>.8125rem</code>, padding <code>.375rem 1.75rem .375rem 1.875rem</code>, <code>#f8f9fa</code> on <code>#dee2e6</code> with a <code>#5c636a</code> placeholder; focus adds a <code>3px</code> <code>rgba(15,108,191,.15)</code> glow. Label is <code>.visually-hidden</code> <span class="rule">summary.mustache:44-59 · styles.css:230-263</span></span>
-    <span class="k">BLK-SEARCH-ICON</span><span class="v"><b>Magnifier</b> — <code>i.fa-search.dims-block-search-icon</code>, absolute at <code>left:0.625rem</code>, <code>0.75rem</code>, <code>#6c757d</code>, <code>pointer-events:none</code>, <code>aria-hidden</code> <span class="rule">styles.css:221-228</span></span>
-    <span class="k">BLK-SEARCH-CLEAR</span><span class="v"><b>Clear button</b> — <code>button.dims-block-search-clear</code>, 22px circle at <code>right:0.25rem</code>; ships <code>display:none</code>, revealed by filters.js only while the field has text <span class="rule">summary.mustache:56-58 · styles.css:265-296</span></span>
-    <span class="k">BLK-FILTER-TOGGLE</span><span class="v"><b>Mobile filter toggle</b> — <code>button.dims-filter-toggle-btn</code> with the sliders icon; <code>display:none</code> by default, a 36px circle only below 576px (label <code>#5c636a</code>, on-state <code>#0f4d85</code> on <code>#cfe2ff</code>), where <code>aria-expanded</code> flips and <code>.dims-filters-open</code> expands both hosts. Its dark rules live inside the same media query — rest <code>#adb5bd</code> on <code>#212529</code> inside a <code>#495057</code> ring, on-state and focus ring <code>#6ea8fe</code> <span class="rule">styles.css:1557-1559</span></span>
-    <span class="k">BLK-LOADING</span><span class="v"><b>Loading line</b> — <code>div.dims-loading-state.text-muted.small</code>, <code>role="status" aria-live="polite"</code>; toggled by <code>showLoading()</code> <span class="rule">summary.mustache:70-72 · filters.js:443-448</span></span>
-    <span class="k">BLK-ERROR</span><span class="v"><b>Error alert</b> — <code>div.dims-error-message.alert.alert-warning</code>, <code>role="alert"</code>, hidden until <code>showError()</code>: text blanked, box unhidden, message written on the next frame so the alert fires <span class="rule">summary.mustache:74-79 · filters.js:457-477</span></span>
-    <span class="k">BLK-ERROR-RETRY</span><span class="v"><b>Retry</b> — <code>button.dims-error-retry.btn.btn-sm.btn-outline-secondary</code>; re-runs the dataset fetch, with its own <code>:focus-visible</code> rule <span class="rule">summary.mustache:76-78 · styles.css:2141-2144</span></span>
-    <span class="k">BLK-SECTION-PLAN</span><span class="v"><b>Plan section header</b> — <code>h3.dims-section-header.dims-section-header-plan</code>, <code>data-section-header="plan"</code>; <code>2rem</code>/600 painted with <code>linear-gradient(180deg,#0f4d85 45%,#0f6cbf 90%)</code> through <code>background-clip:text</code>, with <code>-webkit-text-fill-color:transparent</code> letting it through. Two lang strings joined by <code>&lt;br&gt;</code> <span class="rule">summary.mustache:81-85 · styles.css:1713-1729</span></span>
-    <span class="k">BLK-SECTION-COMP</span><span class="v"><b>Competency section header</b> — same element with <code>data-section-header="competency"</code> and <code>sectionheader_competency_line1/_line2</code>; both ship <code>display:none</code> and are shown from <code>rawDataset.hasplancards</code> / <code>hascompetencies</code>, so they survive a zero-result filter. Dark needs no override — the base rule's `color` and gradient stops are tokens that flip on their own (<code>styles.css:1713-1729</code>); print still clears <code>background-image</code> and <code>-webkit-text-fill-color</code> first so its literal <code>#000</code> is not swallowed by the base fill (<code>:1740-1746</code>) <span class="rule">summary.mustache:97-101 · filters.js:740-746</span></span>
-    <span class="k">BLK-FILTERS-HOST</span><span class="v"><b>Filter host</b> — two empty <code>div.dims-filters-host</code>, <code>data-filters-type="plan"|"competency"</code>. Server-side they are literally empty; <code>renderFilterControls()</code> builds the bar by string concatenation (<code>templates/filters.mustache</code> is a documentation-only mirror) <span class="rule">summary.mustache:86,102 · filters.js:67-198</span></span>
-    <span class="k">BLK-GRID-PLAN</span><span class="v"><b>Plan grid</b> — <code>ul.row.list-unstyled.dims-plan-grid[data-cards-type="plan"]</code> inside a labelled <code>&lt;nav&gt;</code>; Bootstrap <code>.row</code> is overridden to <code>display:flex; flex-wrap:wrap</code>, gap <code>1rem</code>, each <code>li</code> a flex item at <code>flex:1 1 30%; min-width:15rem</code> — the CSS-Grid-plus-`@container` version this used to be is gone (neither `minmax()` used the way core wanted nor `@container` survives the stylelint gate), and a percentage flex-basis caps the row at three cards while answering to the block's own width rather than the viewport's <span class="rule">summary.mustache:93-95 · styles.css:584-602</span></span>
-    <span class="k">BLK-GRID-COMP</span><span class="v"><b>Competency grid</b> — <code>ul[data-cards-type="competency"]</code>; same override with wider tracks, <code>minmax(360px,1fr)</code>. Filtered-out cards get <code>.dims-card-hidden</code> (<code>display:none</code> — the <code>!important</code> is gone, as it is everywhere in the file: Moodle's stylelint forbids the keyword and the plugin's own <code>.stylelintrc.json</code>, which had been hiding that rule, was deleted) <span class="rule">summary.mustache:103-105 · styles.css:1751-1762</span></span>
-    <span class="k">BLK-EMPTY</span><span class="v"><b>Empty state</b> — <code>p.dims-empty-state.text-muted.small</code>, <code>role="status"</code>; shows <code>noactiveplans</code> when the user has no plans at all, otherwise <code>nocompetencies</code>, and stays silent while a ghost card is visible <span class="rule">summary.mustache:107 · filters.js:418-441</span></span>
-    <span class="k">BLK-LIVE-RESULTS</span><span class="v"><b>Polite live region</b> — <code>span.visually-hidden[data-results-status]</code>; <code>announceResults()</code> debounces 600ms, clears then writes on the next frame so an identical count still announces <span class="rule">summary.mustache:109 · filters.js:514-537</span></span>
-    <span class="k">BLK-LIVE-FAV</span><span class="v"><b>Assertive live region</b> — <code>span.visually-hidden[data-fav-status]</code>; carries favourite-toggle errors and auto-clears after 5s <span class="rule">summary.mustache:110 · filters.js:544+</span></span>
-    <span class="k">BLK-NOSCRIPT</span><span class="v"><b>No-JS notice</b> — <code>p.dims-noscript</code> inside <code>&lt;noscript&gt;</code>; deliberately <code>1rem</code> for legibility, <code>--block-dimensions-ink</code> on <code>--block-dimensions-warning-tint</code> inside a <code>--block-dimensions-warning-edge</code> border at radius <code>.25rem</code> — all three tokens flip in dark on their own, so there is no separate dark restatement left <span class="rule">summary.mustache:112-114 · styles.css:2081-2096</span></span>
+    <span class="k">BLK-HEADING</span><span class="v"><b>Block heading</b> — <code>h2.dims-block-heading</code>, "My competencies", <code>1.1rem</code>/700, id <code>block-dimensions-heading-{containerid}</code>; rendered only under <code>showheading</code> <span class="rule">summary.mustache:41-45 · styles.css:187-192</span></span>
+    <span class="k">BLK-SEARCH</span><span class="v"><b>Search input</b> — <code>input.dims-block-search-input</code>, pill (<code>999px</code>), <code>.8125rem</code>, padding <code>.375rem 1.75rem .375rem 1.875rem</code>, <code>surface-alt</code> inside a <code>line</code> border with an <code>ink-muted</code> placeholder; focus steps the ground to <code>surface</code> and the border to <code>accent</code>, and draws the 2px <code>focus-ring</code> outline at a 2px offset. Label is <code>.visually-hidden</code> <span class="rule">summary.mustache:46-61 · styles.css:225-252</span></span>
+    <span class="k">BLK-SEARCH-ICON</span><span class="v"><b>Magnifier</b> — <code>i.fa-search.dims-block-search-icon</code>, absolute at <code>left:0.625rem</code>, <code>0.75rem</code>, <code>ink-muted</code>, <code>pointer-events:none</code>, <code>aria-hidden</code> <span class="rule">styles.css:216-223</span></span>
+    <span class="k">BLK-SEARCH-CLEAR</span><span class="v"><b>Clear button</b> — <code>button.dims-block-search-clear</code>, 22px circle at <code>right:0.25rem</code>; ships <code>display:none</code>, revealed by filters.js only while the field has text <span class="rule">summary.mustache:58-60 · styles.css:254-285</span></span>
+    <span class="k">BLK-FILTER-TOGGLE</span><span class="v"><b>Mobile filter toggle</b> — <code>button.dims-filter-toggle-btn</code> with the sliders icon; <code>display:none</code> by default, a 36px circle only below 576px (<code>ink-muted</code> icon on <code>surface-alt</code> inside a 1.5px <code>line</code> ring; hover and the on-state <code>brand-ink</code> on <code>brand-tint</code>), where <code>aria-expanded</code> flips and <code>.dims-filters-open</code> expands both hosts. Every declaration is a token inside the same media query, so dark needs no rule of its own <span class="rule">summary.mustache:62-67 · styles.css:1605-1607, 1609-1637</span></span>
+    <span class="k">BLK-LOADING</span><span class="v"><b>Loading line</b> — <code>div.dims-loading-state.text-muted.small</code>, <code>role="status" aria-live="polite"</code>; shown on first paint, then derived by <code>syncLoadingLine()</code> from what is still on its way — the page's own text while any group load is in flight, the bucket's own text (<code>statusloadingreview</code> / <code>statusloadingcomplete</code>) while only a status bucket loads, hidden with neither — so one load ending never hides or rewords the line under another <span class="rule">summary.mustache:72-74 · filters.js:555-617</span></span>
+    <span class="k">BLK-ERROR</span><span class="v"><b>Error alert</b> — <code>div.dims-error-message.alert.alert-warning</code>, <code>role="alert"</code>, hidden until <code>showError()</code>: text blanked, box unhidden, message written on the next frame so the alert fires <span class="rule">summary.mustache:76-81 · filters.js:626-646</span></span>
+    <span class="k">BLK-ERROR-RETRY</span><span class="v"><b>Retry</b> — <code>button.dims-error-retry.btn.btn-sm.btn-outline-secondary</code>; re-runs the dataset fetch as a new session, which drops any response still on its way from before, and draws its own <code>:focus-visible</code> ring. Hiding the error box would drop a focused Retry's focus to the page, so focus first moves to the block's <code>role="region"</code> root (<code>tabindex="-1"</code> until focus leaves); no plugin rule styles that focus, so the browser's own ring shows there <span class="rule">summary.mustache:78-80 · styles.css:2187-2190 · filters.js:1469-1479, 1500-1515</span></span>
+    <span class="k">BLK-SECTION-PLAN</span><span class="v"><b>Plan section header</b> — <code>h3.dims-section-header.dims-section-header-plan</code>, <code>data-section-header="plan"</code>; <code>2rem</code>/600 painted with <code>linear-gradient(180deg, brand-ink 45%, accent 90%)</code> — <code>#062b4c</code> → <code>#0f6cbf</code> in light, one flat <code>#6fa7d9</code> in dark — through <code>background-clip:text</code>, with <code>-webkit-text-fill-color:transparent</code> letting it through. Two lang strings joined by <code>&lt;br&gt;</code> <span class="rule">summary.mustache:83-87 · styles.css:1776-1792</span></span>
+    <span class="k">BLK-SECTION-COMP</span><span class="v"><b>Competency section header</b> — same element with <code>data-section-header="competency"</code> and <code>sectionheader_competency_line1/_line2</code>; both ship <code>display:none</code> and are shown from <code>rawDataset.hasplancards</code> / <code>hascompetencies</code>, so they survive a zero-result filter. Dark needs no override — the base rule's <code>color</code> and gradient stops are tokens that flip on their own (<code>styles.css:1776-1792</code>); print still clears <code>background-image</code> and <code>-webkit-text-fill-color</code> first so its literal <code>#000</code> is not swallowed by the base fill (<code>:1801-1807</code>) <span class="rule">summary.mustache:99-103 · filters.js:936-944</span></span>
+    <span class="k">BLK-FILTERS-HOST</span><span class="v"><b>Filter host</b> — two empty <code>div.dims-filters-host</code>, <code>data-filters-type="plan"|"competency"</code>. Server-side they are literally empty; <code>renderFilterControls()</code> builds the bar by string concatenation and is the only definition of its markup — no template renders it <span class="rule">summary.mustache:88,104 · filters.js:181-296</span></span>
+    <span class="k">BLK-GRID-PLAN</span><span class="v"><b>Plan grid</b> — <code>ul.row.list-unstyled.dims-plan-grid[data-cards-type="plan"]</code> inside a labelled <code>&lt;nav&gt;</code>; Bootstrap <code>.row</code> is overridden to an auto-fill grid, <code>repeat(auto-fill,minmax(var(--dims-card-track-min),1fr))</code>, gap <code>1rem</code>, with the Bootstrap column widths neutralised on each <code>li</code>. The floor is <code>min(19rem,100%)</code> (<code>min(26rem,100%)</code> with horizontal cards), so the column count answers to the block's own width rather than the viewport's and no track is ever wider than the block; the <code>@container</code> version this used to be is gone, because <code>@container</code> does not survive the stylelint gate <span class="rule">summary.mustache:95-97 · styles.css:492-512</span></span>
+    <span class="k">BLK-GRID-COMP</span><span class="v"><b>Competency grid</b> — <code>ul[data-cards-type="competency"]</code>; the same grid with a wider floor, <code>min(360px,100%)</code>. Filtered-out cards get <code>.dims-card-hidden</code> (<code>display:none</code> — the <code>!important</code> is gone, as it is everywhere in the file: Moodle's stylelint forbids the keyword and the plugin's own <code>.stylelintrc.json</code>, which had been hiding that rule, was deleted) <span class="rule">summary.mustache:105-107 · styles.css:520-524</span></span>
+    <span class="k">BLK-EMPTY</span><span class="v"><b>Empty state</b> — <code>p.dims-empty-state.text-muted.small</code>, <code>role="status"</code>; shows <code>noactiveplans</code> when the active bucket is on screen and the learner holds no active plan, otherwise — with both lists filtered to nothing — <code>resultsnonefound</code> when the search or a filter hid every card and <code>nocompetencies</code> when there were none, and stays silent before the session's first dataset arrives, while a ghost card is visible or while a status bucket loads <span class="rule">summary.mustache:109 · filters.js:522-553</span></span>
+    <span class="k">BLK-LIVE-RESULTS</span><span class="v"><b>Polite live region</b> — <code>span.visually-hidden[data-results-status]</code>; <code>announceResults()</code> debounces 600ms on a timer of each block's own, so two blocks on one page never cancel each other, stays silent before the first dataset and while a bucket loads, and clears then writes on the next frame so an identical count still announces <span class="rule">summary.mustache:111 · filters.js:675-714</span></span>
+    <span class="k">BLK-LIVE-FAV</span><span class="v"><b>Assertive live region</b> — <code>span.visually-hidden[data-fav-status]</code>; carries favourite-toggle errors and auto-clears after 5s <span class="rule">summary.mustache:112 · filters.js:716-735</span></span>
+    <span class="k">BLK-NOSCRIPT</span><span class="v"><b>No-JS notice</b> — <code>p.dims-noscript</code> inside <code>&lt;noscript&gt;</code>; deliberately <code>1rem</code> for legibility, <code>--block-dimensions-ink</code> on <code>--block-dimensions-warning-tint</code> inside a <code>--block-dimensions-warning-edge</code> border at radius <code>.25rem</code> — all three tokens flip in dark on their own, so there is no separate dark restatement left <span class="rule">summary.mustache:114-116 · styles.css:2131-2146</span></span>
   </div>
 </div>
 </div>

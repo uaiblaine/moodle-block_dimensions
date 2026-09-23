@@ -37,9 +37,20 @@ most expensive one — and is a defect, not a default:
 - `sonnet` — readers, graders, refuters, verifiers, measurers, stale-reference
   sweeps, mechanical renames, test files written against a stated contract.
 - `opus` — implementers of non-trivial code, ADR and documentation drafters,
-  consolidators, critics, estimators.
+  consolidators, critics, estimators. The alias means the **newest Opus**: since
+  2026-09-22 that is Claude Opus 5.5 (`claude-opus-5-5`), measured by asking a
+  subagent launched with `model: 'opus'` which model it runs on. Never pin
+  `claude-opus-5` or any older Opus id. The `Agent` tool accepts aliases only
+  (`sonnet`, `opus`, `haiku`, `fable`); `agent()` in a Workflow accepts an explicit
+  id as well, but the alias is what to write — it follows the newest Opus without
+  an edit here.
 - the session model — only for work done inline in the main loop, never for a
   subagent.
+- `effort` is set beside `model` on every call, never inherited: `high` for
+  verifiers, readers and refuters, `xhigh` for implementers and fixers (the
+  owner's rule of 2026-09-17). An omitted effort inherits the session's, and on
+  Opus 5.5 an explicit one matters twice over — that model's own default is
+  `medium`, one level below Opus 5.
 
 Multi-agent workflows stay opt-in and lean whatever mode is on: size the fan-out
 to the question (roughly 10 to 25 agents), one refuter per finding and only for
@@ -155,20 +166,24 @@ classes/
                              set_return_context (one class each)
   privacy/provider.php       Exports/deletes core_favourites rows
 db/                          access, services, uninstall  (NO install.xml)
-styles.css                   34 colour tokens on bare :root, one
-                             :root[data-bs-theme="dark"] activation rule, one
+styles.css                   34 colour tokens on body, one body-anchored
+                             [data-bs-theme="dark"] activation rule, one
                              inert prefers-color-scheme block, and a Bootstrap 4
                              utility polyfill at the tail
 templates/                   summary (server-rendered shell), plan_card,
-                             competency_card, filters (client-rendered)
+                             competency_card (client-rendered). The filter bar
+                             has no template: renderFilterControls() in
+                             filters.js is its only definition
 amd/src/                     filters.js (fetch + render), state.js (pure state
                              fns), filter_tabs_nav.js — plain AMD, NOT ESM here
 amd/build/                   Committed minified output (grunt) — keep in sync
 lang/{en,pt_br}/             Both kept in sync, alphabetically sorted
 tests/                       PHPUnit: dataset_provider (double pattern),
                              external functions, privacy, generator,
-                             local/colour_tokens_test, local/bootstrap_compat_test
-tests/behat/                 colour_mode.feature + behat_block_dimensions.php
+                             local/colour_tokens_test, local/bootstrap_compat_test,
+                             local/card_layout_test
+tests/behat/                 colour_mode, visibility and status_filter features
+                             + behat_block_dimensions.php
 docs/block-kit/              As-is visual replica of the block (excluded from
                              the release zip via .gitattributes)
 docs/proposals/              To-be designs and the decisions behind them, one
@@ -254,22 +269,41 @@ The plan grid is scoped by a status bucket - `dataset_provider::BUCKET_ACTIVE` /
 status and a bucket. The web service takes `planstatus` and **refuses an unknown value** rather
 than quietly serving the active one. Facts worth keeping:
 
-- **The block opens on the first bucket that has plans.** `opening_bucket()` walks the buckets
-  in order and the web service resolves an EMPTY `planstatus` through it, so a learner whose
-  plans have all finished lands on them instead of on an empty Active bucket with a notice —
-  which is the whole reason the render gate was widened beyond active plans. Every later request
-  carries `state.planStatus` explicitly: leaving it out again would pull the grid back to the
-  opening bucket mid-session.
+- **The block opens on the first bucket that holds any plan.** `opening_bucket()` walks the
+  buckets in order by raw membership, and the web service resolves an EMPTY `planstatus` through
+  it, so a learner whose plans have all finished lands on them instead of on an empty Active bucket
+  with a notice — which is the whole reason the render gate was widened beyond active plans. An
+  active plan on a competencies-mode template counts: it has no plan card but it has competency
+  cards, and those are built only for the active bucket. Every later bucket request carries
+  `state.planStatus` explicitly (leaving it out would pull the grid back to the opening bucket
+  mid-session), and every competency or phase-2 load asks for `planstatus: 'active'`, since any
+  other bucket returns no competency cards.
+- **`hasactiveplans` and `plancounts.active` are different facts.** `hasactiveplans`
+  (`has_active_plans()`) is any active plan, whatever its display mode; it decides the opening
+  bucket, the "No active plans" notice and whether the Active pill is drawn. `plancounts` counts the
+  plan cards each bucket shows. A learner whose active plans are all competencies-mode gets an
+  Active pill with no number, not "Active 0" above a list of competency cards. Mixing the two once
+  left such a learner opening on Completed with no way back to their competency cards.
 - **The pills belong to the filter bar.** `renderStatusPills()` pushes them first into the bar
   `renderFilterControls()` builds, beside the favourites pills and the tag filters, so on a phone
   they appear with everything else when the panel is opened. They were briefly given a host of
   their own outside that panel (2026-09-22) and the owner asked for them back in the bar: the
   block keeps one place where filtering happens.
-- **Only the active bucket is loaded with the page.** `filters.js` keeps each fetched bucket in
+- **Only the opening bucket is loaded with the page.** `filters.js` keeps each fetched bucket in
   `state.statusCards`, so switching back costs no request; the first switch to a bucket draws
-  skeleton cards while it loads.
-- **The counts are free, and they count what the grid will show.** The provider already holds the
-  whole plan list, so `count_plans_by_bucket()` adds no query - but the active count skips a
+  skeleton cards while it loads, and nothing may render the previous bucket's cards under the new
+  pill in that window. A failed switch returns the grid, its tag filters and its favourites
+  filter to the bucket it left, so the failed bucket can be picked again. The Active bucket kept
+  from the favourites-only first request is restored under the favourites pill, never under
+  "Show all" with cards missing.
+- **Retry starts a new client session.** `loadData()` rebuilds the state through
+  `state.js resetSession()` (keeping only the search term and server settings), `resetView()`
+  empties both lists and filter hosts, and every response or failure from the replaced session is
+  dropped. Without that a retry after any error could keep the loading line up forever.
+- **The counts are nearly free, and they count what the grid will show.** The provider already
+  holds the whole plan list; the active count also needs the active plans' template display mode,
+  read in one batch through `template_metadata_cache::get_metadata_for_many()`
+  (`prefetch_template_metadata()`, memoised per request) - the active count skips a
   competencies-mode template, which becomes competency cards rather than a plan card. Without that
   the pill said 5 while the "Show all" pill beside it said 4.
 - **A bucket with no plans is not drawn.** An empty *In review* would read as "you have none",
@@ -301,6 +335,11 @@ stylelint - they read syntax, and what broke was geometry - and both are now pin
   wrapper's `overflow: hidden` cut the pills in half on the horizontal card. Put stacking in that
   rule, never position. The test strips CSS comments before matching, because its own first draft
   read a comment naming the selector as though it were the rule.
+- **A track floor never exceeds the block.** Each grid's floor is `--dims-card-track-min`, always
+  `min(<width>, 100%)`, read as `minmax(var(--dims-card-track-min), 1fr)`: the competency grid's
+  360px floor overflowed Boost's 315px block drawer. The custom property is not decoration -
+  Moodle's stylelint (csstree) rejects `min()` written directly inside `minmax()`, but does not
+  validate a custom property's value.
 
 ### The screenshots in `docs/screenshots/` are real, and reproducible
 
@@ -319,34 +358,43 @@ and it is the part with the most tests behind it.** The full design record is
 `docs/block-kit/token-migration.md`; the contract itself is the banner comment
 at the head of `styles.css`. In short:
 
-- **34 custom properties, declared once, on bare `:root`.** The suffix set is
+- **34 custom properties, declared once, on `body`.** The suffix set is
   byte-identical to `local_dimensions`' `--local-dimensions-*` set — only the
   frankenstyle prefix differs. That parity is what makes the two plugins one
   system, and a test compares the two blocks with both prefixes rewritten to a
   sentinel.
-- **30 of the 34 are three-rung chains**, `var(--bs-NEW, var(--BS4-OLD, #literal))`.
+- **30 of the 34 chain a `--bs-*` property to a literal**, six of them with a
+  Bootstrap 4 name between the two: `var(--bs-NEW, var(--BS4-OLD, #literal))`.
   Moodle 4.5 declares zero `--bs-*` names and Moodle 5.2 declares zero BS4
   legacy names, so **one chain is correct on every supported branch with no
   branch test anywhere**. Never add a branch conditional to a colour.
-- `:root`, not a plugin class, on purpose: `:root` is the ancestor of every node
-  in the document, including anything core relocates to `document.body`. And an
-  unresolved `var()` **does not fall back to its literal** — the whole
-  declaration is invalid at computed-value time, so a background set from an
-  undeclared token is not the default background, it is *no* background.
+- `body`, not a plugin class and not `:root`, on purpose. `body` is the ancestor
+  of every node the plugin paints, including anything core relocates to
+  `document.body`, and an unresolved `var()` **does not fall back to its
+  literal** — the whole declaration is invalid at computed-value time, so a
+  background set from an undeclared token is not the default background, it is
+  *no* background. And a custom property is substituted on the element that
+  declares it: Bootstrap redefines the `--bs-*` set on whatever element carries
+  `data-bs-theme`, which is `<html>` in Moodle 5.3 core and `<body>` in
+  theme_moove, so tokens declared on `:root` kept html's light values under
+  theme_moove's dark mode. Declared on `body`, they see both.
 - **31 of the 34 need no dark rule at all**, because Moodle 5.1/5.2 already
   compile a complete `[data-bs-theme="dark"]` token block and the chains follow
   it. The card face *is* `--bs-body-bg`, which is also the page background, so
   the two cannot disagree. **Do not give them a dark rule.**
-- The one activation rule is `:root[data-bs-theme="dark"]` and it assigns
+- The one activation rule is
+  `body[data-bs-theme="dark"], [data-bs-theme="dark"] body` and it assigns
   **exactly three** tokens: `shadow`, `scrim`, `favourite`. That bound is a
   guarantee — the worst a wrongly-firing activation block can do is deepen a
   shadow, darken a veil and brighten a star; it cannot paint a dark surface on a
   light page. Adding a fourth token to that rule fails the build.
-- **Anchored at `:root`, not a bare `[data-bs-theme="dark"]`.** A bare selector
-  matches through any ancestor at any depth and CSS has no nearest-ancestor-wins
-  rule. `theme_boost_union_fundaseg` really does set `data-bs-theme="dark"` on
-  the navbar and `theme_boost_union` re-pins `light` by hand on five nested
-  templates; a bare selector would ignore those re-pins.
+- **`body` is the subject of both arms, never a bare `[data-bs-theme="dark"]`.**
+  With `body` as the subject, the only ancestor the second arm can match is
+  `<html>`. A bare selector matches through any ancestor at any depth and CSS has
+  no nearest-ancestor-wins rule: `theme_boost_union_fundaseg` really does set
+  `data-bs-theme="dark"` on the navbar and `theme_boost_union` re-pins `light` by
+  hand on five nested templates, and a bare selector would ignore those re-pins.
+  `colour_tokens_test::test_activation_selectors_have_body_as_subject` pins it.
 - **`.theme-dark` and `body.dark` are not accepted, and must never come back.**
   Nothing in Moodle 4.5, 5.0, 5.1, 5.2 or 5.3-dev, and nothing in
   `theme_boost_union` or `theme_boost_union_fundaseg`, has ever emitted either.
@@ -360,7 +408,9 @@ at the head of `styles.css`. In short:
   *input* to `data-bs-theme`, never as an independent trigger; firing on the
   media query directly is how a plugin ends up dark inside a light page. A test
   fails the build if the gate ever becomes reachable. To switch it on later,
-  delete the attribute from the selector — one edit, nothing else.
+  delete the attribute from the selector and update
+  `colour_tokens_test::test_media_fallback_is_written_and_unreachable`, which
+  asserts the gate.
 - **`colour_mode` is constants only, and has no `is_dark()`.** Whether the host
   page is dark is not server-knowable: core resolves it from a per-user
   preference, a cookie and a synchronous head script reading `matchMedia`. Any
@@ -376,21 +426,24 @@ at the head of `styles.css`. In short:
   is `overflow: hidden`. **Never draw a focus indicator with a `box-shadow`** —
   it is not painted at all under `forced-colors: active`. `focus-ring` chains
   `--bs-emphasis-color` and deliberately *not* `--bs-focus-ring-color`, which
-  core fails to flip (1.02:1 on the dark page).
+  core fails to flip (`rgba(15, 108, 191, 0.25)`, 1.26:1 on the dark page).
 
-### The Bootstrap 4 polyfill rides the block's own root, not a body class
+### The Bootstrap 4 polyfill rides the block's content root, not a body class
 
 `styles.css` ends with a polyfill for the BS5 utility families Moodle 4.5 does
 not define, gated on `.block-dimensions-bs4`. The gate is **not optional**:
 plugin CSS loads after core's, so an ungated rule would outrank core's own
 definition on 5.x and freeze 4.5's metrics onto the newer branch.
 
-**The gate is on the block's own root element, and that is a forced divergence
-from `local_dimensions`, which uses a body class.** A block cannot use a body
-class: `theme/boost/layout/columns2.php` calls `$OUTPUT->body_attributes()` one
-line before `$OUTPUT->blocks('side-pre')`, and it is the latter that invokes
-`block_base::get_content()` — the body tag's attributes are already computed by
-the time this plugin is asked for any content. `block_dimensions\local\bootstrap`
+**The gate is on the block's content root (`div.block-dimensions-content`,
+written by `summary.mustache` from the renderable's `isbs4`), and that is a
+forced divergence from `local_dimensions`, which uses a body class.** A block
+cannot add a body class: its content is built while the theme layout renders,
+and the layout is included from `$OUTPUT->header()`, by which point
+`moodle_page::add_body_class()` throws ("after output has been started").
+Boost's `drawers.php` does call `blocks('side-pre')` before `body_attributes()`,
+but the page state has already left `STATE_BEFORE_HEADER`, and a content-region
+block renders after the header anyway. `block_dimensions\local\bootstrap`
 therefore has **no `mark_page()`**; do not add one, because there is no point in
 the block's lifecycle at which it could work, and a helper that silently does
 nothing is worse than an absent one. It is safe here specifically because the
@@ -411,25 +464,39 @@ with an outline, or a dark rule that assigns a decorative shadow from one that
 assigns a whole surface. **That is why every rule of the design is a test method
 rather than a paragraph.** Each method names the mutation that must redden it.
 
-- `tests/local/colour_tokens_test.php` (17 methods, `\basic_testcase`) — the
+- `tests/local/colour_tokens_test.php` (21 methods, `\basic_testcase`) — the
   exact 34 declarations by **string equality**, not a shape regex (a pattern
   cannot prove a chain terminates in a literal, and the terminating literal *is*
   the plugin's Moodle 4.5 behaviour); the suffix list and its byte-identity with
   the sibling; that the activation block assigns only the three plugin-owned
-  tokens and is `:root`-anchored; that the media block is unreachable; contrast
+  tokens and has `body` as the subject; that the media block is unreachable; contrast
   floors in all three resolutions (5.x light, 5.x dark, 4.5 fallback); that no
-  focus indicator is a `box-shadow` or brand-coloured; that the admin-colour
+  focus indicator is a `box-shadow` or brand-coloured; that the favourite star
+  sits on an opaque ground (a translucent disc over card art fell below 3:1); that the admin-colour
   names are never declared by the mode layer; and that every token *read* is a
   token *declared*. It carries an `UNRESOLVED_BUDGET` ratchet asserted for
   **equality**, so it reddens in both directions and may only be edited
-  downwards.
-- `tests/local/bootstrap_compat_test.php` (7 methods) — every BS5 utility used
+  downwards. Its contrast maps `CORE_LIGHT` / `CORE_DARK` / `CORE_BS4` are copies
+  of core's compiled values (Boost's `theme/styles.php` sheet on 5.2, Boost Union's
+  on 4.5): re-read them from the compiled sheets when Moodle updates Bootstrap,
+  or the floors are measured against colours core no longer ships.
+- `tests/local/bootstrap_compat_test.php` (8 methods) — every BS5 utility used
   is polyfilled, the polyfill carries nothing unused, no deprecated BS4 class
   names anywhere (`ml-*`, `sr-only`, `text-left`… resolve on 5.x only through
   `bs4-compat.scss`, which Moodle 6.0 deletes), badges state their text colour,
   data-API attributes are paired (`data-toggle` **and** `data-bs-toggle`), no
   `--mds-*` squatting on core's design-system namespace, and the block root
-  actually carries the Bootstrap marker.
+  actually carries the Bootstrap marker. Both scanners strip Mustache comment
+  spans before reading a template as markup, since a docblock's continuation
+  lines carry no comment marker of their own.
+- `tests/local/card_layout_test.php` (9 methods) — the card-layout invariants
+  below, plus the rules the preference media queries depend on: every
+  `prefers-contrast` / `prefers-reduced-motion` query uses a defined value (a
+  `prefers-contrast: high` query matches in no browser), every override in those
+  blocks and in print wins the cascade against the rule it overrides (several
+  lost on specificity and did nothing), every `transform` has a reduced-motion
+  reset, the plan and competency card shells get the same preference treatment,
+  and the checked pill's count badge stands off the indicator it sits on.
 
 ### Metadata comes from local_dimensions caches only
 `dataset_provider` reads card metadata exclusively through the
@@ -442,9 +509,14 @@ logic was removed as dead code. If a new field is needed, extend the cache in
 `bgcolor` / `textcolor` / `imageurl` are interpolated into `style="..."`
 attributes in the card templates. Mustache `{{ }}` escaping does **not**
 protect a CSS context, so every value destined for a style attribute must pass
-`dataset_provider::sanitize_color()` (hex only) or `sanitize_image_url()`
-(`clean_param PARAM_URL`), and WS return types for URLs are `PARAM_URL`, never
-`PARAM_RAW`. Keep this invariant when adding new style-bound fields.
+`dataset_provider::sanitize_color()` (hex only) or `sanitize_image_url()`,
+and WS return types for URLs are `PARAM_URL`, never `PARAM_RAW`. `PARAM_URL`
+alone is not enough inside `url('...')`: its query and fragment classes accept
+`'`, `(`, `)` and `;`, and the HTML parser decodes Mustache's `&#39;` before the
+CSS parser sees it, so `sanitize_image_url()` also percent-encodes
+`' " ( ) \` and whitespace after `clean_param()` (a `moodle_url`-built
+pluginfile URL already encodes them and passes through unchanged). Keep this
+invariant when adding new style-bound fields.
 
 ### Favourites
 Stored via `core_favourites` in the **user context**, component
@@ -454,7 +526,11 @@ sync with those itemtypes: `classes/privacy/provider.php` (ITEMTYPES const),
 `uninstall_plugin()` does not), and `toggle_favourite`. The enabled check is
 `dataset_provider::is_favourites_enabled()` (treats "never set" as enabled) —
 use it everywhere, never raw `get_config('block_dimensions',
-'enable_favourites')`, or UI and WS disagree on fresh sites.
+'enable_favourites')`, or UI and WS disagree on fresh sites. A card offers the
+star only through `dataset_provider::favourite_fields()`: `showfavourite` is that
+check AND, for a plan card, the active bucket; both templates gate the button on
+it, and `get_block_dataset` declares it for both card types. With the setting
+off, a star used to render on every card while the WS refused every click.
 `toggle_favourite` validates ownership (plan must belong to the user;
 competency must exist) before writing — keep that guard.
 
@@ -535,10 +611,12 @@ HTML; **zero `html_writer`** in plugin code.
 - `tests/<area>/<thing>_test.php`; class extends `\advanced_testcase`;
   `@covers` on the docblock; `$this->resetAfterTest()` in any DB test.
 - `dataset_provider_test.php` uses an **anonymous-class double** exposing
-  protected helpers as `test_*()` proxies and stubbing the
-  `local_dimensions`-touching fetchers (`fetch_bulk_competency_metadata`,
-  `fetch_plan_competencies_api`, `get_competencies_with_courses`) so helper
-  tests run without the sibling plugin. Extend that double for new helpers.
+  protected helpers as `test_*()` proxies (they are not tests) and stubbing the
+  data fetchers (`fetch_bulk_competency_metadata`, which reads the
+  `local_dimensions` cache, and `fetch_plan_competencies_api` /
+  `get_competencies_with_courses`, which read core) so helper tests need no
+  seeded plans. The suite still needs `local_dimensions` installed: the provider
+  uses its constants and caches directly. Extend that double for new helpers.
 - Generator ids come back as **string** under some drivers — cast `(int)`.
 - `colour_tokens_test` and `bootstrap_compat_test` extend **`\basic_testcase`**,
   not `advanced_testcase`: they read `styles.css`, the templates and the AMD
@@ -554,10 +632,14 @@ HTML; **zero `html_writer`** in plugin code.
 
 ## Behat
 
-The block gained its **first** Behat coverage on 2026-09-05:
-`tests/behat/colour_mode.feature` (4 scenarios) plus the step-definition context
-`tests/behat/behat_block_dimensions.php`. Run it locally with the **absolute
-container path** — the relative forms match nothing:
+Three feature files: `colour_mode.feature` (4 scenarios, the colour-mode
+contract), `visibility.feature` (6, the render gate and the status pills) and
+`status_filter.feature` (2: a learner whose only active plan is competencies-mode
+opens on Active, with a count-less pill, and keeps the competency section across
+a round trip to Completed; and a search from the Completed bucket still loads the
+competency cards from the active bucket), plus the step-definition context
+`tests/behat/behat_block_dimensions.php`. Run a feature locally with the
+**absolute container path** — the relative forms match nothing:
 
 ```sh
 mdl behat-init m502

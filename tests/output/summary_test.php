@@ -32,8 +32,8 @@ final class summary_test extends advanced_testcase {
     /**
      * A failure reading the plan list opens the gate instead of throwing, and is logged.
      *
-     * The control is the same user read for real: they hold no active plan, so the gate is
-     * closed, and a true answer can only have come from the failure path.
+     * The control is the same user read for real: they hold no plan, so the gate is closed, and
+     * a true answer can only have come from the failure path.
      */
     public function test_has_content_fails_open_when_the_plan_list_cannot_be_read(): void {
         $this->resetAfterTest();
@@ -68,7 +68,7 @@ final class summary_test extends advanced_testcase {
     }
 
     /**
-     * Every label the client renders is shipped by the shell, status pills included.
+     * The shell's labelsjson payload carries every label of the status filter.
      *
      * The pills are drawn by JavaScript from this payload alone: a label missing here does not
      * fail anything, it silently draws the bucket's internal key at the learner.
