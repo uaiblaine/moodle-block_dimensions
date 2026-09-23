@@ -23,7 +23,10 @@
  */
 
 /**
- * Block Dimensions class.
+ * Learner-facing block listing the user's learning plans and competencies as cards.
+ *
+ * The block itself renders only a shell; amd/src/filters.js fetches the cards from the
+ * block_dimensions_get_block_dataset web service and renders them in the browser.
  *
  * @package    block_dimensions
  * @copyright  2026 Anderson Blaine
@@ -49,8 +52,7 @@ class block_dimensions extends block_base {
     }
 
     /**
-     * Specialization — runs after init, can read config.
-     * Hides the block title bar if the admin setting is enabled.
+     * Hide the block title when the hide_block_title setting is on.
      *
      * @return void
      */
@@ -78,10 +80,9 @@ class block_dimensions extends block_base {
         // Block needs a valid, non-guest user to be logged-in in order to display the user's learning plans.
         if (isloggedin() && !isguestuser()) {
             $summary = new \block_dimensions\output\summary();
-            /* Like block_lp, render nothing at all when there is nothing to show: without an active
-               plan the whole body would be the "no active plans" notice. Core drops an empty block
-               from the page, except in editing mode, where it keeps its controls so it can still be
-               moved or removed. */
+            /* Like block_lp, render nothing when the user holds no plan the block can show (see
+               summary::has_content()). Core drops an empty block from the page, except in editing
+               mode, where it keeps its controls so it can still be moved or removed. */
             if (!$summary->has_content()) {
                 return $this->content;
             }

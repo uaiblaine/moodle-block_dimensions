@@ -33,6 +33,9 @@ use block_dimensions\local\dataset_provider;
 /**
  * Summary renderable class.
  *
+ * The block's server-rendered shell carries labels and settings only; amd/src/filters.js fetches
+ * the cards through block_dimensions_get_block_dataset and renders them client-side.
+ *
  * @package    block_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -43,7 +46,7 @@ class summary implements renderable, templatable {
 
     /**
      * Constructor.
-     * @param stdClass $user The user.
+     * @param stdClass|null $user The user, or null for the current user.
      */
     public function __construct($user = null) {
         global $USER;
@@ -63,6 +66,7 @@ class summary implements renderable, templatable {
         $uiconfig = dataset_provider::get_ui_config();
 
         $containerid = 'block-dimensions-' . uniqid();
+        // The strings amd/src/filters.js writes into its own markup come only from here; a missing key renders wrong, silently.
         $labels = [
             'filterall' => get_string('filterall', 'block_dimensions'),
             'noactiveplans' => get_string('noactiveplans', 'block_dimensions'),
@@ -115,15 +119,13 @@ class summary implements renderable, templatable {
      * list comes from the same provider the web service uses, so this gate and the dataset cannot
      * disagree about the same user.
      *
-     * A failure reading the plan list must never take the page down: the block is rendered inline
-     * with the page, and core's block manager catches nothing, so an exception here would replace
-     * the whole Dashboard with an error page. On any failure the gate answers true, which renders
-     * the shell exactly as the block did before the gate existed; the web service then reads the
-     * plans again and, if that fails too, shows its own error with a retry button. Failing open is
-     * deliberate: failing closed would hide the block silently, for everyone, on a failure that
-     * repeats. The failure is logged with error_log() and not debugging(), because on a site with
-     * developer debugging and pretty exceptions, debugging() during a page render is turned into
-     * an ErrorException by Whoops - the very page-killing throw this catch exists to prevent.
+     * A failure reading the plan list answers true (fails open). The block renders inline with the
+     * page and core's block manager catches nothing, so a throw here would replace the whole page
+     * with an error; an open gate renders the shell, and the web service reads the plans again and
+     * shows its own error with a retry button. Failing closed would hide the block silently for
+     * everyone while the failure repeats. The failure is logged with error_log() rather than
+     * debugging(): with developer debugging and pretty exceptions, Whoops turns debugging() during
+     * a page render into an ErrorException, the very throw this catch prevents.
      *
      * @return bool
      */

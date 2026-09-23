@@ -3,11 +3,12 @@
 /* ============================================================================
    Canonical block-kit scaffold (shared by every screen file).
    AS-IS token values live on .kit (light) and .panel.dark (dark). The plugin
-   no longer ships a skin of its own: styles.css declares 34 tokens on bare
-   :root as var(--bs-NEW, var(--BS4-OLD, #literal)) chains, so 31 of them ARE
+   no longer ships a skin of its own: styles.css declares 34 tokens on body
+   as var(--bs-NEW, var(--BS4-OLD, #literal)) chains, so 31 of them ARE
    core's own Bootstrap values and flip because core's [data-bs-theme="dark"]
    block flips them. Only shadow, scrim and favourite are plugin-authored and
-   restated under :root[data-bs-theme="dark"]. So the two --bk-* blocks below
+   restated under body[data-bs-theme="dark"] / [data-bs-theme="dark"] body.
+   So the two --bk-* blocks below
    are the two RESOLUTIONS of one contract, not two hand-written palettes: the
    light column is core's :root/[data-bs-theme="light"] values and the dark
    column is core's [data-bs-theme="dark"] values, both read out of the running
@@ -63,6 +64,10 @@
   --bk-danger-fg:#df8379;--bk-danger-bg:#280a06;
   --bk-warn-fg:#dee2e6;--bk-warn-bg:#302310;--bk-warn-border:#90682f;
   --bk-empty-circle:rgba(222,226,230,.75);--bk-ghost-fg:rgba(222,226,230,.75);--bk-ghost-circle:#495057;
+  --bk-accent-deep:#6fa7d9;--bk-counter-active-bg:#031626;--bk-counter-active-fg:#6fa7d9;--bk-select-hover-border:rgba(222,226,230,.75);
+  --bk-section-from:#6fa7d9;--bk-section-to:#6fa7d9;--bk-plan-grad-b:#6fa7d9;
+  --bk-comp-grad-a:#90682f;--bk-comp-grad-b:#fd7e14;--bk-comp-grad-c:#f6ce95;
+  --bk-tag-bg:#343a40;--bk-tag-fg:#dee2e6;--bk-star:#fd7e14;
   color:var(--bk-text);
 }
 .screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
@@ -101,7 +106,7 @@
   --st-focus-link:#000;--st-trail-hover:#0f6cbf;
   --st-tab-active:#0f6cbf;--st-ind-shadow:0 1px 3px rgba(0,0,0,.1);
   --st-star-empty:rgba(29,33,37,.75);
-  --st-fav-bg:rgba(255,255,255,.72);--st-fav-bg-hover:#fff;--st-fav-shadow:0 1px 4px rgba(0,0,0,.1);
+  --st-fav-bg:#fff;--st-fav-bg-hover:#f8f9fa;--st-fav-shadow:0 1px 4px rgba(0,0,0,.1);
   --st-ghost-border:#dee2e6;--st-ghost-bg:transparent;--st-ghost-wash:#f8f9fa;
   --st-hc-border:#000;
 }
@@ -112,7 +117,7 @@
   --st-focus-link:#fff;--st-trail-hover:#6fa7d9;
   --st-tab-active:#6fa7d9;--st-ind-shadow:0 1px 3px rgba(0,0,0,.55);
   --st-star-empty:rgba(222,226,230,.75);
-  --st-fav-bg:rgba(29,33,37,.72);--st-fav-bg-hover:#1d2125;--st-fav-shadow:0 1px 4px rgba(0,0,0,.55);
+  --st-fav-bg:#1d2125;--st-fav-bg-hover:#292e33;--st-fav-shadow:0 1px 4px rgba(0,0,0,.55);
   --st-ghost-border:#495057;--st-ghost-bg:transparent;--st-ghost-wash:#292e33;
   --st-hc-border:#fff;
 }
@@ -126,7 +131,7 @@
 .st.g{flex:1 1 152px;max-width:196px;}
 .stl{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:var(--bk-muted);margin-bottom:7px;white-space:nowrap;}
 .stage{display:flex;align-items:center;justify-content:flex-start;min-height:52px;}
-/* card (competency-card, styles.css:327-337) */
+/* card (competency-card, styles.css:316-326) */
 .dc{display:flex;flex-direction:column;width:100%;border-radius:.5rem;overflow:hidden;border:1px solid var(--bk-card-border);background:var(--bk-card-bg);box-shadow:var(--st-shadow-rest);}
 .dc-img{height:32px;position:relative;background:linear-gradient(135deg,var(--bk-comp-grad-a) 0%,var(--bk-comp-grad-b) 50%,var(--bk-comp-grad-c) 100%);}
 .dc-img::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,var(--bk-halftone) 0,transparent 1px);background-size:5px 5px;filter:opacity(.5);}
@@ -135,14 +140,14 @@
 .dc.hov{transform:translateY(-2px);box-shadow:var(--st-shadow-hover);}
 .dc.foc{outline:2px solid var(--bk-focus);outline-offset:2px;}
 .dc-title.foc{display:inline-block;outline:2px solid var(--st-focus-link);outline-offset:2px;border-radius:2px;}
-/* access pill (dims-card-access-btn, styles.css:1065-1089; the article-scoped
-   hover / :focus-within lift lives at 2211-2261) */
+/* access pill (dims-card-access-btn, styles.css:1139-1163; the article-scoped
+   hover / :focus-within lift lives at 2257-2316) */
 .apill{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:8px;background:var(--bk-btn-bg);color:var(--bk-btn-fg);font-size:.85rem;font-weight:600;line-height:1.3;white-space:nowrap;box-shadow:var(--bk-btn-shadow);}
 .apill .ic{width:.8rem;height:.8rem;}
 /* Hover and :focus-within share one treatment, and the pill draws no ring of
    its own — the card's :focus-within ring is the accessible indicator. */
-.apill.hov,.apill.foc{box-shadow:var(--st-btn-shadow-hover);transform:translateY(-1px);}
-/* favourite star (dims-fav-btn, styles.css:1783-1874) */
+.apill.hov,.apill.foc{color:var(--st-trail-hover);box-shadow:var(--st-btn-shadow-hover);transform:translateY(-1px);}
+/* favourite star (dims-fav-btn, styles.css:1839-1931) */
 .favstage{display:inline-flex;align-items:center;justify-content:center;padding:6px;border-radius:6px;background:linear-gradient(135deg,var(--bk-comp-grad-a) 0%,var(--bk-comp-grad-b) 100%);}
 .fav{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border:none;border-radius:50%;background:var(--st-fav-bg);box-shadow:var(--st-fav-shadow);color:var(--st-star-empty);}
 .fav.hov{background:var(--st-fav-bg-hover);transform:scale(1.1);color:var(--bk-star);}
@@ -150,19 +155,19 @@
 .fav.foc{outline:2px solid var(--st-focus-link);outline-offset:2px;}
 .fav.on{color:var(--bk-star);}
 .ic.f{fill:currentColor;}
-/* filter pill (dims-filter-tabs / dims-filter-tab, styles.css:1275-1440) */
+/* filter pill (dims-filter-tabs / dims-filter-tab, styles.css:1332-1489) */
 .tabs{position:relative;display:inline-flex;height:44px;padding:4px;border-radius:999px;background:var(--bk-pill-platter);}
 .tab{position:relative;z-index:2;display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border:none;border-radius:999px;background:transparent;font-size:.875rem;font-weight:500;color:var(--bk-pill-text);opacity:.8;white-space:nowrap;}
 .tab.hov{opacity:1;}
 .tab.on{color:var(--st-tab-active);opacity:1;}
 .tab.foc{outline:2px solid var(--st-focus-link);outline-offset:-2px;opacity:1;}
 .ind{position:absolute;z-index:0;top:4px;bottom:4px;left:4px;right:4px;border-radius:999px;background:var(--bk-pill-indicator);box-shadow:var(--st-ind-shadow);}
-/* clear button (dims-clear-filters-btn, styles.css:1216-1252) */
+/* clear button (dims-clear-filters-btn, styles.css:1274-1309) */
 .clr{display:inline-flex;align-items:center;gap:.375rem;padding:.5rem 1rem;border:1px solid var(--bk-line-3);border-radius:999px;background:transparent;font-size:.875rem;font-weight:500;color:var(--bk-pill-text);white-space:nowrap;}
 .clr .ic{width:.8rem;height:.8rem;}
 .clr.hov{color:var(--bk-danger-fg);border-color:var(--bk-danger-fg);background:var(--bk-danger-bg);}
 .clr.foc{outline:2px solid var(--st-focus-link);outline-offset:2px;}
-/* trail item (trail-item / trail-marker / trail-label, styles.css:695-824, 2184-2208) */
+/* trail item (trail-item / trail-marker / trail-label, styles.css:776-902, 2225-2255) */
 .trailrow{display:inline-flex;align-items:flex-start;}
 .trail{display:inline-flex;flex-direction:column;align-items:center;width:60px;}
 .tmark{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:20px;height:20px;background:var(--bk-card-bg);}
@@ -177,9 +182,9 @@
 .trail.hov .tmark{transform:scale(1.2);}
 .trail.hov .tlabel{text-decoration:underline;color:var(--st-trail-hover);}
 .trail.foc{outline:2px solid var(--st-focus-link);outline-offset:2px;border-radius:4px;}
-/* ghost card (dims-ghost-card-inner, styles.css:1959-2038) */
+/* ghost card (dims-ghost-card-inner, styles.css:2013-2088) */
 .ghost{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.9rem .8rem;border:2px dashed var(--st-ghost-border);border-radius:12px;background:var(--st-ghost-bg);}
-.gcirc{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border:2px solid var(--bk-line-4);border-radius:50%;color:var(--bk-ghost-circle);}
+.gcirc{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border:2px solid var(--bk-line-4);border-radius:50%;color:var(--bk-ghost-fg);}
 .gtitle{font-size:.85rem;font-weight:700;color:var(--bk-ghost-fg);text-align:center;}
 .gsub{font-size:.68rem;color:var(--bk-ghost-fg);text-align:center;}
 .ghost.hov{border-color:var(--bk-accent);background:var(--st-ghost-wash);transform:translateY(-2px);}
@@ -197,7 +202,7 @@
 <div class="kit">
 
 <div class="lede"><b>One focus indicator ships now, and it is not a colour choice.</b>
-Every focusable control in the block draws the same shape — <code>outline: 2px solid var(--block-dimensions-focus-ring); outline-offset: 2px</code> — with exactly two documented exceptions, the filter tab and the sliding indicator, which draw the identical ring at <code>outline-offset: -2px</code> because their platter is <code>overflow: hidden</code> and would clip an outset one.
+Every focusable control in the block draws the same shape — <code>outline: 2px solid var(--block-dimensions-focus-ring); outline-offset: 2px</code> — with exactly two documented exceptions, the filter tab and the sliding indicator, which draw the identical ring at <code>outline-offset: -2px</code> because their platter is <code>overflow: hidden</code> and would clip an outset one. One element takes focus without being a control: when a focused Retry starts a new load, focus moves to the block's own <code>role="region"</code> root, which carries <code>tabindex="-1"</code> only until focus leaves it. No plugin rule styles that focus, so the browser's default indicator draws it, not this ring.
 <b>Nothing draws a focus indicator with a <code>box-shadow</code> any more.</b> That is the reason the 4px brand glow and the filter pill's inset ring are gone rather than recoloured: a <code>box-shadow</code> is not painted at all under <code>forced-colors: active</code>, so a control whose only focus signal was one had no indicator in Windows High Contrast Mode. The card's ring also came down from 3px to 2px, because two ring widths on one page read as a drawing error rather than as two meanings.
 <b>The ring has no dark restatement, and that is the point.</b> <code>--block-dimensions-focus-ring</code> chains <code>--bs-emphasis-color</code>, which core flips: <span class="sw" style="background:#000"></span><code>#000</code> on the light page (21.0:1 against the card face), <span class="sw" style="background:#fff;border-color:#8a8980"></span><code>#fff</code> on the dark one (16.2:1), <code>#343a40</code> on Moodle 4.5 through the <code>--gray-dark</code> rung (11.5:1). It deliberately does <em>not</em> chain <code>--bs-focus-ring-color</code>, which core fails to flip — that value measures 1.02:1 on the dark page.
 Historically this was four different light blues (<code>#005fcc</code>, <code>#1a73e8</code>, <code>#0a58ca</code>, <code>#1765cc</code>) with a fifth in dark, then one migrated blue <code>#0f6cbf</code> that eleven of the thirteen indicators kept on a dark surface at 2.15:1. Both stages are recorded in <code>token-migration.md</code>. A brand colour cannot carry a 3:1 obligation the site owner picks the value for, which is why the ring is now an extreme rather than an accent.</div>
@@ -214,14 +219,14 @@ Historically this was four different light blues (<code>#005fcc</code>, <code>#1
       <div class="st w"><div class="stl">hover</div><div class="stage"><div class="dc hov"><div class="dc-img"></div><div class="dc-body"><div class="dc-title">Digital literacy</div></div></div></div></div>
       <div class="st w"><div class="stl">focus-within</div><div class="stage"><div class="dc foc"><div class="dc-img"></div><div class="dc-body"><div class="dc-title">Digital literacy</div></div></div></div></div>
     </div>
-    <div class="note">Rest shadow <code>0 .125rem .25rem rgba(0,0,0,.075)</code> → hover <code>0 .5rem 1rem rgba(0,0,0,.15)</code> with <code>translateY(-2px)</code>, over a <code>.15s ease-in-out</code> transform + shadow transition. The focus ring is drawn on the article, not the link.</div>
+    <div class="note">Rest shadow <code>0 .125rem .25rem var(--shadow)</code> → hover <code>0 .5rem 1rem var(--shadow)</code>, 10% black in light, with <code>translateY(-2px)</code>, over a <code>.15s ease-in-out</code> transform + shadow transition. The focus ring is drawn on the article, not the link.</div>
 
     <div class="divlbl">Card title link — its own <code>:focus-visible</code> <span class="idb">STA-TITLE-FOCUS</span></div>
     <div class="mx">
       <div class="st"><div class="stl">rest</div><div class="stage"><span class="dc-title">Digital literacy</span></div></div>
       <div class="st"><div class="stl">focus-visible</div><div class="stage"><span class="dc-title foc">Digital literacy</span></div></div>
     </div>
-    <div class="note">A second, deliberate indicator — <code>2px</code> <code>focus-ring</code>, offset <code>2px</code>, radius <code>2px</code> — that survives layouts where <code>:focus-within</code> does not bubble to the article. Both rings can still appear at once, but they are now the same blue, so a focused card no longer shows two colours of ring at the same time.</div>
+    <div class="note">A second, deliberate indicator — <code>2px</code> <code>focus-ring</code>, offset <code>2px</code>, radius <code>2px</code> — that survives layouts where <code>:focus-within</code> does not bubble to the article. Both rings can still appear at once, but they are the same <code>focus-ring</code> colour at the same offset, so a focused card never shows two colours of ring at the same time.</div>
 
     <div class="divlbl">Access pill — hover and <code>:focus-within</code> share one lift <span class="idb">STA-BTN-FOCUS</span></div>
     <div class="mx">
@@ -229,7 +234,7 @@ Historically this was four different light blues (<code>#005fcc</code>, <code>#1
       <div class="st"><div class="stl">hover</div><div class="stage"><span class="apill hov">Access<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div>
       <div class="st"><div class="stl">focus-within</div><div class="stage"><span class="apill foc">Access<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div>
     </div>
-    <div class="note">The pill is <code>pointer-events:none</code>, <code>aria-hidden</code> decoration — the card's <code>.stretched-link</code> is the real target — but it does react. Pointing at the card or tabbing into it grows the rest shadow <code>0 2px 8px/.15</code> to <code>0 4px 14px/.22</code> and lifts the pill <code>translateY(-1px)</code>, over its own <code>.2s</code> shadow + transform transition (<code>styles.css:2232-2248</code>). The selector reads oddly on purpose: it is scoped to the <em>article</em> — <code>.plan-card:hover</code> / <code>.competency-card:hover</code> and the matching <code>:focus-within</code>, with the pill as a descendant. The lift used to be written as <code>.card-link:hover .dims-card-access-btn</code> and never matched, because both templates put the pill inside the image wrapper and the link inside the card body, sibling subtrees (<code>plan_card.mustache:93</code> vs <code>:99</code>); <code>stretched-link</code> makes both <code>:hover</code> and <code>:focus-within</code> bubble to the article, so scoping there reaches all three pills — vertical plan, horizontal plan and competency. Hover and keyboard focus deliberately share the one treatment: the pill has <b>no ring of its own</b>, because the article already draws a <code>3px #0f6cbf</code> ring plus a 4px glow, and a second ring on a decorative element would put two indicators on screen for one focus event. <code>prefers-reduced-motion</code> drops the transform and keeps the shadow (<code>:2175-2184</code>). Logged in <code>token-migration.md</code>.</div>
+    <div class="note">The pill is <code>pointer-events:none</code>, <code>aria-hidden</code> decoration — the card's <code>.stretched-link</code> is the real target — but it does react. Pointing at the card or tabbing into it turns the label <code>accent</code>, grows the rest shadow <code>0 2px 8px</code> to <code>0 4px 14px</code> — both the <code>shadow</code> token — and lifts the pill <code>translateY(-1px)</code>, over its own <code>.2s</code> shadow + transform transition (<code>styles.css:2274-2287</code>). The selector reads oddly on purpose: it is scoped to the <em>article</em> — <code>.plan-card:hover</code> / <code>.competency-card:hover</code> and the matching <code>:focus-within</code>, with the pill as a descendant. The lift used to be written as <code>.card-link:hover .dims-card-access-btn</code> and never matched, because both templates put the pill inside the image wrapper and the link inside the card body, sibling subtrees (<code>plan_card.mustache:103</code> vs <code>:109</code>); <code>stretched-link</code> makes both <code>:hover</code> and <code>:focus-within</code> bubble to the article, so scoping there reaches all three pills — vertical plan, horizontal plan and competency. Hover and keyboard focus deliberately share the one treatment: the pill has <b>no ring of its own</b>, because the article already draws the 2px <code>focus-ring</code> outline, and a second ring on a decorative element would put two indicators on screen for one focus event. <code>prefers-reduced-motion</code> drops the transform and keeps the shadow (<code>styles.css:2307-2316</code>). Logged in <code>token-migration.md</code>.</div>
 
     <div class="divlbl">Favourite star <span class="idb">STA-STAR</span></div>
     <div class="mx">
@@ -239,7 +244,7 @@ Historically this was four different light blues (<code>#005fcc</code>, <code>#1
       <div class="st"><div class="stl">focus</div><div class="stage"><span class="favstage"><span class="fav foc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg></span></span></div></div>
       <div class="st"><div class="stl">on</div><div class="stage"><span class="favstage"><span class="fav on"><svg class="ic f" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg></span></span></div></div>
     </div>
-    <div class="note">Empty star <code>ink-muted</code> turns <code>favourite</code> — <code>#e8590c</code> light, <code>#fd7e14</code> dark — on hover while the 32px disc scales <code>1.1</code> and its translucent white backing goes fully opaque; <code>:active</code> drops to <code>.95</code>. The ring is plain <code>:focus</code>, not <code>:focus-visible</code>, so it also shows on mouse click.</div>
+    <div class="note">Empty star <code>ink-muted</code> turns <code>favourite</code> — <code>#e8590c</code> light, <code>#fd7e14</code> dark — on hover while the 32px disc scales <code>1.1</code> and its opaque <code>surface</code> backing steps to <code>surface-alt</code>; <code>:active</code> drops to <code>.95</code>. The ring is <code>:focus-visible</code>, not <code>:focus</code>, so a mouse click leaves no ring on the card.</div>
 
     <div class="divlbl">Filter pill — the inset focus ring <span class="idb">STA-PILL-FOCUS</span></div>
     <div class="mx">
@@ -248,7 +253,7 @@ Historically this was four different light blues (<code>#005fcc</code>, <code>#1
       <div class="st"><div class="stl">active</div><div class="stage"><span class="tabs"><span class="ind"></span><span class="tab on">All</span></span></div></div>
       <div class="st"><div class="stl">focus-visible</div><div class="stage"><span class="tabs"><span class="tab foc">All</span></span></div></div>
     </div>
-    <div class="note">The one shape variation left: the pill draws the same <code>2px</code> ring at <code>outline-offset: -2px</code>, so it lands <em>inside</em> the pill so it cannot be clipped by the platter's <code>overflow:hidden</code>, but it is also the only control here whose indicator does not sit outside the box. Active state is text colour (<code>#0f6cbf</code>) plus the sliding white indicator behind it; in dark the active text is <code>#dee2e6</code>, not the accent.</div>
+    <div class="note">The one shape variation left: the pill draws the same <code>2px</code> ring at <code>outline-offset: -2px</code>, so it lands <em>inside</em> the pill so it cannot be clipped by the platter's <code>overflow:hidden</code>, but it is also the only control here whose indicator does not sit outside the box. Active state is <code>accent</code> text (<code>#0f6cbf</code>) plus the sliding <code>surface</code> indicator behind it, and it stays the accent in dark (<code>#6fa7d9</code>).</div>
 
     <div class="divlbl">Clear filters button <span class="idb">STA-CLEAR-HOVER</span></div>
     <div class="mx">
@@ -266,11 +271,11 @@ Historically this was four different light blues (<code>#005fcc</code>, <code>#1
     </div>
     <div class="note">Marker scales <code>1.2</code> over <code>.15s</code>; the label underlines. The pending marker is a <code>1px ink-muted</code> ring — it was <code>2px #adb5bd</code> at 2.07:1, and darkening it alone would have made pending steps read heavier than completed ones, so the stroke thinned in the same change; <code>1.4.11</code> sets a ratio, not a thickness. Outer size stays 14px on <code>border-box</code>, so nothing shifts. The <code>#6c757d</code> that first replaced it is a token read now, so the ratio holds in both modes instead of only in light. Note the split, which is unchanged: <code>.trail-item.clickable:hover .trail-label</code> also recolours to <code>accent</code>, but the newer <code>.trail-item-link:hover</code> rule only underlines — so a keyboard user and a mouse user can see different label colours on the same item. Focus ring is the standard <code>2px focus-ring</code>, offset <code>2px</code>, radius <code>4px</code>.</div>
 
-    <div class="divlbl">Ghost card “Show all (N)” <span class="idb">STA-GHOST-HOVER</span></div>
+    <div class="divlbl">Ghost card “View more items (N)” <span class="idb">STA-GHOST-HOVER</span></div>
     <div class="mx">
-      <div class="st g"><div class="stl">rest</div><div class="stage"><span class="ghost"><span class="gcirc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="gtitle">Show all (24)</span><span class="gsub">Look beyond favourites.</span></span></div></div>
-      <div class="st g"><div class="stl">hover</div><div class="stage"><span class="ghost hov"><span class="gcirc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="gtitle">Show all (24)</span><span class="gsub">Look beyond favourites.</span></span></div></div>
-      <div class="st g"><div class="stl">focus</div><div class="stage"><span class="ghost foc"><span class="gcirc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="gtitle">Show all (24)</span><span class="gsub">Look beyond favourites.</span></span></div></div>
+      <div class="st g"><div class="stl">rest</div><div class="stage"><span class="ghost"><span class="gcirc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="gtitle">View more items (24)</span><span class="gsub">Explore beyond favourites.</span></span></div></div>
+      <div class="st g"><div class="stl">hover</div><div class="stage"><span class="ghost hov"><span class="gcirc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="gtitle">View more items (24)</span><span class="gsub">Explore beyond favourites.</span></span></div></div>
+      <div class="st g"><div class="stl">focus</div><div class="stage"><span class="ghost foc"><span class="gcirc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="gtitle">View more items (24)</span><span class="gsub">Explore beyond favourites.</span></span></div></div>
     </div>
     <div class="note">Scaled down for the matrix — the real card is a 50px circle, <code>2rem 1.5rem</code> padding and a <code>1.1rem</code> title. Hover takes the border and both texts to <code>accent</code> over a <code>surface-alt</code> wash and lifts 2px; <code>:active</code> returns to <code>translateY(0)</code>. Focus is <code>focus-ring</code>, which is an ink extreme rather than a blue — so hover and focus are now visibly different <em>kinds</em> of signal, not two shades of the same one, which is the point of taking the indicator off the brand.</div>
 
@@ -298,7 +303,7 @@ Historically this was four different light blues (<code>#005fcc</code>, <code>#1
       <div class="st"><div class="stl">rest</div><div class="stage"><span class="dc-title">Digital literacy</span></div></div>
       <div class="st"><div class="stl">focus-visible</div><div class="stage"><span class="dc-title foc">Digital literacy</span></div></div>
     </div>
-    <div class="note">A second, deliberate indicator — <code>2px</code> <code>focus-ring</code>, offset <code>2px</code>, radius <code>2px</code> — that survives layouts where <code>:focus-within</code> does not bubble to the article. Unchanged in dark: <code>#0f6cbf</code> on <code>#343a40</code> is a much weaker ring than the card's <code>#6ea8fe</code>.</div>
+    <div class="note">A second, deliberate indicator — <code>2px</code> <code>focus-ring</code>, offset <code>2px</code>, radius <code>2px</code> — that survives layouts where <code>:focus-within</code> does not bubble to the article. It is the same <code>focus-ring</code> token as the card's own ring, <code>#fff</code> in dark, so the two never differ.</div>
 
     <div class="divlbl">Access pill — hover and <code>:focus-within</code> share one lift <span class="idb">STA-BTN-FOCUS</span></div>
     <div class="mx">
@@ -306,7 +311,7 @@ Historically this was four different light blues (<code>#005fcc</code>, <code>#1
       <div class="st"><div class="stl">hover</div><div class="stage"><span class="apill hov">Access<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div>
       <div class="st"><div class="stl">focus-within</div><div class="stage"><span class="apill foc">Access<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div>
     </div>
-    <div class="note">Same article-scoped lift as light — hover and <code>:focus-within</code> on <code>.plan-card</code> / <code>.competency-card</code>, <code>translateY(-1px)</code>, no ring on the pill itself — but dark is the one skin that restates the shadow: <code>0 4px 14px rgba(0,0,0,.5)</code> (<code>styles.css:2232-2248</code>). It has to. The dark rest state is already the deeper <code>0 2px 8px rgba(0,0,0,.35)</code> (<code>:1065-1089</code>), so reusing the light hover value of <code>.22</code> would have made the lifted pill read <em>flatter</em> than the resting one. Everything else carries over: the selector is scoped to the article because the pill sits in the image wrapper and the link in the card body, sibling subtrees the old <code>.card-link:hover</code> form could never reach, and <code>prefers-reduced-motion</code> drops the transform while the deepened shadow stays.</div>
+    <div class="note">Same article-scoped lift as light — hover and <code>:focus-within</code> on <code>.plan-card</code> / <code>.competency-card</code>, <code>accent</code> text, <code>translateY(-1px)</code>, no ring on the pill itself — and dark restates nothing: rest and lift both read the <code>shadow</code> token, which deepens from 10% to 55% black with the host (<code>styles.css:1139-1163</code>, <code>2274-2287</code>), so the lifted pill still reads above the resting one. Everything else carries over: the selector is scoped to the article because the pill sits in the image wrapper and the link in the card body, sibling subtrees the old <code>.card-link:hover</code> form could never reach, and <code>prefers-reduced-motion</code> drops the transform while the shadow stays.</div>
 
     <div class="divlbl">Favourite star <span class="idb">STA-STAR</span></div>
     <div class="mx">
@@ -316,7 +321,7 @@ Historically this was four different light blues (<code>#005fcc</code>, <code>#1
       <div class="st"><div class="stl">focus</div><div class="stage"><span class="favstage"><span class="fav foc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg></span></span></div></div>
       <div class="st"><div class="stl">on</div><div class="stage"><span class="favstage"><span class="fav on"><svg class="ic f" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg></span></span></div></div>
     </div>
-    <div class="note">Dark backing is <code>scrim</code> at <code>rgb(29 33 37 / 72%)</code> → hover the opaque <code>surface</code>, the empty star is <code>ink-muted</code> over the dark card, and the hover colour is the same <code>#ffc107</code>. The ring is plain <code>:focus</code>, not <code>:focus-visible</code>, so it also shows on mouse click.</div>
+    <div class="note">Dark backing is the opaque <code>surface</code> (<code>#1d2125</code>) → hover <code>surface-alt</code> (<code>#292e33</code>); the empty star is <code>ink-muted</code> and turns <code>favourite</code> (<code>#fd7e14</code>) on hover. The ring is <code>:focus-visible</code>, so a mouse click leaves none.</div>
 
     <div class="divlbl">Filter pill — the inset focus ring <span class="idb">STA-PILL-FOCUS</span></div>
     <div class="mx">
@@ -325,7 +330,7 @@ Historically this was four different light blues (<code>#005fcc</code>, <code>#1
       <div class="st"><div class="stl">active</div><div class="stage"><span class="tabs"><span class="ind"></span><span class="tab on">All</span></span></div></div>
       <div class="st"><div class="stl">focus-visible</div><div class="stage"><span class="tabs"><span class="tab foc">All</span></span></div></div>
     </div>
-    <div class="note">The one shape variation left: the pill draws the same <code>2px</code> ring at <code>outline-offset: -2px</code>, so it lands <em>inside</em> the pill so it cannot be clipped by the platter's <code>overflow:hidden</code>. In dark the indicator becomes <code>#495057</code> and the active label <code>#dee2e6</code>, so the pill loses its accent entirely while the focus ring keeps the light-mode blue.</div>
+    <div class="note">The one shape variation left: the pill draws the same <code>2px</code> ring at <code>outline-offset: -2px</code>, so it lands <em>inside</em> the pill so it cannot be clipped by the platter's <code>overflow:hidden</code>. In dark the indicator is <code>surface</code> (<code>#1d2125</code>) on the <code>#343a40</code> platter, the active label stays <code>accent</code> (<code>#6fa7d9</code>) and the focus ring is <code>#fff</code> — all three the same declarations as in light.</div>
 
     <div class="divlbl">Clear filters button <span class="idb">STA-CLEAR-HOVER</span></div>
     <div class="mx">
@@ -333,7 +338,7 @@ Historically this was four different light blues (<code>#005fcc</code>, <code>#1
       <div class="st"><div class="stl">hover</div><div class="stage"><span class="clr hov"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4-4a2 2 0 0 1 0-2.8L13.6 3.6a2 2 0 0 1 2.8 0l4 4a2 2 0 0 1 0 2.8L11 21z"/><path d="M21 21H7M9 11l5 5"/></svg>Clear</span></div></div>
       <div class="st"><div class="stl">focus-visible</div><div class="stage"><span class="clr foc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4-4a2 2 0 0 1 0-2.8L13.6 3.6a2 2 0 0 1 2.8 0l4 4a2 2 0 0 1 0 2.8L11 21z"/><path d="M21 21H7M9 11l5 5"/></svg>Clear</span></div></div>
     </div>
-    <div class="note">Real label is “Clear filters” with <code>fa-eraser</code>; shortened here to fit the matrix. Dark is the only control with a fully restated hover pair: <code>#ea868f</code> on <code>#2c0b0e</code>.</div>
+    <div class="note">Real label is “Clear filters” with <code>fa-eraser</code>; shortened here to fit the matrix. Dark restates nothing: the hover reads <code>danger-ink</code> on <code>danger-tint</code>, <code>#df8379</code> on <code>#280a06</code> there.</div>
 
     <div class="divlbl">Trail item <span class="idb">STA-TRAIL-HOVER</span></div>
     <div class="mx">
@@ -343,11 +348,11 @@ Historically this was four different light blues (<code>#005fcc</code>, <code>#1
     </div>
     <div class="note">Marker scales <code>1.2</code> over <code>.15s</code>; the label underlines. Dark restates nothing here — the whole trail is token reads, so the marker backing follows <code>surface</code>, the pending ring and the label follow <code>ink-muted</code>, the completed marker, its connectors and the completed label follow <code>success-ink</code> (<code>#153114</code> light, <code>#86af84</code> dark), and the <code>.clickable</code> hover label follows <code>accent</code>. The eight hand-written dark rules this replaces existed only because the light values were literals; every ratio they were added to fix is now core's own.</div>
 
-    <div class="divlbl">Ghost card “Show all (N)” <span class="idb">STA-GHOST-HOVER</span></div>
+    <div class="divlbl">Ghost card “View more items (N)” <span class="idb">STA-GHOST-HOVER</span></div>
     <div class="mx">
-      <div class="st g"><div class="stl">rest</div><div class="stage"><span class="ghost"><span class="gcirc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="gtitle">Show all (24)</span><span class="gsub">Look beyond favourites.</span></span></div></div>
-      <div class="st g"><div class="stl">hover</div><div class="stage"><span class="ghost hov"><span class="gcirc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="gtitle">Show all (24)</span><span class="gsub">Look beyond favourites.</span></span></div></div>
-      <div class="st g"><div class="stl">focus</div><div class="stage"><span class="ghost foc"><span class="gcirc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="gtitle">Show all (24)</span><span class="gsub">Look beyond favourites.</span></span></div></div>
+      <div class="st g"><div class="stl">rest</div><div class="stage"><span class="ghost"><span class="gcirc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="gtitle">View more items (24)</span><span class="gsub">Explore beyond favourites.</span></span></div></div>
+      <div class="st g"><div class="stl">hover</div><div class="stage"><span class="ghost hov"><span class="gcirc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="gtitle">View more items (24)</span><span class="gsub">Explore beyond favourites.</span></span></div></div>
+      <div class="st g"><div class="stl">focus</div><div class="stage"><span class="ghost foc"><span class="gcirc"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="gtitle">View more items (24)</span><span class="gsub">Explore beyond favourites.</span></span></div></div>
     </div>
     <div class="note">Scaled down for the matrix — the real card is a 50px circle, <code>2rem 1.5rem</code> padding and a <code>1.1rem</code> title. Dark needs no rule of its own: the dashed border is <code>line</code>, the hover wash is <code>surface-alt</code> and the hover text is <code>accent</code>, all three of which flip with the host. The wash is the clearest case for the change — the 4% brand tint it replaces resolved to about <code>#f7fafd</code> on white and to nothing at all on a dark page.</div>
 
@@ -362,12 +367,13 @@ Historically this was four different light blues (<code>#005fcc</code>, <code>#1
 
 <div class="sums">
   <div class="sum">
-    <h4>prefers-contrast: high <span class="idb">STA-CONTRAST</span></h4>
+    <h4>prefers-contrast: more <span class="idb">STA-CONTRAST</span></h4>
     <ul>
+      <li><b>The query asks for <code>more</code>, the raised-contrast value Media Queries Level 5 defines.</b> Until 2026-09-23 every block asked for <code>high</code>, which is not a value of the feature, so the browser evaluated it as false and none of the remedies below had ever applied. <code>card_layout_test</code> now fails on an undefined value.</li>
       <li><b>Every extreme in this block is now a token, and that is the whole repair.</b> It used to paint <code>#000</code> borders and outlines with no dark counterpart, so a user on dark plus high contrast got black on a dark card. The borders that name an extreme now name <code>ink-strong</code> (<code>--bs-emphasis-color</code>: <code>#000</code> light, <code>#fff</code> dark), so the block flips with the page like the rest of the file.</li>
-      <li>Card takes <code>border: 2px solid ink-strong</code> and its title <code>color: ink-strong</code>. The card's focus ring is <em>not</em> restated here any more: the base rule already draws the same 2px ink-extreme outline, and a verbatim duplicate is how the next reader concludes the two must differ for a reason nobody wrote down.</li>
-      <li>The competency gradient still flattens to a literal <code>#6c757d</code>, and that literal is deliberate. A flat fill in the image slot has to separate from the card face in <em>both</em> modes at once, so it can be neither extreme: <code>#6c757d</code> is 4.69:1 on the light card face and 3.45:1 on the dark one. A token that flipped would turn the image area light on a dark page and invert the card. Nothing in that slot carries meaning — the title, tags and pill all paint their own ground.</li>
-      <li>Access pill, tags, favourite star, clear button and ghost card thicken to <code>currentColor</code>, which needs no token: it is already whatever ink the element inherited. The select goes <code>2px solid ink-strong</code> rather than <code>#000</code>, because it sits on the page in both modes.</li>
+      <li>Both cards take <code>border: 2px solid ink-strong</code> and a title in <code>color: ink-strong</code>, from one block that follows both cards' own rules; <code>card_layout_test</code> pins that the two card shells share it (the plan card kept its 1px <code>line</code> border here, 1.30:1 in light, until 2026-09-23). The card's focus ring is <em>not</em> restated here any more: the base rule already draws the same 2px ink-extreme outline, and a verbatim duplicate is how the next reader concludes the two must differ for a reason nobody wrote down.</li>
+      <li>Both card gradients, an admin's custom fill included, still flatten to a literal <code>#6c757d</code>, and that literal is deliberate. A flat fill in the image slot has to separate from the card face in <em>both</em> modes at once, so it can be neither extreme: <code>#6c757d</code> is 4.69:1 on the light card face and 3.45:1 on the dark one. A token that flipped would turn the image area light on a dark page and invert the card. Nothing in that slot carries meaning — the title, tags and pill all paint their own ground.</li>
+      <li>Access pill, tags, favourite star, clear button and ghost card thicken to <code>currentColor</code>, which needs no token: it is already whatever ink the element inherited. The access pill trades its shadow for that border, and keeps it off while its card is hovered or focused too: the lift rule outranks the swap, so a second override repeats the lift's own selectors. The select goes <code>2px solid ink-strong</code> rather than <code>#000</code>, because it sits on the page in both modes.</li>
       <li>Filter pills gain <code>2px solid transparent</code>; the <em>active</em> pill takes <code>border-color: focus-ring</code>, the sliding indicator <code>outline: 2px solid focus-ring; outline-offset: -2px</code>, and the active favourite pill <code>2px solid ink-strong</code> — the border separates a filled pill from the page, so it follows the page.</li>
       <li><b>A separate <code>forced-colors: active</code> block now exists, and it is not the same thing.</b> Under Windows High Contrast Mode the browser substitutes its own palette for every <code>background-color</code>, so the white sliding indicator and the filled active pill both flatten to the same Canvas as their neighbours and the selected filter stops being distinguishable (WCAG 1.4.1). An <code>outline</code> is the fix precisely because outline <em>is</em> remapped there, while a background is overwritten and a <code>box-shadow</code> is not drawn at all.</li>
     </ul>
@@ -376,7 +382,7 @@ Historically this was four different light blues (<code>#005fcc</code>, <code>#1
     <h4>prefers-reduced-motion: reduce <span class="idb">STA-MOTION</span> &nbsp;·&nbsp; print <span class="idb">STA-PRINT</span></h4>
     <ul>
       <li><b>Reduced motion</b> zeroes every transition (card, access pill, filter pill, select, indicator, paddles, clear button, favourite star, ghost card, the mobile filter host and its toggle) and every transform: card hover, the access pill's <code>translateY(-1px)</code>, star hover and <code>:active</code>, ghost hover and <code>:active</code>, and the trail marker's <code>scale(1.2)</code> all become <code>none</code>. Colour and shadow changes survive, so every state stays distinguishable without movement.</li>
-      <li><b>Print</b> hides the access pill, the tag row, the favourite star, the whole filter bar and the ghost card; the card drops its shadow, forces <code>border: 1px solid #000</code> and sets <code>break-inside: avoid</code>; the competency gradient flattens to <code>#ced4da</code>.</li>
+      <li><b>Print</b> hides the access pill, the tag row, the favourite star, the whole filter bar and the ghost card; both cards drop their shadow, force <code>border: 1px solid #000</code> and set <code>break-inside: avoid</code>, from one block shared by the two card shells; both gradients flatten to <code>#ced4da</code>.</li>
       <li><b>Every literal in a print block is deliberate and mode-invariant.</b> Paper is white whatever the screen is doing, and <code>data-bs-theme</code> stays on the html element while printing — so ink resolved through a mode token would print <code>#dee2e6</code> on white from a dark page. This is the one place in the file where a hardcoded colour is the correct answer.</li>
       <li>The gradient's print rule no longer needs <code>!important</code>. The admin-chosen fill moved off the inline style attribute and onto a <code>.has-custom-bg</code> class reading a custom property, so the print and high-contrast overrides win at equal specificity instead of fighting an inline declaration — which is also what let the last <code>!important</code> leave the file, since Moodle's stylelint forbids it.</li>
       <li>The section header prints as solid <code>#000</code>: it clears <code>background-image</code> and resets <code>-webkit-text-fill-color</code> to <code>currentcolor</code> first, because the base rule's transparent fill beats a bare <code>color</code>.</li>
@@ -392,14 +398,14 @@ Historically this was four different light blues (<code>#005fcc</code>, <code>#1
     <span class="k">STA-CARD-FOCUS</span><span class="v"><b>Card <code>:focus-within</code></b> — <code>outline: 2px solid focus-ring; outline-offset: 2px</code>, identical on both card types and in both modes. The 3px width, the <code>0 0 0 4px</code> brand glow, the dark restatement and the <code>:has()</code> fallback are all gone: the width was the only one on the page that was not 2px, the glow was a <code>box-shadow</code> and so invisible under forced colours, the restatement became unnecessary once the token flipped, and the fallback's two selectors could never match anything <span class="rule">styles.css · FOCUS STATES banner</span></span>
     <span class="k">STA-TITLE-FOCUS</span><span class="v"><b>Title-link <code>:focus-visible</code></b> — a deliberate second indicator on <code>.stretched-link</code>: <code>2px solid focus-ring</code>, offset <code>2px</code>, radius <code>2px</code>, so focus stays visible in layouts where <code>:focus-within</code> does not bubble to the article. The offset was 4px and is now 2px: when both rings paint, two different offsets read as a drawing error rather than as two indicators. The card link's own <code>outline: none</code> rules were deleted — an author <code>outline: none</code> is not restored under <code>forced-colors: active</code> <span class="rule">styles.css · stretched-link block</span></span>
     <span class="k">STA-BTN-FOCUS</span><span class="v"><b>Access pill</b> — hover and <code>:focus-within</code> share one lift: shadow <code>0 2px 8px var(--shadow)</code> → <code>0 4px 14px var(--shadow)</code> plus <code>translateY(-1px)</code>, dropped under reduced motion. Scoped to the article rather than the card link, which the templates never make the pill a descendant of. The pill draws no ring of its own, since the card's <code>:focus-within</code> ring is the accessible indicator for this <code>aria-hidden</code>, <code>pointer-events: none</code> decoration. The hand-written dark deepening is gone — the token does it <span class="rule">styles.css · access-btn blocks; plan_card.mustache</span></span>
-    <span class="k">STA-STAR</span><span class="v"><b>Favourite star</b> — empty <code>ink-muted</code> → hover <code>favourite</code> with <code>scale(1.1)</code> and a backing that goes from <code>scrim</code> to opaque <code>surface</code>, <code>:active scale(.95)</code>, <code>:focus-visible</code> the standard ring. <code>favourite</code> is the second plugin-owned token: <code>#e8590c</code> light and <code>#fd7e14</code> dark, both clearing 3:1 on all three surfaces. The old <code>#ffc107</code> did not — it is 1.7:1 on white <span class="rule">styles.css · dims-fav-btn block</span></span>
+    <span class="k">STA-STAR</span><span class="v"><b>Favourite star</b> — empty <code>ink-muted</code> → hover <code>favourite</code> with <code>scale(1.1)</code> and a backing that steps from <code>surface</code> to <code>surface-alt</code>, both opaque so the star's ground never depends on the card art behind the disc, <code>:active scale(.95)</code>, <code>:focus-visible</code> the standard ring. <code>favourite</code> is the second plugin-owned token: <code>#e8590c</code> light and <code>#fd7e14</code> dark, both clearing 3:1 on the disc and on its hover step. The old <code>#ffc107</code> did not — it is 1.63:1 on white <span class="rule">styles.css · dims-fav-btn block</span></span>
     <span class="k">STA-PILL-FOCUS</span><span class="v"><b>Filter pill</b> — inactive at <code>opacity:.8</code>, hover <code>1</code>, active takes <code>accent</code> with the sliding indicator behind it. Its focus indicator is now a real <code>outline: 2px solid focus-ring</code> at <code>outline-offset: -2px</code>, not an inset <code>box-shadow</code>: the negative offset keeps it inside a platter that is <code>overflow: hidden</code>, and an outline survives forced colours where a shadow does not <span class="rule">styles.css · filter-tab block</span></span>
     <span class="k">STA-CLEAR-HOVER</span><span class="v"><b>Clear-filters button</b> — hover moves colour, border and background to <code>danger-ink</code> / <code>danger-tint</code> in one <code>.15s</code> transition, which is core's own danger alert pairing rather than a plugin choice; <code>:focus-visible</code> is the standard ring <span class="rule">styles.css · dims-clear-filters-btn block</span></span>
     <span class="k">STA-TRAIL-HOVER</span><span class="v"><b>Trail item</b> — marker <code>scale(1.2)</code> and label underline on hover and <code>:focus-visible</code>; <code>.trail-item.clickable</code> also recolours the label to <code>accent</code>, which flips with the host. Link focus ring is the standard one, radius <code>4px</code> <span class="rule">styles.css · trail blocks</span></span>
     <span class="k">STA-GHOST-HOVER</span><span class="v"><b>Ghost card</b> — rest <code>2px dashed line</code>; hover takes border, circle and title to <code>accent</code> over a <code>surface-alt</code> wash and lifts <code>2px</code>, <code>:active</code> returns to <code>0</code>; <code>:focus-visible</code> — not <code>:focus</code> — is the standard ring. The 4% brand wash it replaces resolved to about <code>#f7fafd</code> on white and to nothing at all on a dark page <span class="rule">styles.css · dims-ghost-card-inner block</span></span>
-    <span class="k">STA-CONTRAST</span><span class="v"><b><code>prefers-contrast: high</code></b> — <code>2-3px</code> borders naming <code>ink-strong</code> or <code>currentColor</code> on card, pill, tag, star, select, clear button and ghost card; the competency gradient flattens to a deliberate literal <code>#6c757d</code>; the active filter pill gains a real border and the indicator an inset outline. No <code>#000</code> literal survives in this block <span class="rule">styles.css · per-component high-contrast blocks</span></span>
-    <span class="k">STA-MOTION</span><span class="v"><b><code>prefers-reduced-motion: reduce</code></b> — every transition and every transform in the block is set to <code>none</code>, including the trail marker's dedicated opt-out at the end of the file <span class="rule">styles.css · per-component reduced-motion blocks</span></span>
-    <span class="k">STA-PRINT</span><span class="v"><b><code>@media print</code></b> — access pill, tags, favourite star, filter bar and ghost card are <code>display:none</code>; the card drops its shadow, forces <code>1px solid #000</code> and <code>break-inside: avoid</code>; the gradient flattens to <code>#ced4da</code> without <code>!important</code>; the section header drops its gradient fill and prints <code>#000</code>. Every literal here is mode-invariant on purpose <span class="rule">styles.css · per-component print blocks</span></span>
+    <span class="k">STA-CONTRAST</span><span class="v"><b><code>prefers-contrast: more</code></b> — <code>2-3px</code> borders naming <code>ink-strong</code> or <code>currentColor</code> on both cards, filter pill, tag, star, select, clear button and ghost card, with an <code>ink-strong</code> card title; both card gradients flatten to a deliberate literal <code>#6c757d</code>; the access pill stays shadowless while its card is hovered or focused; the active filter pill gains a real border - its selectors repeat the depth of the base tab rule, whose <code>border: none</code> would otherwise win on specificity - and the indicator an inset outline. No <code>#000</code> literal survives in this block <span class="rule">styles.css · per-component high-contrast blocks</span></span>
+    <span class="k">STA-MOTION</span><span class="v"><b><code>prefers-reduced-motion: reduce</code></b> — transitions and transforms are set to <code>none</code>, each reset written at least as specific as the rule it resets (the filter tab, the hidden paddle and the clickable trail marker each needed that; <code>card_layout_test</code> pins it). The plan card's hover lift is reset from a block of its own below the plan card's rules, which it must follow to win <span class="rule">styles.css · per-component reduced-motion blocks</span></span>
+    <span class="k">STA-PRINT</span><span class="v"><b><code>@media print</code></b> — access pill, tags, favourite star, filter bar and ghost card are <code>display:none</code>; both cards drop their shadow, force <code>1px solid #000</code> and <code>break-inside: avoid</code>; both gradients flatten to <code>#ced4da</code> without <code>!important</code>; the section header drops its gradient fill and prints <code>#000</code>. Every literal here is mode-invariant on purpose <span class="rule">styles.css · per-component print blocks</span></span>
   </div>
 </div>
 </div>

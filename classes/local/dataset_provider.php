@@ -47,8 +47,8 @@ class dataset_provider {
     /** @var array Plans for the user. */
     protected $plans = [];
 
-    /** @var array Static cache for custom field definitions (keyed by shortname_area). */
-    protected static $fieldcache = [];
+    /** @var array Template metadata this provider has already read, keyed by template id. */
+    protected $templatemetadata = [];
 
     /**
      * Constructor.
@@ -78,8 +78,8 @@ class dataset_provider {
      * @var array The statuses each status bucket carries, keyed by bucket name.
      *
      * A plain draft belongs to no bucket on purpose: nothing would render it, so a learner whose
-     * only plan is a draft would open a block with nothing in it. The two review statuses share a
-     * bucket the way core groups its own draft statuses.
+     * only plan is a draft would open a block with nothing in it. The two review statuses share one
+     * bucket; core counts both as draft statuses ({@see \core_competency\plan::get_draft_statuses()}).
      */
     protected const BUCKET_STATUSES = [
         self::BUCKET_ACTIVE => [plan::STATUS_ACTIVE],
@@ -116,22 +116,36 @@ class dataset_provider {
     /**
      * The bucket the block opens on: the first one, in bucket order, that holds a plan.
      *
-     * A learner whose plans have all finished must land on them, not on an empty Active bucket
-     * with a notice - that is the whole reason the render gate was widened beyond active plans.
-     * With no plan at all the answer is the active bucket, whose own empty state is the honest
-     * one, and the block does not render for such a learner anyway.
+     * Any plan counts, whatever its template's display mode. An active plan on a competencies-mode
+     * template draws no plan card, but its competency cards are built only in the active bucket, so
+     * opening on a later bucket would leave them out of reach. A learner whose plans have all been
+     * completed lands on them rather than on an empty Active bucket. With no displayable plan the
+     * answer is the active bucket, whose empty state is the right one, although
+     * {@see \block_dimensions\output\summary::has_content()} renders no shell for such a learner in
+     * the first place.
      *
      * @return string One of the BUCKET_* constants.
      */
     public function opening_bucket(): string {
-        $counts = $this->count_plans_by_bucket();
         foreach (array_keys(self::BUCKET_STATUSES) as $bucket) {
-            if ($counts[$bucket] > 0) {
+            if (!empty($this->get_plans_in_bucket($bucket))) {
                 return $bucket;
             }
         }
 
         return self::BUCKET_ACTIVE;
+    }
+
+    /**
+     * Whether the user holds an active plan, whatever its template's display mode.
+     *
+     * This is not a non-zero active count from {@see count_plans_by_bucket()}: that counts plan
+     * cards, and an active plan on a competencies-mode template shows competency cards instead.
+     *
+     * @return bool
+     */
+    public function has_active_plans(): bool {
+        return !empty($this->get_plans_in_bucket(self::BUCKET_ACTIVE));
     }
 
     /**
@@ -150,10 +164,11 @@ class dataset_provider {
     }
 
     /**
-     * How many plans the learner holds in each status bucket.
+     * How many plan cards each status bucket shows: the number on its pill.
      *
-     * The constructor already read the whole plan list, so this costs no query: it is what lets
-     * the first response carry every bucket's count while building only one bucket's cards.
+     * Works from the plan list the constructor already read, plus the cached template metadata of
+     * active plans, so the first response can carry every bucket's count while building only one
+     * bucket's cards.
      *
      * @return array{active: int, review: int, complete: int}
      */
@@ -164,6 +179,7 @@ class dataset_provider {
             self::BUCKET_COMPLETE => 0,
         ];
 
+        $this->prefetch_template_metadata($this->get_plans_in_bucket(self::BUCKET_ACTIVE));
         foreach ($this->plans as $plan) {
             $bucket = self::bucket_of((int) $plan->get('status'));
             if ($bucket === null) {
@@ -199,11 +215,17 @@ class dataset_provider {
      * can fetch the missing group without re-processing the group that was
      * already loaded with favourites in Phase 1.
      *
-     * $planstatus names the status bucket to build cards for. Only the active bucket is loaded
-     * with the page; the others are built when the learner asks for them, which is what keeps a
-     * finished plan's images, metadata and trail off the first render. Outside the active bucket
-     * every plan renders as a plan card whatever its template's display mode, and no competency
-     * cards are built: the competency section is about work in progress.
+     * $planstatus names the status bucket to build cards for. Anything that is not a bucket name,
+     * which is what the block's first request sends, resolves through {@see opening_bucket()}, so
+     * the first response builds whichever bucket the block opens on. Every other bucket is built
+     * only when the learner asks for it, which keeps the images, metadata and trail of the plans
+     * in those buckets off the first response. Outside the active bucket every plan renders as a
+     * plan card whatever its template's display mode, and no competency cards are built: the
+     * competency section is about work in progress.
+     *
+     * 'plancounts' counts plan cards per bucket ({@see count_plans_by_bucket()}), while
+     * 'hasactiveplans' says whether any active plan exists ({@see has_active_plans()}); the two
+     * differ when an active plan shows competency cards instead of a plan card.
      *
      * @param bool $favouritesonly If true, only return favourited cards.
      * @param string $loadgroup Limit card building: 'plan', 'competency', or '' for both.
@@ -215,21 +237,20 @@ class dataset_provider {
         string $loadgroup = '',
         string $planstatus = ''
     ): array {
-        global $USER;
-
         if (!self::is_bucket($planstatus)) {
             $planstatus = $this->opening_bucket();
         }
         $isactivebucket = $planstatus === self::BUCKET_ACTIVE;
         $bucketplans = $this->get_plans_in_bucket($planstatus);
         $plancounts = $this->count_plans_by_bucket();
+        $this->prefetch_template_metadata($bucketplans);
 
         // Pre-load favourite IDs if the feature is enabled.
         $favouritesenabled = self::is_favourites_enabled();
         $planfavids = [];
         $compfavids = [];
         if ($favouritesenabled) {
-            [$planfavids, $compfavids] = $this->preload_favourite_ids((int) $USER->id);
+            [$planfavids, $compfavids] = $this->preload_favourite_ids($this->userid);
         }
 
         $competencycards = [];
@@ -288,7 +309,7 @@ class dataset_provider {
         return [
             'planstatus' => $planstatus,
             'plancounts' => $plancounts,
-            'hasactiveplans' => $plancounts[self::BUCKET_ACTIVE] > 0,
+            'hasactiveplans' => $this->has_active_plans(),
             'hasplancards' => !empty($plancards),
             'hascompetencies' => !empty($competencycards),
             'plancards' => $plancards,
@@ -346,6 +367,9 @@ class dataset_provider {
     /**
      * Resolve template metadata and resulting display mode for a plan.
      *
+     * A plan without a template is always a plan card; a template whose metadata sets no display
+     * mode defaults to competencies mode.
+     *
      * @param int|null $templateid Template id.
      * @return array{0: array<string, mixed>, 1: mixed}
      */
@@ -354,10 +378,37 @@ class dataset_provider {
             return [[], constants::DISPLAYMODE_PLAN];
         }
 
-        $templatemetadata = template_metadata_cache::get_template_metadata($templateid);
+        if (!isset($this->templatemetadata[$templateid])) {
+            $this->templatemetadata[$templateid] = template_metadata_cache::get_template_metadata($templateid);
+        }
+        $templatemetadata = $this->templatemetadata[$templateid];
         $displaymode = $templatemetadata['displaymode'] ?? constants::DISPLAYMODE_COMPETENCIES;
 
         return [$templatemetadata, $displaymode];
+    }
+
+    /**
+     * Read the template metadata of the given plans in one batch, ahead of
+     * {@see resolve_plan_display_context()}.
+     *
+     * Templates this provider has already read are skipped. On a cold cache the misses cost one
+     * grouped query instead of one per template.
+     *
+     * @param array $plans Plans whose templates are about to be resolved.
+     * @return void
+     */
+    protected function prefetch_template_metadata(array $plans): void {
+        $templateids = [];
+        foreach ($plans as $plan) {
+            $templateid = (int) $plan->get('templateid');
+            if ($templateid && !isset($this->templatemetadata[$templateid])) {
+                $templateids[$templateid] = $templateid;
+            }
+        }
+
+        if (!empty($templateids)) {
+            $this->templatemetadata += template_metadata_cache::get_metadata_for_many(array_values($templateids));
+        }
     }
 
     /**
@@ -369,7 +420,7 @@ class dataset_provider {
      * @param array $templatemetadata Template metadata.
      * @param bool $favouritesonly Whether favourites-only mode is active.
      * @param array $planfavids Plan favourites map.
-     * @return array|null
+     * @return array|null Null when favourites-only mode skips a plan that is not a favourite.
      */
     protected function build_plan_dataset_card(
         \core_competency\plan $plan,
@@ -385,14 +436,34 @@ class dataset_provider {
         }
 
         $card = $this->build_plan_card($plan, $templateid, $planid, $templatemetadata);
-        $isfavourite = isset($planfavids[$planid]);
-        $card['isfavourite'] = $isfavourite;
-        $card['favouritearialabel'] = $isfavourite
+        // Only an active plan's card offers the toggle: the other buckets hold plans finished or under review.
+        $isactive = self::bucket_of((int) $plan->get('status')) === self::BUCKET_ACTIVE;
+
+        return array_merge($card, $this->favourite_fields($isactive, isset($planfavids[$planid])));
+    }
+
+    /**
+     * The favourite toggle fields every card carries.
+     *
+     * A card offers the toggle only while favourites are enabled ({@see is_favourites_enabled()}).
+     * With them disabled toggle_favourite refuses every call and filters.js ignores the click, so a
+     * star drawn anyway would be a focusable pressed/unpressed button that does nothing.
+     *
+     * @param bool $offerable Whether this card can carry the toggle while favourites are enabled.
+     * @param bool $isfavourite Whether the item is one of the user's favourites.
+     * @return array{showfavourite: bool, isfavourite: bool, favouritearialabel: string, favouritetitle: string}
+     */
+    protected function favourite_fields(bool $offerable, bool $isfavourite): array {
+        $label = $isfavourite
             ? get_string('removefromfavourites', 'block_dimensions')
             : get_string('addtofavourites', 'block_dimensions');
-        $card['favouritetitle'] = $card['favouritearialabel'];
 
-        return $card;
+        return [
+            'showfavourite' => $offerable && self::is_favourites_enabled(),
+            'isfavourite' => $isfavourite,
+            'favouritearialabel' => $label,
+            'favouritetitle' => $label,
+        ];
     }
 
     /**
@@ -428,7 +499,7 @@ class dataset_provider {
      * @param bool $favouritesonly Whether favourites-only mode is active.
      * @param array $compfavids Favourite competency ids map.
      * @param array $seencompetencies Seen competency ids map (updated by reference).
-     * @return array
+     * @return array ['counted' => int, 'cards' => array]; 0 and [] when the plan's competencies cannot be read.
      */
     protected function process_plan_competencies(
         int $planid,
@@ -440,6 +511,10 @@ class dataset_provider {
         try {
             $competencies = $this->fetch_plan_competencies_api($plan);
         } catch (\Exception $e) {
+            /* Only the web service builds competency cards, and its entry points send debugging() to
+               the error log. During a page render it could throw instead; see
+               \block_dimensions\output\summary::has_content(). */
+            debugging('Error reading the competencies of plan ' . $planid . ': ' . $e->getMessage(), DEBUG_DEVELOPER);
             return ['counted' => 0, 'cards' => []];
         }
 
@@ -517,7 +592,8 @@ class dataset_provider {
     }
 
     /**
-     * Decide whether a competency should be skipped for visibility reasons.
+     * Decide whether a competency is skipped: already listed by an earlier plan, or linked to no
+     * visible course (which also marks it as seen).
      *
      * @param int $competencyid Competency id.
      * @param array $seencompetencies Seen competency ids (updated by reference).
@@ -588,18 +664,16 @@ class dataset_provider {
 
         $metadata = $bulkmetadata[$competencyid] ?? null;
         $card = $this->build_competency_card($planid, $competencyid, $competency, $metadata);
-        $isfavourite = isset($compfavids[$competencyid]);
-        $card['isfavourite'] = $isfavourite;
-        $card['favouritearialabel'] = $isfavourite
-            ? get_string('removefromfavourites', 'block_dimensions')
-            : get_string('addtofavourites', 'block_dimensions');
-        $card['favouritetitle'] = $card['favouritearialabel'];
+        $card = array_merge($card, $this->favourite_fields(true, isset($compfavids[$competencyid])));
 
         return ['counted' => true, 'card' => $card];
     }
 
     /**
      * Check whether the favourites feature is enabled.
+     *
+     * Use this rather than reading the setting, so the card stars and toggle_favourite agree on a
+     * site where the setting was never saved.
      *
      * @return bool
      */
@@ -656,30 +730,32 @@ class dataset_provider {
      * defined (admin hasn't configured the custom field) so the caller can
      * fall back to a generic localized label.
      *
+     * The definition is read on every call. {@see get_ui_config()} asks once per field per request,
+     * so a memo would save no query, and a static one would outlive the request that filled it and
+     * go on serving a renamed field under its old name.
+     *
      * @param string $shortname Custom field shortname.
      * @param string $area Custom field area ('lp' for plan templates, 'competency' for competencies).
      * @return string|null format_string'd display name, or null if not found.
      */
     public static function get_customfield_name(string $shortname, string $area): ?string {
         global $DB;
-        $key = "name_{$shortname}_{$area}";
-        if (!array_key_exists($key, self::$fieldcache)) {
-            $sql = "SELECT f.name
-                      FROM {customfield_field} f
-                      JOIN {customfield_category} c ON c.id = f.categoryid
-                     WHERE f.shortname = :shortname
-                       AND c.component = :component
-                       AND c.area = :area";
-            $name = $DB->get_field_sql($sql, [
-                'shortname' => $shortname,
-                'component' => 'local_dimensions',
-                'area' => $area,
-            ]);
-            self::$fieldcache[$key] = ($name !== false && $name !== null && $name !== '')
-                ? format_string($name, true, ['context' => \context_system::instance()])
-                : null;
-        }
-        return self::$fieldcache[$key];
+
+        $sql = "SELECT f.name
+                  FROM {customfield_field} f
+                  JOIN {customfield_category} c ON c.id = f.categoryid
+                 WHERE f.shortname = :shortname
+                   AND c.component = :component
+                   AND c.area = :area";
+        $name = $DB->get_field_sql($sql, [
+            'shortname' => $shortname,
+            'component' => 'local_dimensions',
+            'area' => $area,
+        ]);
+
+        return ($name !== false && $name !== null && $name !== '')
+            ? format_string($name, true, ['context' => \context_system::instance()])
+            : null;
     }
 
     /**
@@ -704,16 +780,36 @@ class dataset_provider {
     /**
      * Validate an image URL destined for an inline background-image style.
      *
+     * PARAM_URL alone does not make a value safe inside url('...'): it accepts a quote and
+     * parentheses in the query and the fragment, and the HTML parser decodes Mustache's escaping
+     * before the CSS parser reads the attribute, so such a URL could close the string and append
+     * declarations. Every character that can end a CSS string or url() token is therefore
+     * percent-encoded. A URL built by moodle_url already encodes them and comes back unchanged.
+     *
      * @param string|null $url Raw URL from cached metadata.
-     * @return string|null The URL when it passes PARAM_URL cleaning, null otherwise.
+     * @return string|null The cleaned URL, or null when it fails PARAM_URL.
      */
     protected function sanitize_image_url(?string $url): ?string {
         if ($url === null || $url === '') {
             return null;
         }
         $clean = clean_param($url, PARAM_URL);
+        if ($clean === '') {
+            return null;
+        }
 
-        return $clean !== '' ? $clean : null;
+        return strtr($clean, [
+            "'" => '%27',
+            '"' => '%22',
+            '(' => '%28',
+            ')' => '%29',
+            '\\' => '%5C',
+            ' ' => '%20',
+            "\t" => '%09',
+            "\n" => '%0A',
+            "\f" => '%0C',
+            "\r" => '%0D',
+        ]);
     }
 
     /**
@@ -783,7 +879,6 @@ class dataset_provider {
             'hasstatuslabel' => $statuslabel !== '',
             'iscompleteplan' => $iscomplete,
             'isreviewplan' => $bucket === self::BUCKET_REVIEW,
-            'showfavourite' => $bucket === self::BUCKET_ACTIVE,
             'url' => $viewurl->out(false),
             'imageurl' => $imageurl,
             'hasimage' => !empty($imageurl),
@@ -840,8 +935,9 @@ class dataset_provider {
     /**
      * Build trail-related payload for a plan card.
      *
-     * A completed plan reads the ratings core froze at completion instead of the learner's
-     * current ones - local_dimensions owns that switch, and the flag is how it is asked for.
+     * A completed plan's trail shows the ratings core froze at completion, not the learner's
+     * current ones; {@see \local_dimensions\plan_trail_cache::get_trail_data()} makes that switch
+     * when $iscomplete is true.
      *
      * @param int $planid Plan id.
      * @param int|null $templateid Template id.
@@ -1090,7 +1186,10 @@ class dataset_provider {
     }
 
     /**
-     * Get trail start index.
+     * Index of the first trail item shown.
+     *
+     * 0 when everything fits or nothing is completed; otherwise the window of $maxitems centred on
+     * the last completed item, clamped so it never runs past the end.
      *
      * @param int $total Total items.
      * @param int $lastcompletedindex Last completed index.

@@ -67,8 +67,8 @@ Feature: The block appears only for a learner holding a plan it can show
     Then I should see "Induction 2025"
     And I should not see "Teaching practice"
 
-  # D1 of the status-filter proposal: a learner whose plans have all finished lands on them,
-  # rather than on an empty Active bucket with a notice.
+  # A learner whose plans have all finished lands on them, not on an empty Active bucket with its
+  # notice.
   @javascript
   Scenario: A learner with no active plan opens on their completed plans
     When I log in as "student2"

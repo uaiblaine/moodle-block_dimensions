@@ -34,16 +34,34 @@ use core_privacy\tests\provider_testcase;
  */
 final class provider_test extends provider_testcase {
     /**
-     * Helper: create a favourite for the given user, itemtype and itemid.
+     * Create a block_dimensions favourite in the user's own context, where the plugin keeps all of them.
      *
      * @param int $userid
      * @param string $itemtype
      * @param int $itemid
      */
     private function create_favourite(int $userid, string $itemtype, int $itemid): void {
-        $usercontext = context_user::instance($userid);
-        $service = \core_favourites\service_factory::get_service_for_user_context($usercontext);
-        $service->create_favourite('block_dimensions', $itemtype, $itemid, $usercontext);
+        $this->create_favourite_at_context($userid, $itemtype, $itemid, context_user::instance($userid));
+    }
+
+    /**
+     * Create a block_dimensions favourite recorded against an arbitrary context.
+     *
+     * The plugin only ever creates favourites in a user's own context ({@see create_favourite()}),
+     * so a row at another context is a state the plugin should never produce itself. It is still a
+     * legitimate favourites-table row (the service accepts any {@see \context} for the item being
+     * favourited, independent of the user context the service instance is scoped to), and it is the
+     * fixture the provider's context-type guards are written to exclude - a guard that is only ever
+     * tested against a context with nothing in it proves nothing about the guard itself.
+     *
+     * @param int $userid The user the favourite belongs to.
+     * @param string $itemtype
+     * @param int $itemid
+     * @param \context $context The context to record the favourite against.
+     */
+    private function create_favourite_at_context(int $userid, string $itemtype, int $itemid, \context $context): void {
+        $service = \core_favourites\service_factory::get_service_for_user_context(context_user::instance($userid));
+        $service->create_favourite('block_dimensions', $itemtype, $itemid, $context);
     }
 
     /**
@@ -109,7 +127,14 @@ final class provider_test extends provider_testcase {
     }
 
     /**
-     * Test that users from other components are not included.
+     * A userlist for another component gets no users from a context holding this plugin's favourites.
+     *
+     * This does not pin provider::get_users_in_context()'s own component guard: core's
+     * add_userids_for_context() filters its SQL on $userlist->get_component() directly
+     * (favourites/classes/privacy/provider.php:117-125), so a userlist built for 'core_course' finds
+     * nothing here whether or not this plugin's own guard runs first - deleting the guard cannot
+     * change this test's outcome. Kept as a regression check on that underlying assumption, which
+     * every other test in this file relies on for isolation between components.
      *
      * @covers ::get_users_in_context
      */
@@ -127,12 +152,20 @@ final class provider_test extends provider_testcase {
     }
 
     /**
-     * Test that non-user contexts are ignored.
+     * Non-user contexts are ignored, even when a favourite is recorded directly against one.
+     *
+     * A userlist built for context_system with nothing at that context ever added would pass
+     * whether or not the instanceof context_user guard ran, because there would be nothing for
+     * core's own contextid filter to find either way. The control seeds exactly the row that filter
+     * WOULD find, so only the plugin's own guard keeps it out of the answer.
      *
      * @covers ::get_users_in_context
      */
     public function test_get_users_in_context_ignores_non_user_contexts(): void {
         $this->resetAfterTest();
+        $user = $this->getDataGenerator()->create_user();
+        $this->create_favourite_at_context((int) $user->id, 'plan', 5, context_system::instance());
+
         $userlist = new \core_privacy\local\request\userlist(
             context_system::instance(),
             'block_dimensions'
@@ -193,7 +226,13 @@ final class provider_test extends provider_testcase {
     }
 
     /**
-     * Test that deletion is skipped for non-user contexts.
+     * Deletion is skipped for non-user contexts, even for a favourite recorded directly against one.
+     *
+     * The user-context favourite below survives this call purely because core's own contextid filter
+     * in delete_favourites_for_all_users() never matches it - true whether or not the instanceof
+     * context_user guard runs, so on its own it would not catch the guard's deletion. The
+     * system-context favourite is the row the guard actually protects: without it, core's filter
+     * would find and delete that row too.
      *
      * @covers ::delete_data_for_all_users_in_context
      */
@@ -202,12 +241,19 @@ final class provider_test extends provider_testcase {
         $this->resetAfterTest();
         $user = $this->getDataGenerator()->create_user();
         $this->create_favourite((int) $user->id, 'plan', 1);
+        $this->create_favourite_at_context((int) $user->id, 'competency', 2, context_system::instance());
 
         provider::delete_data_for_all_users_in_context(context_system::instance());
 
         $this->assertSame(1, $DB->count_records('favourite', [
             'component' => 'block_dimensions',
             'userid' => $user->id,
+            'contextid' => context_user::instance($user->id)->id,
+        ]));
+        $this->assertSame(1, $DB->count_records('favourite', [
+            'component' => 'block_dimensions',
+            'userid' => $user->id,
+            'contextid' => context_system::instance()->id,
         ]));
     }
 
