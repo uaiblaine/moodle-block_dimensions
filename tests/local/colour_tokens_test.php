@@ -225,7 +225,7 @@ final class colour_tokens_test extends \basic_testcase {
      * so a chain that is right on one branch and wrong on another cannot pass.
      *
      * Deliberately absent: accent, brand-ink and danger-ink as normal text on surface-inset, which
-     * measure 4.50, 4.50 and 4.20 in dark with core's own values, so
+     * measure 4.495, 4.495 and 4.20 in dark with core's own values, so
      * test_no_low_contrast_ink_on_the_inset_surface() forbids the pairing instead; and ink-faint,
      * which measures 3.07:1 on surface-inset in light, so test_ink_faint_is_only_inactive_text()
      * limits it to inactive text.
@@ -260,7 +260,7 @@ final class colour_tokens_test extends \basic_testcase {
         ['neutral-ink', 'neutral-tint', 4.5],
     ];
 
-    /** @var array Tokens that may not be normal-size text on surface-inset (dark: 4.50, 4.50, 4.20). */
+    /** @var array Tokens that may not be normal-size text on surface-inset (dark: 4.495, 4.495, 4.20). */
     private const DENIED_ON_INSET = ['accent', 'brand-ink', 'danger-ink'];
 
     /**
@@ -324,19 +324,20 @@ final class colour_tokens_test extends \basic_testcase {
             'selector' => '.competency-card-gradient',
             'property' => 'background',
             'value' => '#6c757d',
-            'why' => 'prefers-contrast flat fill: a MIDDLE, 4.69:1 on the light card face and 3.45:1 on the dark one.',
+            'why' => 'prefers-contrast: more flat fill of both card gradients, a middle value: 4.69:1 on the light card face, '
+                . '3.45:1 on the dark one.',
         ],
         [
             'selector' => '.competency-card',
             'property' => 'border',
             'value' => '#000',
-            'why' => 'Print. Paper is white whatever the screen is doing.',
+            'why' => 'Print, on both card shells. Paper is white whatever the screen is doing.',
         ],
         [
             'selector' => '.competency-card-gradient',
             'property' => 'background',
             'value' => '#ced4da',
-            'why' => 'Print. Paper is white whatever the screen is doing.',
+            'why' => 'Print, on both card gradients. Paper is white whatever the screen is doing.',
         ],
         [
             'selector' => '.dims-section-header',
@@ -455,8 +456,12 @@ final class colour_tokens_test extends \basic_testcase {
         for ($i = 0; $i < $length; $i++) {
             $char = $css[$i];
             if ($char === '{') {
-                $selector = trim(substr($css, $selectorstart, $i - $selectorstart));
-                $line = substr_count(substr($css, 0, $selectorstart), "\n") + 1;
+                $prelude = substr($css, $selectorstart, $i - $selectorstart);
+                $selector = trim($prelude);
+                /* The prelude starts right after the previous brace, so it opens with the line
+                   breaks before the selector, and with those left by a blanked comment. */
+                $selectoroffset = $selectorstart + strlen($prelude) - strlen(ltrim($prelude));
+                $line = substr_count($css, "\n", 0, $selectoroffset) + 1;
                 $stack[] = [$selector, $i, $line];
                 $selectorstart = $i + 1;
             } else if ($char === '}') {
@@ -1004,15 +1009,23 @@ final class colour_tokens_test extends \basic_testcase {
         $theirstext = $this->token_block_text($siblingroot, self::SIBLING_PREFIX);
         if ($theirstext === '') {
             /*
-             * The sibling is installed but has no token block, so it has not adopted the contract
-             * yet: CI checks it out from its default branch, which can lag this plugin. That is an
-             * adoption gap rather than a divergence, so the test skips. Once adopted, a divergence
-             * fails here, and a deleted block fails the sibling's own
-             * test_token_block_declares_exactly_the_contract().
+             * No top-level body rule declaring the sibling's surface token. When the sibling
+             * declares none of its tokens at all, it predates the contract: an adoption gap, so the
+             * test skips. When it does declare them, the block has moved, lost its anchor or been
+             * renamed, and that is a divergence this plugin's build is the only one to see: CI runs
+             * this plugin's testsuite, never the sibling's.
              */
+            $declaration = '/' . preg_quote(self::SIBLING_PREFIX, '/') . '[a-z0-9-]+\s*:/';
+            if (preg_match($declaration, $this->uncommented($siblingroot . '/styles.css'))) {
+                $this->fail(
+                    self::SIBLING . ' declares ' . self::SIBLING_PREFIX . ' tokens, but not in a top-level body '
+                        . 'rule declaring ' . self::SIBLING_PREFIX . 'surface, which is where the family keeps its '
+                        . 'token block; the two blocks cannot be compared until it is back there.'
+                );
+            }
             $this->markTestSkipped(
                 self::SIBLING . ' is installed but declares no ' . self::SIBLING_PREFIX
-                    . ' token block, so it has not adopted the family colour contract yet and there is '
+                    . ' tokens at all, so it has not adopted the family colour contract yet and there is '
                     . 'nothing to compare against. Land the two plugins\' contract branches together, '
                     . 'or the sibling\'s first, and this comparison starts running by itself.'
             );
@@ -1176,8 +1189,8 @@ final class colour_tokens_test extends \basic_testcase {
         $this->assertSame(
             [],
             $offenders,
-            'The host signal is read only from the html element, and no other dark mechanism may live '
-                . 'beside it: ' . implode('; ', $offenders)
+            'The host signal is read only on body or on the html element above it, and no other dark '
+                . 'mechanism may live beside it: ' . implode('; ', $offenders)
         );
     }
 
@@ -1324,7 +1337,7 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * Three coloured inks may not be normal-size text on the inset surface.
      *
-     * accent and brand-ink measure 4.50:1 there in dark and danger-ink 4.20:1, with core's own
+     * accent and brand-ink measure 4.495:1 there in dark and danger-ink 4.20:1, with core's own
      * values on core's own surface. Large text is exempt because all three clear 3:1, but a rule
      * whose font-size is not given in rem counts as normal, never as large. Rules whose background
      * cannot be resolved are counted against UNRESOLVED_BUDGET.
@@ -1374,7 +1387,7 @@ final class colour_tokens_test extends \basic_testcase {
         $this->assertSame(
             [],
             $offenders,
-            'accent, brand-ink and danger-ink measure 4.50, 4.50 and 4.20 against surface-inset on the dark '
+            'accent, brand-ink and danger-ink measure 4.495, 4.495 and 4.20 against surface-inset on the dark '
                 . 'page, so they may not be normal-size text there: ' . implode('; ', $offenders)
         );
         sort($unresolved);
@@ -1391,7 +1404,8 @@ final class colour_tokens_test extends \basic_testcase {
      * Every declared pair clears its floor, in all three resolutions.
      *
      * The values are resolved out of the stylesheet with resolve(), so the test fails when the CSS
-     * changes, not only when the constants in this file do.
+     * changes, not only when the constants in this file do. The ratio is compared unrounded: a WCAG
+     * threshold is a minimum, so 4.495:1 fails a 4.5 floor.
      *
      * Changes that must make it fail, all of them applied to the CSS: point favourite at #fd7e14 in
      * light (2.57 on surface); put ink-muted's 4.5 fallback back to var(--gray, #6a737b) (4.07 on
@@ -1416,9 +1430,9 @@ final class colour_tokens_test extends \basic_testcase {
                         . ' (' . $back . ') could not be parsed as colours';
                     continue;
                 }
-                if ($ratio + 0.005 < $floor) {
+                if ($ratio < $floor) {
                     $offenders[] = sprintf(
-                        '%s: %s (%s) on %s (%s) is %.2f:1, floor %.1f',
+                        '%s: %s (%s) on %s (%s) is %.3f:1, floor %.1f',
                         $mode,
                         $foreground,
                         $fore,
@@ -1435,6 +1449,92 @@ final class colour_tokens_test extends \basic_testcase {
             $offenders,
             'Every token pairing must clear its WCAG floor on the light page, on the dark page and on the '
                 . 'Moodle 4.5 fallback literals: ' . implode('; ', $offenders)
+        );
+    }
+
+    /**
+     * The favourite star sits on an opaque disc, in every state that paints one.
+     *
+     * The disc overlays card art the admin chose. A translucent disc such as the scrim lets the art
+     * through and moves the star's ground: over black art the light star measures 1.80:1. So every
+     * rule painting the disc must read one plugin token that resolves opaque in all three
+     * resolutions, and every star colour the stylesheet sets must clear the 3:1 floor for a
+     * graphical object (WCAG 1.4.11) on it.
+     *
+     * Changes that must make it fail: paint .dims-fav-btn, or its hover, with the scrim token; give
+     * the empty star the line token.
+     *
+     * @return void
+     */
+    public function test_favourite_star_sits_on_an_opaque_ground(): void {
+        $grounds = [];
+        $stars = [];
+        foreach ($this->stylesheets() as $path) {
+            foreach ($this->rules($path) as $rule) {
+                $declarations = $this->declarations($rule['body']);
+                $where = $rule['file'] . ':' . $rule['line'];
+                foreach (explode(',', $rule['selector']) as $part) {
+                    $part = trim($part);
+                    if (str_contains($part, '.dims-fav-icon') && isset($declarations['color'])) {
+                        $stars[$where . ' ' . $part] = $declarations['color'];
+                    }
+                    /* The disc itself: the button as the subject, in any state. */
+                    if (!preg_match('/\.dims-fav-btn(?::[a-z-]+)*$/', $part)) {
+                        continue;
+                    }
+                    foreach (['background', 'background-color'] as $property) {
+                        if (isset($declarations[$property])) {
+                            $grounds[$where . ' ' . $part] = $declarations[$property];
+                        }
+                    }
+                }
+            }
+        }
+        $this->assertNotEmpty($grounds, 'No rule paints the favourite disc, so this test checks nothing.');
+        $this->assertNotEmpty($stars, 'No rule colours the favourite star, so this test checks nothing.');
+
+        $tokenpattern = '/^var\(' . preg_quote(self::PREFIX, '/') . '([a-z0-9-]+)\)$/';
+        $offenders = [];
+        foreach ($grounds as $groundsite => $groundvalue) {
+            if (!preg_match($tokenpattern, $groundvalue, $ground)) {
+                $offenders[] = $groundsite . ' paints ' . $groundvalue . ', which is not one plugin token';
+                continue;
+            }
+            foreach (['light', 'dark', 'bs4'] as $mode) {
+                $back = (string) $this->resolve($ground[1], $mode);
+                $parsed = $this->parse_colour($back);
+                if ($parsed === null || $parsed[3] < 1) {
+                    $offenders[] = $mode . ': ' . $groundsite . ' paints ' . $ground[1] . ' (' . $back
+                        . '), which is not opaque';
+                    continue;
+                }
+                foreach ($stars as $starsite => $starvalue) {
+                    if (!preg_match($tokenpattern, $starvalue, $star)) {
+                        $offenders[] = $starsite . ' colours the star ' . $starvalue . ', which is not one plugin token';
+                        continue;
+                    }
+                    $ratio = $this->contrast((string) $this->resolve($star[1], $mode), $back);
+                    if ($ratio === null || $ratio < 3.0) {
+                        $offenders[] = sprintf(
+                            '%s: %s (%s) on %s (%s) is %.3f:1, floor 3.0',
+                            $mode,
+                            $star[1],
+                            $starsite,
+                            $ground[1],
+                            $groundsite,
+                            (float) $ratio
+                        );
+                    }
+                }
+            }
+        }
+        $offenders = array_values(array_unique($offenders));
+        sort($offenders);
+        $this->assertSame(
+            [],
+            $offenders,
+            'The favourite star must sit on an opaque disc it clears 3:1 against, in every mode: '
+                . implode('; ', $offenders)
         );
     }
 
@@ -1670,7 +1770,7 @@ final class colour_tokens_test extends \basic_testcase {
         $offenders = [];
         $sites = 0;
         foreach (glob($this->plugin_root() . '/templates/*.mustache') ?: [] as $path) {
-            foreach (file($path) as $number => $line) {
+            foreach ($this->source_lines($path) as $number => $line) {
                 if ($this->is_comment_line($line) || !str_contains($line, 'style="')) {
                     /* Only an inline style attribute is a transport site. The same conditional
                        section also toggles a class name a few lines below, and counting that as a
@@ -1787,7 +1887,7 @@ final class colour_tokens_test extends \basic_testcase {
                 continue;
             }
             $relative = str_replace($this->plugin_root() . '/', '', $path);
-            foreach (file($path) as $number => $line) {
+            foreach ($this->source_lines($path) as $number => $line) {
                 if ($this->is_comment_line($line)) {
                     continue;
                 }
@@ -1846,11 +1946,12 @@ final class colour_tokens_test extends \basic_testcase {
             }
         }
         sort($offenders);
+        $ratio = $this->contrast((string) $this->resolve('ink-faint', 'light'), (string) $this->resolve('surface-inset', 'light'));
         $this->assertSame(
             [],
             $offenders,
-            $token . ' is 2.70:1 on the inset surface in light mode and is legitimate only as the text of '
-                . 'an inactive control or a placeholder: ' . implode('; ', $offenders)
+            sprintf('%s is %.2f:1 on the inset surface in light mode, below the 4.5:1 text floor, and is ', $token, $ratio)
+                . 'legitimate only as the text of an inactive control or a placeholder: ' . implode('; ', $offenders)
         );
     }
 
@@ -1893,10 +1994,97 @@ final class colour_tokens_test extends \basic_testcase {
     }
 
     /**
+     * Mustache comments do not reach the line scans as markup.
+     *
+     * A template docblock is one comment spanning many lines, and its continuation lines carry no
+     * comment marker of their own, so a scan that only skipped the opening line would read the
+     * prose as markup: a docblock naming the host attribute would count as writing it.
+     *
+     * Changes that must make it fail: make strip_mustache_comments() return its input unchanged;
+     * make its pattern greedy, which also blanks the markup between two comments.
+     *
+     * @return void
+     */
+    public function test_mustache_comments_are_not_scanned_as_markup(): void {
+        $template = "{{!\n    Prose naming " . colour_mode::HOST_ATTRIBUTE . " and style=\"x\".\n}}\n"
+            . "<div class=\"a\">{{! Inline. }}<span style=\"b\"></span></div>\n"
+            . "{{! Second comment. }}\n";
+
+        $this->assertSame(
+            ['', '', '', '<div class="a"><span style="b"></span></div>', '', ''],
+            explode("\n", $this->strip_mustache_comments($template)),
+            'Every comment span is blanked, its line breaks kept, and the markup around it stays on its line.'
+        );
+    }
+
+    /**
+     * Each rule's reported line is the line its selector starts on.
+     *
+     * The failure messages in this file cite the file:line that rules() reports. The text between
+     * the previous brace and a selector opens with line breaks, so a line counted from that brace
+     * points above the rule.
+     *
+     * Change that must make it fail: count the line in rules() from $selectorstart again.
+     *
+     * @return void
+     */
+    public function test_rule_lines_point_at_their_selector(): void {
+        $checked = 0;
+        $offenders = [];
+        foreach ($this->stylesheets() as $path) {
+            $lines = explode("\n", $this->uncommented($path));
+            foreach ($this->rules($path) as $rule) {
+                $checked++;
+                $source = explode('{', $lines[$rule['line'] - 1] ?? '')[0];
+                $source = trim(preg_replace('/\s+/', ' ', $source));
+                if ($source === '' || !str_starts_with($rule['selector'], $source)) {
+                    $offenders[] = $rule['file'] . ':' . $rule['line'] . ' reads "' . $source . '", not the start of '
+                        . $rule['selector'];
+                }
+            }
+        }
+
+        $this->assertGreaterThan(0, $checked, 'No rule was found, so this test checks nothing.');
+        $this->assertSame([], $offenders, 'A rule is reported on a line that is not its selector: ' . implode('; ', $offenders));
+    }
+
+    /**
+     * A template with its Mustache comments blanked, line breaks preserved.
+     *
+     * A comment runs from its opening marker to the first closing pair of braces, as Mustache
+     * reads it, so a docblock is blanked as a whole and markup after it keeps its line number.
+     *
+     * @param string $text Template source.
+     * @return string The source with every comment replaced by its own line breaks.
+     */
+    private function strip_mustache_comments(string $text): string {
+        return (string) preg_replace_callback('/\{\{!.*?\}\}/s', static function (array $m): string {
+            return str_repeat("\n", substr_count($m[0], "\n"));
+        }, $text);
+    }
+
+    /**
+     * The lines of a source file, with Mustache comments blanked in a template.
+     *
+     * @param string $path Absolute path to a source file.
+     * @return array Zero-based line index => line text.
+     */
+    private function source_lines(string $path): array {
+        $text = (string) file_get_contents($path);
+        if (str_ends_with($path, '.mustache')) {
+            $text = $this->strip_mustache_comments($text);
+        }
+
+        return explode("\n", $text);
+    }
+
+    /**
      * Whether a line is prose rather than markup.
      *
-     * @param string $line One raw source line.
-     * @return bool True when the line is blank or opens with a PHP, JS or Mustache comment marker.
+     * Mustache comments never reach this check: source_lines() has already blanked them.
+     *
+     * @param string $line One source line.
+     * @return bool True when the line is blank or opens with a PHP or JS comment marker.
      */
     private function is_comment_line(string $line): bool {
         $trimmed = ltrim($line);
@@ -1904,7 +2092,6 @@ final class colour_tokens_test extends \basic_testcase {
         return $trimmed === ''
             || str_starts_with($trimmed, '//')
             || str_starts_with($trimmed, '/*')
-            || str_starts_with($trimmed, '*')
-            || str_starts_with($trimmed, '{{!');
+            || str_starts_with($trimmed, '*');
     }
 }

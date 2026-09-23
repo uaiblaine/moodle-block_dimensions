@@ -291,6 +291,95 @@ final class get_block_dataset_test extends advanced_testcase {
     }
 
     /**
+     * No card offers the favourite toggle while favourites are disabled, through the return
+     * allowlist and the card templates.
+     *
+     * clean_returnvalue() silently strips a flag the structure does not declare, and a template
+     * that does not read the flag draws the star anyway: a focusable toggle whose click
+     * toggle_favourite refuses.
+     *
+     * @covers ::execute
+     * @covers ::execute_returns
+     */
+    public function test_no_card_offers_the_favourite_toggle_while_favourites_are_disabled(): void {
+        global $OUTPUT;
+        $this->resetAfterTest();
+        set_config('enabled', 1, 'core_competency');
+        $generator = $this->getDataGenerator();
+        $competency = $generator->get_plugin_generator('core_competency');
+
+        // One active plan draws a plan card; another, on a competencies-mode template, a competency card.
+        $framework = $competency->create_framework();
+        $comp = $competency->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $course = $generator->create_course();
+        $competency->create_course_competency(['courseid' => $course->id, 'competencyid' => $comp->get('id')]);
+        $template = $competency->create_template();
+        $competency->create_template_competency(['templateid' => $template->get('id'), 'competencyid' => $comp->get('id')]);
+        $this->set_template_field(
+            (int) $template->get('id'),
+            \local_dimensions\constants::CFIELD_DISPLAYMODE,
+            \local_dimensions\constants::DISPLAYMODE_COMPETENCIES
+        );
+        $user = $generator->create_user();
+        $competency->create_plan(['userid' => $user->id, 'status' => plan::STATUS_ACTIVE]);
+        $competency->create_plan([
+            'userid' => $user->id,
+            'templateid' => $template->get('id'),
+            'status' => plan::STATUS_ACTIVE,
+        ]);
+        $this->setUser($user);
+
+        /* Every card as the client receives it, each paired with the markup its template draws: the
+           plan card once per layout, since each layout carries its own copy of the button. */
+        $cardsasserved = function () use ($OUTPUT): array {
+            $raw = get_block_dataset::execute(false);
+            $clean = \core_external\external_api::clean_returnvalue(get_block_dataset::execute_returns(), $raw);
+            $this->assertCount(1, $clean['plancards'], 'the fixture must produce a plan card, or this proves nothing');
+            $this->assertCount(1, $clean['competencycards'], 'the fixture must produce a competency card');
+
+            $served = [];
+            foreach (['plancards' => 'plan', 'competencycards' => 'competency'] as $list => $type) {
+                $card = $clean[$list][0];
+                $this->assertArrayHasKey('showfavourite', $card, 'the return structure strips the ' . $type . ' flag');
+                $this->assertSame($raw[$list][0]['showfavourite'], $card['showfavourite']);
+                $layouts = $type === 'plan' ? [true, false] : [null];
+                foreach ($layouts as $isvertical) {
+                    if ($isvertical !== null) {
+                        $card['isvertical'] = $isvertical;
+                        $card['ishorizontal'] = !$isvertical;
+                    }
+                    $html = $OUTPUT->render_from_template('block_dimensions/' . $type . '_card', $card);
+                    $this->assertStringContainsString('aria-labelledby="' . $type . '-title-', $html);
+                    $served[] = [
+                        'type' => $type,
+                        'showfavourite' => $card['showfavourite'],
+                        'stars' => substr_count($html, 'data-fav-type="' . $type . '"'),
+                    ];
+                }
+            }
+
+            return $served;
+        };
+
+        // Control: with favourites enabled every card, in every layout, draws exactly one star.
+        set_config('enable_favourites', 1, 'block_dimensions');
+        $served = $cardsasserved();
+        $this->assertCount(3, $served);
+        foreach ($served as $card) {
+            $this->assertTrue($card['showfavourite'], $card['type'] . ' card');
+            $this->assertSame(1, $card['stars'], $card['type'] . ' card');
+        }
+
+        set_config('enable_favourites', 0, 'block_dimensions');
+        $served = $cardsasserved();
+        $this->assertCount(3, $served);
+        foreach ($served as $card) {
+            $this->assertFalse($card['showfavourite'], $card['type'] . ' card');
+            $this->assertSame(0, $card['stars'], $card['type'] . ' card');
+        }
+    }
+
+    /**
      * With no active plan the block opens on the first bucket that has one.
      *
      * The block renders for a learner whose plans have all finished, so it must open on those
@@ -326,6 +415,65 @@ final class get_block_dataset_test extends advanced_testcase {
         $this->assertSame(['active' => 0, 'review' => 0, 'complete' => 1], $result['plancounts']);
         $this->assertCount(1, $result['plancards']);
         $this->assertSame('New Educator Induction', $result['plancards'][0]['name']);
+        $this->assertFalse($result['hasactiveplans']);
+    }
+
+    /**
+     * An active plan that shows competency cards opens the block on the active bucket.
+     *
+     * Its template's display mode turns it into competency cards rather than a plan card, so the
+     * active pill counts nothing; but the learner does hold an active plan, and competency cards
+     * are built only in the active bucket. Opening on the completed plan would leave them out of
+     * reach, and a "no active plans" notice would be false.
+     *
+     * @covers ::execute
+     */
+    public function test_an_active_plan_showing_competencies_opens_the_active_bucket(): void {
+        $this->resetAfterTest();
+        set_config('enabled', 1, 'core_competency');
+        $generator = $this->getDataGenerator();
+        $competency = $generator->get_plugin_generator('core_competency');
+
+        $framework = $competency->create_framework();
+        $comp = $competency->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $compid = (int) $comp->get('id');
+        $course = $generator->create_course();
+        $competency->create_course_competency(['courseid' => $course->id, 'competencyid' => $compid]);
+        $template = $competency->create_template();
+        $competency->create_template_competency(['templateid' => $template->get('id'), 'competencyid' => $compid]);
+        $this->set_template_field(
+            (int) $template->get('id'),
+            \local_dimensions\constants::CFIELD_DISPLAYMODE,
+            \local_dimensions\constants::DISPLAYMODE_COMPETENCIES
+        );
+
+        $user = $generator->create_user();
+        $competency->create_plan([
+            'userid' => $user->id,
+            'templateid' => $template->get('id'),
+            'status' => plan::STATUS_ACTIVE,
+        ]);
+        $competency->create_plan([
+            'userid' => $user->id,
+            'status' => plan::STATUS_COMPLETE,
+            'name' => 'Finished plan',
+        ]);
+        $this->setUser($user);
+
+        $opened = get_block_dataset::execute(false);
+
+        $this->assertSame('active', $opened['planstatus']);
+        $this->assertTrue($opened['hasactiveplans']);
+        // The pill counts plan cards, and the active plan draws none.
+        $this->assertSame(['active' => 0, 'review' => 0, 'complete' => 1], $opened['plancounts']);
+        $this->assertSame([], $opened['plancards']);
+        $this->assertSame([$compid], array_column($opened['competencycards'], 'id'));
+
+        // Every response says so, whichever bucket it builds; the competency cards stay with active.
+        $complete = get_block_dataset::execute(false, '', 'complete');
+        $this->assertTrue($complete['hasactiveplans']);
+        $this->assertSame(['Finished plan'], array_column($complete['plancards'], 'name'));
+        $this->assertSame([], $complete['competencycards']);
     }
 
     /**

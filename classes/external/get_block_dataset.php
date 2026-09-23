@@ -186,7 +186,10 @@ class get_block_dataset extends external_api {
             'hasstatuslabel' => new external_value(PARAM_BOOL, 'Whether the card shows a status chip'),
             'iscompleteplan' => new external_value(PARAM_BOOL, 'Whether the plan is completed'),
             'isreviewplan' => new external_value(PARAM_BOOL, 'Whether the plan is waiting for or under review'),
-            'showfavourite' => new external_value(PARAM_BOOL, 'Whether the card offers the favourite toggle'),
+            'showfavourite' => new external_value(
+                PARAM_BOOL,
+                'Whether the card offers the favourite toggle: favourites are enabled and the plan is active'
+            ),
             'imageurl' => new external_value(PARAM_URL, 'Image url', VALUE_OPTIONAL),
             'hasimage' => new external_value(PARAM_BOOL, 'Has image'),
             'hastrail' => new external_value(PARAM_BOOL, 'Has trail'),
@@ -234,6 +237,10 @@ class get_block_dataset extends external_api {
             'showcardtitle' => new external_value(PARAM_BOOL, 'Show card title'),
             'buttonlabel' => new external_value(PARAM_TEXT, 'Button label'),
             'buttonarialabel' => new external_value(PARAM_TEXT, 'Button aria label'),
+            'showfavourite' => new external_value(
+                PARAM_BOOL,
+                'Whether the card offers the favourite toggle: favourites are enabled'
+            ),
             'isfavourite' => new external_value(PARAM_BOOL, 'Is favourite'),
             'favouritearialabel' => new external_value(PARAM_TEXT, 'Favourite toggle button accessible name'),
             'favouritetitle' => new external_value(PARAM_TEXT, 'Favourite toggle button tooltip'),
@@ -285,11 +292,17 @@ class get_block_dataset extends external_api {
         return new external_single_structure([
             'planstatus' => new external_value(PARAM_ALPHA, 'The status bucket these plan cards belong to'),
             'plancounts' => new external_single_structure([
-                'active' => new external_value(PARAM_INT, 'Number of active plans'),
+                'active' => new external_value(
+                    PARAM_INT,
+                    'Number of active plan cards; a plan whose template shows competency cards is not counted'
+                ),
                 'review' => new external_value(PARAM_INT, 'Number of plans waiting for or under review'),
                 'complete' => new external_value(PARAM_INT, 'Number of completed plans'),
-            ], 'How many plans the learner holds in each status bucket'),
-            'hasactiveplans' => new external_value(PARAM_BOOL, 'Has active plans'),
+            ], 'How many plan cards each status bucket shows'),
+            'hasactiveplans' => new external_value(
+                PARAM_BOOL,
+                'Whether the user holds an active plan, whatever its template display mode'
+            ),
             'hasplancards' => new external_value(PARAM_BOOL, 'Has plan cards'),
             'hascompetencies' => new external_value(PARAM_BOOL, 'Has competency cards'),
             'plancards' => new external_multiple_structure($plancard, 'Plan cards'),

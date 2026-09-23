@@ -235,8 +235,8 @@ body[data-bs-theme="dark"],
 }
 
 /* ink-muted, not ink-faint. ink-faint is the token for inactive-control text
-   and placeholders, but it measures 3.04:1 on this input's surface-alt ground
-   in light mode, where ink-muted measures 6.74:1. The placeholder is exempt
+   and placeholders, but it measures 3.16:1 on this input's surface-alt ground
+   in light mode, where ink-muted measures 6.90:1. The placeholder is exempt
    from 1.4.3 as incidental text, but a compliant token is available. */
 .block_dimensions .dims-block-search-input::placeholder {
     color: var(--block-dimensions-ink-muted);
@@ -457,42 +457,6 @@ body[data-bs-theme="dark"],
 }
 
 /* ============================================
-   HIGH CONTRAST MODE - WCAG 1.4.11
-   ============================================
-   prefers-contrast and the colour mode are independent preferences, so a
-   remedy for one must not regress the other: a #000 border is the strongest
-   edge on a white page and 1.30:1 on the dark one. Remedies that want the
-   strongest edge use a token that flips; the one that needs a middle value
-   stays a literal, with its numbers.
-
-   This block does not compensate for a site whose own palette is
-   low-contrast, and it is not Windows High Contrast Mode, which is
-   forced-colors: active and has its own block further down this file. */
-@media (prefers-contrast: high) {
-    /* ink-strong is --bs-emphasis-color: #000 on the light page (21.0:1
-       against the card face) and #fff on the dark one (16.2:1). */
-    .block_dimensions .competency-card {
-        border: 2px solid var(--block-dimensions-ink-strong);
-    }
-
-    .block_dimensions .competency-card .card-title {
-        color: var(--block-dimensions-ink-strong);
-    }
-
-    /* A literal on purpose. The flat fill replacing the gradient has to
-       separate from the card face in both modes at once, so it cannot be an
-       extreme: #6c757d is 4.69:1 on the light card face and 3.45:1 on the dark
-       one, where a token that flips would turn the image area light on a dark
-       page. Nothing drawn on it relies on it for contrast; it only has to stay
-       visible as a shape. colour_tokens_test lists it in LITERAL_EXEMPTIONS,
-       and an exemption that matches no live literal fails the build. */
-    .block_dimensions .competency-card-gradient,
-    .block_dimensions .competency-card-gradient.has-custom-bg {
-        background: #6c757d;
-    }
-}
-
-/* ============================================
    REDUCED MOTION - WCAG 2.3.3
    ============================================ */
 @media (prefers-reduced-motion: reduce) {
@@ -502,28 +466,6 @@ body[data-bs-theme="dark"],
 
     .block_dimensions .competency-card:hover {
         transform: none;
-    }
-}
-
-/* ============================================
-   PRINT STYLES
-   ============================================
-   Good practice, not WCAG conformance evidence: no WCAG 2.x success criterion
-   governs print output. */
-/* Paper is white whatever the screen is doing, and data-bs-theme stays on the
-   page while printing, so ink resolved through a mode token would print
-   #dee2e6 on white from a dark page. Every literal in a @media print block in
-   this file is deliberate and mode-invariant for that reason. */
-@media print {
-    .block_dimensions .competency-card {
-        break-inside: avoid;
-        box-shadow: none;
-        border: 1px solid #000;
-    }
-
-    .block_dimensions .competency-card-gradient,
-    .block_dimensions .competency-card-gradient.has-custom-bg {
-        background: #ced4da;
     }
 }
 
@@ -538,10 +480,19 @@ body[data-bs-theme="dark"],
 /* Override Bootstrap .row with an auto-fill track grid. auto-fill, not a flex row: flex grows
    the items of a short last row to fill the line, so a lone last card would stretch to the
    full width. auto-fill keeps the empty tracks, so every card is its column's width whatever
-   the row holds. card_layout_test pins this. */
+   the row holds.
+
+   The track floor is --dims-card-track-min, always min(<width>, 100%): the width sets how many
+   columns a wide region gets, and 100% caps a single track at the list's own width. A fixed
+   floor wider than the block overflows it, and Boost's block drawer (315px) and a phone are
+   both narrower than the plan grid's 19rem plus the card padding. The floor is carried in a
+   custom property because Moodle's stylelint rejects min() inside minmax(), which browsers
+   accept, and does not validate a declaration that reads var(). card_layout_test pins both
+   rules. */
 .block_dimensions [data-cards-type] {
+    --dims-card-track-min: min(19rem, 100%);
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(var(--dims-card-track-min), 1fr));
     gap: 1rem;
     /* Drop the Bootstrap .row negative margins. */
     margin-left: 0;
@@ -563,7 +514,13 @@ body[data-bs-theme="dark"],
 /* A horizontal plan card carries a 180px image column beside its body, so it needs a wider
    track before it is worth splitting the row. */
 .block_dimensions [data-cards-type="plan"]:has(.dims-plan-item-horizontal) {
-    grid-template-columns: repeat(auto-fill, minmax(26rem, 1fr));
+    --dims-card-track-min: min(26rem, 100%);
+}
+
+/* The competency grid keeps a wider floor of its own. This rule has the grid rule's specificity
+   and follows it, which is what lets it override the floor. */
+.block_dimensions [data-cards-type="competency"] {
+    --dims-card-track-min: min(360px, 100%);
 }
 
 /* ============================================
@@ -632,6 +589,83 @@ body[data-bs-theme="dark"],
 .block_dimensions .plan-card .card-title {
     font-size: 0.9rem;
     line-height: 1.4;
+}
+
+/* ============================================
+   HIGH CONTRAST MODE - WCAG 1.4.11
+   ============================================
+   prefers-contrast and the colour mode are independent preferences, so a
+   remedy for one must not regress the other: a #000 border is the strongest
+   edge on a white page and 1.30:1 on the dark one. Remedies that want the
+   strongest edge use a token that flips; the one that needs a middle value
+   stays a literal, with its numbers.
+
+   This block does not compensate for a site whose own palette is
+   low-contrast, and it is not Windows High Contrast Mode, which is
+   forced-colors: active and has its own block further down this file.
+
+   Every block of this kind in the file asks for more, the value Media
+   Queries Level 5 defines for a raised-contrast preference; high is not a
+   value of this feature, so a block written against it never matches.
+   card_layout_test pins the value.
+
+   The competency card and the plan card take the same treatment here and in
+   PRINT STYLES below, and card_layout_test pins that parity. Both blocks sit
+   after both cards' own rules because they win on source order, at the
+   specificity of the rules they override. */
+@media (prefers-contrast: more) {
+    /* ink-strong is --bs-emphasis-color: #000 on the light page (21.0:1
+       against the card face) and #fff on the dark one (16.2:1). */
+    .block_dimensions .competency-card,
+    .block_dimensions .plan-card {
+        border: 2px solid var(--block-dimensions-ink-strong);
+    }
+
+    .block_dimensions .competency-card .card-title,
+    .block_dimensions .plan-card .card-title {
+        color: var(--block-dimensions-ink-strong);
+    }
+
+    /* A literal on purpose. The flat fill replacing the gradient has to
+       separate from the card face in both modes at once, so it cannot be an
+       extreme: #6c757d is 4.69:1 on the light card face and 3.45:1 on the dark
+       one, where a token that flips would turn the image area light on a dark
+       page. It replaces an admin's custom fill too, which may be as light as
+       the card face. Nothing drawn on it relies on it for contrast; it only
+       has to stay visible as a shape. colour_tokens_test lists it in
+       LITERAL_EXEMPTIONS, and an exemption that matches no live literal fails
+       the build. */
+    .block_dimensions .competency-card-gradient,
+    .block_dimensions .competency-card-gradient.has-custom-bg,
+    .block_dimensions .plan-card-gradient,
+    .block_dimensions .plan-card-gradient.has-custom-bg {
+        background: #6c757d;
+    }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================
+   Good practice, not WCAG conformance evidence: no WCAG 2.x success criterion
+   governs print output. */
+/* Paper is white whatever the screen is doing, and data-bs-theme stays on the
+   page while printing, so ink resolved through a mode token would print
+   #dee2e6 on white from a dark page. Every literal in a @media print block in
+   this file is deliberate and mode-invariant for that reason. */
+@media print {
+    .block_dimensions .competency-card,
+    .block_dimensions .plan-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+
+    .block_dimensions .competency-card-gradient,
+    .block_dimensions .competency-card-gradient.has-custom-bg,
+    .block_dimensions .plan-card-gradient,
+    .block_dimensions .plan-card-gradient.has-custom-bg {
+        background: #ced4da;
+    }
 }
 
 .block_dimensions .competency-count-text {
@@ -1131,7 +1165,7 @@ body[data-bs-theme="dark"],
 /* Hover/focus feedback for the pill: see ACCESS PILL at the end of this file. */
 
 /* High contrast */
-@media (prefers-contrast: high) {
+@media (prefers-contrast: more) {
 
     .block_dimensions .dims-card-access-btn,
     .block_dimensions .dims-card-access-btn-horizontal {
@@ -1210,7 +1244,7 @@ body[data-bs-theme="dark"],
 
 /* High contrast mode for tags: the edge is already there and already
    currentcolor, so the preference only thickens it. */
-@media (prefers-contrast: high) {
+@media (prefers-contrast: more) {
     .block_dimensions .dimension-tag {
         border-width: 2px;
     }
@@ -1648,13 +1682,18 @@ body[data-bs-theme="dark"],
 
 /* ============================================
    FILTER - High Contrast
-   ============================================ */
-@media (prefers-contrast: high) {
-    .block_dimensions .dims-filter-tab {
+   ============================================
+   The tab selectors repeat the depth of the base tab rule, whose
+   border: none would otherwise win on specificity and leave the active
+   tab's border-color on a border that is not drawn. Every override in the
+   preference blocks of this file follows that rule; card_layout_test pins
+   it. */
+@media (prefers-contrast: more) {
+    .block_dimensions .block-dimensions-content .dims-filter-tab {
         border: 2px solid transparent;
     }
 
-    .block_dimensions .dims-filter-tab.active {
+    .block_dimensions .block-dimensions-content .dims-filter-tab.active {
         border-color: var(--block-dimensions-focus-ring);
     }
 
@@ -1700,10 +1739,13 @@ body[data-bs-theme="dark"],
 
 /* ============================================
    FILTER - Reduced Motion
-   ============================================ */
+   ============================================
+   Each selector is at least as specific as the base rule it resets: the tab
+   rule is written under .block-dimensions-content, and a hidden paddle
+   carries a transition of its own. */
 @media (prefers-reduced-motion: reduce) {
 
-    .block_dimensions .dims-filter-tab,
+    .block_dimensions .block-dimensions-content .dims-filter-tab,
     .block_dimensions .dims-filter-select {
         transition: none;
     }
@@ -1712,7 +1754,8 @@ body[data-bs-theme="dark"],
         transition: none;
     }
 
-    .block_dimensions .dims-filter-tabs-paddle {
+    .block_dimensions .dims-filter-tabs-paddle,
+    .block_dimensions .dims-filter-tabs-paddle.dims-filter-tabs-paddle-hidden {
         transition: none;
     }
 
@@ -1771,14 +1814,9 @@ body[data-bs-theme="dark"],
 }
 
 /* ============================================
-   COMPETENCY CARD GRID - Auto-fill columns
+   COMPETENCY CARD ITEM
+   The competency grid and its track floor are in CARD GRID above.
    ============================================ */
-.block_dimensions [data-cards-type="competency"] {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-    gap: 1rem;
-}
-
 .block_dimensions .dims-competency-item {
     max-width: none;
     width: 100%;
@@ -1810,11 +1848,12 @@ body[data-bs-theme="dark"],
     height: 32px;
     border: none;
     border-radius: 50%;
-    /* The disc is a veil over arbitrary card art, so it is the scrim token:
-       72% white in light, 72% of the dark body ground in dark. The star on it
-       measures 3.58:1 light and 6.30:1 dark against the scrim colour itself;
-       the 28% of card art showing through moves the actual ground. */
-    background: var(--block-dimensions-scrim);
+    /* An opaque disc, so the star's ground is known whatever card art sits
+       behind it: the filled star is 3.58:1 on surface in light and 6.30:1 in
+       dark, and the empty one 7.10:1 and 7.57:1 (WCAG 1.4.11). A translucent
+       disc such as the scrim lets the art through, and over black art the
+       light star falls to 1.80:1. colour_tokens_test pins the opaque ground. */
+    background: var(--block-dimensions-surface);
     cursor: pointer;
     padding: 0;
     transition: background 0.2s ease, transform 0.15s ease;
@@ -1828,8 +1867,10 @@ body[data-bs-theme="dark"],
     right: 8px;
 }
 
+/* surface-alt is the next rung, and still opaque: the filled star is 3.40:1
+   on it in light and 5.33:1 in dark. */
 .block_dimensions .dims-fav-btn:hover {
-    background: var(--block-dimensions-surface);
+    background: var(--block-dimensions-surface-alt);
     transform: scale(1.1);
 }
 
@@ -1863,7 +1904,7 @@ body[data-bs-theme="dark"],
 }
 
 /* High contrast */
-@media (prefers-contrast: high) {
+@media (prefers-contrast: more) {
     .block_dimensions .dims-fav-btn {
         border: 2px solid currentColor;
         box-shadow: none;
@@ -1929,8 +1970,8 @@ body[data-bs-theme="dark"],
    and #fff on the dark one, and the pill's own fill is the site primary in
    both (--bs-primary does not flip). #000 on that fill measures 3.92:1 and
    #fff 5.36:1 on Boost's default, so the edge holds either way round. */
-@media (prefers-contrast: high) {
-    .block_dimensions .dims-fav-filter-btn.active {
+@media (prefers-contrast: more) {
+    .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active {
         border: 2px solid var(--block-dimensions-ink-strong);
     }
 }
@@ -1951,15 +1992,15 @@ body[data-bs-theme="dark"],
     font-size: 0.75rem;
 }
 
-.block_dimensions .dims-fav-filter-btn.active .dims-filter-count,
-.block_dimensions .dims-all-filter-btn.active .dims-filter-count {
-    opacity: 1;
+/* A checked pill's badge. Keyed on the checked tab rather than on a pill type,
+   because every checked pill without a fill of its own (status, show all) sits
+   on the indicator, which paints surface: a badge keeping its surface rest
+   fill there has no shape. brand-ink on brand-tint is core's primary alert
+   pairing, and it keeps a shape on the favourites pill's brand-fill as well.
+   card_layout_test pins it for every pill filters.js draws. */
+.block_dimensions .dims-filter-tab.active .dims-filter-count {
     background: var(--block-dimensions-brand-tint);
     color: var(--block-dimensions-brand-ink);
-    border-radius: 999px;
-    padding: 0 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
 }
 
 /* ============================================
@@ -2047,7 +2088,7 @@ body[data-bs-theme="dark"],
 }
 
 /* High contrast */
-@media (prefers-contrast: high) {
+@media (prefers-contrast: more) {
     .block_dimensions .dims-ghost-card-inner {
         border-width: 3px;
         border-color: currentColor;
@@ -2144,6 +2185,13 @@ body[data-bs-theme="dark"],
 
 /* Retry button inside the error alert (WCAG 2.4.7). */
 .block_dimensions .dims-error-retry:focus-visible {
+    outline: 2px solid var(--block-dimensions-focus-ring);
+    outline-offset: 2px;
+}
+
+/* The block root, which takes focus while a keyboard-triggered retry hides the error box
+   (focusBlock() in amd/src/filters.js): the plugin's ring, not the browser default. */
+.block_dimensions .block-dimensions-content:focus-visible {
     outline: 2px solid var(--block-dimensions-focus-ring);
     outline-offset: 2px;
 }
@@ -2245,6 +2293,22 @@ body[data-bs-theme="dark"],
     transform: translateY(-1px);
 }
 
+/* Under prefers-contrast: more the pill trades its shadow for a border (see
+   ACCESS / CONTINUE BUTTON). The rule above outranks that override while the
+   card is hovered or focused, so the shadow is switched off again here, on
+   the same selectors; card_layout_test pins that a switched-off property
+   stays off in every state. */
+@media (prefers-contrast: more) {
+    .block_dimensions .plan-card:hover .dims-card-access-btn,
+    .block_dimensions .competency-card:hover .dims-card-access-btn,
+    .block_dimensions .plan-card:focus-within .dims-card-access-btn,
+    .block_dimensions .competency-card:focus-within .dims-card-access-btn,
+    .block_dimensions .plan-card:hover .dims-card-access-btn-horizontal,
+    .block_dimensions .plan-card:focus-within .dims-card-access-btn-horizontal {
+        box-shadow: none;
+    }
+}
+
 /* The lift is motion, so it goes with prefers-reduced-motion like every other
    transform in this file. */
 @media (prefers-reduced-motion: reduce) {
@@ -2258,11 +2322,28 @@ body[data-bs-theme="dark"],
     }
 }
 
+/* The clickable trail item scales its marker from a rule of its own, more
+   specific than the link's, so it is reset here by name. */
 @media (prefers-reduced-motion: reduce) {
+    .block_dimensions .trail-item.clickable:hover .trail-marker,
     .block_dimensions .trail-item-link:hover .trail-marker,
     .block_dimensions .trail-item-link:focus-visible .trail-marker {
         transform: none;
         transition: none;
+    }
+}
+
+/* The plan card's hover lift, reset the way the competency card's is under
+   REDUCED MOTION. These selectors have the specificity of the plan card's own
+   rules, so they win by source order and have to stay below them;
+   card_layout_test pins that every transform has a reset that wins. */
+@media (prefers-reduced-motion: reduce) {
+    .block_dimensions .plan-card {
+        transition: none;
+    }
+
+    .block_dimensions .plan-card:hover {
+        transform: none;
     }
 }
 
