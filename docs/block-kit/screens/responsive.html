@@ -3,11 +3,12 @@
 /* ============================================================================
    Canonical block-kit scaffold (shared by every screen file).
    AS-IS token values live on .kit (light) and .panel.dark (dark). The plugin
-   no longer ships a skin of its own: styles.css declares 34 tokens on bare
-   :root as var(--bs-NEW, var(--BS4-OLD, #literal)) chains, so 31 of them ARE
+   no longer ships a skin of its own: styles.css declares 34 tokens on body
+   as var(--bs-NEW, var(--BS4-OLD, #literal)) chains, so 31 of them ARE
    core's own Bootstrap values and flip because core's [data-bs-theme="dark"]
    block flips them. Only shadow, scrim and favourite are plugin-authored and
-   restated under :root[data-bs-theme="dark"]. So the two --bk-* blocks below
+   restated under body[data-bs-theme="dark"] / [data-bs-theme="dark"] body.
+   So the two --bk-* blocks below
    are the two RESOLUTIONS of one contract, not two hand-written palettes: the
    light column is core's :root/[data-bs-theme="light"] values and the dark
    column is core's [data-bs-theme="dark"] values, both read out of the running
@@ -63,6 +64,10 @@
   --bk-danger-fg:#df8379;--bk-danger-bg:#280a06;
   --bk-warn-fg:#dee2e6;--bk-warn-bg:#302310;--bk-warn-border:#90682f;
   --bk-empty-circle:rgba(222,226,230,.75);--bk-ghost-fg:rgba(222,226,230,.75);--bk-ghost-circle:#495057;
+  --bk-accent-deep:#6fa7d9;--bk-counter-active-bg:#031626;--bk-counter-active-fg:#6fa7d9;--bk-select-hover-border:rgba(222,226,230,.75);
+  --bk-section-from:#6fa7d9;--bk-section-to:#6fa7d9;--bk-plan-grad-b:#6fa7d9;
+  --bk-comp-grad-a:#90682f;--bk-comp-grad-b:#fd7e14;--bk-comp-grad-c:#f6ce95;
+  --bk-tag-bg:#343a40;--bk-tag-fg:#dee2e6;--bk-star:#fd7e14;
   color:var(--bk-text);
 }
 .screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
@@ -88,7 +93,7 @@
 
 /* ---- screen-local values styles.css uses that the token block does not name ---- */
 .kit{--bk-sticky-scrim:rgba(255,255,255,.72);--bk-sticky-scrim-dark:rgba(29,33,37,.72);
-     --bk-fav-scrim:rgba(255,255,255,.72);--bk-card-shadow:rgba(0,0,0,.1);}
+     --bk-fav-bg:#fff;--bk-card-shadow:0 .125rem .25rem rgba(0,0,0,.1);}
 .ic.fill{fill:currentColor;}
 
 /* ---- phone frame: simulates the ≤575.98px viewport (panel 1) ---- */
@@ -120,19 +125,18 @@
 .ftoggle[aria-expanded="true"]{background:var(--bk-counter-active-bg);border-color:var(--bk-accent-deep);color:var(--bk-accent-deep);}
 .ftoggle .ic{width:.9rem;height:.9rem;}
 
-/* ---- dark strip for that toggle: the control only exists below 575.98px, so its
-   dark rules live inside the same query. Both panels on this screen are light, so
-   this small sample is where the dark treatment is shown. The rest state is pure
-   token swap (surface-2 / line-3 / search-placeholder all flip in dark); only the
-   on-state needs its own rule, because dark keeps the #212529 fill instead of
-   reusing the light #cfe2ff active-count tint. ---- */
+/* ---- dark strip for that toggle. Both panels on this screen are light, so this
+   small sample shows the same declarations resolved on a dark page: every one is a
+   token read inside the 575.98px query, so the sample only swaps token values —
+   surface-alt / line / ink-muted at rest, brand-tint / brand-ink on, focus-ring. ---- */
 .dsample{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;margin:6px 20px 0;padding:12px;
-  border:1px solid #343a40;border-radius:10px;background:#212529;
-  --bk-surface-2:#f8f9fa;--bk-line-3:#dee2e6;--bk-search-placeholder:rgba(29,33,37,.75);}
+  border:1px solid #343a40;border-radius:10px;background:#1d2125;
+  --bk-surface-2:#292e33;--bk-line-3:#495057;--bk-search-placeholder:rgba(222,226,230,.75);
+  --bk-counter-active-bg:#031626;--bk-accent-deep:#6fa7d9;}
 .dcol{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:104px;}
 .dlab{font-size:10px;line-height:1.35;color:#adb5bd;text-align:center;}
-.dsample .ftoggle[aria-expanded="true"]{background:#212529;border-color:#6ea8fe;color:#6ea8fe;}
-.dsample .ftoggle.foc{outline:2px solid #6ea8fe;outline-offset:2px;}
+.dsample .ftoggle.foc{outline:2px solid #fff;outline-offset:2px;}
+.ftoggle.foc{outline:2px solid #000;outline-offset:2px;}
 
 /* ---- collapsible filters host (0fr → 1fr) ---- */
 .fhost{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease;}
@@ -145,9 +149,10 @@
   font-size:.875rem;font-weight:500;font-family:inherit;color:var(--bk-pill-text);opacity:.8;cursor:pointer;white-space:nowrap;position:relative;z-index:2;}
 .ftab.active{color:var(--bk-accent);opacity:1;cursor:default;}
 .mob .ftab,.sml .ftab{padding:.375rem .625rem;font-size:.8rem;}
-.ind{position:absolute;top:4px;bottom:4px;border-radius:999px;background:var(--bk-pill-indicator);box-shadow:0 1px 3px rgba(0,0,0,.12);z-index:0;}
+.ind{position:absolute;top:4px;bottom:4px;border-radius:999px;background:var(--bk-pill-indicator);box-shadow:0 1px 3px rgba(0,0,0,.1);z-index:0;}
+.ftab.fav.active{background:#0f6cbf;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.1);}
 .fcount{font-weight:600;margin-left:.15rem;background:var(--bk-counter-bg);color:var(--bk-counter-fg);border-radius:999px;padding:0 6px;font-size:.75rem;}
-.ftab.active .fcount{background:var(--bk-counter-active-bg);color:var(--bk-counter-active-fg);}
+.ftab.fav.active .fcount,.ftab.show.active .fcount{background:var(--bk-counter-active-bg);color:var(--bk-counter-active-fg);}
 .clearf{display:inline-flex;align-items:center;gap:.375rem;padding:.5rem 1rem;border:1px solid var(--bk-line-3);border-radius:999px;
   background:transparent;font-size:.875rem;font-weight:500;font-family:inherit;color:var(--bk-muted);cursor:pointer;white-space:nowrap;flex-shrink:0;}
 .paddle{display:flex;align-items:center;justify-content:center;width:24px;border:none;background:transparent;color:var(--bk-paddle);padding:0;cursor:pointer;}
@@ -173,10 +178,10 @@
 .access.h{left:10px;right:auto;width:fit-content;}
 .access .ic{width:.8rem;height:.8rem;}
 .fav{position:absolute;top:8px;left:8px;z-index:3;display:flex;align-items:center;justify-content:center;width:32px;height:32px;
-  border:none;border-radius:50%;background:var(--bk-fav-scrim);color:var(--bk-star);padding:0;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+  border:none;border-radius:50%;background:var(--bk-fav-bg);color:var(--bk-star);padding:0;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.1);}
 .card.horiz>.fav{left:auto;right:8px;}
 .tags{position:absolute;bottom:8px;left:8px;display:flex;flex-wrap:wrap;gap:4px;z-index:1;}
-.tag{display:inline-block;padding:4px 12px;font-size:.75rem;font-weight:600;border-radius:100px;background:var(--bk-tag-bg);color:var(--bk-tag-fg);}
+.tag{display:inline-block;padding:4px 12px;font-size:.75rem;font-weight:600;border-radius:999px;border:1px solid currentcolor;background:var(--bk-tag-bg);color:var(--bk-tag-fg);}
 
 /* ---- trail ---- */
 .trail{display:flex;flex-direction:row;align-items:flex-start;gap:0;margin:.5rem 0 0;padding:.5rem 0 0;overflow-x:auto;list-style:none;}
@@ -197,18 +202,15 @@
 .trail.v .tlabel{white-space:normal;max-width:none;font-size:.72rem;margin-top:0;}
 .trail.v .titem:not(.last)::after{left:9px;top:calc(50% + 10px);width:2px;height:calc(100% - 10px);}
 
-/* ---- the grid that replaces Bootstrap .row. It is flex now, not grid, and
-       there is no container query left in styles.css. All three of the pieces
-       that used to build this are rejected by Moodle's own stylelint config:
-       container-type is an unknown property, @container an unknown at-rule and
-       minmax(clamp(...)) an invalid value for grid-template-columns. The
-       replacement caps the column count with a percentage flex-basis, which is
-       a percentage OF THE CONTAINER and so still answers to the block column
-       rather than to the viewport - which was the whole point of the container
-       query. Three cards of 30% fit a row and four cannot; the 15rem floor
-       keeps a column readable. ---- */
-.grid{display:flex;flex-wrap:wrap;gap:1rem;margin:0;padding:0;list-style:none;}
-.grid>li{flex:1 1 30%;min-width:15rem;max-width:100%;padding:0;margin:0;}
+/* ---- the grid that replaces Bootstrap .row: auto-fill tracks whose floor is
+       min(<width>, 100%), carried in --dims-card-track-min. There is no
+       container query left in styles.css (stylelint rejects container-type
+       and @container), and min() is kept out of minmax() itself because the
+       same stylelint config rejects it there. The width sets the column count
+       in a wide block; the 100% cap gives a narrower block one track as wide
+       as the block rather than a track that overflows it. ---- */
+.grid{--dims-card-track-min:min(19rem,100%);display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--dims-card-track-min),1fr));gap:1rem;margin:0;padding:0;list-style:none;}
+.grid>li{width:100%;max-width:none;flex:none;padding:0;margin:0;}
 .card.horiz{flex-direction:row;}
 .card.horiz>.imgwrap{flex:0 0 180px;}
 .card.horiz .cimg{height:100%;min-height:180px;}
@@ -266,8 +268,8 @@
             <div class="fhost-inner">
               <div class="fbar">
                 <div class="platter"><span class="ind" style="left:4px;width:118px"></span>
-                  <button class="ftab active" type="button" role="radio" aria-checked="true"><svg class="ic fill" viewBox="0 0 24 24" aria-hidden="true" style="width:.8rem;height:.8rem;color:var(--bk-star)"><path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg>Favourites<span class="fcount">3</span></button>
-                  <button class="ftab" type="button" role="radio" aria-checked="false">Show all<span class="fcount">12</span></button>
+                  <button class="ftab fav active" type="button" role="radio" aria-checked="true"><svg class="ic fill" viewBox="0 0 24 24" aria-hidden="true" style="width:.8rem;height:.8rem"><path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg>My Favourites<span class="fcount">3</span></button>
+                  <button class="ftab show" type="button" role="radio" aria-checked="false">Show all<span class="fcount">12</span></button>
                 </div>
                 <div class="platter"><span class="ind" style="left:28px;width:56px"></span>
                   <button class="paddle" type="button" aria-label="Scroll left"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
@@ -301,7 +303,7 @@
                 </div>
                 <div class="cbody">
                   <h4 class="ctitle">Leadership pathway</h4>
-                  <p class="ccount">4 of 6 competencies</p>
+                  <p class="ccount">5 competencies</p>
                   <ul class="trail">
                     <li class="titem done first"><span class="tmark"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="m9 11 3 3 9-9"/></svg></span><span class="tlabel ok">FEED</span></li>
                     <li class="titem done"><span class="tmark"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="m9 11 3 3 9-9"/></svg></span><span class="tlabel ok">DELEG</span></li>
@@ -313,7 +315,7 @@
               </article>
             </li>
           </ul>
-          <p class="filler">Scroll the frame: the header stays put and the cards pass under the 70 % white scrim.</p>
+          <p class="filler">Scroll the frame: the header stays put and the cards pass under the 72 % white scrim.</p>
         </div>
       </div>
     </div>
@@ -321,7 +323,7 @@
       <span class="idb">RSP-IMAGE-140 · competency image band</span>
       <span class="idb">plan image stays 120px at every width</span>
     </div>
-    <div class="note">Header: <code>position:sticky; top:60px; z-index:10</code>, <code>rgba(255,255,255,.7)</code> + <code>backdrop-filter:blur(8px)</code>, <code>border-radius:10px</code>, 10px padding, 10px bottom margin. Dark mode overrides the scrim to <code>rgba(33,37,41,.97)</code> — nearly opaque, so the blur is decorative rather than functional there. Trail below 576px: items <code>min-width:45px</code>, labels <code>0.6rem</code> / <code>max-width:45px</code>, strip set to <code>overflow-x:auto; flex-wrap:nowrap</code>.</div>
+    <div class="note">Header: <code>position:sticky; top:60px; z-index:10</code>, the <code>scrim</code> token (<code>rgb(255 255 255 / 72%)</code>) + <code>backdrop-filter:blur(8px)</code>, <code>border-radius:10px</code>, 10px padding, 10px bottom margin. In dark the same token resolves to <code>rgb(29 33 37 / 72%)</code>, the dark page ground at the same opacity, so the blur works the same way in both modes. Trail below 576px: items <code>min-width:45px</code>, labels <code>0.6rem</code> / <code>max-width:45px</code>, strip set to <code>overflow-x:auto; flex-wrap:nowrap</code>.</div>
 
     <div class="divlbl">Filters host — <code>grid-template-rows:0fr</code> animating to <code>1fr</code> over 0.3s <span class="idb">RSP-FILTERS-COLLAPSE</span> <span class="idb">RSP-PILL-SMALL</span></div>
     <div class="bk-cap" style="padding-top:6px">Collapsed — <code>aria-expanded="false"</code>, no <code>.dims-filters-open</code></div>
@@ -335,7 +337,7 @@
       </div>
       <div class="fhost">
         <div class="fhost-inner">
-          <div class="fbar"><div class="platter"><span class="ind" style="left:4px;width:118px"></span><button class="ftab active" type="button">Favourites<span class="fcount">3</span></button><button class="ftab" type="button">Show all<span class="fcount">12</span></button></div></div>
+          <div class="fbar"><div class="platter"><span class="ind" style="left:4px;width:118px"></span><button class="ftab fav active" type="button">My Favourites<span class="fcount">3</span></button><button class="ftab show" type="button">Show all<span class="fcount">12</span></button></div></div>
         </div>
       </div>
     </div>
@@ -351,35 +353,35 @@
       </div>
       <div class="fhost open">
         <div class="fhost-inner">
-          <div class="fbar"><div class="platter"><span class="ind" style="left:4px;width:118px"></span><button class="ftab active" type="button">Favourites<span class="fcount">3</span></button><button class="ftab" type="button">Show all<span class="fcount">12</span></button></div></div>
+          <div class="fbar"><div class="platter"><span class="ind" style="left:4px;width:118px"></span><button class="ftab fav active" type="button">My Favourites<span class="fcount">3</span></button><button class="ftab show" type="button">Show all<span class="fcount">12</span></button></div></div>
         </div>
       </div>
     </div>
-    <div class="note">Pills shrink to <code>padding:.375rem .625rem; font-size:.8rem</code> (from <code>.5rem 1rem</code> / <code>.875rem</code>) but the 44px platter, its 4px padding and the 36px inner row are unchanged — and the <b>Clear filters</b> button keeps <code>0.875rem</code>, so it reads slightly larger than the pills beside it. Dropdown-mode selects go to <code>width:100%</code>.</div>
+    <div class="note">Pills shrink to <code>padding:.375rem .625rem; font-size:.8rem</code> (from <code>.5rem 1rem</code> / <code>.875rem</code>) but the 44px platter, its 4px padding and the 36px inner row are unchanged — and the <b>Clear filters</b> button keeps <code>0.875rem</code>, so it reads slightly larger than the pills beside it. Dropdown-mode selects go to <code>width:100%</code>, and the bar centres its groups with <code>.625rem</code> between rows and <code>.5rem</code> between groups.</div>
 
     <div class="divlbl">The same toggle in dark — rules nested in the 575.98px query <span class="idb">RSP-TOGGLE</span></div>
     <div class="dsample">
       <div class="dcol">
         <button class="ftoggle" type="button" aria-expanded="false" aria-label="Toggle filters"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></button>
-        <span class="dlab">rest<br>#adb5bd on #212529<br>7.43:1</span>
+        <span class="dlab">rest<br>ink-muted on surface-alt<br>line ring</span>
       </div>
       <div class="dcol">
         <button class="ftoggle" type="button" aria-expanded="true" aria-label="Toggle filters"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></button>
-        <span class="dlab">hover / <code>aria-expanded</code><br>#6ea8fe border + icon<br>6.39:1</span>
+        <span class="dlab">hover / <code>aria-expanded</code><br>brand-ink on brand-tint<br>#6fa7d9 on #031626</span>
       </div>
       <div class="dcol">
         <button class="ftoggle foc" type="button" aria-expanded="false" aria-label="Toggle filters"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></button>
-        <span class="dlab"><code>:focus-visible</code><br>2px #6ea8fe at 2px offset</span>
+        <span class="dlab"><code>:focus-visible</code><br>2px focus-ring (#fff) at 2px offset</span>
       </div>
     </div>
-    <div class="note">The toggle is the one control on this screen that exists <i>only</i> below the breakpoint, so its dark rules had to be nested in the same <code>@media (max-width: 575.98px)</code> block rather than joining the other dark rules further down the file. Before that they were missing entirely and a light <code>#f8f9fa</code> disc sat on the dark sticky header. Rest is <code>#212529</code> fill / <code>#495057</code> border / <code>#adb5bd</code> icon; hover and <code>[aria-expanded="true"]</code> keep that fill and flip border and icon to <code>#6ea8fe</code> — dark does not reuse the light <code>#cfe2ff</code> tint, so the on-state reads as an outline change rather than a fill change; the focus ring keeps its geometry and only swaps colour. Both panels above are light, which is why this strip carries its own dark values.</div>
+    <div class="note">The toggle is the one control on this screen that exists <i>only</i> below the breakpoint, so all of its styling is nested in the same <code>@media (max-width: 575.98px)</code> block, and every declaration there is a token read — there is no dark rule of its own to nest. Rest is <code>surface-alt</code> fill / 1.5px <code>line</code> ring / <code>ink-muted</code> icon (<code>#292e33</code> / <code>#495057</code> / 75% <code>#dee2e6</code> in dark); hover and <code>[aria-expanded="true"]</code> take <code>brand-tint</code> fill with a <code>brand-ink</code> ring and icon (<code>#031626</code> / <code>#6fa7d9</code> in dark, <code>#cfe2f2</code> / <code>#062b4c</code> in light); the focus ring is the 2px <code>focus-ring</code> outline. Both panels above are light, which is why this strip resolves the same declarations for a dark page.</div>
   </div>
 
   <!-- ============ PANEL 2 — NARROW BLOCK COLUMN ============ -->
   <div class="panel">
     <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · narrow block column (wide viewport)</div>
 
-    <div class="bk-cap">Grid collapses to one column, card stacks by container query · <span class="idb">RSP-GRID</span> <span class="idb">RSP-H-STACK</span></div>
+    <div class="bk-cap">Grid collapses to one track; the horizontal card no longer stacks here · <span class="idb">RSP-GRID</span> <span class="idb">RSP-H-STACK</span></div>
     <div class="wide">
       <div class="wide-main">page region<br>viewport ≥ 992px</div>
       <div class="blockcol">
@@ -395,7 +397,7 @@
               </div>
               <div class="cbody">
                 <h4 class="ctitle clamp">Leadership pathway</h4>
-                <p class="ccount">4 of 6 competencies</p>
+                <p class="ccount">3 competencies</p>
                 <ul class="trail v">
                   <li class="titem done first"><span class="tmark"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="m9 11 3 3 9-9"/></svg></span><span class="tlabel ok">Giving feedback</span></li>
                   <li class="titem"><span class="tmark"><span class="ecircle"></span></span><span class="tlabel">Coaching conversations</span></li>
@@ -408,20 +410,20 @@
             <article class="card plan">
               <div class="imgwrap">
                 <div class="cimg pln"></div>
-                <span class="access">Continue <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
+                <span class="access">Access <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
               </div>
-              <div class="cbody"><h4 class="ctitle">Onboarding plan</h4><p class="ccount">2 of 3 competencies</p></div>
+              <div class="cbody"><h4 class="ctitle">Onboarding plan</h4><p class="ccount">0 competencies</p></div>
             </article>
           </li>
         </ul>
       </div>
     </div>
     <div class="bk-ids">
-      <span class="idb">flex-wrap · gap 1rem</span>
-      <span class="idb">li · flex: 1 1 30% · min-width 15rem</span>
+      <span class="idb">auto-fill grid · gap 1rem</span>
+      <span class="idb">floor min(26rem, 100%) with horizontal cards</span>
       <span class="idb">no @container — stylelint rejects it</span>
     </div>
-    <div class="note">Cell width here is ≈296px, which is under the <code>15rem</code> floor's own working room, so the row can hold one card. The container query that used to stack the horizontal card at this width is <b>gone</b>, and this is the one place the re-baseline lost a behaviour rather than renaming one: on a 1440px viewport with a narrow block column the horizontal card now keeps its 180px image column, because <code>@container</code> is an unknown at-rule to Moodle's stylelint and the gate refuses it. The flex basis preserves the <em>column count</em> against the container; it cannot restyle a card by the width of its own cell.</div>
+    <div class="note">The list here is ≈296px wide, under the <code>26rem</code> floor a list of horizontal cards asks for, so the <code>100%</code> cap makes one track as wide as the list. The container query that used to stack the horizontal card at this width is <b>gone</b>, and this is the one place the re-baseline lost a behaviour rather than renaming one: on a 1440px viewport with a narrow block column the horizontal card now keeps its 180px image column, because <code>@container</code> is an unknown at-rule to Moodle's stylelint and the gate refuses it. The auto-fill grid answers the <em>column count</em> to the container; it cannot restyle a card by the width of its own cell.</div>
 
     <div class="divlbl">Same markup, wide cell — the query does not fire <span class="idb">RSP-H-STACK</span></div>
     <div class="fullcell">
@@ -436,7 +438,7 @@
             </div>
             <div class="cbody">
               <h4 class="ctitle clamp">Leadership pathway</h4>
-              <p class="ccount">4 of 6 competencies</p>
+              <p class="ccount">2 competencies</p>
               <ul class="trail v">
                 <li class="titem done first"><span class="tmark"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="m9 11 3 3 9-9"/></svg></span><span class="tlabel ok">Giving feedback</span></li>
                 <li class="titem last"><span class="tmark"><span class="ecircle"></span></span><span class="tlabel">Leading change</span></li>
@@ -446,7 +448,7 @@
         </li>
       </ul>
     </div>
-    <div class="note">Why the grid exists at all: the block ships its cards inside Bootstrap's <code>.row</code> / <code>col-*</code> markup, then <b>overrides it</b> — <code>[data-cards-type]</code> becomes <code>display:grid</code> with the Bootstrap negative margins zeroed, and every <code>&gt;li</code> drops <code>flex</code>/<code>padding</code>/<code>margin-bottom</code> in favour of the 1rem grid gap. Bootstrap columns respond to the <b>viewport</b>; a Moodle block lives in a column whose width the viewport does not describe, so the plugin makes each cell a query container instead. Note the competency grid does not use the clamp — it hardcodes <code>minmax(360px,1fr)</code>, so in a block column narrower than 360px its single track overflows the column.</div>
+    <div class="note">Why the grid exists at all: the block ships its cards inside Bootstrap's <code>.row</code> / <code>col-*</code> markup, then <b>overrides it</b> — <code>[data-cards-type]</code> becomes <code>display:grid</code> with the Bootstrap negative margins zeroed, and every <code>&gt;li</code> drops <code>flex</code>/<code>padding</code>/<code>margin-bottom</code> in favour of the 1rem grid gap. Bootstrap columns respond to the <b>viewport</b>; a Moodle block lives in a column whose width the viewport does not describe, so the tracks answer to the list's own width instead. Every floor is <code>min(&lt;width&gt;,100%)</code>, the competency grid's included (<code>min(360px,100%)</code>), so in a block column narrower than the floor the single track takes the column's width rather than overflowing it.</div>
   </div>
 
 </div>
@@ -460,17 +462,17 @@
         <tr>
           <td class="q">@media (min-width: 992px)</td>
           <td>viewport</td>
-          <td>Competency card image band drops to <b>100px</b>. Nothing else keys off this breakpoint — the plan card image stays 120px. <span class="rule">styles.css:477-481</span></td>
+          <td>Competency card image band drops to <b>100px</b>. Nothing else keys off this breakpoint — the plan card image stays 120px. <span class="rule">styles.css:447-451</span></td>
         </tr>
         <tr>
           <td class="q">default (576–991.98px)</td>
           <td>—</td>
-          <td>Card images 120px. Header is a single <code>space-between</code> row; search row <code>max-width:200px; margin-left:auto</code>; the filter toggle is <code>display:none</code> and the filters host is always open. Pills 0.875rem; trail items 50px with 0.65rem / 60px labels. <span class="rule">styles.css:183-208, 405-413, 796-804</span></td>
+          <td>Card images 120px. Header is a single <code>space-between</code> row; search row <code>max-width:200px; margin-left:auto</code>; the filter toggle is <code>display:none</code> and the filters host is always open. Pills 0.875rem; trail items 50px with 0.65rem / 60px labels. <span class="rule">styles.css:178-203, 377-385, 874-882</span></td>
         </tr>
         <tr>
           <td class="q">@media (max-width: 575.98px)</td>
           <td>viewport</td>
-          <td>Header stacks, centres and turns sticky at <code>top:60px</code> with the translucent scrim; search row goes full width; the 36px round toggle appears; the filters host becomes a <code>0fr</code> grid that opens to <code>1fr</code>; pills shrink to 0.8rem and selects to <code>width:100%</code>; competency image band grows to <b>140px</b>; horizontal plan cards stack with a 160px image; trail items 45px with 0.6rem / 45px labels. The toggle is nested here too, since the control does not exist above the breakpoint — and every declaration inside is a token, so there is no separate dark treatment to call out any more. <span class="rule">styles.css:299-322, 1562-1588, 1594-1622, 1612-1617, 483-487, 1023-1026, 1047-1050</span></td>
+          <td>Header stacks, centres and turns sticky at <code>top:60px</code> with the translucent scrim; search row goes full width; the 36px round toggle appears; the filters host becomes a <code>0fr</code> grid that opens to <code>1fr</code>; pills shrink to 0.8rem, the bar centres its groups and selects go to <code>width:100%</code>; competency image band grows to <b>140px</b>; horizontal plan cards stack with a 160px image; trail items 45px with 0.6rem / 45px labels. The toggle is nested here too, since the control does not exist above the breakpoint — and every declaration inside is a token, so there is no separate dark treatment to call out any more. <span class="rule">styles.css:288-311, 1609-1637, 1642-1681, 1662-1665, 1670-1676, 453-457, 1097-1100, 1121-1124</span></td>
         </tr>
         <tr>
           <td class="q">@container dims-card-cell (max-width: 360px)</td>
@@ -485,14 +487,14 @@
 <div class="legend">
   <h3>ID legend — Responsive (RSP)</h3>
   <div class="leg">
-    <span class="k">RSP-STICKY</span><span class="v"><b>Sticky stacked block header.</b> Below 575.98px <code>.dims-block-header</code> becomes <code>flex-direction:column; align-items:stretch; text-align:center</code> and sticks at <code>top:60px</code> (clearing the Boost navbar) with <code>z-index:10</code>, <code>background:rgba(255,255,255,.7)</code>, <code>backdrop-filter:blur(8px)</code> (plus the <code>-webkit-</code> twin), <code>border-radius:10px</code>, 10px padding on three sides, 1rem bottom padding and a 10px bottom margin. The scrim is <code>--block-dimensions-scrim</code> — 72% white in light, 72% of the dark body ground in dark — which resolves on its own; the separate dark-mode block this used to need is gone. <span class="rule">styles.css:299-322</span></span>
-    <span class="k">RSP-SEARCH-STACK</span><span class="v"><b>Search row at full width.</b> <code>.dims-search-row</code> normally sits at <code>max-width:200px; margin-left:auto</code> so it hugs the right edge of the header row; on mobile both are reset (<code>max-width:100%; margin-left:0</code>) and it fills the stacked header. The inner <code>.dims-block-search-wrapper</code> is <code>flex:1</code> at every width, so the input absorbs whatever the toggle does not use. <span class="rule">styles.css:200-219, 318-321</span></span>
-    <span class="k">RSP-TOGGLE</span><span class="v"><b>Filter toggle button — mobile only.</b> <code>.dims-filter-toggle-btn</code> is <code>display:none</code> by default and only becomes an <code>inline-flex</code> 36px circle inside the 575.98px query: <code>1.5px solid #dee2e6</code>, <code>background:#f8f9fa</code>, <code>color:#5c636a</code> (darkened from #6c757d, which was only 4.45:1 on that fill). Hover and <code>[aria-expanded="true"]</code> share one rule — <code>#cfe2ff</code> fill, <code>#0f4d85</code> border and text — so the pressed state and the hover state are visually identical. <code>:focus-visible</code> is a 2px <code>#0f6cbf</code> outline at 2px offset. Dark is handled inside the very same query — it has to be, since the control is <code>display:none</code> above the breakpoint — and used to be absent altogether, which left a light <code>#f8f9fa</code> disc on the dark sticky header: rest is now <code>#212529</code> fill / <code>#495057</code> border / <code>#adb5bd</code> icon (7.43:1), hover and <code>[aria-expanded="true"]</code> hold the fill and take a <code>#6ea8fe</code> border and icon (6.39:1) instead of the light <code>#cfe2ff</code> tint, and the focus ring swaps to <code>#6ea8fe</code>. Ships in the mustache shell, not in the JS-built bar. <span class="rule">styles.css:1554-1556 (light 1400-1427, dark 1429-1452); summary.mustache:60-65</span></span>
-    <span class="k">RSP-FILTERS-COLLAPSE</span><span class="v"><b>Collapsible filters host.</b> Below 576px <code>.dims-filters-host</code> becomes <code>display:grid; grid-template-rows:0fr</code> with a <code>0.3s ease</code> transition, and <code>.dims-filters-panel-inner</code> takes <code>overflow:hidden; min-height:0</code> — the pair is what lets a height-unknown panel animate. Opening is done by <code>.dims-filters-open</code> on the <code>.block-dimensions-content</code> container, not on the host, which is why one class controls both hosts (plan and competency) at once. <span class="rule">styles.css:1594-1622; summary.mustache:86,102</span></span>
-    <span class="k">RSP-PILL-SMALL</span><span class="v"><b>Smaller pills inside the panel.</b> The only thing the mobile query does to the filter bar besides collapsing it: <code>.dims-filter-tab</code> goes to <code>padding:.375rem .625rem; font-size:.8rem</code> (from <code>.5rem 1rem</code> / <code>.875rem</code>) and <code>.dims-filter-select</code> to <code>width:100%</code>. Groups keep flowing with the desktop <code>flex-wrap</code>; the 44px platter, 4px platter padding, 36px inner row and the <code>Clear filters</code> button's 0.875rem are all untouched. <span class="rule">styles.css:1612-1617; 1216-1248 (clear button); 1275-1315 (platter)</span></span>
-    <span class="k">RSP-IMAGE-140</span><span class="v"><b>140px image band.</b> <code>.competency-card-image</code> is 120px by default, <b>100px</b> above 992px and <b>140px</b> below 575.98px — the widest band is the smallest screen, because on mobile it is the only thing separating stacked cards. The rule targets the competency card only: <code>.plan-card-image</code> holds 120px at every width, so the two card types diverge at both ends of the range. <span class="rule">styles.css:405-413, 477-481, 483-487</span></span>
+    <span class="k">RSP-STICKY</span><span class="v"><b>Sticky stacked block header.</b> Below 575.98px <code>.dims-block-header</code> becomes <code>flex-direction:column; align-items:stretch; text-align:center</code> and sticks at <code>top:60px</code> (clearing the Boost navbar) with <code>z-index:10</code>, <code>background: var(--block-dimensions-scrim)</code>, <code>backdrop-filter:blur(8px)</code> (plus the <code>-webkit-</code> twin), <code>border-radius:10px</code>, 10px padding on three sides, 1rem bottom padding and a 10px bottom margin. The scrim is <code>--block-dimensions-scrim</code> — 72% white in light, 72% of the dark body ground in dark — which resolves on its own; the separate dark-mode block this used to need is gone. <span class="rule">styles.css:288-311</span></span>
+    <span class="k">RSP-SEARCH-STACK</span><span class="v"><b>Search row at full width.</b> <code>.dims-search-row</code> normally sits at <code>max-width:200px; margin-left:auto</code> so it hugs the right edge of the header row; on mobile both are reset (<code>max-width:100%; margin-left:0</code>) and it fills the stacked header. The inner <code>.dims-block-search-wrapper</code> is <code>flex:1</code> at every width, so the input absorbs whatever the toggle does not use. <span class="rule">styles.css:195-214, 307-310</span></span>
+    <span class="k">RSP-TOGGLE</span><span class="v"><b>Filter toggle button — mobile only.</b> <code>.dims-filter-toggle-btn</code> is <code>display:none</code> by default and only becomes an <code>inline-flex</code> 36px circle inside the 575.98px query: a <code>1.5px</code> <code>line</code> ring, <code>surface-alt</code> fill and an <code>ink-muted</code> icon. Hover and <code>[aria-expanded="true"]</code> share one rule — <code>brand-tint</code> fill, <code>brand-ink</code> ring and icon — so the pressed state and the hover state are visually identical. <code>:focus-visible</code> is the 2px <code>focus-ring</code> outline at a 2px offset. Every one of those is a token read inside the same query — it has to be there, since the control is <code>display:none</code> above the breakpoint — so dark needs no rule of its own: the tokens resolve to <code>#292e33</code> / <code>#495057</code> / 75% <code>#dee2e6</code> at rest, <code>#031626</code> / <code>#6fa7d9</code> on, and <code>#fff</code> for the ring. Ships in the mustache shell, not in the JS-built bar. <span class="rule">styles.css:1605-1607 (mobile rules 1609-1637); summary.mustache:62-67</span></span>
+    <span class="k">RSP-FILTERS-COLLAPSE</span><span class="v"><b>Collapsible filters host.</b> Below 576px <code>.dims-filters-host</code> becomes <code>display:grid; grid-template-rows:0fr</code> with a <code>0.3s ease</code> transition, and <code>.dims-filters-panel-inner</code> takes <code>overflow:hidden; min-height:0</code> — the pair is what lets a height-unknown panel animate. Opening is done by <code>.dims-filters-open</code> on the <code>.block-dimensions-content</code> container, not on the host, which is why one class controls both hosts (plan and competency) at once. <span class="rule">styles.css:1642-1681; summary.mustache:88,104</span></span>
+    <span class="k">RSP-PILL-SMALL</span><span class="v"><b>Smaller pills inside the panel.</b> Besides collapsing it, the mobile query shrinks the pills — <code>.dims-filter-tab</code> goes to <code>padding:.375rem .625rem; font-size:.8rem</code> (from <code>.5rem 1rem</code> / <code>.875rem</code>) — stretches <code>.dims-filter-select</code> to <code>width:100%</code>, and centres the bar's groups with a <code>.625rem</code> row gap and a <code>.5rem</code> column gap. Groups keep flowing with the desktop <code>flex-wrap</code>; the 44px platter, 4px platter padding, 36px inner row and the <code>Clear filters</code> button's 0.875rem are all untouched. <span class="rule">styles.css:1662-1665, 1670-1676, 1678-1680; 1260-1295 (clear button); 1318-1346 (platter)</span></span>
+    <span class="k">RSP-IMAGE-140</span><span class="v"><b>140px image band.</b> <code>.competency-card-image</code> is 120px by default, <b>100px</b> above 992px and <b>140px</b> below 575.98px — the widest band is the smallest screen, because on mobile it is the only thing separating stacked cards. The rule targets the competency card only: <code>.plan-card-image</code> holds 120px at every width, so the two card types diverge at both ends of the range. <span class="rule">styles.css:377-385, 447-451, 453-457</span></span>
     <span class="k">RSP-H-STACK</span><span class="v"><b>Horizontal card stacking.</b> Declared <b>once</b> now, in <code>@media (max-width:575.98px)</code>. Card and link go <code>flex-direction:column</code>, <code>.plan-card-image-wrapper-horizontal</code> trades <code>flex:0 0 180px</code> for <code>flex:none; width:100%</code>, and <code>.plan-card-image-horizontal</code> goes from <code>height:100%; min-height:180px</code> to <code>height:160px; min-height:auto</code>. The identical container copy — the one that mattered in a Moodle block, because it fired on a wide viewport whenever the block column was narrow — is gone with the container-query layer. <span class="rule">styles.css · plan-card-horizontal responsive block</span></span>
-    <span class="k">RSP-GRID</span><span class="v"><b>The layout that replaces Bootstrap's row.</b> <code>[data-cards-type]</code> overrides <code>.row</code> with <code>display:flex; flex-wrap:wrap; gap:1rem</code> and zeroes the Bootstrap negative margins; each <code>&gt;li</code> overrides <code>col-*</code> with <code>flex:1 1 30%; min-width:15rem; max-width:100%</code> and no padding or bottom margin. A flex basis is a percentage <em>of the container</em>, so 30% caps the row at three cards (four would need 120%) while still answering to the block column rather than the viewport, and the 15rem floor is what collapses it to one column in a narrow block. The competency grid still re-declares itself later as a real grid with a plain <code>minmax(360px,1fr)</code>, which is a valid value and so survives the gate. <span class="rule">styles.css · CARD GRID and COMPETENCY CARD GRID banners</span></span>
+    <span class="k">RSP-GRID</span><span class="v"><b>The layout that replaces Bootstrap's row.</b> <code>[data-cards-type]</code> overrides <code>.row</code> with <code>display:grid; grid-template-columns:repeat(auto-fill,minmax(var(--dims-card-track-min),1fr)); gap:1rem</code> and zeroes the Bootstrap negative margins; each <code>&gt;li</code> overrides <code>col-*</code> with <code>width:100%; max-width:none; flex:none</code> and no padding or bottom margin. <code>auto-fill</code> keeps the empty tracks, so a lone last card keeps its column width. The floor is <code>min(19rem,100%)</code>, <code>min(26rem,100%)</code> for horizontal plan cards and <code>min(360px,100%)</code> for competencies: the width sets the column count, and the <code>100%</code> cap collapses a narrow block to one track as wide as the block instead of one that overflows it. <span class="rule">styles.css · CARD GRID banner (492-524)</span></span>
   </div>
 </div>
 </div>

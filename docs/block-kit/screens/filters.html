@@ -3,11 +3,12 @@
 /* ============================================================================
    Canonical block-kit scaffold (shared by every screen file).
    AS-IS token values live on .kit (light) and .panel.dark (dark). The plugin
-   no longer ships a skin of its own: styles.css declares 34 tokens on bare
-   :root as var(--bs-NEW, var(--BS4-OLD, #literal)) chains, so 31 of them ARE
+   no longer ships a skin of its own: styles.css declares 34 tokens on body
+   as var(--bs-NEW, var(--BS4-OLD, #literal)) chains, so 31 of them ARE
    core's own Bootstrap values and flip because core's [data-bs-theme="dark"]
    block flips them. Only shadow, scrim and favourite are plugin-authored and
-   restated under :root[data-bs-theme="dark"]. So the two --bk-* blocks below
+   restated under body[data-bs-theme="dark"] / [data-bs-theme="dark"] body.
+   So the two --bk-* blocks below
    are the two RESOLUTIONS of one contract, not two hand-written palettes: the
    light column is core's :root/[data-bs-theme="light"] values and the dark
    column is core's [data-bs-theme="dark"] values, both read out of the running
@@ -63,6 +64,10 @@
   --bk-danger-fg:#df8379;--bk-danger-bg:#280a06;
   --bk-warn-fg:#dee2e6;--bk-warn-bg:#302310;--bk-warn-border:#90682f;
   --bk-empty-circle:rgba(222,226,230,.75);--bk-ghost-fg:rgba(222,226,230,.75);--bk-ghost-circle:#495057;
+  --bk-accent-deep:#6fa7d9;--bk-counter-active-bg:#031626;--bk-counter-active-fg:#6fa7d9;--bk-select-hover-border:rgba(222,226,230,.75);
+  --bk-section-from:#6fa7d9;--bk-section-to:#6fa7d9;--bk-plan-grad-b:#6fa7d9;
+  --bk-comp-grad-a:#90682f;--bk-comp-grad-b:#fd7e14;--bk-comp-grad-c:#f6ce95;
+  --bk-tag-bg:#343a40;--bk-tag-fg:#dee2e6;--bk-star:#fd7e14;
   color:var(--bk-text);
 }
 .screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
@@ -91,10 +96,11 @@
    for. Declared here, never inline in the markup.
    ============================================================================ */
 .kit{
-  --flt-tab-active-fg:var(--bk-accent);          /* --dims-tabs-item-color-active */
-  --flt-fav-active-fg:#fff;                      /* .dims-fav-filter-btn.active colour */
-  --flt-ind-shadow:0 1px 3px rgba(0,0,0,.12);    /* --dims-tabs-indicator-shadow */
-  --flt-fav-shadow:0 1px 3px rgba(0,0,0,.12);    /* no dark override in styles.css */
+  --flt-tab-active-fg:var(--bk-accent);          /* .dims-filter-tab.active: accent */
+  --flt-fav-active-bg:#0f6cbf;                   /* .dims-fav-filter-btn.active: brand-fill, which does not flip */
+  --flt-fav-active-fg:#fff;                      /* .dims-fav-filter-btn.active: on-brand-fill */
+  --flt-ind-shadow:0 1px 3px rgba(0,0,0,.1);     /* indicator: 0 1px 3px shadow */
+  --flt-fav-shadow:0 1px 3px rgba(0,0,0,.1);     /* active favourite pill: 0 1px 3px shadow */
   --flt-select-fg:var(--bk-pill-text);
   --flt-mask-on:black;                           /* mask alpha, not a UI colour */
   --flt-mask-off:transparent;
@@ -106,17 +112,17 @@
 }
 .panel.dark{
   --flt-tab-active-fg:#6fa7d9;
-  --flt-fav-active-fg:#212529;
-  --flt-ind-shadow:0 1px 3px rgba(0,0,0,.3);
+  --flt-ind-shadow:0 1px 3px rgba(0,0,0,.55);
+  --flt-fav-shadow:0 1px 3px rgba(0,0,0,.55);
   --flt-select-fg:rgba(222,226,230,.75);
   /* No dark twin needed: currentcolor already followed the flipped ink. */
 }
 
-/* ---- .dims-filters-bar (styles.css:1216-1233) ---- */
+/* ---- .dims-filters-bar (styles.css:1263-1269) ---- */
 .flt-wrap{padding:6px 20px 2px;}
 .flt-bar{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;}
 
-/* ---- .dims-filter-tabs platter (styles.css:1275-1305); real custom properties:
+/* ---- .dims-filter-tabs platter (styles.css:1332-1360); real custom properties:
        height 44px · inner 36px · padding 4px · paddle 40px · mask gradient 22px ---- */
 .flt-tabs{position:relative;display:inline-flex;width:fit-content;max-width:100%;height:44px;padding:4px;
   background:var(--bk-pill-platter);border-radius:999px;overflow:hidden;}
@@ -129,7 +135,7 @@
 }
 .flt-items{display:flex;align-items:center;width:fit-content;height:100%;margin:0;padding:0;white-space:nowrap;position:relative;z-index:1;}
 
-/* ---- .dims-filter-tab (styles.css:1376-1422) ---- */
+/* ---- .dims-filter-tab (styles.css:1431-1471) ---- */
 .flt-tab{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.5rem 1rem;border:none;
   background:transparent;border-radius:999px;font-family:var(--font);font-size:.875rem;font-weight:500;
   color:var(--bk-pill-text);cursor:pointer;white-space:nowrap;position:relative;z-index:2;opacity:.8;
@@ -139,22 +145,22 @@
 /* Deterministic widths so the hand-placed indicator lines up in any font. */
 .w-all{min-width:52px;}.w-val{min-width:66px;}.w-fav{min-width:178px;}.w-show{min-width:140px;}
 
-/* ---- favourite pill (styles.css:1879-1911) ---- */
+/* ---- favourite pill (styles.css:1936-1966) ---- */
 .flt-tab.fav{gap:.35rem;}
-.flt-tab.fav.active{background:var(--bk-accent);color:var(--flt-fav-active-fg);box-shadow:var(--flt-fav-shadow);}
+.flt-tab.fav.active{background:var(--flt-fav-active-bg);color:var(--flt-fav-active-fg);box-shadow:var(--flt-fav-shadow);}
 .flt-tab.fav .ic.st{width:.8rem;height:.8rem;fill:currentColor;stroke:none;}
 
-/* ---- .dims-filter-count (styles.css:1942-1972, rest state 1931-1939); both skins are
-       named by the scaffold now, so the badge needs no screen-local token ---- */
+/* ---- .dims-filter-count (styles.css:1985-1993; the badge of any checked pill 2001-2004); both
+       skins are named by the scaffold now, so the badge needs no screen-local token ---- */
 .flt-count{font-weight:600;margin-left:.15rem;background:var(--bk-counter-bg);color:var(--bk-counter-fg);
   border-radius:999px;padding:0 6px;font-size:.75rem;}
-.flt-tab.fav.active .flt-count,.flt-tab.show.active .flt-count{background:var(--bk-counter-active-bg);color:var(--bk-counter-active-fg);}
+.flt-tab.active .flt-count{background:var(--bk-counter-active-bg);color:var(--bk-counter-active-fg);}
 
-/* ---- .dims-filter-tabs-indicator (styles.css:1425-1440) ---- */
+/* ---- .dims-filter-tabs-indicator (styles.css:1474-1489) ---- */
 .flt-ind{position:absolute;top:4px;bottom:4px;height:calc(100% - 8px);border-radius:999px;
   background-color:var(--bk-pill-indicator);box-shadow:var(--flt-ind-shadow);pointer-events:none;z-index:0;}
 
-/* ---- .dims-filter-tabs-paddle (styles.css:1443-1504) ---- */
+/* ---- .dims-filter-tabs-paddle (styles.css:1492-1553) ---- */
 .flt-paddles{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:3;}
 .flt-paddle{position:absolute;top:4px;bottom:4px;width:40px;min-height:36px;z-index:3;display:flex;align-items:center;
   justify-content:center;border:none;background:transparent;color:var(--bk-paddle);cursor:pointer;pointer-events:auto;padding:0;}
@@ -162,14 +168,14 @@
 .flt-paddle.l{left:0;}.flt-paddle.r{right:0;}
 .flt-paddle svg{pointer-events:none;width:8px;height:14px;}
 
-/* ---- .dims-filter-select (styles.css:1514-1552, hover/focus 1543-1552) ---- */
+/* ---- .dims-filter-select (styles.css:1563-1600, hover/focus 1591-1600) ---- */
 .flt-select{appearance:none;-webkit-appearance:none;padding:.5rem 2rem .5rem 1rem;border:1px solid var(--bk-line-3);
   border-radius:999px;background-color:var(--bk-pill-platter);background-image:var(--flt-select-chevron);
-  background-repeat:no-repeat;background-position:right .75rem center;background-size:12px;font-family:var(--font);
+  background-repeat:no-repeat;background-position:right 1rem center,right .75rem center;background-size:4px 4px;font-family:var(--font);
   font-size:.875rem;font-weight:500;color:var(--flt-select-fg);cursor:pointer;min-width:120px;transition:all .2s ease;}
 .flt-select:hover{background-color:var(--bk-select-hover-bg);border-color:var(--bk-select-hover-border);}
 
-/* ---- .dims-clear-filters-btn (styles.css:1216-1252, hover 1239-1243) ---- */
+/* ---- .dims-clear-filters-btn (styles.css:1274-1309, hover 1296-1300) ---- */
 .flt-clear{display:inline-flex;align-items:center;gap:.375rem;padding:.5rem 1rem;border:1px solid var(--bk-line-3);
   border-radius:999px;background:transparent;font-family:var(--font);font-size:.875rem;font-weight:500;
   color:var(--bk-muted);cursor:pointer;white-space:nowrap;flex-shrink:0;
@@ -217,9 +223,9 @@
       <span class="idb">FLT-INDICATOR</span>
       <span class="idb">FLT-CLEAR</span>
     </div>
-    <div class="note">Pills are a <b>radiogroup of radios with <code>aria-checked</code></b>, deliberately not tab/tablist — a tablist would require an associated tabpanel (docblock in <code>templates/filters.mustache</code>). Roving tabindex: the checked radio is the group's only tab stop (<code>tabindex="0"</code>), siblings are <code>-1</code>, arrow keys move within.</div>
-    <div class="note">Accessible name = type label + the admin's custom-field name, "Filter learning plans — Year"; it falls back to the bare group label when the custom field is undefined (<code>filters.js:140-146</code>).</div>
-    <div class="note">The platter's seven <code>--dims-tabs-*</code> colour variables — platter fill, item and active-item colour, indicator fill and shadow, both paddle colours — are gone; the base rule's use sites now read <code>--block-dimensions-*</code> tokens directly, so there is no separate dark-mode override left to swap them in (<code>styles.css:1275-1305</code>). The count badge is the same story: it is <code>--block-dimensions-surface</code> under <code>--block-dimensions-ink-muted</code> (<code>styles.css:1931-1939</code>), flipping on its own where it once had no dark rule at all and sat as a foreign light island on the dark platter; the active badge inside a checked pill keeps <code>--block-dimensions-brand-tint</code> / <code>--block-dimensions-brand-ink</code> in both skins and never needed a dark variant.</div>
+    <div class="note">Pills are a <b>radiogroup of radios with <code>aria-checked</code></b>, deliberately not tab/tablist — a tablist would require an associated tabpanel (the <code>renderFilterControls()</code> docblock in <code>amd/src/filters.js</code>). Roving tabindex: the checked radio is the group's only tab stop (<code>tabindex="0"</code>), siblings are <code>-1</code>, arrow keys move within.</div>
+    <div class="note">Accessible name = type label + the admin's custom-field name, "Filter learning plans — Year"; it falls back to the bare group label when the custom field is undefined (<code>filters.js:238-244</code>).</div>
+    <div class="note">The platter's seven <code>--dims-tabs-*</code> colour variables — platter fill, item and active-item colour, indicator fill and shadow, both paddle colours — are gone; the base rule's use sites now read <code>--block-dimensions-*</code> tokens directly, so there is no separate dark-mode override left to swap them in (<code>styles.css:1332-1360</code>). The count badge is the same story: it is <code>--block-dimensions-surface</code> under <code>--block-dimensions-ink-muted</code> (<code>styles.css:1985-1993</code>), flipping on its own where it once had no dark rule at all and sat as a foreign light island on the dark platter; the active badge inside any checked pill, status pills included, reads <code>--block-dimensions-brand-tint</code> / <code>--block-dimensions-brand-ink</code>, which flip on their own too (<code>styles.css:1995-2004</code>).</div>
 
     <div class="divlbl">Same radiogroup, the other radio checked — only one is on <span class="idb">FLT-ALL-PILL</span> <span class="idb">FLT-INDICATOR</span></div>
     <div class="flt-wrap">
@@ -231,7 +237,7 @@
         <div class="flt-ind" style="left:182px;width:140px"></div>
       </div>
     </div>
-    <div class="note">The favourite pill paints its own solid accent background, so when it is checked it covers the indicator sliding underneath; the "Show all" pill has no background of its own and reads as the indicator. The pair only renders when favourites are enabled <i>and</i> the type has at least one (<code>typeFavCount &gt; 0</code>). Counts are per type and are patched in place by <code>updateFavouritePillCounts()</code>, so toggling a star never rebuilds the bar and never steals focus.</div>
+    <div class="note">The favourite pill paints its own solid <code>brand-fill</code> background under <code>on-brand-fill</code> text — the site's primary, which does not flip, so it is the same blue in both panels — and when it is checked it covers the indicator sliding underneath; the "Show all" pill has no background of its own and reads as the indicator. The pair only renders when favourites are enabled <i>and</i> the type has at least one (<code>typeFavCount &gt; 0</code>), and for plans only in the active bucket, whose cards alone carry a star. On the plan bar the status pills come first when two buckets qualify; they are drawn in <code>plan-status.html</code>. Counts are per type and are patched in place by <code>updateFavouritePillCounts()</code>, so toggling a star never rebuilds the bar and never steals focus.</div>
 
     <div class="divlbl">Overflowing group — edge fade + both paddles <span class="idb">FLT-MASK</span> <span class="idb">FLT-PADDLE-L</span> <span class="idb">FLT-PADDLE-R</span></div>
     <div class="flt-wrap">
@@ -264,7 +270,7 @@
         <option value="2023">2023</option>
       </select>
     </div>
-    <div class="note">Admin picks pills or dropdown per tag through the four <code>*_displaymode</code> settings (<code>plan_tag1</code>, <code>plan_tag2</code>, <code>competency_tag1</code>, <code>competency_tag2</code>); anything other than <code>dropdown</code> falls back to tabs. Native <code>&lt;select&gt;</code> with <code>appearance:none</code> and the chevron baked in as a <code>data:</code> background image — dark ships a second data URI with a lighter fill. Dropdowns get no platter, no indicator and no paddles: <code>FilterTabsNav</code> only ever touches <code>.dims-filter-tabs</code>.</div>
+    <div class="note">Admin picks pills or dropdown per tag through the four <code>*_displaymode</code> settings (<code>plan_tag1</code>, <code>plan_tag2</code>, <code>competency_tag1</code>, <code>competency_tag2</code>); anything other than <code>dropdown</code> falls back to tabs. Native <code>&lt;select&gt;</code> with <code>appearance:none</code> and the chevron drawn as two 4px <code>currentcolor</code> triangles, so it follows the control's own text colour and needs no second image in dark. Dropdowns get no platter, no indicator and no paddles: <code>FilterTabsNav</code> only ever touches <code>.dims-filter-tabs</code>.</div>
 
     <div class="divlbl">Clear button — rest and hover <span class="idb">FLT-CLEAR</span></div>
     <div class="flt-wrap"><div class="stack">
@@ -311,9 +317,9 @@
       <span class="idb">FLT-INDICATOR</span>
       <span class="idb">FLT-CLEAR</span>
     </div>
-    <div class="note">Pills are a <b>radiogroup of radios with <code>aria-checked</code></b>, deliberately not tab/tablist — a tablist would require an associated tabpanel (docblock in <code>templates/filters.mustache</code>). Roving tabindex: the checked radio is the group's only tab stop (<code>tabindex="0"</code>), siblings are <code>-1</code>, arrow keys move within.</div>
-    <div class="note">Accessible name = type label + the admin's custom-field name, "Filter learning plans — Year"; it falls back to the bare group label when the custom field is undefined (<code>filters.js:140-146</code>).</div>
-    <div class="note">The platter's seven <code>--dims-tabs-*</code> colour variables — platter fill, item and active-item colour, indicator fill and shadow, both paddle colours — are gone; the base rule's use sites now read <code>--block-dimensions-*</code> tokens directly, so there is no separate dark-mode override left to swap them in (<code>styles.css:1275-1305</code>). The count badge is the same story: it is <code>--block-dimensions-surface</code> under <code>--block-dimensions-ink-muted</code> (<code>styles.css:1931-1939</code>), flipping on its own where it once had no dark rule at all and sat as a foreign light island on the dark platter; the active badge inside a checked pill keeps <code>--block-dimensions-brand-tint</code> / <code>--block-dimensions-brand-ink</code> in both skins and never needed a dark variant.</div>
+    <div class="note">Pills are a <b>radiogroup of radios with <code>aria-checked</code></b>, deliberately not tab/tablist — a tablist would require an associated tabpanel (the <code>renderFilterControls()</code> docblock in <code>amd/src/filters.js</code>). Roving tabindex: the checked radio is the group's only tab stop (<code>tabindex="0"</code>), siblings are <code>-1</code>, arrow keys move within.</div>
+    <div class="note">Accessible name = type label + the admin's custom-field name, "Filter learning plans — Year"; it falls back to the bare group label when the custom field is undefined (<code>filters.js:238-244</code>).</div>
+    <div class="note">The platter's seven <code>--dims-tabs-*</code> colour variables — platter fill, item and active-item colour, indicator fill and shadow, both paddle colours — are gone; the base rule's use sites now read <code>--block-dimensions-*</code> tokens directly, so there is no separate dark-mode override left to swap them in (<code>styles.css:1332-1360</code>). The count badge is the same story: it is <code>--block-dimensions-surface</code> under <code>--block-dimensions-ink-muted</code> (<code>styles.css:1985-1993</code>), flipping on its own where it once had no dark rule at all and sat as a foreign light island on the dark platter; the active badge inside any checked pill, status pills included, reads <code>--block-dimensions-brand-tint</code> / <code>--block-dimensions-brand-ink</code>, which flip on their own too (<code>styles.css:1995-2004</code>).</div>
 
     <div class="divlbl">Same radiogroup, the other radio checked — only one is on <span class="idb">FLT-ALL-PILL</span> <span class="idb">FLT-INDICATOR</span></div>
     <div class="flt-wrap">
@@ -325,7 +331,7 @@
         <div class="flt-ind" style="left:182px;width:140px"></div>
       </div>
     </div>
-    <div class="note">The favourite pill paints its own solid accent background, so when it is checked it covers the indicator sliding underneath; the "Show all" pill has no background of its own and reads as the indicator. The pair only renders when favourites are enabled <i>and</i> the type has at least one (<code>typeFavCount &gt; 0</code>). Counts are per type and are patched in place by <code>updateFavouritePillCounts()</code>, so toggling a star never rebuilds the bar and never steals focus.</div>
+    <div class="note">The favourite pill paints its own solid <code>brand-fill</code> background under <code>on-brand-fill</code> text — the site's primary, which does not flip, so it is the same blue in both panels — and when it is checked it covers the indicator sliding underneath; the "Show all" pill has no background of its own and reads as the indicator. The pair only renders when favourites are enabled <i>and</i> the type has at least one (<code>typeFavCount &gt; 0</code>), and for plans only in the active bucket, whose cards alone carry a star. On the plan bar the status pills come first when two buckets qualify; they are drawn in <code>plan-status.html</code>. Counts are per type and are patched in place by <code>updateFavouritePillCounts()</code>, so toggling a star never rebuilds the bar and never steals focus.</div>
 
     <div class="divlbl">Overflowing group — edge fade + both paddles <span class="idb">FLT-MASK</span> <span class="idb">FLT-PADDLE-L</span> <span class="idb">FLT-PADDLE-R</span></div>
     <div class="flt-wrap">
@@ -358,7 +364,7 @@
         <option value="2023">2023</option>
       </select>
     </div>
-    <div class="note">Admin picks pills or dropdown per tag through the four <code>*_displaymode</code> settings (<code>plan_tag1</code>, <code>plan_tag2</code>, <code>competency_tag1</code>, <code>competency_tag2</code>); anything other than <code>dropdown</code> falls back to tabs. Native <code>&lt;select&gt;</code> with <code>appearance:none</code> and the chevron baked in as a <code>data:</code> background image — dark ships a second data URI with a lighter fill. Dropdowns get no platter, no indicator and no paddles: <code>FilterTabsNav</code> only ever touches <code>.dims-filter-tabs</code>.</div>
+    <div class="note">Admin picks pills or dropdown per tag through the four <code>*_displaymode</code> settings (<code>plan_tag1</code>, <code>plan_tag2</code>, <code>competency_tag1</code>, <code>competency_tag2</code>); anything other than <code>dropdown</code> falls back to tabs. Native <code>&lt;select&gt;</code> with <code>appearance:none</code> and the chevron drawn as two 4px <code>currentcolor</code> triangles, so it follows the control's own text colour and needs no second image in dark. Dropdowns get no platter, no indicator and no paddles: <code>FilterTabsNav</code> only ever touches <code>.dims-filter-tabs</code>.</div>
 
     <div class="divlbl">Clear button — rest and hover <span class="idb">FLT-CLEAR</span></div>
     <div class="flt-wrap"><div class="stack">
@@ -374,19 +380,19 @@
 <div class="legend">
   <h3>ID legend — Filter bar (FLT) · rendered by amd/src/filters.js, not by a mustache template</h3>
   <div class="leg">
-    <span class="k">FLT-BAR</span><span class="v"><b>Filter toolbar</b> — <code>.dims-filters-bar</code>, <code>role="toolbar"</code> with the group label as its accessible name; flex, wrap, <code>gap .75rem</code>, <code>margin-bottom 1rem</code>. Emitted once per <code>.dims-filters-host[data-filters-type]</code>, i.e. twice per block (plan + competency) <span class="rule">filters.js:67-90,84; styles.css:1216-1233</span></span>
-    <span class="k">FLT-FAV-PILL</span><span class="v"><b>"★ My Favourites (N)" radio</b> — <code>.dims-fav-filter-btn</code>, <code>data-fav-filter-type</code>; only rendered when favourites are enabled and the type has at least one. Checked state paints solid <code>--block-dimensions-brand-fill</code> / <code>--block-dimensions-on-brand-fill</code> instead of relying on the indicator <span class="rule">filters.js:92-111; styles.css:1879-1911</span></span>
-    <span class="k">FLT-ALL-PILL</span><span class="v"><b>"Show all (N)" radio</b> — <code>.dims-all-filter-btn</code>, <code>data-all-filter-type</code>; the other half of the same radiogroup, checked whenever the favourite filter is off <span class="rule">filters.js:112-120, 226-232</span></span>
-    <span class="k">FLT-COUNT</span><span class="v"><b>Count badge</b> — <code>.dims-filter-count</code>, <code>0.75rem/600</code>, <code>999px</code>, <code>padding 0 6px</code>; patched in place by <code>updateFavouritePillCounts()</code> so starring a card keeps focus on the star. Rest state is <code>--block-dimensions-surface</code> under <code>--block-dimensions-ink-muted</code>, which flips on its own in dark — no separate dark rule left to keep in sync; the badge inside a checked pill is <code>--block-dimensions-brand-tint</code> / <code>--block-dimensions-brand-ink</code> in both skins <span class="rule">filters.js:484-505; styles.css:1942-1972, 1931-1939</span></span>
-    <span class="k">FLT-TABS</span><span class="v"><b>Tag radiogroup platter</b> — <code>.dims-filter-tabs</code> in <code>.dims-filter-tabs-wrapper[data-filter-group]</code>; <code>44px</code> shell, <code>4px</code> padding, <code>36px</code> inner row, <code>border-radius 999px</code>, wrapper capped at <code>600px</code> (auto for the <code>fav_</code> group) <span class="rule">filters.js:148-163; styles.css:1260-1305</span></span>
-    <span class="k">FLT-TAB-ALL</span><span class="v"><b>"All" radio</b> — the <code>data-filter-value=""</code> reset that leads every tag group; checked when no value is selected for that field <span class="rule">filters.js:151-154</span></span>
-    <span class="k">FLT-TAB</span><span class="v"><b>Tag value radio</b> — <code>.dims-filter-tab</code>, one per unique <code>tag1</code>/<code>tag2</code> value found in the loaded cards, locale-sorted; <code>0.875rem/500</code>, <code>opacity .8</code> rising to 1 on hover, focus-visible draws an <i>inset</i> 2px accent ring so it is not clipped by the platter <span class="rule">filters.js:155-162; styles.css:1376-1422</span></span>
-    <span class="k">FLT-INDICATOR</span><span class="v"><b>Sliding pill background</b> — <code>.dims-filter-tabs-indicator</code>, absolutely positioned sibling of the mask at <code>z-index 0</code>, driven by <code>--dims-tabs-indicator-start/-width</code>, <code>320ms ease-out</code>; white + <code>0 1px 3px rgba(0,0,0,.12)</code> light, <code>#495057</code> + <code>.3</code> shadow dark <span class="rule">filter_tabs_nav.js:100-102; styles.css:1425-1440</span></span>
-    <span class="k">FLT-MASK</span><span class="v"><b>Scroll clip + edge fade</b> — <code>.dims-filter-tabs-mask</code>, <code>overflow-x:hidden</code> with a <code>mask-image</code> that is transparent for <code>36px</code> then fades to opaque over <code>22px</code> at each end; the end that has no paddle switches to <code>black</code> via <code>:has()</code>, and <code>.dims-filter-tabs-mask-noscroll</code> drops the mask entirely <span class="rule">filter_tabs_nav.js:96-98; styles.css:1307-1315</span></span>
-    <span class="k">FLT-PADDLE-L</span><span class="v"><b>Scroll-left paddle</b> — <code>40px</code> wide (<code>36 + 4</code>), chevron <code>M7 1L1 7L7 13</code> in an <code>8×14</code> viewBox at stroke-width 2; <code>aria-hidden="true"</code> and <code>tabIndex -1</code> because keyboard users navigate with arrow keys, but the label is still localized (<code>paddleleft</code>) <span class="rule">filter_tabs_nav.js:61-62, 111-117; styles.css:1443-1504</span></span>
-    <span class="k">FLT-PADDLE-R</span><span class="v"><b>Scroll-right paddle</b> — mirror of the left, chevron <code>M1 1L7 7L1 13</code>, label <code>paddleright</code>; both fade out via <code>.dims-filter-tabs-paddle-hidden</code> when that end is reached and dim to <code>opacity .42</code> when disabled <span class="rule">filter_tabs_nav.js:63-64, 119-125; styles.css:1489-1504</span></span>
-    <span class="k">FLT-SELECT</span><span class="v"><b>Dropdown display mode</b> — <code>.dims-filter-select</code>, chosen per tag by the <code>*_displaymode</code> admin setting; native <code>&lt;select&gt;</code> with <code>appearance:none</code>, <code>999px</code> radius, a <code>data:</code> SVG chevron at <code>right .75rem</code>, <code>min-width 120px</code>, and the same combined <code>aria-label</code> as the pill group <span class="rule">filters.js:164-174; styles.css:1514-1552, 1543-1552</span></span>
-    <span class="k">FLT-CLEAR</span><span class="v"><b>Clear filters</b> — <code>.dims-clear-filters-btn[data-clear-type]</code>, emitted with <code>style="display:none"</code> and revealed by <code>updateClearFilterButtons()</code> only when that type has an active filter; eraser icon at <code>0.8rem</code>, hover flips to the danger pair <span class="rule">filters.js:177-184, 241-246; styles.css:1216-1252, 1239-1243</span></span>
+    <span class="k">FLT-BAR</span><span class="v"><b>Filter toolbar</b> — <code>.dims-filters-bar</code>, <code>role="toolbar"</code> with the group label as its accessible name; flex, wrap, <code>gap .75rem</code>, <code>margin-bottom 1rem</code>. Emitted once per <code>.dims-filters-host[data-filters-type]</code>, i.e. twice per block (plan + competency) <span class="rule">filters.js:195-296, 210; styles.css:1263-1269</span></span>
+    <span class="k">FLT-FAV-PILL</span><span class="v"><b>"★ My Favourites (N)" radio</b> — <code>.dims-fav-filter-btn</code>, <code>data-fav-filter-type</code>; only rendered when favourites are enabled and the type has at least one, and for plans only in the active bucket. Checked state paints solid <code>--block-dimensions-brand-fill</code> / <code>--block-dimensions-on-brand-fill</code> instead of relying on the indicator <span class="rule">filters.js:142-179; styles.css:1936-1966</span></span>
+    <span class="k">FLT-ALL-PILL</span><span class="v"><b>"Show all (N)" radio</b> — <code>.dims-all-filter-btn</code>, <code>data-all-filter-type</code>; the other half of the same radiogroup, checked whenever the favourite filter is off <span class="rule">filters.js:168-174, 326-332</span></span>
+    <span class="k">FLT-COUNT</span><span class="v"><b>Count badge</b> — <code>.dims-filter-count</code>, <code>0.75rem/600</code>, <code>999px</code>, <code>padding 0 6px</code>; patched in place by <code>updateFavouritePillCounts()</code> so starring a card keeps focus on the star. Rest state is <code>--block-dimensions-surface</code> under <code>--block-dimensions-ink-muted</code>, which flips on its own in dark — no separate dark rule left to keep in sync; the badge inside any checked pill (favourites, show all, status) is <code>--block-dimensions-brand-ink</code> on <code>--block-dimensions-brand-tint</code>: the rule is keyed on the checked tab, because a checked show-all or status pill sits on the indicator, which paints <code>surface</code>, where the resting fill would give the badge no shape <span class="rule">filters.js:652-673; styles.css:1985-1993, 1995-2004</span></span>
+    <span class="k">FLT-TABS</span><span class="v"><b>Tag radiogroup platter</b> — <code>.dims-filter-tabs</code> in <code>.dims-filter-tabs-wrapper[data-filter-group]</code>; <code>44px</code> shell, <code>4px</code> padding, <code>36px</code> inner row, <code>border-radius 999px</code>, wrapper capped at <code>600px</code> (auto for the <code>fav_</code> group) <span class="rule">filters.js:246-261; styles.css:1317-1360</span></span>
+    <span class="k">FLT-TAB-ALL</span><span class="v"><b>"All" radio</b> — the <code>data-filter-value=""</code> reset that leads every tag group; checked when no value is selected for that field <span class="rule">filters.js:249-252</span></span>
+    <span class="k">FLT-TAB</span><span class="v"><b>Tag value radio</b> — <code>.dims-filter-tab</code>, one per unique <code>tag1</code>/<code>tag2</code> value found in the loaded cards, locale-sorted; <code>0.875rem/500</code>, <code>opacity .8</code> rising to 1 on hover, <code>accent</code> text when checked; focus-visible draws the 2px <code>focus-ring</code> outline at <code>outline-offset: -2px</code> so it is not clipped by the platter <span class="rule">filters.js:253-260; styles.css:1431-1471</span></span>
+    <span class="k">FLT-INDICATOR</span><span class="v"><b>Sliding pill background</b> — <code>.dims-filter-tabs-indicator</code>, absolutely positioned sibling of the mask at <code>z-index 0</code>, driven by <code>--dims-tabs-indicator-start/-width</code>, <code>320ms ease-out</code>; <code>surface</code> with a <code>0 1px 3px</code> <code>shadow</code> — <code>#fff</code> at 10% in light, <code>#1d2125</code> at 55% in dark <span class="rule">filter_tabs_nav.js:99-101; styles.css:1474-1489</span></span>
+    <span class="k">FLT-MASK</span><span class="v"><b>Scroll clip + edge fade</b> — <code>.dims-filter-tabs-mask</code>, <code>overflow-x:hidden</code> with a <code>mask-image</code> that is transparent for <code>36px</code> then fades to opaque over <code>22px</code> at each end; the end that has no paddle switches to <code>black</code> via <code>:has()</code>, and <code>.dims-filter-tabs-mask-noscroll</code> drops the mask entirely <span class="rule">filter_tabs_nav.js:95-97; styles.css:1362-1370, 1381-1415</span></span>
+    <span class="k">FLT-PADDLE-L</span><span class="v"><b>Scroll-left paddle</b> — <code>40px</code> wide (<code>36 + 4</code>), chevron <code>M7 1L1 7L7 13</code> in an <code>8×14</code> viewBox at stroke-width 2; <code>aria-hidden="true"</code> and <code>tabIndex -1</code> because keyboard users navigate with arrow keys, but the label is still localized (<code>paddleleft</code>) <span class="rule">filter_tabs_nav.js:61-62, 110-116; styles.css:1492-1553</span></span>
+    <span class="k">FLT-PADDLE-R</span><span class="v"><b>Scroll-right paddle</b> — mirror of the left, chevron <code>M1 1L7 7L1 13</code>, label <code>paddleright</code>; both fade out via <code>.dims-filter-tabs-paddle-hidden</code> when that end is reached and dim to <code>opacity .42</code> when disabled <span class="rule">filter_tabs_nav.js:63-64, 118-124; styles.css:1538-1553</span></span>
+    <span class="k">FLT-SELECT</span><span class="v"><b>Dropdown display mode</b> — <code>.dims-filter-select</code>, chosen per tag by the <code>*_displaymode</code> admin setting; native <code>&lt;select&gt;</code> with <code>appearance:none</code>, <code>999px</code> radius, a chevron of two 4px <code>currentcolor</code> triangles at <code>right 1rem</code> / <code>right .75rem</code>, <code>min-width 120px</code>, and the same combined <code>aria-label</code> as the pill group <span class="rule">filters.js:262-272; styles.css:1563-1600, 1591-1600</span></span>
+    <span class="k">FLT-CLEAR</span><span class="v"><b>Clear filters</b> — <code>.dims-clear-filters-btn[data-clear-type]</code>, emitted with <code>style="display:none"</code> and revealed by <code>updateClearFilterButtons()</code> only when that type has an active filter; eraser icon at <code>0.8rem</code>, hover flips to the danger pair <span class="rule">filters.js:275-282, 341-346; styles.css:1274-1309, 1296-1300</span></span>
   </div>
 </div>
 </div>

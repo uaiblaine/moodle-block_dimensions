@@ -161,7 +161,7 @@ The block aims at WCAG 2.1 AA:
 - Filter pills are exposed as radiogroups with roving tabindex and full keyboard support (arrows, Home/End); every control has a meaningful accessible name.
 - Live regions announce result counts, loading, empty states and favourite errors; focus is preserved when the filter bar re-renders.
 - Trail completion is conveyed in text for screen readers, not by colour alone; decorative imagery is hidden from assistive technology.
-- `prefers-reduced-motion`, `prefers-contrast: high` and print styles are honoured.
+- `prefers-reduced-motion`, `prefers-contrast: more` and print styles are honoured.
 
 
 Theme support

@@ -172,6 +172,36 @@ final class bootstrap_compat_test extends \basic_testcase {
     }
 
     /**
+     * Blank out every Mustache comment span in a file's content.
+     *
+     * A Mustache comment closes at its first closing double brace ({@see is_comment_line()}), so a
+     * multi-line template docblock only carries the {{! marker on its opening line - the
+     * continuation lines are plain prose with no marker of their own, and is_comment_line() would
+     * scan them as markup. Newlines inside the span are preserved so line numbers reported against
+     * the result still point at the right source line, the same way colour_tokens_test::uncommented()
+     * blanks CSS comments.
+     *
+     * @param string $content Raw file content.
+     * @return string The content with every {{! ... }} span replaced by blank lines.
+     */
+    private function strip_mustache_comments(string $content): string {
+        return preg_replace_callback('~\{\{!.*?\}\}~s', static function (array $match): string {
+            return str_repeat("\n", substr_count($match[0], "\n"));
+        }, $content);
+    }
+
+    /**
+     * Read a file as scannable lines, with Mustache comment spans blanked first.
+     *
+     * @param string $path Absolute path to a file under markup_files().
+     * @return array List of lines, 0-indexed, matching file()'s line numbering.
+     */
+    private function file_lines(string $path): array {
+        $content = $this->strip_mustache_comments(file_get_contents($path));
+        return explode("\n", $content);
+    }
+
+    /**
      * The exact class tokens the polyfill block defines behind the Bootstrap 4 gate.
      *
      * Token-level, not family-level: a family-level check ("is gap-* covered?") passes while
@@ -206,7 +236,7 @@ final class bootstrap_compat_test extends \basic_testcase {
     private function used_bs5_tokens(): array {
         $used = [];
         foreach ($this->markup_files() as $path) {
-            foreach (file($path) as $line) {
+            foreach ($this->file_lines($path) as $line) {
                 if ($this->is_comment_line($line)) {
                     continue;
                 }
@@ -282,7 +312,7 @@ final class bootstrap_compat_test extends \basic_testcase {
     public function test_no_deprecated_bootstrap4_class_names(): void {
         $offenders = [];
         foreach ($this->markup_files() as $path) {
-            foreach (file($path) as $number => $line) {
+            foreach ($this->file_lines($path) as $number => $line) {
                 if ($this->is_comment_line($line)) {
                     continue;
                 }
@@ -318,7 +348,7 @@ final class bootstrap_compat_test extends \basic_testcase {
          */
         $offenders = [];
         foreach ($this->markup_files() as $path) {
-            foreach (file($path) as $number => $line) {
+            foreach ($this->file_lines($path) as $number => $line) {
                 if ($this->is_comment_line($line)) {
                     continue;
                 }
@@ -359,7 +389,7 @@ final class bootstrap_compat_test extends \basic_testcase {
             'data-parent' => 'data-bs-parent',
         ];
         foreach ($this->markup_files() as $path) {
-            foreach (file($path) as $number => $line) {
+            foreach ($this->file_lines($path) as $number => $line) {
                 if ($this->is_comment_line($line)) {
                     continue;
                 }
@@ -441,5 +471,50 @@ final class bootstrap_compat_test extends \basic_testcase {
             'The Bootstrap 4 polyfill is gated on a class the block\'s own root must carry, so this '
                 . 'chain has to stay intact: ' . implode('; ', $offenders)
         );
+    }
+
+    /**
+     * A Bootstrap class named only in a Mustache docblock's prose must not count as markup usage.
+     *
+     * is_comment_line() alone only recognises the LINE that opens a {{! … }} span; a multi-line
+     * template docblock's continuation lines carry no marker of their own and, unstripped, would be
+     * scanned as real markup. templates/plan_card.mustache has exactly this shape: its docblock
+     * names "visually-hidden" in prose on a continuation line. Left unfixed, that prose mention
+     * would keep test_polyfill_carries_nothing_unused() green even after every real markup use of
+     * the class was deleted — the fixture below reproduces the shape without depending on that real
+     * template's wording.
+     *
+     * @return void
+     */
+    public function test_mustache_docblock_prose_is_not_scanned_as_markup(): void {
+        $fixture = sys_get_temp_dir() . '/block_dimensions_bootstrap_compat_' . uniqid() . '.mustache';
+        file_put_contents($fixture, implode("\n", [
+            '{{!',
+            '    Example docblock naming visually-hidden in prose, across more than one line - this',
+            '    continuation line carries no comment marker of its own.',
+            '}}',
+            '<span class="visually-hidden">real usage, outside the comment</span>',
+            '',
+        ]));
+
+        try {
+            $found = [];
+            foreach ($this->file_lines($fixture) as $line) {
+                if ($this->is_comment_line($line)) {
+                    continue;
+                }
+                if (preg_match('/\bvisually-hidden\b/', $line)) {
+                    $found[] = trim($line);
+                }
+            }
+            $this->assertSame(
+                ['<span class="visually-hidden">real usage, outside the comment</span>'],
+                $found,
+                'Only the real markup use of visually-hidden should survive the line scan; the '
+                    . 'docblock\'s prose mention must be blanked before it, not counted alongside it.'
+            );
+        } finally {
+            unlink($fixture);
+        }
     }
 }

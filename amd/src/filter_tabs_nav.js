@@ -479,6 +479,12 @@ define([], function() {
         }
 
         e.preventDefault();
+        // A radio marked aria-busy is still loading what it checked, and filters.js ignores a click
+        // on any other one until then. Moving focus alone would leave it on an unchecked radio, so
+        // the keys do nothing while the group is busy.
+        if (this.itemsEl.querySelector('.dims-filter-tab[aria-busy="true"]')) {
+            return;
+        }
         var nextIndex;
         if (e.key === 'ArrowRight') {
             nextIndex = (focusedIndex + 1) % tabs.length;

@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - **A plan status filter, with every bucket but the active one loaded on demand.** The plan grid now
   groups plans as *Active*, *In review* (both review statuses, the way core groups its own draft
-  statuses) and *Completed*. Only the active bucket arrives with the page; another bucket is fetched
+  statuses) and *Completed*. Only the opening bucket arrives with the page; another bucket is fetched
   the first time the learner asks for it and kept afterwards, so a second visit costs no request. A
   bucket with no plans is not drawn: an empty *In review* would read as "you have none" on the many
   sites where it means "you cannot see them", since a learner needs
@@ -23,8 +23,8 @@ All notable changes to this project will be documented in this file.
   2026092200), so the card agrees with core's own plan page. Search scopes to the bucket on screen.
 
   The pills are part of the filter bar, so on a phone they appear with the rest of the filters when
-  the panel is opened. The block opens on the first bucket that has plans: a learner whose plans
-  have all finished lands on them, rather than on an empty Active bucket with a notice. The web
+  the panel is opened. The block opens on the first bucket that holds any plan: a learner whose
+  plans have all finished lands on them, rather than on an empty Active bucket with a notice. The web
   service resolves an empty `planstatus` through `dataset_provider::opening_bucket()`, and every
   later request names its bucket.
 
@@ -47,12 +47,66 @@ All notable changes to this project will be documented in this file.
 - **The status pills drew their internal keys.** The new labels existed in both language files but
   were not in the payload the client renders from, so the pills read "active" and "complete".
   `summary_test` now asserts every label the client draws is shipped.
+- **A learner whose active plans show competency cards could lose them.** An active plan on a
+  competencies-mode template (the default) has no plan card, so it counted as "no active plan": the
+  block showed "No active plans at the moment." above the learner's competency cards, and a learner
+  who also held a completed plan opened on *Completed* with no Active pill to go back. The block now
+  opens on the first bucket holding any plan, `hasactiveplans` means any active plan, and the Active
+  pill is drawn for such a learner without a number (its count is plan cards).
+- **The status filter lost or mixed cards in several paths.** Loading the competency cards while
+  another bucket was on screen emptied the competency section (they are built for the active bucket
+  only, and every such load now asks for it); returning to *Active* before the rest of the plans
+  had loaded showed only the favourites under a checked "Show all"; a failed bucket fetch left the
+  previous bucket's cards under the new pill and made that bucket impossible to pick again (the
+  grid now returns to the bucket it left, with its tag and favourites filters); and a response
+  arriving during a bucket switch could redraw the previous bucket's cards under the new pill.
+- **Retry after a load error could leave the block stuck.** The loading line stayed up and old cards
+  stayed on screen, because the flags of the failed session survived. Retry now starts a new client
+  session, keeps the search term and applies it, and drops late responses from the replaced one.
+- **Keyboard focus was lost in the filter bar (WCAG 2.4.3).** Activating a status pill, by click or
+  arrow key, rebuilt the bar and dropped focus to the page; arrow keys moved focus while a bucket was
+  loading although the click was ignored; a keyboard Retry hid the button holding focus. A tag value
+  holding a quote or backslash made the focus-restoring selector throw and aborted the render.
+- **The favourite star rendered with favourites disabled.** Every competency card and every active
+  plan card drew a focusable toggle that the web service then refused. Both templates now gate the
+  star on `showfavourite`, which requires the setting (`is_favourites_enabled()`), and the web
+  service declares it for both card types. A star toggled and later redrawn also kept its old label.
+- **A search or filter matching nothing read "No competencies in your plans."** It now says "No
+  results found."; the old text is kept for a learner who really has none.
+- **`prefers-contrast` styles never applied.** All seven blocks asked for `prefers-contrast: high`,
+  a draft value no browser shipped; they now use `more`. Several overrides in those blocks, and the
+  `prefers-reduced-motion` resets of the filter tabs, hidden paddles and trail marker, also lost on
+  specificity and did nothing. The plan card now gets the competency card's raised-contrast and
+  print treatment, and its hover lift stops under reduced motion. `card_layout_test` pins all of it.
+- **The competency grid overflowed narrow block regions.** Its 360px track floor was wider than
+  Boost's 315px block drawer. Every card grid's floor is now capped at the block's width.
+- **The favourite star could fall below 3:1 over card art (WCAG 1.4.11).** Its disc was 72%
+  translucent over arbitrary images; it is now opaque.
+- **A checked status pill's count badge had no visible shape.** The checked-badge rule named only
+  the favourites and show-all pills.
 
 ### Changed
 - **Code comments rewritten to Moodle's guidance.** Every comment was checked against the code it
   describes (74 contradicted it and were corrected), history and development-environment notes were
   removed, and required docblocks, tags and Mustache example contexts were kept. The AMD builds were
   rebuilt for the new module docblocks.
+- **Image URLs written into inline styles are percent-encoded.** `sanitize_image_url()` encodes
+  `' " ( ) \` and whitespace after `clean_param(PARAM_URL)`, which lets a quote and parentheses
+  through in a query or fragment; a `url('...')` in a `style` attribute is a CSS context Mustache
+  escaping does not protect. Pluginfile URLs already encode these and pass unchanged.
+- **Template metadata is read in one batch per request**, and the bucket counts are computed once.
+  A failure reading a plan's competencies is now logged through `debugging()` (web service only)
+  instead of silently showing an empty section. Favourites are read for the user the provider was
+  built for, not the logged-in user. Custom field names are no longer memoised in a static that
+  outlived a rename.
+- **Removed `templates/filters.mustache`.** Nothing rendered it and it had drifted from the filter
+  bar `filters.js` draws, which stays the bar's only definition.
+- **Tests that could not fail now can.** The `toggle_favourite` tests pin each guard with a fixture
+  that passes every other one, and cover the ownership check and a full toggle round trip; the
+  privacy tests gained controls; the source-scanning tests no longer read Mustache docblock prose
+  as markup; the sibling token comparison fails instead of skipping; and `status_filter.feature`
+  pins the status pills end to end.
+
 - **The block renders nothing for a user with no plan it can show, as `block_lp` does.**
   `get_content()` calls `summary::has_content()` again, and core drops the empty block from the
   page; in editing mode it stays, with its controls, so it can still be moved or removed. The gate

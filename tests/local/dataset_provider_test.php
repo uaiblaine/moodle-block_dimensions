@@ -18,6 +18,7 @@ namespace block_dimensions\local;
 
 use advanced_testcase;
 use core_competency\plan;
+use local_dimensions\constants;
 
 /**
  * PHPUnit tests for dataset provider helper behavior.
@@ -33,7 +34,8 @@ final class dataset_provider_test extends advanced_testcase {
      * Build a test double exposing protected helper methods as public test_*() proxies.
      *
      * The constructor is skipped, so the plan list stays empty until test_set_plans() fills it,
-     * and the competency fetchers and build_competency_card() are stubbed.
+     * and the competency fetchers and build_competency_card() are stubbed. A template id given a
+     * display mode through test_set_display_mode() resolves to it without reading any metadata.
      *
      * @return object
      */
@@ -43,12 +45,48 @@ final class dataset_provider_test extends advanced_testcase {
             protected array $stubbedcompetencies = [];
             /** @var array Stubbed courses map for get_competencies_with_courses. */
             protected array $stubbedcourses = [];
+            /** @var array Stubbed display modes, keyed by template id. */
+            protected array $stubbeddisplaymodes = [];
 
             /**
              * Constructor.
              */
             public function __construct() {
                 // Do not call parent constructor in pure helper tests.
+            }
+
+            /**
+             * Make a template id resolve to a display mode without template metadata.
+             *
+             * @param int $templateid Template id a fake plan reports.
+             * @param int $displaymode One of the local_dimensions DISPLAYMODE_* constants.
+             * @return void
+             */
+            public function test_set_display_mode(int $templateid, int $displaymode): void {
+                $this->stubbeddisplaymodes[$templateid] = $displaymode;
+            }
+
+            /**
+             * Resolve a stubbed template id without reading metadata.
+             *
+             * @param int|null $templateid Template id.
+             * @return array
+             */
+            protected function resolve_plan_display_context(?int $templateid): array {
+                if ($templateid && isset($this->stubbeddisplaymodes[$templateid])) {
+                    return [[], $this->stubbeddisplaymodes[$templateid]];
+                }
+
+                return parent::resolve_plan_display_context($templateid);
+            }
+
+            /**
+             * Skip the batch read: the fake plans' template ids exist nowhere.
+             *
+             * @param array $plans Plans.
+             * @return void
+             */
+            protected function prefetch_template_metadata(array $plans): void {
             }
 
             public function test_get_trail_start_index(
@@ -222,10 +260,11 @@ final class dataset_provider_test extends advanced_testcase {
              *
              * @param string $planname Plan name.
              * @param bool $haspartialtrail Whether trail is partial.
+             * @param string|null $bucket The plan's status bucket, or null for the active wording.
              * @return array
              */
-            public function test_get_plan_button_data(string $planname, bool $haspartialtrail): array {
-                return $this->get_plan_button_data($planname, $haspartialtrail);
+            public function test_get_plan_button_data(string $planname, bool $haspartialtrail, ?string $bucket = null): array {
+                return $this->get_plan_button_data($planname, $haspartialtrail, $bucket);
             }
 
             /**
@@ -351,35 +390,48 @@ final class dataset_provider_test extends advanced_testcase {
     /**
      * Build a fake plan that reports one status, with no database behind it.
      *
+     * A non-zero template id has no metadata behind it either: give it a display mode with the
+     * double's test_set_display_mode().
+     *
      * @param int $status Status the fake plan reports.
+     * @param int $templateid Template id the fake plan reports, 0 for none.
      * @return object
      */
-    protected function fake_plan(int $status): object {
-        return new class ($status) {
+    protected function fake_plan(int $status, int $templateid = 0): object {
+        return new class ($status, $templateid) {
             /** @var int Status this fake plan reports. */
             protected $status;
+
+            /** @var int Template id this fake plan reports. */
+            protected $templateid;
 
             /**
              * Constructor.
              *
              * @param int $status Status to report.
+             * @param int $templateid Template id to report.
              */
-            public function __construct(int $status) {
+            public function __construct(int $status, int $templateid) {
                 $this->status = $status;
+                $this->templateid = $templateid;
             }
 
             /**
              * Get a field from the fake plan object.
              *
-             * Every field but status reads 0. A templateid of 0 means no template, so
-             * count_plans_by_bucket() counts an active fake plan as a plan card without
-             * reading template metadata.
+             * Every field but status and templateid reads 0. A templateid of 0 means no
+             * template, so count_plans_by_bucket() counts an active fake plan as a plan card
+             * without reading template metadata.
              *
              * @param string $field Field name.
              * @return int
              */
             public function get(string $field): int {
-                return $field === 'status' ? $this->status : 0;
+                if ($field === 'status') {
+                    return $this->status;
+                }
+
+                return $field === 'templateid' ? $this->templateid : 0;
             }
         };
     }
@@ -445,6 +497,34 @@ final class dataset_provider_test extends advanced_testcase {
         $provider->test_set_plans([$this->fake_plan(plan::STATUS_DRAFT)]);
         $this->assertFalse($provider->has_displayable_plans());
         $this->assertSame(['active' => 0, 'review' => 0, 'complete' => 0], $provider->count_plans_by_bucket());
+    }
+
+    /**
+     * An active plan that shows competency cards still opens the block on the active bucket.
+     *
+     * It draws no plan card, so the active count stays at zero, but its competency cards are built
+     * only in the active bucket: opening on the completed plan would leave them out of reach.
+     *
+     * @covers ::opening_bucket
+     * @covers ::has_active_plans
+     * @covers ::count_plans_by_bucket
+     */
+    public function test_an_active_plan_showing_competencies_opens_the_active_bucket(): void {
+        $provider = $this->get_provider_double();
+        $provider->test_set_display_mode(7, constants::DISPLAYMODE_COMPETENCIES);
+        $provider->test_set_plans([
+            $this->fake_plan(plan::STATUS_ACTIVE, 7),
+            $this->fake_plan(plan::STATUS_COMPLETE),
+        ]);
+
+        $this->assertSame(['active' => 0, 'review' => 0, 'complete' => 1], $provider->count_plans_by_bucket());
+        $this->assertSame(dataset_provider::BUCKET_ACTIVE, $provider->opening_bucket());
+        $this->assertTrue($provider->has_active_plans());
+
+        // Control: with the completed plan alone the block opens on it, and holds no active plan.
+        $provider->test_set_plans([$this->fake_plan(plan::STATUS_COMPLETE)]);
+        $this->assertSame(dataset_provider::BUCKET_COMPLETE, $provider->opening_bucket());
+        $this->assertFalse($provider->has_active_plans());
     }
 
     /**
@@ -729,7 +809,7 @@ final class dataset_provider_test extends advanced_testcase {
     }
 
     /**
-     * Plan competency processor should return empty result when API throws.
+     * Plan competency processor should return an empty result, and say why, when the API throws.
      *
      * @covers ::process_plan_competencies
      */
@@ -778,10 +858,11 @@ final class dataset_provider_test extends advanced_testcase {
 
         $this->assertSame(0, $result['counted']);
         $this->assertSame([], $result['cards']);
+        $this->assertDebuggingCalled('Error reading the competencies of plan 11: API failure', DEBUG_DEVELOPER);
     }
 
     /**
-     * Button data should use continue strings when trail is partial, access strings otherwise.
+     * Button data: continue on a partial trail, access otherwise, and view outside the active bucket.
      *
      * @covers ::get_plan_button_data
      */
@@ -789,17 +870,24 @@ final class dataset_provider_test extends advanced_testcase {
         $this->resetAfterTest();
         $provider = $this->get_provider_double();
 
-        $partialdata = $provider->test_get_plan_button_data('My plan', true);
-        $this->assertArrayHasKey('buttonlabel', $partialdata);
-        $this->assertArrayHasKey('buttonarialabel', $partialdata);
-        $this->assertStringContainsString('My plan', $partialdata['buttonarialabel']);
+        // Precondition: the wordings differ, or swapping the branches would go unnoticed.
+        $this->assertNotSame(get_string('continuecard', 'block_dimensions'), get_string('accesscard', 'block_dimensions'));
 
-        $accessdata = $provider->test_get_plan_button_data('Other plan', false);
-        $this->assertArrayHasKey('buttonlabel', $accessdata);
-        $this->assertArrayHasKey('buttonarialabel', $accessdata);
-        $this->assertStringContainsString('Other plan', $accessdata['buttonarialabel']);
+        $this->assertSame([
+            'buttonlabel' => get_string('continuecard', 'block_dimensions'),
+            'buttonarialabel' => get_string('continuecardaria', 'block_dimensions', 'My plan'),
+        ], $provider->test_get_plan_button_data('My plan', true));
 
-        $this->assertNotSame($partialdata['buttonlabel'], $accessdata['buttonlabel']);
+        $this->assertSame([
+            'buttonlabel' => get_string('accesscard', 'block_dimensions'),
+            'buttonarialabel' => get_string('accesscardaria', 'block_dimensions', 'Other plan'),
+        ], $provider->test_get_plan_button_data('Other plan', false));
+
+        // Outside the active bucket there is nothing to continue, even on a partial trail.
+        $this->assertSame([
+            'buttonlabel' => get_string('viewplancard', 'block_dimensions'),
+            'buttonarialabel' => get_string('viewplancardaria', 'block_dimensions', 'Done plan'),
+        ], $provider->test_get_plan_button_data('Done plan', true, dataset_provider::BUCKET_COMPLETE));
     }
 
     /**
@@ -808,13 +896,10 @@ final class dataset_provider_test extends advanced_testcase {
      * @covers ::resolve_plan_display_context
      */
     public function test_resolve_plan_display_context_returns_plan_mode_for_null_template(): void {
-        if (!class_exists(\local_dimensions\constants::class)) {
-            $this->markTestSkipped('local_dimensions is not installed');
-        }
         $provider = $this->get_provider_double();
         [$templatemetadata, $displaymode] = $provider->test_resolve_plan_display_context(null);
         $this->assertSame([], $templatemetadata);
-        $this->assertSame(\local_dimensions\constants::DISPLAYMODE_PLAN, $displaymode);
+        $this->assertSame(constants::DISPLAYMODE_PLAN, $displaymode);
     }
 
     /**
@@ -997,10 +1082,187 @@ final class dataset_provider_test extends advanced_testcase {
         $encoded = 'https://example.com/pluginfile.php/1/local_dimensions/cardimage/7/my%20photo.png';
         $this->assertSame($encoded, $provider->test_sanitize_image_url($encoded));
 
-        // Values that would break out of url('...') in the inline style are dropped.
+        // A URL built by moodle_url already encodes a quote and parentheses, so it is left alone.
+        $built = \moodle_url::make_pluginfile_url(1, 'local_dimensions', 'cardimage', 7, '/', "it's (my) photo.png")->out(false);
+        $this->assertStringContainsString('%27s%20%28my%29', $built);
+        $this->assertSame($built, $provider->test_sanitize_image_url($built));
+
+        // Values that are not URLs at all are dropped.
         $this->assertNull($provider->test_sanitize_image_url("x') no-repeat; position: fixed; ('"));
         $this->assertNull($provider->test_sanitize_image_url('javascript:alert(1)'));
         $this->assertNull($provider->test_sanitize_image_url(''));
         $this->assertNull($provider->test_sanitize_image_url(null));
+    }
+
+    /**
+     * A URL that passes PARAM_URL cannot close url('...') and append declarations.
+     *
+     * PARAM_URL accepts a quote and parentheses in the query and the fragment, and the browser
+     * decodes Mustache's &#39; before the CSS parser reads the style attribute.
+     *
+     * @covers ::sanitize_image_url
+     */
+    public function test_sanitize_image_url_encodes_what_param_url_lets_through(): void {
+        $provider = $this->get_provider_double();
+
+        $breakouts = [
+            [
+                "https://x.example/a.png?');background-image:url('https://evil.example/t",
+                'https://x.example/a.png?%27%29;background-image:url%28%27https://evil.example/t',
+            ],
+            [
+                "https://x.example/a.png#');position:fixed;x:url('y",
+                'https://x.example/a.png#%27%29;position:fixed;x:url%28%27y',
+            ],
+        ];
+        foreach ($breakouts as [$breakout, $expected]) {
+            // Precondition: PARAM_URL lets the value through unchanged, which is the gap under test.
+            $this->assertSame($breakout, clean_param($breakout, PARAM_URL));
+
+            $clean = $provider->test_sanitize_image_url($breakout);
+            $this->assertSame($expected, $clean);
+            $this->assertDoesNotMatchRegularExpression('/[\'"()\\\\\s]/', $clean);
+        }
+    }
+
+    /**
+     * Favourites are read for the user the provider was built for, not for whoever is logged in.
+     *
+     * @covers ::get_dataset
+     */
+    public function test_favourites_belong_to_the_provider_user(): void {
+        global $USER;
+        $this->resetAfterTest();
+        set_config('enabled', 1, 'core_competency');
+
+        $learner = $this->getDataGenerator()->create_user();
+        $plan = $this->getDataGenerator()->get_plugin_generator('core_competency')->create_plan([
+            'userid' => $learner->id,
+            'status' => plan::STATUS_ACTIVE,
+        ]);
+        $learnercontext = \context_user::instance($learner->id);
+        \core_favourites\service_factory::get_service_for_user_context($learnercontext)
+            ->create_favourite('block_dimensions', 'plan', (int) $plan->get('id'), $learnercontext);
+
+        // The viewer holds no favourite of their own, so a starred card can only be the learner's.
+        $this->setAdminUser();
+        $this->assertNotSame((int) $learner->id, (int) $USER->id);
+
+        $dataset = (new dataset_provider((int) $learner->id))->get_dataset(false, 'plan', dataset_provider::BUCKET_ACTIVE);
+
+        $this->assertCount(1, $dataset['plancards']);
+        $this->assertSame((int) $plan->get('id'), $dataset['plancards'][0]['id']);
+        $this->assertTrue($dataset['plancards'][0]['isfavourite']);
+    }
+
+    /**
+     * A custom field's display name is read afresh, so a rename shows on the very next read.
+     *
+     * @covers ::get_customfield_name
+     */
+    public function test_get_customfield_name_follows_a_rename(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        \local_dimensions\helper::ensure_custom_fields_exist(\local_dimensions\helper::AREA_LP);
+        $field = \local_dimensions\helper::find_field_by_shortname(constants::CFIELD_TAG1, \local_dimensions\helper::AREA_LP);
+        $this->assertNotNull($field, 'the tag field must exist, or this proves nothing');
+
+        $DB->set_field('customfield_field', 'name', 'Intake year', ['id' => $field->get('id')]);
+        $this->assertSame('Intake year', dataset_provider::get_customfield_name(constants::CFIELD_TAG1, 'lp'));
+
+        $DB->set_field('customfield_field', 'name', 'Cohort', ['id' => $field->get('id')]);
+        $this->assertSame('Cohort', dataset_provider::get_customfield_name(constants::CFIELD_TAG1, 'lp'));
+
+        $this->assertNull(dataset_provider::get_customfield_name('block_dimensions_nosuchfield', 'lp'));
+    }
+
+    /**
+     * A competency card offers the favourite toggle only while favourites are enabled.
+     *
+     * A setting that was never saved counts as enabled, as it does for toggle_favourite; a raw
+     * read of the setting would hide the star on such a site.
+     *
+     * @covers ::process_competency_dataset_item
+     * @covers ::favourite_fields
+     */
+    public function test_competency_card_offers_the_favourite_toggle_only_while_favourites_are_enabled(): void {
+        $this->resetAfterTest();
+        $provider = $this->get_provider_double();
+        $competency = new class {
+            /**
+             * Get a field from fake competency object.
+             *
+             * @param string $field Field name.
+             * @return int
+             */
+            public function get(string $field): int {
+                return ($field === 'id') ? 601 : 0;
+            }
+        };
+        $buildcard = function () use ($provider, $competency): array {
+            $seencompetencies = [];
+            $result = $provider->test_process_competency_dataset_item(
+                12,
+                $competency,
+                false,
+                [],
+                [601 => (object) ['competencyid' => 601]],
+                [],
+                $seencompetencies
+            );
+            $this->assertNotNull($result['card'], 'the competency must produce a card, or this proves nothing');
+
+            return $result['card'];
+        };
+
+        // Control: with favourites enabled the card offers the toggle.
+        set_config('enable_favourites', 1, 'block_dimensions');
+        $this->assertTrue($buildcard()['showfavourite']);
+
+        unset_config('enable_favourites', 'block_dimensions');
+        $this->assertFalse(get_config('block_dimensions', 'enable_favourites'));
+        $this->assertTrue($buildcard()['showfavourite']);
+
+        set_config('enable_favourites', 0, 'block_dimensions');
+        $card = $buildcard();
+        $this->assertFalse($card['showfavourite']);
+        // The return structure declares the other favourite fields as required, so they stay.
+        $this->assertFalse($card['isfavourite']);
+        $this->assertSame(get_string('addtofavourites', 'block_dimensions'), $card['favouritearialabel']);
+        $this->assertSame($card['favouritearialabel'], $card['favouritetitle']);
+    }
+
+    /**
+     * A plan card offers the favourite toggle only for an active plan, and only while favourites
+     * are enabled.
+     *
+     * @covers ::get_dataset
+     * @covers ::build_plan_dataset_card
+     * @covers ::favourite_fields
+     */
+    public function test_plan_card_offers_the_favourite_toggle_only_while_favourites_are_enabled(): void {
+        $this->resetAfterTest();
+        set_config('enabled', 1, 'core_competency');
+
+        $learner = $this->getDataGenerator()->create_user();
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $generator->create_plan(['userid' => $learner->id, 'status' => plan::STATUS_ACTIVE]);
+        $generator->create_plan(['userid' => $learner->id, 'status' => plan::STATUS_COMPLETE]);
+        $this->setUser($learner);
+        $provider = new dataset_provider((int) $learner->id);
+        $showfavourite = static function (string $bucket) use ($provider): array {
+            return array_column($provider->get_dataset(false, 'plan', $bucket)['plancards'], 'showfavourite');
+        };
+
+        // Control: with favourites enabled the active plan offers the toggle and the completed one does not.
+        set_config('enable_favourites', 1, 'block_dimensions');
+        $this->assertSame([true], $showfavourite(dataset_provider::BUCKET_ACTIVE));
+        $this->assertSame([false], $showfavourite(dataset_provider::BUCKET_COMPLETE));
+
+        set_config('enable_favourites', 0, 'block_dimensions');
+        $this->assertSame([false], $showfavourite(dataset_provider::BUCKET_ACTIVE));
+        $this->assertSame([false], $showfavourite(dataset_provider::BUCKET_COMPLETE));
     }
 }

@@ -3,11 +3,12 @@
 /* ============================================================================
    Canonical block-kit scaffold (shared by every screen file).
    AS-IS token values live on .kit (light) and .panel.dark (dark). The plugin
-   no longer ships a skin of its own: styles.css declares 34 tokens on bare
-   :root as var(--bs-NEW, var(--BS4-OLD, #literal)) chains, so 31 of them ARE
+   no longer ships a skin of its own: styles.css declares 34 tokens on body
+   as var(--bs-NEW, var(--BS4-OLD, #literal)) chains, so 31 of them ARE
    core's own Bootstrap values and flip because core's [data-bs-theme="dark"]
    block flips them. Only shadow, scrim and favourite are plugin-authored and
-   restated under :root[data-bs-theme="dark"]. So the two --bk-* blocks below
+   restated under body[data-bs-theme="dark"] / [data-bs-theme="dark"] body.
+   So the two --bk-* blocks below
    are the two RESOLUTIONS of one contract, not two hand-written palettes: the
    light column is core's :root/[data-bs-theme="light"] values and the dark
    column is core's [data-bs-theme="dark"] values, both read out of the running
@@ -63,6 +64,10 @@
   --bk-danger-fg:#df8379;--bk-danger-bg:#280a06;
   --bk-warn-fg:#dee2e6;--bk-warn-bg:#302310;--bk-warn-border:#90682f;
   --bk-empty-circle:rgba(222,226,230,.75);--bk-ghost-fg:rgba(222,226,230,.75);--bk-ghost-circle:#495057;
+  --bk-accent-deep:#6fa7d9;--bk-counter-active-bg:#031626;--bk-counter-active-fg:#6fa7d9;--bk-select-hover-border:rgba(222,226,230,.75);
+  --bk-section-from:#6fa7d9;--bk-section-to:#6fa7d9;--bk-plan-grad-b:#6fa7d9;
+  --bk-comp-grad-a:#90682f;--bk-comp-grad-b:#fd7e14;--bk-comp-grad-c:#f6ce95;
+  --bk-tag-bg:#343a40;--bk-tag-fg:#dee2e6;--bk-star:#fd7e14;
   color:var(--bk-text);
 }
 .screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
@@ -88,33 +93,32 @@
 
 /* ---- screen-local values styles.css hardcodes but tokens.html does not name ---- */
 .kit{
-  --bk-card-shadow:rgba(0,0,0,.1);
-  --bk-tag-shadow:0 1px 3px rgba(0,0,0,.2);
-  --bk-fav-bg:rgba(255,255,255,.72);--bk-fav-shadow:rgba(0,0,0,.1);
+  --bk-card-shadow:0 .125rem .25rem rgba(0,0,0,.1);
+  --bk-fav-bg:#fff;--bk-fav-shadow:0 1px 4px rgba(0,0,0,.1);
   --bk-btn-shadow-hover:0 4px 14px rgba(0,0,0,.1);
   --bk-star-empty:rgba(29,33,37,.75);
   --bk-demo-custombg:#0f6cbf;--bk-demo-customfg:#ffffff;
   --bk-photo-a:#2f5d84;--bk-photo-b:#7fa8c9;--bk-photo-c:#1f3d57;--bk-photo-d:#f0cf9c;
 }
 .panel.dark{
-  --bk-card-shadow:rgba(0,0,0,.55);
-  --bk-tag-shadow:0 1px 3px rgba(0,0,0,.4);
-  --bk-fav-bg:rgba(29,33,37,.72);--bk-fav-shadow:rgba(0,0,0,.55);
+  --bk-card-shadow:0 .125rem .25rem rgba(0,0,0,.55);
+  --bk-fav-bg:#1d2125;--bk-fav-shadow:0 1px 4px rgba(0,0,0,.55);
   --bk-btn-shadow-hover:0 4px 14px rgba(0,0,0,.55);
   --bk-star-empty:rgba(222,226,230,.75);
 }
 
-/* ---- competency grid: repeat(auto-fill, minmax(360px,1fr)) — 2 columns here ---- */
+/* ---- competency grid: repeat(auto-fill, minmax(var(--dims-card-track-min), 1fr)) with the
+       floor min(360px, 100%) — 2 columns here ---- */
 .cmpgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;align-items:start;padding:10px 20px 2px;}
 .cell{min-width:0;}
 .cardcap{font-size:10px;color:var(--bk-muted);margin:5px 0 0;line-height:1.35;}
 
-/* ---- .competency-card (styles.css:327-337) ---- */
+/* ---- .competency-card (styles.css:316-326) ---- */
 .cmp-card{display:flex;flex-direction:column;position:relative;border-radius:.5rem;overflow:hidden;
   box-shadow:var(--bk-card-shadow);border:1px solid var(--bk-card-border);background-color:var(--bk-card-bg);}
-.cmp-card.focus{outline:3px solid var(--bk-focus);outline-offset:2px;box-shadow:0 0 0 4px var(--bk-focus-glow);}
+.cmp-card.focus{outline:2px solid var(--bk-focus);outline-offset:2px;}
 
-/* ---- image wrapper + image band (styles.css:405-413, 1056-1059, 477-487) ---- */
+/* ---- image wrapper + image band (styles.css:377-385, 1130-1133, 447-457) ---- */
 .cmp-imgwrap{position:relative;flex-shrink:0;}
 .cmp-img{width:100%;height:120px;background-size:cover;background-position:center;background-repeat:no-repeat;position:relative;flex-shrink:0;}
 .cmp-grad{background:linear-gradient(135deg,var(--bk-comp-grad-a) 0%,var(--bk-comp-grad-b) 50%,var(--bk-comp-grad-c) 100%);}
@@ -127,7 +131,7 @@
   radial-gradient(circle at 24% 96%,var(--bk-photo-c) 0 34%,transparent 35%),
   linear-gradient(196deg,var(--bk-photo-a) 0%,var(--bk-photo-b) 58%,var(--bk-photo-c) 100%);}
 
-/* ---- favourite star (styles.css:1783-1847) ---- */
+/* ---- favourite star (styles.css:1839-1904) ---- */
 .cmp-fav{position:absolute;top:8px;left:8px;z-index:3;display:flex;align-items:center;justify-content:center;
   width:32px;height:32px;border:none;border-radius:50%;background:var(--bk-fav-bg);cursor:pointer;padding:0;
   box-shadow:var(--bk-fav-shadow);transition:background .2s ease,transform .15s ease;}
@@ -135,23 +139,23 @@
 .cmp-fav .off{color:var(--bk-star-empty);}
 .cmp-fav .on{color:var(--bk-star);fill:currentColor;}
 
-/* ---- tags (styles.css:1127-1180) ---- */
+/* ---- tags (styles.css:1198-1238) ---- */
 .cmp-tags{position:absolute;bottom:8px;left:8px;display:flex;flex-wrap:wrap;gap:4px;z-index:1;}
-.cmp-tag{display:inline-block;padding:4px 12px;font-size:.75rem;font-weight:600;line-height:1.2;border-radius:100px;
-  white-space:nowrap;box-shadow:var(--bk-tag-shadow);
+.cmp-tag{display:inline-block;padding:4px 12px;font-size:.75rem;font-weight:600;line-height:1.2;border-radius:999px;
+  white-space:nowrap;border:1px solid currentcolor;
   background-color:var(--dimension-custombgcolor,var(--bk-tag-bg));color:var(--dimension-customtextcolor,var(--bk-tag-fg));}
 
-/* ---- access pill (styles.css:1065-1089) ---- */
+/* ---- access pill (styles.css:1139-1163) ---- */
 .cmp-access{position:absolute;top:10px;right:10px;z-index:2;display:inline-flex;align-items:center;gap:6px;
   padding:6px 16px;background:var(--bk-btn-bg);color:var(--bk-btn-fg);font-size:.85rem;font-weight:600;line-height:1.3;
   border-radius:8px;white-space:nowrap;box-shadow:var(--bk-btn-shadow);pointer-events:none;
   transition:box-shadow .2s ease,transform .2s ease;}
 .cmp-access .ic{width:.8rem;height:.8rem;}
 /* Lift scoped to the article, hover and focus sharing one treatment, and no ring
-   on the pill itself — the card's ring is the focus indicator (styles.css:2211-2261). */
+   on the pill itself — the card's ring is the focus indicator (styles.css:2257-2316). */
 .cmp-card:hover .cmp-access,
 .cmp-card:focus-within .cmp-access,
-.cmp-card.focus .cmp-access{opacity:1;box-shadow:var(--bk-btn-shadow-hover);transform:translateY(-1px);}
+.cmp-card.focus .cmp-access{opacity:1;color:var(--bk-accent);box-shadow:var(--bk-btn-shadow-hover);transform:translateY(-1px);}
 @media (prefers-reduced-motion:reduce){
   .cmp-access{transition:none;}
   .cmp-card:hover .cmp-access,
@@ -159,7 +163,7 @@
   .cmp-card.focus .cmp-access{transform:none;}
 }
 
-/* ---- body + 2-line clamped title (styles.css:462-472) ---- */
+/* ---- body + 2-line clamped title (styles.css:431-442) ---- */
 .cmp-body{padding:1rem;}
 .cmp-title{font-size:.9rem;line-height:1.4;font-weight:700;margin:0;color:var(--bk-text);
   display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.8em;}
@@ -192,7 +196,7 @@
   <div class="panel">
     <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · light (Boost)</div>
 
-    <div class="bk-cap">Competency grid — <code>minmax(360px,1fr)</code>, gap 1rem · <span class="idb">CMP-CARD</span></div>
+    <div class="bk-cap">Competency grid — floor <code>min(360px,100%)</code>, gap 1rem · <span class="idb">CMP-CARD</span></div>
     <div class="cmpgrid">
       <div class="cell">
         <article class="cmp-card" aria-labelledby="cmp-t-1">
@@ -278,23 +282,23 @@
         <div class="cmp-tags" aria-hidden="true"><span class="cmp-tag">Tag</span></div>
         <span class="chip c1">top 8 · left 8 · 32px circle · z 3</span>
         <span class="chip c2">top 10 · right 10 · r8 · z 2</span>
-        <span class="chip c3">bottom 8 · left 8 · r100 · z 1</span>
+        <span class="chip c3">bottom 8 · left 8 · r999 · z 1</span>
       </div>
       <div class="ht">
         <figure><div class="sw"></div><figcaption>actual — 5px grid, 1px dots, opacity .5</figcaption></figure>
         <figure><div class="sw zoom"></div><figcaption>5× — 25px grid, 5px dots (same ratio)</figcaption></figure>
       </div>
     </div>
-    <div class="note">Card shell: radius <code>.5rem</code>, 1px border, shadow <code>0 .125rem .25rem rgba(0 0 0/.075)</code>, hover <code>translateY(-2px)</code>; <code>:focus-within</code> paints a 3px outline plus a 4px glow. High contrast flattens the gradient to <code>#6c757d</code> and print to <code>#ced4da</code>; print also drops the star, the tags and the access pill.</div>
-    <div class="note"><b>Palette migration (2026-07-27) — the gradient stops moved, the mechanism did not.</b> The warm three-stop fallback is now <code>linear-gradient(135deg,#ffc107 0%,#fd7e14 50%,#e8590c 100%)</code>, on the orange family <code>local_dimensions</code> keeps as its brand accent, in place of <code>#f5af19 → #f12711 → #ef4136</code>. Everything else is deliberately untouched: same <code>135deg</code>, same three stops at 0 / 50 / 100%, and the same <code>::after</code> halftone — a <code>5px × 5px</code> grid of 1px radial dots at <code>filter:opacity(.5)</code>, coloured by <code>--dimension-customtextcolor</code> falling back to <code>#00000082</code>. The two swatches above render from the shipped values, so "actual" and "5×" still show the identical dot-to-cell ratio they did before.</div>
-    <div class="note">The tag chips moved with it: fill <code>#ef4136 → #fd7e14</code> and the <b>default text flipped from <code>#fff</code> to <code>#212529</code></b>, Bootstrap's warning-badge convention. White on the old red measured <b>3.83:1</b> and failed WCAG 1.4.3; dark on <code>#fd7e14</code> is <b>6.00:1</b>. Dark text on a warm fill reads heavier than the old white-on-red — that is the intended change, not a regression. The custom-colour overrides (<code>--dimension-custombgcolor</code> / <code>--dimension-customtextcolor</code>) are unchanged, so the third card above still paints its chip from card data.</div>
+    <div class="note">Card shell: radius <code>.5rem</code>, 1px <code>line</code> border, shadow <code>0 .125rem .25rem</code> in the <code>shadow</code> token, hover <code>translateY(-2px)</code>; <code>:focus-within</code> paints the 2px <code>focus-ring</code> outline at a 2px offset. High contrast flattens the gradient to <code>#6c757d</code> and print to <code>#ced4da</code>; print also drops the star, the tags and the access pill.</div>
+    <div class="note"><b>Two palette migrations — the gradient stops moved, the mechanism did not.</b> The warm three-stop fallback is now <code>linear-gradient(135deg, warning-edge 0%, favourite 50%, warning-ink 100%)</code>, <code>#f9deb8 → #e8590c → #60451f</code> on Boost in light; it was the literal <code>#ffc107 → #fd7e14 → #e8590c</code> from 2026-07-27 to 2026-09-05, and <code>#f5af19 → #f12711 → #ef4136</code> before that. Everything else is deliberately untouched: same <code>135deg</code>, same three stops at 0 / 50 / 100%, and the same <code>::after</code> halftone — a <code>5px × 5px</code> grid of 1px radial dots at <code>filter:opacity(.5)</code>, coloured by <code>--dimension-customtextcolor</code> falling back to <code>#00000082</code>. The two swatches above render from the shipped values, so "actual" and "5×" still show the identical dot-to-cell ratio they did before.</div>
+    <div class="note">The unconfigured tag chip is page furniture now: <code>ink</code> on <code>surface-inset</code> with a 1px <code>currentcolor</code> edge, 13.66:1 in light and 8.84:1 in dark, a neutral that separates from every stop of either gradient. It was white on <code>#ef4136</code> (3.83:1, a WCAG 1.4.3 failure) until 2026-07-27, then <code>#212529</code> on <code>#fd7e14</code> — which vanished into the competency gradient's own <code>#fd7e14</code> middle stop — until 2026-09-05. The custom-colour overrides (<code>--dimension-custombgcolor</code> / <code>--dimension-customtextcolor</code>) are unchanged, so the third card above still paints its chip from card data.</div>
   </div>
 
   <!-- ============ AS-IS · DARK ============ -->
   <div class="panel dark">
     <div class="plabel"><span class="pdot" style="background:#6fa7d9"></span>As-is · dark (host data-bs-theme="dark")</div>
 
-    <div class="bk-cap">Competency grid — <code>minmax(360px,1fr)</code>, gap 1rem · <span class="idb">CMP-CARD</span></div>
+    <div class="bk-cap">Competency grid — floor <code>min(360px,100%)</code>, gap 1rem · <span class="idb">CMP-CARD</span></div>
     <div class="cmpgrid">
       <div class="cell">
         <article class="cmp-card" aria-labelledby="cmp-d-1">
@@ -354,15 +358,15 @@
     </div>
     <div class="bk-ids">
       <span class="idb">CMP-CARD · surface on line</span>
-      <span class="idb">CMP-FAV · scrim rgb(29 33 37 / 72%)</span>
+      <span class="idb">CMP-FAV · surface #1d2125</span>
       <span class="idb">CMP-IMAGE · unchanged</span>
-      <span class="idb">CMP-GRADIENT · unchanged</span>
+      <span class="idb">CMP-GRADIENT · tone stops flip</span>
       <span class="idb">CMP-HALFTONE · unchanged</span>
-      <span class="idb">CMP-TAGS · shadow deepens to .4</span>
+      <span class="idb">CMP-TAGS · surface-inset / ink</span>
       <span class="idb">CMP-ACCESS · surface / ink</span>
       <span class="idb">CMP-TITLE · ink (no !important anywhere)</span>
     </div>
-    <div class="note"><b>Dark mode touches nothing here, and that is the design.</b> The card background, border, title, focus outline, star platter, empty star and every shadow are single declarations naming <code>surface</code>, <code>line</code>, <code>ink</code>, <code>focus-ring</code>, <code>scrim</code>, <code>ink-muted</code> and <code>shadow</code>; 31 of the 34 tokens are chains onto core's own <code>--bs-*</code> names, so this whole column is what core's <code>[data-bs-theme="dark"]</code> block makes them. The three exceptions — <code>shadow</code>, <code>scrim</code> and <code>favourite</code> — are the entire contents of the plugin's one activation rule. The decorative gradient does move, because its stops are tone tokens (<code>warning-edge → favourite → warning-ink</code>) rather than literals; the halftone and an <em>admin-configured</em> fill or chip colour do not, because <code>--dimension-custombgcolor</code> and <code>--dimension-customtextcolor</code> are instance data the mode layer is forbidden to declare in either mode.</div>
+    <div class="note"><b>Dark mode touches nothing here, and that is the design.</b> The card background, border, title, focus outline, star platter, empty star and every shadow are single declarations naming <code>surface</code>, <code>line</code>, <code>ink</code>, <code>focus-ring</code>, <code>ink-muted</code> and <code>shadow</code>; 31 of the 34 tokens are chains onto core's own <code>--bs-*</code> names, so this whole column is what core's <code>[data-bs-theme="dark"]</code> block makes them. The three exceptions — <code>shadow</code>, <code>scrim</code> and <code>favourite</code> — are the entire contents of the plugin's one activation rule. The decorative gradient does move, because its stops are tone tokens (<code>warning-edge → favourite → warning-ink</code>) rather than literals; the halftone and an <em>admin-configured</em> fill or chip colour do not, because <code>--dimension-custombgcolor</code> and <code>--dimension-customtextcolor</code> are instance data the mode layer is forbidden to declare in either mode.</div>
     <div class="note">Same WCAG contract as light: decorative gradient <code>aria-hidden</code>, photo <code>role="img"</code> + name, tags in a labelled <code>role="group"</code>, the star a sibling button with <code>aria-pressed</code>, only the title a real link.</div>
     <div class="note">Same eligibility rule: one card per competency that has a visible linked course, de-duplicated across plans; no trail, no count text.</div>
 
@@ -380,14 +384,14 @@
         <div class="cmp-tags" aria-hidden="true"><span class="cmp-tag">Tag</span></div>
         <span class="chip c1">top 8 · left 8 · 32px circle · z 3</span>
         <span class="chip c2">top 10 · right 10 · r8 · z 2</span>
-        <span class="chip c3">bottom 8 · left 8 · r100 · z 1</span>
+        <span class="chip c3">bottom 8 · left 8 · r999 · z 1</span>
       </div>
       <div class="ht">
         <figure><div class="sw"></div><figcaption>actual — 5px grid, 1px dots, opacity .5</figcaption></figure>
         <figure><div class="sw zoom"></div><figcaption>5× — 25px grid, 5px dots (same ratio)</figcaption></figure>
       </div>
     </div>
-    <div class="note">Card shell geometry is theme-independent: radius <code>.5rem</code>, hover lift <code>-2px</code>, focus ring 3px + 4px glow (blue swaps to <code>#6ea8fe</code>). The photo swatch here is a CSS stand-in — the kit ships no external assets; the real image is a File-API URL passed through <code>sanitize_image_url()</code>.</div>
+    <div class="note">Card shell geometry is theme-independent: radius <code>.5rem</code>, hover lift <code>-2px</code>, the 2px <code>focus-ring</code> outline (<code>#fff</code> here). The photo swatch here is a CSS stand-in — the kit ships no external assets; the real image is the competency's cached <code>cardimageurl</code>, passed through <code>sanitize_image_url()</code>, which percent-encodes quotes, parentheses, backslash and whitespace after <code>PARAM_URL</code> so the value cannot end the <code>url('…')</code> it lands in.</div>
   </div>
 
 </div>
@@ -395,14 +399,14 @@
 <div class="legend">
   <h3>ID legend — Competency card (competency_card.mustache)</h3>
   <div class="leg">
-    <span class="k">CMP-CARD</span><span class="v"><b>Card shell</b> — <code>&lt;article class="card competency-card h-100"&gt;</code>, <code>aria-labelledby</code> the title id; flex column, radius <code>.5rem</code>, <code>overflow:hidden</code>, 1px <code>rgba(0 0 0/.125)</code> border on <code>#fff</code>, shadow <code>0 .125rem .25rem rgba(0 0 0/.075)</code>, hover <code>translateY(-2px)</code> + <code>0 .5rem 1rem rgba(0 0 0/.15)</code>, <code>:focus-within</code> 3px <code>#0f6cbf</code> + <code>0 0 0 4px rgba(15 108 191/.25)</code>. The custom colours arrive as inline <code>--dimension-custombgcolor</code> / <code>--dimension-customtextcolor</code> on this element and cascade to the gradient, the halftone and the tags. Fill, border and the focus ring are all <code>--block-dimensions-*</code> tokens (<code>surface</code>/<code>line</code>/<code>focus-ring</code>) that flip in dark on their own — the separate <code>.theme-dark</code>/<code>body.dark</code> layer this used to need is gone <span class="rule">competency_card.mustache:48; styles.css:327-337, 397-400</span></span>
-    <span class="k">CMP-FAV</span><span class="v"><b>Favourite star</b> — <code>button.dims-fav-btn</code>, <code>data-fav-type="competency"</code>, <code>data-fav-id</code>, <code>aria-pressed</code> true/false, 32px circle at top 8 / left 8, <code>z-index:3</code>, platter <code>rgba(255 255 255/.85)</code>, hover <code>scale(1.1)</code>, active <code>scale(.95)</code>, focus 2px <code>#0f6cbf</code>. Star filled <code>#ffc107</code>, empty <code>#6c757d</code> (dark <code>#adb5bd</code>, hover both go amber). A sibling of the link, never nested in it; hidden in print <span class="rule">competency_card.mustache:49-62; styles.css:1783-1874</span></span>
-    <span class="k">CMP-IMAGE</span><span class="v"><b>Image band</b> — <code>.competency-card-image</code> inside <code>.competency-card-image-wrapper</code> (the only positioned ancestor for the three overlays); 100% × <b>120px</b>, <code>cover</code> / <code>center</code> / <code>no-repeat</code>, <code>flex-shrink:0</code>; <b>100px</b> at ≥992px, <b>140px</b> at ≤575.98px. With a real photo it is <code>role="img"</code> + <code>aria-label="{{name}}"</code> and carries no overlay pattern; the URL is validated by <code>dataset_provider::sanitize_image_url()</code> (<code>PARAM_URL</code>) before it reaches the <code>style</code> attribute <span class="rule">competency_card.mustache:63-70; styles.css:405-413, 1056-1059, 477-487</span></span>
-    <span class="k">CMP-GRADIENT</span><span class="v"><b>Gradient fallback</b> — <code>.competency-card-gradient</code>, shown when <code>hasimage</code> is false; <code>linear-gradient(135deg,#ffc107 0%,#fd7e14 50%,#e8590c 100%)</code>, <code>aria-hidden="true"</code> (decorative, WCAG 1.1.1). The 2026-07-27 migration moved only these three stops — off <code>#f5af19 → #f12711 → #ef4136</code> and onto the orange family <code>local_dimensions</code> ships as its brand accent; the angle, the stop positions and the halftone overlay are unchanged. With a custom background the template adds <code>.has-custom-bg</code> and the inline <code>background: var(--dimension-custombgcolor)</code>, flattening the three-stop gradient to one solid. High contrast replaces it with <code>#6c757d</code>, print with <code>#ced4da</code> <span class="rule">competency_card.mustache:72-75; styles.css:421-429, 503-536, 561-572</span></span>
-    <span class="k">CMP-HALFTONE</span><span class="v"><b>Halftone dot overlay</b> — <code>.competency-card-gradient::after</code>, inset 0, <code>radial-gradient(circle, var(--dimension-customtextcolor,#00000082) 0px, transparent 1px)</code> on a <code>5px × 5px</code> grid at <code>filter:opacity(.5)</code>, <code>pointer-events:none</code>. It exists only on the gradient element, so a photo card never gets dots; setting a custom text colour recolours the dots and the tag chip together <span class="rule">styles.css:445-456</span></span>
-    <span class="k">CMP-TAGS</span><span class="v"><b>Tag chips</b> — <code>.dimension-tags</code>, <code>role="group"</code> labelled by the <code>cardtags</code> lang string (WCAG 1.3.1), absolute bottom 8 / left 8, <code>flex-wrap</code>, gap 4px, <code>z-index:1</code>; each <code>.dimension-tag.cm-tag</code> is 4px/12px, <code>.75rem</code>/600, radius <code>100px</code>, shadow <code>0 1px 3px rgba(0 0 0/.2)</code> (dark <code>.4</code>), fill <code>var(--dimension-custombgcolor,#fd7e14)</code> on <code>var(--dimension-customtextcolor,#212529)</code> — the default text flipped from <code>#fff</code> (3.83:1 on the old <code>#ef4136</code>, a WCAG 1.4.3 failure) to dark, which reads 6.00:1 on <code>#fd7e14</code>. Zero, one or two chips — <code>tag1</code> / <code>tag2</code> from the competency metadata cache; hidden in print <span class="rule">competency_card.mustache:77-83; styles.css:1127-1180; dataset_provider.php:834-843</span></span>
-    <span class="k">CMP-ACCESS</span><span class="v"><b>Access pill</b> — <code>span.dims-card-access-btn</code>, <code>aria-hidden="true"</code> and <code>pointer-events:none</code> because the title anchor is the real link; top 10 / right 10, <code>z-index:2</code>, 6px/16px, <code>.85rem</code>/600, radius <code>8px</code>, <code>#212529</code> on <code>#fff</code> with <code>0 2px 8px rgba(0 0 0/.15)</code>. It <b>lifts</b> to <code>0 4px 14px rgba(0 0 0/.22)</code> + <code>translateY(-1px)</code> on <code>.competency-card:hover</code> <b>and</b> <code>.competency-card:focus-within</code> — pointer and keyboard deliberately share one treatment. The lift used to be written as <code>.card-link:hover .dims-card-access-btn</code> and never matched (pill at <code>:84</code> inside the image wrapper, link at <code>:90</code> inside the body, so the pill is the link's sibling subtree, not its descendant); it is now scoped to the article, where <code>stretched-link</code> makes both states bubble — which is why the selector reads off the card rather than off the link. The pill carries <b>no ring of its own</b> on purpose: the article already paints the focus indicator (3px ring + 4px glow around the whole card), so a second ring would put two rings on screen for one focus event — the pill is <code>aria-hidden</code> decoration, the card's ring is the accessible indicator. Dark deepens the hover shadow to <code>0 4px 14px rgba(0 0 0/.5)</code>, since the dark rest shadow is already <code>rgba(0 0 0/.35)</code> and the light hover value would read <i>flatter</i> than rest; <code>prefers-reduced-motion:reduce</code> drops the <code>transform</code> and keeps the shadow. Label is always <code>accesscard</code> here — unlike the plan card, a competency never shows "Continue". Dark: <code>#343a40</code> / <code>#f8f9fa</code> <span class="rule">competency_card.mustache:84-86, 90; styles.css:1065-1122, 2211-2261; dataset_provider.php:864</span></span>
-    <span class="k">CMP-TITLE</span><span class="v"><b>Title link</b> — <code>h4.card-title</code> (id <code>competency-title-{{id}}</code>) wrapping <code>a.competency-card-link.stretched-link</code>; <code>.9rem</code>/1.4, <code>-webkit-line-clamp:2</code> and <code>min-height:2.8em</code> so one-line and two-line titles occupy the same box and a row of cards stays aligned. The only real interactive link on the card (pseudo-link pattern, WCAG 2.4.4 / 2.5.3 / 4.1.1); its href is <code>/local/dimensions/view-competency.php?id={planid}&amp;competencyid={id}</code>. The title colour is <code>ink</code> and is never restated for dark. The <code>#f8f9fa !important</code> this row used to record is gone with the whole <code>.theme-dark</code> / <code>body.dark</code> layer — 77 + 77 rules keyed off selectors no shipped Moodle or Boost Union theme has ever emitted <span class="rule">competency_card.mustache:88-92; styles.css:462-472; dataset_provider.php:824-827</span></span>
+    <span class="k">CMP-CARD</span><span class="v"><b>Card shell</b> — <code>&lt;article class="card competency-card h-100"&gt;</code>, <code>aria-labelledby</code> the title id; flex column, radius <code>.5rem</code>, <code>overflow:hidden</code>, 1px <code>line</code> border on <code>surface</code>, shadow <code>0 .125rem .25rem</code>, hover <code>translateY(-2px)</code> + <code>0 .5rem 1rem</code>, both in the <code>shadow</code> token, <code>:focus-within</code> the 2px <code>focus-ring</code> outline at a 2px offset. The custom colours arrive as inline <code>--dimension-custombgcolor</code> / <code>--dimension-customtextcolor</code> on this element and cascade to the gradient, the halftone and the tags. Fill, border and the focus ring are all <code>--block-dimensions-*</code> tokens (<code>surface</code>/<code>line</code>/<code>focus-ring</code>) that flip in dark on their own — the separate <code>.theme-dark</code>/<code>body.dark</code> layer this used to need is gone <span class="rule">competency_card.mustache:53; styles.css:316-326, 340-343, 369-372</span></span>
+    <span class="k">CMP-FAV</span><span class="v"><b>Favourite star</b> — <code>button.dims-fav-btn</code>, <code>data-fav-type="competency"</code>, <code>data-fav-id</code>, <code>aria-pressed</code> true/false, 32px circle at top 8 / left 8, <code>z-index:3</code>, an opaque <code>surface</code> disc that steps to <code>surface-alt</code> on hover, so the star's ground is known whatever card art sits behind it (a translucent disc let black art pull the light star to 1.80:1), hover <code>scale(1.1)</code>, active <code>scale(.95)</code>, focus the standard 2px <code>focus-ring</code> outline at 2px offset. Star filled <code>favourite</code> (3.58:1 light, 6.30:1 dark on the disc), empty <code>ink-muted</code>, which turns <code>favourite</code> on hover. A sibling of the link, never nested in it; drawn under the template's <code>showfavourite</code> gate, which the server sets on every competency card while favourites are enabled and on none while they are off; hidden in print <span class="rule">competency_card.mustache:54-69; styles.css:1839-1931; dataset_provider.php:445-467</span></span>
+    <span class="k">CMP-IMAGE</span><span class="v"><b>Image band</b> — <code>.competency-card-image</code> inside <code>.competency-card-image-wrapper</code> (the only positioned ancestor for the three overlays); 100% × <b>120px</b>, <code>cover</code> / <code>center</code> / <code>no-repeat</code>, <code>flex-shrink:0</code>; <b>100px</b> at ≥992px, <b>140px</b> at ≤575.98px. With a real photo it is <code>role="img"</code> + <code>aria-label="{{name}}"</code> and carries no overlay pattern; the URL is validated by <code>dataset_provider::sanitize_image_url()</code> (<code>PARAM_URL</code>, then <code>'</code> <code>"</code> <code>(</code> <code>)</code> <code>\</code> and whitespace percent-encoded) before it reaches the <code>style</code> attribute <span class="rule">competency_card.mustache:70-77; styles.css:377-385, 1130-1133, 447-457; dataset_provider.php:792-813, 1109</span></span>
+    <span class="k">CMP-GRADIENT</span><span class="v"><b>Gradient fallback</b> — <code>.competency-card-gradient</code>, shown when <code>hasimage</code> is false; <code>linear-gradient(135deg, warning-edge 0%, favourite 50%, warning-ink 100%)</code> — <code>#f9deb8 → #e8590c → #60451f</code> in light, <code>#90682f → #fd7e14 → #f6ce95</code> in dark — <code>aria-hidden="true"</code> (decorative, WCAG 1.1.1). Both migrations moved only these three stops, first off <code>#f5af19 → #f12711 → #ef4136</code> onto literals, then onto tone tokens; the angle, the stop positions and the halftone overlay are unchanged. With a custom background the template adds <code>.has-custom-bg</code>, whose rule sets <code>background: var(--dimension-custombgcolor)</code>, flattening the three-stop gradient to one solid. High contrast replaces it with <code>#6c757d</code>, print with <code>#ced4da</code>, in blocks the plan card's gradient shares <span class="rule">competency_card.mustache:78-82; styles.css:387-407, 629-643, 663-668</span></span>
+    <span class="k">CMP-HALFTONE</span><span class="v"><b>Halftone dot overlay</b> — <code>.competency-card-gradient::after</code>, inset 0, <code>radial-gradient(circle, var(--dimension-customtextcolor,#00000082) 0px, transparent 1px)</code> on a <code>5px × 5px</code> grid at <code>filter:opacity(.5)</code>, <code>pointer-events:none</code>. It exists only on the gradient element, so a photo card never gets dots; setting a custom text colour recolours the dots and the tag chip together <span class="rule">styles.css:414-425</span></span>
+    <span class="k">CMP-TAGS</span><span class="v"><b>Tag chips</b> — <code>.dimension-tags</code>, <code>role="group"</code> labelled by the <code>cardtags</code> lang string (WCAG 1.3.1), absolute bottom 8 / left 8, <code>flex-wrap</code>, gap 4px, <code>z-index:1</code>; each <code>.dimension-tag.cm-tag</code> is 4px/12px, <code>.75rem</code>/600, radius <code>999px</code>, a 1px <code>currentcolor</code> edge rather than a shadow, fill <code>var(--dimension-custombgcolor, surface-inset)</code> under <code>var(--dimension-customtextcolor, ink)</code> — 13.66:1 light and 8.84:1 dark when unconfigured. Zero, one or two chips — <code>tag1</code> / <code>tag2</code> from the competency metadata cache; hidden in print <span class="rule">competency_card.mustache:83-89; styles.css:1198-1238; dataset_provider.php:1110-1119</span></span>
+    <span class="k">CMP-ACCESS</span><span class="v"><b>Access pill</b> — <code>span.dims-card-access-btn</code>, <code>aria-hidden="true"</code> and <code>pointer-events:none</code> because the title anchor is the real link; top 10 / right 10, <code>z-index:2</code>, 6px/16px, <code>.85rem</code>/600, radius <code>8px</code>, <code>ink</code> on <code>surface</code> with a <code>0 2px 8px</code> <code>shadow</code>. It <b>lifts</b> to <code>0 4px 14px</code> + <code>translateY(-1px)</code>, its label turning <code>accent</code>, on <code>.competency-card:hover</code> <b>and</b> <code>.competency-card:focus-within</code> — pointer and keyboard deliberately share one treatment. The lift used to be written as <code>.card-link:hover .dims-card-access-btn</code> and never matched (pill at <code>competency_card.mustache:90</code> inside the image wrapper, link at <code>:96</code> inside the body, so the pill is the link's sibling subtree, not its descendant); it is now scoped to the article, where <code>stretched-link</code> makes both states bubble — which is why the selector reads off the card rather than off the link. The pill carries <b>no ring of its own</b> on purpose: the article already paints the focus indicator (the 2px <code>focus-ring</code> outline around the whole card), so a second ring would put two rings on screen for one focus event — the pill is <code>aria-hidden</code> decoration, the card's ring is the accessible indicator. Dark needs no rule of its own: the <code>shadow</code> token deepens from 10% to 55% black with the host and the pill resolves to <code>#dee2e6</code> on <code>#1d2125</code>; <code>prefers-contrast:more</code> keeps the lifted pill shadowless, as at rest, and <code>prefers-reduced-motion:reduce</code> drops the <code>transform</code> and keeps the shadow. Label is always <code>accesscard</code> here — unlike the plan card, a competency never shows "Continue" or "View plan" <span class="rule">competency_card.mustache:90-92, 96; styles.css:1139-1193, 2257-2316; dataset_provider.php:1140</span></span>
+    <span class="k">CMP-TITLE</span><span class="v"><b>Title link</b> — <code>h4.card-title</code> (id <code>competency-title-{{id}}</code>) wrapping <code>a.competency-card-link.stretched-link</code>; <code>.9rem</code>/1.4, <code>-webkit-line-clamp:2</code> and <code>min-height:2.8em</code> so one-line and two-line titles occupy the same box and a row of cards stays aligned. The only real interactive link on the card (pseudo-link pattern, WCAG 2.4.4 / 2.5.3 / 4.1.1); its href is <code>/local/dimensions/view-competency.php?id={planid}&amp;competencyid={id}</code>. The title sets no colour of its own: it inherits the page's text colour, and only <code>prefers-contrast: more</code> restates it, as <code>ink-strong</code>. The <code>#f8f9fa !important</code> this row used to record is gone with the whole <code>.theme-dark</code> / <code>body.dark</code> layer — 77 + 77 rules keyed off selectors no shipped Moodle or Boost Union theme has ever emitted <span class="rule">competency_card.mustache:94-98; styles.css:431-442; dataset_provider.php:1100-1103</span></span>
   </div>
 </div>
 </div>

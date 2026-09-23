@@ -42,11 +42,11 @@ use Moodle\BehatExtension\Exception\SkippedException;
  * {@see \block_dimensions\local\colour_tokens_test::test_plugin_never_writes_the_host_signal()} fails
  * if any plugin source outside tests/behat does.
  *
- * The steps say "host" where local_dimensions' equivalent steps say "page", on purpose. Behat step
- * definitions are site-global, and local_dimensions is a hard dependency, so the two contexts are
- * always loaded together: a second context declaring the same pattern fails every scenario of both
- * plugins with "Step ... is already defined". Check the sibling's context before adding a step to
- * either.
+ * The colour-mode steps say "host" where local_dimensions' equivalent steps say "page", on purpose.
+ * Behat step definitions are site-global, and local_dimensions is a hard dependency, so the two
+ * contexts are always loaded together: a second context declaring the same pattern fails every
+ * scenario of both plugins with "Step ... is already defined". Check the sibling's context before
+ * adding a step to either.
  *
  * @package    block_dimensions
  * @category   test
@@ -178,6 +178,37 @@ class behat_block_dimensions extends behat_base {
                 $this->getSession()
             );
         }
+    }
+
+    /**
+     * Gives a learner an active learning plan based on a template.
+     *
+     * Core's plan generator takes a template only as an id, which a feature cannot know. The plan
+     * takes its competencies from the template, and a template with no display mode stored in
+     * local_dimensions' metadata is in competencies mode, so in the active bucket the plan becomes
+     * competency cards rather than a plan card.
+     *
+     * @Given :username holds an active learning plan :planname based on the template :templateshortname
+     * @param string $username The learner.
+     * @param string $planname The plan name.
+     * @param string $templateshortname The short name of the template the plan is based on.
+     * @return void
+     */
+    public function holds_an_active_learning_plan_based_on_the_template(
+        string $username,
+        string $planname,
+        string $templateshortname
+    ): void {
+        global $DB;
+
+        $userid = (int) $DB->get_field('user', 'id', ['username' => $username], MUST_EXIST);
+        $templateid = (int) $DB->get_field('competency_template', 'id', ['shortname' => $templateshortname], MUST_EXIST);
+        \testing_util::get_data_generator()->get_plugin_generator('core_competency')->create_plan([
+            'name' => $planname,
+            'userid' => $userid,
+            'templateid' => $templateid,
+            'status' => \core_competency\plan::STATUS_ACTIVE,
+        ]);
     }
 
     /**

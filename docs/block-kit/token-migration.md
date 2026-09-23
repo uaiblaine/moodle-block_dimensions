@@ -1,8 +1,9 @@
 # Token migrations — Dimensions block
 
 Two migrations, recorded in order. **2026-07-27:** Material/Google → Moodle DS, a value-for-value
-swap of 120 literals. **2026-09-05:** literals → a 34-token `:root` contract shared byte-for-byte
-with `local_dimensions`, which is where the second half of this file starts. Read the first as
+swap of 120 literals. **2026-09-05:** literals → a 34-token contract shared byte-for-byte
+with `local_dimensions`, declared on `:root` then and on `body` since the 2026-09-23 re-baseline,
+which is where the second half of this file starts. Read the first as
 history: almost every value it lists has since been replaced by a token read, and the section at the
 end says which of its open questions that closed.
 
@@ -164,17 +165,31 @@ section below closes, along with the dark-mode gaps that sweeping for it exposed
 
 ## Defects fixed in passing
 
-- **`styles.css:859`** — `.plan-card-horizontal .card-title` gained `padding-right: 1.75rem`. This
-  layout moves the favourite star to the card's top-right (1699-1702) but nothing reserved that
-  space in the body, so a long first line ran underneath the 32px star.
-- **`styles.css:608`** — the plan-card border was a malformed four-argument
-  `rgb(228, 228, 228, 0.44)`; it is now `rgba(0, 0, 0, 0.125)`, matching the competency card.
-- **`styles.css:780-793`** — a source comment asserted the pending marker's ring was "≈ 3.1:1"
-  against white. It never was; the real figure was 2.07:1. The comment now states the measured
-  value and the reasoning behind the ring that replaced it.
-- **`styles.css:608`** — the near-white `#FFFEFC` plan-card background, invisible against `#fff` in
-  practice and identical to it in dark mode, normalised to `#fff`. Both card types now share one
-  surface. The uppercase literals `#FFFEFC`, `#004C94` and `#297BC4` are gone with it.
+> **Superseded in part.** All four fixes still hold, but three of them no longer take the form
+> recorded here: the 2026-09-05 migration replaced the border and background literals with token
+> reads, and the pending marker's source comment has since dropped its measurement history, which
+> this file keeps. Each entry says what shipped on 2026-07-27, then what the cited rule holds today.
+
+- **`styles.css:937`** — `.plan-card-horizontal .card-title` gained `padding-right: 1.75rem`. This
+  layout moves the favourite star to the card's top-right (1851-1854) but nothing reserved that
+  space in the body, so a long first line ran underneath the 32px star. Unchanged since; the
+  comment beside the declaration (929-933) gives the arithmetic.
+- **`styles.css:529`** — the plan-card border was a malformed four-argument
+  `rgb(228, 228, 228, 0.44)`; the fix made it `rgba(0, 0, 0, 0.125)`, the competency card's
+  border. That literal is gone: both cards now read `border: 1px solid var(--block-dimensions-line)`
+  (600 here, 324 on `.competency-card`) — core's `--bs-border-color`, `#dee2e6` on 4.5 — so they
+  still match.
+- **`styles.css:860-871`** — a source comment asserted the pending marker's ring was "≈ 3.1:1"
+  against white. It never was; the real figure was 2.07:1, and the fix rewrote the comment to say so
+  and to give the reasoning behind the 1px `#6c757d` ring that replaced it (4.69:1). The comment on
+  that rule (849-853) now states only the current contract — `ink-muted` on the card surface, and
+  why the stroke stays 1px — and the measurements live here, under *Dark-mode completion* and *The
+  eight dark contrast repairs, retired without regression*.
+- **`styles.css:529`** — the near-white `#FFFEFC` plan-card background, invisible against `#fff` in
+  practice and identical to it in dark mode, was normalised to `#fff` so both card types shared one
+  surface; the uppercase literals `#FFFEFC`, `#004C94` and `#297BC4` went with it. Both cards now
+  read `background-color: var(--block-dimensions-surface)` (601 here, 325 on `.competency-card`) —
+  core's `--bs-body-bg`, Boost's `--white` on 4.5 — so they still share one surface.
 
 ## Dark-mode completion (applied after the migration)
 
@@ -229,7 +244,7 @@ it never needed a dark variant.
 **Access pill, hover and focus (2131-2185).** Three rules styled the pill **as a descendant of the
 card link** — the hover lift (`0 4px 14px/.22` + `translateY(-1px)`) and its own `:focus-visible`
 ring. It never is one: both templates put the pill inside the image wrapper and the link inside the
-card body (`plan_card.mustache:93` vs `:99`, `competency_card.mustache:84` vs `:90`), so they are
+card body (`plan_card.mustache:103` vs `:109`, `competency_card.mustache:90` vs `:96`), so they are
 sibling subtrees. The lift had never fired for a single user, and the article-scoped block that was
 meant to replace them only set `opacity: 1` — itself a no-op, since nothing sets the pill's opacity
 below 1.
@@ -301,7 +316,7 @@ the one that is still open says so.
 
 ---
 
-# Second migration — literals to a 34-token `:root` contract (2026-09-05)
+# Second migration — literals to a 34-token contract (2026-09-05)
 
 > **Status: IMPLEMENTED (2026-09-05).** Applied to `styles.css` as a value-and-structure slice:
 > every colour literal outside three documented exemptions replaced by a token read, the
@@ -309,10 +324,15 @@ the one that is still open says so.
 > container-query layer removed, and the plugin's own `.stylelintrc.json` deleted. `version.php`
 > bumped so the CSS cache revision moves. 17 PHPUnit methods and 4 Behat scenarios were added with
 > it, every one mutation-checked. The kit's panels were re-baselined the same day.
+>
+> **Moved to `body` on 2026-09-23.** The contract was declared on `:root`, and the activation rule
+> anchored there, when this section was written. Both now sit on `body`; the two passages below
+> that argue for `:root` are marked where they stand, and the last section of this file says why.
 
 **Before** = the Moodle DS palette the first migration produced: correct values, but ~120 literals,
 each needing a hand-written dark twin. **After** = 34 custom properties declared once on bare
-`:root`, with the suffix set byte-identical to `local_dimensions`' `--local-dimensions-*` set.
+`:root` (on `body` since 2026-09-23), with the suffix set byte-identical to `local_dimensions`'
+`--local-dimensions-*` set.
 
 ## What the contract is
 
@@ -323,6 +343,11 @@ its *middle* rung wherever Boost declares the legacy name — `--white`, `--ligh
 `--primary` — and on the terminal literal otherwise. Every literal in the block was chosen to equal
 the middle rung it stands behind, verified value by value against the compiled Boost sheets of the
 running m405 and m502 stacks on 2026-09-05.
+
+> **Superseded 2026-09-23 on the element, not on the reasoning.** The block is declared on `body`
+> now. `body` is still the ancestor of every node the plugin paints, anything appended to
+> `document.body` included, and it is also where theme_moove writes `data-bs-theme`; see the last
+> section.
 
 `:root` and not a plugin class, deliberately. Custom properties substitute at computed-value time on
 the element carrying the declaration; `:root` is the ancestor of every node in the document, so one
@@ -351,6 +376,11 @@ they are the entire contents of the one activation rule:
 
 That bound is a second, independent guarantee: the worst a wrongly-firing activation block can do is
 deepen a shadow, darken a veil and brighten a star. It cannot paint a dark surface on a light page.
+
+> **Superseded 2026-09-23.** The rule is now
+> `body[data-bs-theme="dark"], [data-bs-theme="dark"] body`, the attribute on `body` or on `html`,
+> at (0,1,1) against the token block's (0,0,1). The argument below against a bare selector holds
+> unchanged: `body` as the subject still keeps every scope below it out.
 
 The rule is **anchored at `:root` on purpose**. A bare `[data-bs-theme="dark"]` matches through any
 ancestor at any depth, and CSS descendant combinators have no nearest-ancestor-wins rule. That is not
@@ -473,3 +503,76 @@ Recorded because a re-baseline that only lists wins is not a record.
    through both migrations, and worth a deliberate ruling rather than a silent pass. Note the value
    is core's own `--bs-border-color` now, so a ruling here is a ruling about core's hairline as much
    as about the plugin's.
+
+# Re-baseline — the move to `body`, raised contrast, the track floor and the favourite disc (2026-09-23)
+
+No token value changed: the contract is the same 34 declarations, and the activation rule assigns
+the same three tokens. What moved is the element both are declared on, where the tokens are applied,
+and four rules that never took effect.
+
+- **The token block and the activation rule moved from `:root` to `body`.** A custom property is
+  substituted on the element that declares it and inherits as the substituted value, and Bootstrap
+  redefines the `--bs-*` set on whichever element carries `data-bs-theme`. Moodle 5.3 writes that
+  attribute on `html`; theme_moove writes it on `body`. Tokens declared on `:root` would keep html's
+  light values under theme_moove, while tokens declared on `body` see both. The activation rule
+  became `body[data-bs-theme="dark"], [data-bs-theme="dark"] body` — (0,1,1) against the token
+  block's (0,0,1), so it wins on specificity — and still cannot be reached from a scope below
+  `body`, such as a dark navbar, because inheritance runs downwards only. The inert media block's
+  gate moved with it: `[data-dimensions-media-optin]` is required on `body` now.
+  `colour_tokens_test::test_activation_selectors_have_body_as_subject` pins the subject.
+
+- **The raised-contrast blocks never matched.** All seven asked for `prefers-contrast: high`. Media
+  Queries Level 5 defines `no-preference`, `more`, `less` and `custom`; a browser reads any other
+  value as false, so every remedy recorded above under that heading — the `ink-strong` borders, the
+  `#6c757d` flat gradient, the active tab's border — had never applied. They ask for `more` now, and
+  `card_layout_test::test_preference_queries_use_defined_values` fails on an undefined value.
+  `local_dimensions` carries the same query four times.
+- **Three preference overrides lost on specificity.** The raised-contrast tab border and the
+  reduced-motion tab transition were written as `.block_dimensions .dims-filter-tab` (0,2,0) against
+  a base rule under `.block-dimensions-content` (0,3,0), so the tab kept `border: none` and its
+  transition; the reduced-motion paddle rule lost to the hidden paddle's own transition, and the
+  reduced-motion trail rule lost to `.trail-item.clickable:hover .trail-marker`. Each now repeats the
+  depth of the rule it overrides, and `card_layout_test::test_preference_overrides_are_not_outranked`
+  compares every preference override with the base rules for the same element and state.
+- **The track floor is capped at the block's width.** Every grid reads
+  `minmax(var(--dims-card-track-min), 1fr)`, and the floor is `min(19rem, 100%)`, `min(26rem, 100%)`
+  for horizontal plan cards and `min(360px, 100%)` for competencies. The competency grid's bare
+  `360px` overflowed any block narrower than that — Boost's 315px drawer, a phone — and the other two
+  did the same below their own widths. The floor rides a custom property because the stylelint
+  config rejects `min()` inside `minmax()`, and does not validate a declaration that reads `var()`.
+  In a wide region the column count is what it was.
+- **The favourite star sits on an opaque disc.** The disc was the translucent `scrim`, so 28% of the
+  card art showed through and moved the star's ground: over black art the light star measured
+  1.80:1, over white art the dark one 2.50:1, both under the 3:1 of WCAG 1.4.11. It is `surface`
+  now (the filled star 3.58:1 light, 6.30:1 dark) and steps to `surface-alt` on hover (3.40:1 and
+  5.33:1). `scrim` stays in the contract for the mobile sticky header.
+  `colour_tokens_test::test_favourite_star_sits_on_an_opaque_ground` pins the opaque ground.
+- **The plan card had none of the competency card's raised-contrast and print treatment.** Under
+  `prefers-contrast: more` the competency card drew a 2px `ink-strong` border and an `ink-strong`
+  title while the plan card kept its 1px `line` border, 1.30:1 against the light page; in print the
+  competency card dropped its shadow and took a 1px `#000` border and `break-inside: avoid`, and the
+  plan card had no print rule at all. Both blocks now name both cards and both gradients (`#6c757d`
+  under raised contrast, `#ced4da` in print, custom fills included), and they sit after both cards'
+  own rules, since they win on source order at those rules' specificity.
+  `card_layout_test::test_card_shells_share_their_preference_treatment` pins the parity.
+- **A fourth override lost, this time to a state rule.** Under `prefers-contrast: more` the access
+  pill trades its shadow for a 2px border, but the article-scoped lift (0,4,0) outranks that swap
+  (0,2,0), so the pill of a hovered or focused card got its shadow back. An override repeating the
+  lift's six selectors now follows it, and
+  `card_layout_test::test_switched_off_properties_stay_off_in_every_state` checks that a property a
+  preference switches off stays off in every state rule for the same element.
+- **A checked status pill's count badge had no shape.** The active-badge rule named only the
+  favourites and show-all pills, so a checked status pill kept the resting `surface` badge on the
+  indicator, which paints `surface` too. The rule is keyed on the checked tab now,
+  `.dims-filter-tab.active .dims-filter-count` (`brand-ink` on `brand-tint`), and
+  `card_layout_test::test_checked_pill_badge_stands_off_the_indicator` checks the winning badge fill
+  against the indicator for every pill class `filters.js` draws.
+
+Every `file:line` citation in the kit — `styles.css`, the templates, the AMD modules, the PHP
+classes and the lang file — was re-anchored to the current files in the same pass.
+Citations that already pointed at the wrong rule were corrected where found: `FLT-BAR` named the
+clear button's lines rather than `.dims-filters-bar`, and a handful written against the original
+stylesheet of 2026-07-27 (the competency card hover, the image heights, the trail list reset, the
+ghost card hover) had not moved with it. The *Defects fixed in passing* entries had the opposite
+problem: their line numbers followed the file while their prose still described the 2026-07-27
+literals, so each now also says what its cited rule holds today.
