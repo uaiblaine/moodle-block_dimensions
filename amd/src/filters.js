@@ -16,9 +16,10 @@
 /**
  * Client-side state-driven rendering for block_dimensions.
  *
- * Supports two-phase loading: favourites are loaded first for a fast initial
- * render, then the full dataset is fetched on demand (search, "All items" pill,
- * or ghost-card click).
+ * Supports two-phase loading: with favourites enabled, only favourite cards are
+ * loaded first for a fast initial render, and the rest of a card type is fetched
+ * on demand (for example by a search, the "Show all" pill or the ghost card).
+ * Plan cards are also scoped to a status bucket; see pickStatus().
  *
  * @module     block_dimensions/filters
  * @copyright  2026 Anderson Blaine
@@ -67,11 +68,11 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
     /**
      * Push the plan status pills: Active, In review, Completed.
      *
-     * They sit inside the filter bar, so on a phone they appear with the rest of the filters when
-     * the panel is opened. A bucket with no plans is not drawn at all: an empty "In review" would
-     * read as "you have none", while on most sites it means "you cannot see them" - the review
-     * statuses are core's draft statuses and need moodle/competency:planviewowndraft, which no
-     * archetype holds. One bucket alone is not a choice either, so the group appears from two.
+     * They sit inside the filter bar, so on a phone they open and close with the other filters.
+     * A bucket with no plans is not drawn unless it is the one on screen: an empty "In review"
+     * would read as "you have none", while on most sites it means "you cannot see them" - the
+     * review statuses are core's draft statuses and need moodle/competency:planviewowndraft, which
+     * no archetype holds. A single bucket is not a choice, so nothing is drawn unless two qualify.
      *
      * @param {Array} html Markup accumulator, appended in place.
      * @param {Object} state Application state.
@@ -115,9 +116,8 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
     /**
      * Push the favourites / show-all pill pair for one card type.
      *
-     * Extracted from renderFilterControls, which the lint's complexity budget had outgrown - and
-     * because the pair has a rule of its own: outside the active status bucket there are no
-     * favourites to filter, so the pills are not drawn at all.
+     * Not drawn when favourites are disabled or the type has no favourite, nor for plans outside
+     * the active status bucket, whose cards carry no favourite toggle.
      *
      * @param {Array} html Markup accumulator, appended in place.
      * @param {string} type 'plan' or 'competency'.
@@ -174,22 +174,18 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         const settings = state.filterSettings[type] || {};
         const html = [];
         let hasAnyFilter = false;
-        // Group label used as accessible name for each radiogroup and as the
-        // aria-label of the dropdown select. Better than the meaningless tag
-        // slug ("tag1" / "tag2") that was previously exposed to AT (WCAG 2.4.6,
-        // 4.1.2).
+        // Accessible name of the toolbar; the pill groups and tag filters in it reuse or
+        // extend it (WCAG 2.4.6, 4.1.2).
         const groupLabel = type === 'plan'
             ? (labels.filterbyplan || labels.filterall)
             : (labels.filterbycompetency || labels.filterall);
 
         html.push('<div class="dims-filters-bar" role="toolbar" aria-label="' + escapeHtml(groupLabel) + '">');
 
-        // Favourite / All pills (always first, if enabled). Pills are mutually
-        // exclusive within a type, so they form a radiogroup (WCAG 4.1.2). The
-        // checked one carries tabindex="0", siblings tabindex="-1" so the
-        // group is reached as a single tab stop and arrow keys navigate within
-        // it (managed by filter_tabs_nav.js).
-        // Counts are per-type: plan pills show plan counts, competency pills show competency counts.
+        // Status pills (plans only) come first, then the favourites / show-all pair. Each pill set
+        // is a radiogroup (WCAG 4.1.2) with a roving tabindex: only the checked pill has
+        // tabindex="0", so the group is one tab stop and filter_tabs_nav.js moves within it on
+        // arrow keys.
         if (type === 'plan') {
             hasAnyFilter = renderStatusPills(html, state, labels, groupLabel) || hasAnyFilter;
         }
@@ -409,7 +405,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
 
     /**
      * Render or remove ghost cards that invite the user to load all items.
-     * One ghost card per block type (plan/competency), each with its own count.
+     * One ghost card per card type (plan/competency), each with its own count.
      */
     function renderGhostCards(container, state, labels) {
         // Remove any existing ghost cards.
@@ -554,9 +550,8 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
     }
 
     /**
-     * Surgically update the favourite-pill counts ("My Favourites (N)" and
-     * "Show all (N)") without rebuilding the filter bar. Used by toggleFavourite
-     * to preserve focus on the star button (WCAG 2.4.3).
+     * Update the counts on the favourites and show-all pills in place, without rebuilding the
+     * filter bar, so toggleFavourite keeps focus on the star button (WCAG 2.4.3).
      */
     function updateFavouritePillCounts(container, state) {
         ['plan', 'competency'].forEach(function(type) {
@@ -834,7 +829,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
      * Draw placeholder cards while a status bucket is on its way.
      *
      * The grid keeps its shape and the learner sees where the cards will land, instead of an
-     * empty block that looks broken. The count comes from the bucket's own pill.
+     * empty block that looks broken. It draws as many cards as the bucket's pill counts, up to three.
      *
      * @param {HTMLElement} container Block container.
      * @param {Object} state Application state.
@@ -874,7 +869,9 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
     }
 
     /**
-     * Put the loading line and the grid back the way they were.
+     * Restore the loading line and clear the grid's busy flag.
+     *
+     * The skeleton cards stay until the plan list is next rendered, which empties it first.
      *
      * @param {HTMLElement} container Block container.
      */
@@ -896,9 +893,10 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
     /**
      * Switch the plan grid to another status bucket, fetching it the first time.
      *
-     * Only the active bucket arrives with the page; every other bucket is built when it is
-     * asked for and kept afterwards, so a second visit costs nothing. Competency cards are
-     * untouched: they are about work in progress and belong to the active plans alone.
+     * Only the bucket the block opens on arrives with the first request; every other bucket is
+     * built when it is asked for and kept afterwards, so a second visit costs nothing.
+     * Competency cards are untouched: they are about work in progress and belong to the active
+     * plans alone.
      *
      * @param {HTMLElement} container Block container.
      * @param {Object} state Application state.
@@ -985,7 +983,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         showLoading(container, true);
 
         /* The bucket travels with the request: leaving it out asks the server to pick the bucket
-           to open on, which would pull the plan grid back to the active one mid-session. */
+           to open on again, which would pull the plan grid back to it mid-session. */
         return fetchDataset(options.endpointmethod, {
             favouritesonly: false,
             loadgroup: group,
@@ -1133,14 +1131,13 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
             });
         }
 
-        // Click delegator handles trail links, filter tabs and clear buttons;
-        // branch count over the lint cap is acknowledged (refactor pending).
+        // One delegated click handler for the cards and the filter bar; its branch count is over
+        // eslint's complexity limit.
         // eslint-disable-next-line complexity
         container.addEventListener('click', (e) => {
-            // Handle clickable trail item — call WS to set return context, then navigate.
-            // Trail items are real <a> elements (WCAG 2.1.1 — Enter/Space work
-            // natively via the browser). We only intercept the navigation when
-            // we need to fire the set_return_context web service first.
+            // Trail items are real links, so the keyboard reaches and follows them natively
+            // (WCAG 2.1.1). A link carrying a plan id is intercepted only to call the
+            // set_return_context web service before navigating.
             const trailLink = e.target.closest('a.trail-item-link');
             if (trailLink) {
                 const planid = parseInt(trailLink.dataset.trailPlanid, 10);
@@ -1214,7 +1211,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                 return;
             }
 
-            // Handle "All items" pill click.
+            // Handle a "Show all" pill click.
             const allFilterBtn = e.target.closest('.dims-all-filter-btn');
             if (allFilterBtn) {
                 e.preventDefault();
@@ -1319,8 +1316,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         const fetchArgs = useFavouritesFirst ? {favouritesonly: true} : {};
 
         return fetchDataset(options.endpointmethod, fetchArgs)
-            // Phase-1/phase-2 favourites branching; branch count over the lint
-            // cap is acknowledged (refactor pending).
+            // The phase-1/phase-2 favourites branching is over eslint's complexity limit.
             // eslint-disable-next-line complexity
             .then((dataset) => {
                 state.rawDataset = {
@@ -1367,7 +1363,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                     state.favouriteFilterActive.competency = state.favouriteCountCompetency > 0 && state.hasnonfavouritecompetencies;
 
                     if (planHasItemsNoFavs && compHasItemsNoFavs) {
-                        // Both groups are empty — load everything.
+                        // Neither group has a favourite — load everything.
                         return loadGroupDataset(container, state, options, '');
                     } else if (planHasItemsNoFavs) {
                         // Only plans need full load — keep competency favs in phase-1.

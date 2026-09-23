@@ -2,9 +2,8 @@ name: ci
 
 on:
   push:
-    # Filtered to the merge targets. Without this, a push to a feature branch
-    # ran the whole pipeline AND the pull_request event ran it again on the same
-    # commit - double, for no extra information.
+    # Merge targets only: a feature branch is tested by its pull_request event,
+    # and a push trigger on it would run the same commit a second time.
     branches:
       - main
       - 'MOODLE_*_STABLE'

@@ -47,7 +47,7 @@ class dataset_provider {
     /** @var array Plans for the user. */
     protected $plans = [];
 
-    /** @var array Static cache for custom field definitions (keyed by shortname_area). */
+    /** @var array Static cache of formatted custom field names (null when undefined), keyed "name_<shortname>_<area>". */
     protected static $fieldcache = [];
 
     /**
@@ -78,8 +78,8 @@ class dataset_provider {
      * @var array The statuses each status bucket carries, keyed by bucket name.
      *
      * A plain draft belongs to no bucket on purpose: nothing would render it, so a learner whose
-     * only plan is a draft would open a block with nothing in it. The two review statuses share a
-     * bucket the way core groups its own draft statuses.
+     * only plan is a draft would open a block with nothing in it. The two review statuses share one
+     * bucket; core counts both as draft statuses ({@see \core_competency\plan::get_draft_statuses()}).
      */
     protected const BUCKET_STATUSES = [
         self::BUCKET_ACTIVE => [plan::STATUS_ACTIVE],
@@ -116,10 +116,10 @@ class dataset_provider {
     /**
      * The bucket the block opens on: the first one, in bucket order, that holds a plan.
      *
-     * A learner whose plans have all finished must land on them, not on an empty Active bucket
-     * with a notice - that is the whole reason the render gate was widened beyond active plans.
-     * With no plan at all the answer is the active bucket, whose own empty state is the honest
-     * one, and the block does not render for such a learner anyway.
+     * A learner whose plans have all been completed lands on them rather than on an empty Active
+     * bucket. With no displayable plan the answer is the active bucket, whose empty state is the
+     * right one, although {@see \block_dimensions\output\summary::has_content()} renders no shell
+     * for such a learner in the first place.
      *
      * @return string One of the BUCKET_* constants.
      */
@@ -152,8 +152,9 @@ class dataset_provider {
     /**
      * How many plans the learner holds in each status bucket.
      *
-     * The constructor already read the whole plan list, so this costs no query: it is what lets
-     * the first response carry every bucket's count while building only one bucket's cards.
+     * Works from the plan list the constructor already read, plus the cached template metadata of
+     * active plans, so the first response can carry every bucket's count while building only one
+     * bucket's cards.
      *
      * @return array{active: int, review: int, complete: int}
      */
@@ -346,6 +347,9 @@ class dataset_provider {
     /**
      * Resolve template metadata and resulting display mode for a plan.
      *
+     * A plan without a template is always a plan card; a template whose metadata sets no display
+     * mode defaults to competencies mode.
+     *
      * @param int|null $templateid Template id.
      * @return array{0: array<string, mixed>, 1: mixed}
      */
@@ -369,7 +373,7 @@ class dataset_provider {
      * @param array $templatemetadata Template metadata.
      * @param bool $favouritesonly Whether favourites-only mode is active.
      * @param array $planfavids Plan favourites map.
-     * @return array|null
+     * @return array|null Null when favourites-only mode skips a plan that is not a favourite.
      */
     protected function build_plan_dataset_card(
         \core_competency\plan $plan,
@@ -428,7 +432,7 @@ class dataset_provider {
      * @param bool $favouritesonly Whether favourites-only mode is active.
      * @param array $compfavids Favourite competency ids map.
      * @param array $seencompetencies Seen competency ids map (updated by reference).
-     * @return array
+     * @return array ['counted' => int, 'cards' => array]; 0 and [] when the plan's competencies cannot be read.
      */
     protected function process_plan_competencies(
         int $planid,
@@ -517,7 +521,8 @@ class dataset_provider {
     }
 
     /**
-     * Decide whether a competency should be skipped for visibility reasons.
+     * Decide whether a competency is skipped: already listed by an earlier plan, or linked to no
+     * visible course (which also marks it as seen).
      *
      * @param int $competencyid Competency id.
      * @param array $seencompetencies Seen competency ids (updated by reference).
@@ -600,6 +605,9 @@ class dataset_provider {
 
     /**
      * Check whether the favourites feature is enabled.
+     *
+     * Use this rather than reading the setting, so the card stars and toggle_favourite agree on a
+     * site where the setting was never saved.
      *
      * @return bool
      */
@@ -840,8 +848,9 @@ class dataset_provider {
     /**
      * Build trail-related payload for a plan card.
      *
-     * A completed plan reads the ratings core froze at completion instead of the learner's
-     * current ones - local_dimensions owns that switch, and the flag is how it is asked for.
+     * A completed plan's trail shows the ratings core froze at completion, not the learner's
+     * current ones; {@see \local_dimensions\plan_trail_cache::get_trail_data()} makes that switch
+     * when $iscomplete is true.
      *
      * @param int $planid Plan id.
      * @param int|null $templateid Template id.
@@ -1090,7 +1099,10 @@ class dataset_provider {
     }
 
     /**
-     * Get trail start index.
+     * Index of the first trail item shown.
+     *
+     * 0 when everything fits or nothing is completed; otherwise the window of $maxitems centred on
+     * the last completed item, clamped so it never runs past the end.
      *
      * @param int $total Total items.
      * @param int $lastcompletedindex Last completed index.

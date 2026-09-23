@@ -17,9 +17,8 @@
 /**
  * External API to set return context for the "Return to Plan" button.
  *
- * Called by the block's JavaScript when a trail item or card is clicked,
- * so the floating "Return to Plan" button knows which plan to go back to
- * after the user lands on the course page.
+ * Called by the block's JavaScript before it follows a trail link, so that the courses linked
+ * to the plan show local_dimensions' "Return to plan" button leading back to that plan.
  *
  * @package    block_dimensions
  * @copyright  2026 Anderson Blaine
@@ -68,11 +67,12 @@ class set_return_context extends external_api {
      *
      * When courseid is provided, stores the context for that specific course.
      * When courseid is 0, resolves all courses linked to the plan's competencies
-     * and stores the context for each one (same behaviour as view-plan.php).
+     * and stores the context for each one, as local/dimensions/view-plan.php does.
      *
      * @param int $planid The learning plan ID.
      * @param int $courseid The target course ID (0 to resolve all from the plan).
-     * @return array Result with success flag.
+     * @return array ['success' => bool]; false when local_dimensions' enablereturnbutton setting is off.
+     * @throws \moodle_exception For a guest, or when the user cannot read the plan.
      */
     public static function execute(int $planid, int $courseid = 0): array {
         global $USER;

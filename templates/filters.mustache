@@ -17,12 +17,11 @@
 {{!
     @template block_dimensions/filters
 
-    Filter bar template for block_dimensions — illustrative only.
-
-    NOTE: at runtime the filter bar is built by string concatenation in
-    amd/src/filters.js (renderFilterControls). This template is kept in sync
-    for documentation purposes; edits here have no effect on the rendered
-    output.
+    Reference markup for the tag filters of the filter bar. Nothing renders
+    this template, so an edit here changes nothing on the page: the bar is
+    built by string concatenation in renderFilterControls() in
+    amd/src/filters.js, which also draws the status and favourites pills and
+    the clear-filters button this template leaves out.
 
     Filter pills represent a mutually-exclusive selection of tag values, so
     they are exposed to assistive technology as a `radiogroup` of `radio`

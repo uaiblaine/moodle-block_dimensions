@@ -34,7 +34,7 @@ use core_privacy\tests\provider_testcase;
  */
 final class provider_test extends provider_testcase {
     /**
-     * Helper: create a favourite for the given user, itemtype and itemid.
+     * Create a block_dimensions favourite in the user's own context, where the plugin keeps all of them.
      *
      * @param int $userid
      * @param string $itemtype
@@ -109,7 +109,7 @@ final class provider_test extends provider_testcase {
     }
 
     /**
-     * Test that users from other components are not included.
+     * Test that a userlist for another component gets no users from a context holding this plugin's favourites.
      *
      * @covers ::get_users_in_context
      */

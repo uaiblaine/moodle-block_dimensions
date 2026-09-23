@@ -1,12 +1,11 @@
 /**
- * Block Dimensions Styles
+ * Block Dimensions styles.
  *
- * Written against WCAG 2.2 AA. The criteria this file addresses are cited by
- * number beside the rules that address them; the evidence for each is the
- * colour-token contract at the head of the file plus the measurements recorded
- * in the comments. It is not a claim of blanket conformance for the plugin.
- * Uses Bootstrap 4 conventions to match Moodle Boost theme.
- * All selectors scoped under .block_dimensions to avoid namespace collisions.
+ * Written against WCAG 2.2 AA. Criteria are cited by number beside the rules
+ * that address them, with the contrast ratios that justify each choice; this is
+ * not a claim of blanket conformance for the plugin. Component rules are scoped
+ * under .block_dimensions; the colour tokens and their colour-mode rules sit on
+ * body (see COLOUR TOKENS below).
  *
  * @package    block_dimensions
  * @copyright  2026 Anderson Blaine
@@ -17,38 +16,34 @@
    COLOUR TOKENS - THE WHOLE COLOUR CONTRACT
    ============================================
 
-   Thirty-four tokens, declared once, on bare body. The suffix set is byte-identical to
-   local_dimensions' --local-dimensions-* set; only the frankenstyle prefix differs. That is what
-   makes the two plugins one system, while keeping their declarations apart inside the single
-   stylesheet Moodle compiles from every installed plugin.
+   Thirty-four tokens, declared once, on body. The suffix set is identical to
+   local_dimensions' --local-dimensions-* set; only the frankenstyle prefix differs, and
+   colour_tokens_test compares the two blocks.
 
-   Thirty of them are three-rung chains - var(--bs-NEW, var(--BS4-OLD, #literal)). Moodle 4.5
-   declares ZERO --bs-* custom properties and Moodle 5.2 declares ZERO BS4 legacy names, so one
-   chain is correct on every supported branch with no branch test anywhere. And because 5.1 and
-   5.2 already compile a complete [data-bs-theme="dark"] token block, those thirty are
-   dark-mode-correct with NO dark rule at all: the plugin's card face IS --bs-body-bg, which is
-   also the page's own background, so the two cannot disagree. Do not give them one.
+   Thirty of them chain a Bootstrap 5 custom property to a literal, some with a Bootstrap 4 name
+   between the two: var(--bs-NEW, var(--BS4-OLD, #literal)). Moodle 4.5 declares no --bs-*
+   custom properties and Moodle 5.x declares none of the BS4 names, so one chain is correct on
+   every supported branch without a branch test. Moodle 5.1 and 5.2 compile a complete
+   [data-bs-theme="dark"] block for the --bs-* set, so these thirty follow the colour mode with
+   no dark rule of their own: the card face is --bs-body-bg, the page's own background, so the
+   two cannot disagree. Do not give them one. on-brand-fill is white in both modes (Tier 1c).
 
-   body is the ancestor of every node this plugin can paint, including anything core relocates
-   to document.body - core/modal appends its dialogue there, as a SIBLING of the page container.
-   That completeness matters because an unresolved var() does NOT fall back to the literal - the
-   whole declaration is invalid at computed-value time, so a background set from an undeclared
-   token is no background at all.
+   body is the ancestor of every node this plugin paints, including anything appended to
+   document.body. That matters because an unresolved var() does not fall back to a literal: the
+   declaration is invalid at computed-value time, so a background read from an undeclared token
+   is no background at all.
 
-   Custom properties substitute at computed-value time on the element CARRYING the declaration,
-   and inherit downwards as already substituted strings. These compute on BODY, which is the
-   point: 31 of the 34 read a var(--bs-*) chain, and Bootstrap redefines the --bs-* set on
-   whatever element carries data-bs-theme. Computing on html would take a snapshot of html's
-   values and miss every scope at or below body - which is exactly what happened under
-   theme_moove, whose dark mode writes the attribute on document.body. A scope BELOW body, such
-   as the navbar one Boost Union uses, still cannot reach these, because inheritance runs
-   downwards only.
+   body rather than :root: a custom property is substituted on the element carrying the
+   declaration and inherits as the substituted value, and Bootstrap redefines the --bs-* set on
+   whatever element carries data-bs-theme. Moodle 5.3 writes that attribute on html and
+   theme_moove writes it on body; tokens declared on body see both, where tokens declared on
+   :root would keep html's light values under theme_moove. A scope below body, such as the dark
+   navbar Boost Union can render, cannot reach them, because inheritance runs downwards only.
 
-   Two names are deliberately absent because they are not design tokens at all:
-   --dimension-custombgcolor and --dimension-customtextcolor carry admin instance data across
-   the plugin boundary (templates/competency_card.mustache writes them inline). The mode layer
-   reads them and never declares or overrides them, in either mode: a site's chosen brand colour
-   stays its colour when the page goes dark, and only the neutrals around it adapt.
+   --dimension-custombgcolor and --dimension-customtextcolor are deliberately not tokens: they
+   carry admin instance data, written inline on the article by the card templates. The
+   colour-mode rules read them and never declare or override them, so a site's chosen colour
+   stays its colour when the page goes dark and only the neutrals around it adapt.
    ============================================ */
 body {
     /* Tier 1 - surfaces, hairline, ink, accent. */
@@ -64,9 +59,9 @@ body {
     --block-dimensions-accent-hover: var(--bs-link-hover-color, #0c5699);
 
     /* Tier 1b - the six tone families. Each is core's own -text-emphasis / -bg-subtle /
-       -border-subtle triple, so a plugin chip is byte-for-byte core's own alert on the same
-       page. Meaning rides these; a solid --bs-<tone> never carries state, because none of the
-       solids flip and each fails 3:1 on one branch or the other. */
+       -border-subtle triple, which is what core's alert of that tone paints, so a plugin chip
+       matches core's alert on the same page. Meaning rides these; a solid --bs-<tone> never
+       carries state, because the solids do not change with the colour mode. */
     --block-dimensions-brand-ink: var(--bs-primary-text-emphasis, #062b4c);
     --block-dimensions-brand-tint: var(--bs-primary-bg-subtle, #cfe2f2);
     --block-dimensions-brand-edge: var(--bs-primary-border-subtle, #9fc4e5);
@@ -86,19 +81,20 @@ body {
     --block-dimensions-neutral-tint: var(--bs-secondary-bg-subtle, #f5f6f8);
     --block-dimensions-neutral-edge: var(--bs-secondary-border-subtle, #ebeef0);
 
-    /* Tier 1c - brand as a SOLID fill, under on-brand-fill text, and nothing else.
-       --bs-primary does not flip: as ink on the dark page it measures 1.10:1 on the fleet's
-       own m502 theme. As a fill under white it is 5.36:1 on Boost and 14.68:1 there, which is
-       exactly .btn-primary's contract. Never an ink, never a stateful border, never a ring. */
+    /* Tier 1c - brand as a solid fill, under on-brand-fill text, and nothing else.
+       --bs-primary does not change with the colour mode, so it is not a safe ink on a dark
+       page (Boost's #0f6cbf is 3.02:1 on the dark body). As a fill under white text it is
+       .btn-primary's own pairing, 5.36:1 on Boost. Never an ink, never a stateful border,
+       never a ring. */
     --block-dimensions-brand-fill: var(--bs-primary, var(--primary, #0f6cbf));
     --block-dimensions-on-brand-fill: #fff;
 
     /* Tier 2 - the four core cannot supply. focus-ring chains --bs-emphasis-color, which
-       flips, and deliberately NOT --bs-focus-ring-color, which core fails to flip (measured
-       1.02:1 on the dark page). The other three are the ONLY plugin-authored values in the
-       system with a dark counterpart, and that bound is what makes it impossible for this
-       plugin to paint a dark surface on a light page: the worst a wrongly firing activation
-       block can do is deepen a shadow, darken a veil and brighten a star. */
+       flips with the colour mode, and deliberately not --bs-focus-ring-color, which does not.
+       The other three are the only plugin-authored values with a dark counterpart, and that
+       bound keeps this plugin from painting a dark surface on a light page: the worst a
+       wrongly firing activation block can do is deepen a shadow, darken a veil and brighten
+       a star. */
     --block-dimensions-focus-ring: var(--bs-emphasis-color, var(--gray-dark, #343a40));
     --block-dimensions-shadow: rgb(0 0 0 / 10%);
     --block-dimensions-scrim: rgb(255 255 255 / 72%);
@@ -109,34 +105,26 @@ body {
    DARK MODE - ACTIVATION
    ============================================
 
-   ONE selector, and it is the host's own signal. data-bs-theme is Bootstrap 5.3's native
-   colour-mode attribute and it is what Moodle itself writes: theme_boost's
-   before_html_attributes listener adds it to the html tag, and the head script it injects
-   resolves "auto" with window.matchMedia and writes the result back to
-   document.documentElement. Gated behind theme_boost/enablecolourmodes, off by default.
+   One signal: data-bs-theme, Bootstrap 5.3's colour-mode attribute. Moodle 5.3's theme_boost
+   writes it on the html element from a before_html_attributes listener, and its head script
+   resolves "auto" with window.matchMedia; the feature is gated behind
+   theme_boost/enablecolourmodes, off by default. theme_moove writes it on body instead.
 
-   THE SUBJECT IS <body>, AND THAT IS WHAT FORECLOSES LEAKING. The hazard is unchanged: a BARE
-   [data-bs-theme="dark"] matches through ANY ancestor at any depth, and CSS descendant
-   combinators have no nearest-ancestor-wins rule - theme_boost_union_fundaseg sets the attribute
-   on the navbar element itself, and theme_boost_union re-pins data-bs-theme="light" by hand on
-   five nested templates to stop that scope reaching its own submenus. Naming body as the SUBJECT
-   answers it completely: there is exactly one body, its only ancestor is html, so
-   "[data-bs-theme="dark"] body" can only ever mean "html[data-bs-theme="dark"] body", and no
-   deeper scope can reach it. Both arms are (0,1,1) against the token block's (0,0,1), so the
-   mode layer still wins on specificity rather than on source order.
+   body is the subject of both selectors, which is what keeps nested scopes out. A bare
+   [data-bs-theme="dark"] matches through any ancestor at any depth, and descendant combinators
+   have no nearest-ancestor-wins rule: Boost Union can set data-bs-theme="dark" on its navbar
+   and re-pins "light" by hand on the submenus inside it. body has only html above it, so
+   "[data-bs-theme="dark"] body" can only mean the attribute on html, and
+   body[data-bs-theme="dark"] covers theme_moove. Both are (0,1,1) against the token block's
+   (0,0,1), so the mode rule wins on specificity rather than on source order.
 
-   THE SECOND ARM IS MEASURED, NOT DEFENSIVE. theme_moove writes the attribute on document.body
-   (amd/src/darkmode.js:35) and redefines the whole --bs-* set there; an :root-anchored rule sees
-   only the html element's light values. Measured on m502 with moove's own switch: the page went
-   to #1d2125 while the plugin's surface stayed #f2f3f7.
+   Do not key rules off .theme-dark or body.dark: nothing in Moodle 4.5, 5.1, 5.2 or 5.3-dev,
+   nor in Boost Union, emits either.
 
-   .theme-dark and body.dark are NOT accepted. Nothing in Moodle 4.5, 5.1, 5.2 or 5.3-dev, and
-   nothing in theme_boost_union or theme_boost_union_fundaseg, has ever emitted either. This
-   plugin's 77 + 77 rules keyed off them were dead code and have been deleted, not rewired.
-
-   ONLY the three plugin-owned decorative tokens are assigned here. The other 31 follow core's
-   own --bs-* values and need no rule, which is why this block cannot make the plugin dark on a
-   light page even if it fires on a branch that has no dark palette.
+   Only the three plugin-owned decorative tokens are assigned here; the others follow core's
+   --bs-* values or do not change with the mode. So even firing on a branch with no dark
+   palette, this rule cannot make the plugin dark on a light page. colour_tokens_test pins the
+   three-token bound and body as the subject.
    ============================================ */
 body[data-bs-theme="dark"],
 [data-bs-theme="dark"] body {
@@ -149,42 +137,33 @@ body[data-bs-theme="dark"],
    OS-PREFERENCE FALLBACK - WRITTEN, READY, AND DELIBERATELY INERT
    ============================================
 
-   This block must not fire today, and today it cannot: its selector requires
-   [data-dimensions-media-optin] on the BODY element - the element the token block itself is
-   declared on, so that switching this on would reach the same tokens - and nothing in either
-   plugin, no PHP, no AMD module, no Mustache template, no Behat step, no test, ever writes that
-   attribute. The :root:not([data-bs-theme="light"]) half in front of it is the second guard: a
-   host that has explicitly chosen light on the html element must win over the OS preference even
-   after the gate is removed, and body alone could not express that.
+   This block cannot fire today: its selector requires [data-dimensions-media-optin] on body
+   (the element the tokens are declared on, so switching it on reaches the same tokens), and
+   nothing in either plugin ever writes that attribute. The :not([data-bs-theme="light"]) parts
+   are a second guard: a host that has explicitly chosen light, on html or on body, must win
+   over the OS preference even once the gate is removed.
 
-   INERT BECAUSE THE OS PREFERENCE IS THE WRONG SIGNAL ON ITS OWN. Moodle 5.3's theme_boost
-   reads prefers-color-scheme in a head script and writes the RESULT into data-bs-theme on the
-   html element, and only when the user's stored mode is auto. Core treats the OS preference as
-   an INPUT to the attribute, never as an independent trigger. Firing on the media query
-   directly would override an explicit user choice with an OS setting, and would let this
-   plugin be dark inside a light page - which is exactly the defect this block replaces.
+   Inert because the OS preference is the wrong signal on its own. Moodle 5.3's theme_boost
+   reads prefers-color-scheme in a head script and writes the result into data-bs-theme on the
+   html element, and only when the user's chosen mode is auto: core treats the OS preference as
+   an input to the attribute, never as an independent trigger. Firing on the media query
+   directly would override an explicit user choice and could make this plugin dark inside a
+   light page.
 
-   :not([data-bs-theme="light"]) is belt and braces: a host that has explicitly chosen light
-   must win over the OS even after the gate is removed.
+   It assigns only the three plugin-owned decorative tokens. The others follow core's --bs-*
+   values, which are already dark on a genuinely dark host; a host that paints dark without
+   dark --bs-* values should set data-bs-theme rather than have this block widened. So even
+   switched on, this block cannot produce a dark plugin on a light page, and it is not a second
+   palette to keep in step.
 
-   IT CONTAINS ONLY THE THREE PLUGIN-OWNED DECORATIVE TOKENS, AND THAT IS DELIBERATE. The other
-   31 follow core's own --bs-* values. On any host that is genuinely dark those are already dark
-   and already correct; on any host that is light, re-pointing them here is precisely the defect
-   above. A host that paints dark WITHOUT its --bs-* tokens being dark is a host whose own CSS
-   this plugin cannot see, and the supported fix for that host is to set data-bs-theme, not to
-   widen this block. So even fully switched on, this block cannot produce a dark plugin on a
-   light page. That bound is a second, independent guarantee, and it is why this fallback is not
-   a second palette to keep in step.
-
-   TO SWITCH ON - one line, one edit: delete "[data-dimensions-media-optin]" from the selector
-   below. Nothing else changes anywhere.
-
-   TO RETIRE - preferred, once the plugin's supported MINIMUM reaches 503: delete this block
-   outright. Core resolves auto itself from 5.3 on, so the fallback has nothing left to cover.
+   To switch it on: delete [data-dimensions-media-optin] from the selector below and update
+   colour_tokens_test::test_media_fallback_is_written_and_unreachable, which asserts the gate.
+   To retire it, preferably once the plugin's supported minimum reaches 5.3: delete the block,
+   since core resolves "auto" itself from 5.3 on.
    ============================================ */
 @media (prefers-color-scheme: dark) {
 
-    /* Switch-on line: remove [data-dimensions-media-optin] and nothing else. */
+    /* Switch-on: remove [data-dimensions-media-optin] from this selector. */
     :root:not([data-bs-theme="light"])
     body[data-dimensions-media-optin]:not([data-bs-theme="light"]) {
         --block-dimensions-shadow: rgb(0 0 0 / 55%);
@@ -256,21 +235,15 @@ body[data-bs-theme="dark"],
 }
 
 /* ink-muted, not ink-faint. ink-faint is the token for inactive-control text
-   and placeholders, but it measures 3.04:1 on this input's own surface-alt
-   ground in LIGHT mode, where ink-muted measures 6.74:1. The placeholder is
-   exempt from 1.4.3 as incidental text; taking the exemption when a compliant
-   token is available buys nothing. Was #5c636a, 5.78:1. */
+   and placeholders, but it measures 3.04:1 on this input's surface-alt ground
+   in light mode, where ink-muted measures 6.74:1. The placeholder is exempt
+   from 1.4.3 as incidental text, but a compliant token is available. */
 .block_dimensions .dims-block-search-input::placeholder {
     color: var(--block-dimensions-ink-muted);
 }
 
-/* A real outline replaces the brand-tinted glow this used to draw. Two
-   reasons, both measured: a box-shadow is not rendered at all under
-   forced-colors: active, so a control whose only focus signal is one has no
-   indicator in Windows High Contrast Mode; and a 3:1 obligation cannot be
-   delegated to a colour the site owner picks - the site primary as a ring on
-   the dark card measures 2.33:1 on the fleet's own theme. focus-ring chains
-   --bs-emphasis-color, which flips: 21.0:1 light, 16.2:1 dark, 11.5:1 on 4.5. */
+/* An outline in the focus-ring token, not a brand-coloured glow; see FOCUS
+   STATES below. */
 .block_dimensions .dims-block-search-input:focus {
     border-color: var(--block-dimensions-accent);
     background: var(--block-dimensions-surface);
@@ -295,9 +268,9 @@ body[data-bs-theme="dark"],
     transition: background 0.15s ease;
 }
 
-/* The wash is surface-inset, not surface-alt: this button sits ON the input,
-   whose own rest background IS surface-alt, so an alt-on-alt hover would be
-   invisible. surface-inset is the next rung in both modes. */
+/* surface-inset, not surface-alt: this button sits on the input, whose rest
+   background is surface-alt, so an alt-on-alt hover would be invisible.
+   surface-inset is the next rung in both modes. */
 .block_dimensions .dims-block-search-clear:hover {
     background: var(--block-dimensions-surface-inset);
 }
@@ -371,45 +344,28 @@ body[data-bs-theme="dark"],
 
 /* ============================================
    FOCUS STATES - WCAG 2.4.7 Focus Visible
-   Minimum 3:1 contrast ratio for focus indicator
+   Focus indicators keep 3:1 against their surroundings (1.4.11)
    ============================================
 
-   ONE SHAPE, EVERYWHERE, IN BOTH PLUGINS OF THIS FAMILY:
+   One focus indicator everywhere, shared with local_dimensions:
 
        outline: 2px solid var(--block-dimensions-focus-ring);
        outline-offset: 2px;
 
-   Two exceptions, each with its reason beside it, and both keep a REAL
-   outline: the filter tab and the tabs indicator draw at outline-offset -2px
-   because their platter is overflow: hidden and would clip an outset ring.
-   Nothing else in this file may deviate, and nothing may draw a focus
-   indicator with a box-shadow, because a box-shadow is not painted at all
-   under forced-colors: active.
+   Two exceptions, the filter tab and the tabs indicator, keep the same outline
+   at outline-offset: -2px, because their platter is overflow: hidden and would
+   clip an outset ring.
 
-   The card ring was 3px here and 2px on every other control, which put two
-   ring widths on one page for one meaning. It is 2px now. The token is the
-   emphasis extreme (near-black in light, near-white in dark, 21.0 / 16.2 /
-   11.5 to one), so the ring is far more visible than the brand blue it
-   replaced at either width.
+   Never draw a focus indicator with a box-shadow: it is not painted under
+   forced-colors: active (Windows High Contrast Mode). Never set outline: none
+   without drawing another indicator either: an author outline: none is
+   honoured under forced colours, which leaves the control with none at all.
 
-   The card link's own two outline: none rules are gone. An author outline:
-   none is not restored by the browser under forced-colors: active, so a rule
-   that suppresses the outline and puts nothing in its place leaves the control
-   with no focus indicator at all in Windows High Contrast Mode. Both templates
-   give every card link .stretched-link, and that class's own :focus-visible
-   rule near the end of this file draws a real ring, so nothing is lost.
-
-   The 4px brand glow that rode alongside the ring is gone for the same reason
-   the search input's is: a box-shadow does not survive forced colours, and a
-   focus indicator must not be brand-coloured. The outline is the indicator.
-
-   The rule that used to sit below this one, labelled a fallback for browsers
-   without :focus-visible support, is deleted. Neither half of it could ever do
-   any work. Its first selector required .competency-card to be a DESCENDANT of
-   a focused .competency-card-link, and competency_card.mustache nests them the
-   other way round: the link is inside the article. Its second selector,
-   the :has() form, matched only when :focus-within already had - and :has() is
-   the NEWER feature of the two, so it could not be a fallback for anything. */
+   The ring colour is the emphasis extreme, which flips with the colour mode
+   (21.0:1 light, 16.2:1 dark, 11.5:1 on 4.5), and never the brand colour,
+   which does not flip and is chosen by the site. Every card link also
+   carries .stretched-link, whose :focus-visible rule near the end of this file
+   rings the title link itself. */
 .block_dimensions .competency-card:focus-within {
     outline: 2px solid var(--block-dimensions-focus-ring);
     outline-offset: 2px;
@@ -428,12 +384,11 @@ body[data-bs-theme="dark"],
     flex-shrink: 0;
 }
 
-/* Gradient Fallback (decorative - hidden from AT).
-   The warm three-stop art that stands in for a missing card image. It carries
-   no contrast obligation of its own - everything drawn on it (the access pill,
-   the favourite disc, the dimension chip) paints its own ground - so the tokens
-   here are chosen to hold the warm family in both modes rather than to clear a
-   floor. The plan card's twin below is the cool half of the same pairing. */
+/* Gradient fallback (decorative, aria-hidden): the warm art that stands in for
+   a missing card image. It carries no contrast obligation of its own, because
+   everything drawn on it (the access pill, the favourite disc, the dimension
+   chip) paints its own ground, so the tokens only keep the warm family in both
+   modes. The plan card's gradient is the cool half of the pairing. */
 .block_dimensions .competency-card-gradient {
     background:
         linear-gradient(
@@ -451,13 +406,11 @@ body[data-bs-theme="dark"],
     background: var(--dimension-custombgcolor);
 }
 
-/* Halftone Pattern Overlay (decorative).
-   The #00000082 fallback is deliberately NOT a token. These dots composite on
-   the admin's own fill (--dimension-custombgcolor) or on the decorative
-   gradient above, never on the page surface, so they are inside a branded
-   island: "the mode layer may not touch it, and inside it nothing may
-   reference a mode token". This is the same exemption class as the plugin
-   family's photo and gradient overlay blacks. */
+/* Halftone pattern overlay (decorative). The #00000082 fallback is
+   deliberately a literal, not a token: the dots composite on the admin's fill
+   (--dimension-custombgcolor) or on the decorative gradient, never on the page
+   surface, so they must not change with the colour mode. colour_tokens_test
+   lists it in LITERAL_EXEMPTIONS and the gradient in ISLAND_ROOTS. */
 .block_dimensions .competency-card-gradient::after {
     content: '';
     position: absolute;
@@ -483,7 +436,8 @@ body[data-bs-theme="dark"],
     line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    /* Ensure minimum touch target - WCAG 2.5.8 */
+    /* Two lines tall (2 x line-height) even for a one-line title, so the card
+       bodies line up. The link's target is the whole card (.stretched-link). */
     min-height: 2.8em;
 }
 
@@ -505,46 +459,33 @@ body[data-bs-theme="dark"],
 /* ============================================
    HIGH CONTRAST MODE - WCAG 1.4.11
    ============================================
-   prefers-contrast and the colour mode are two independent preference axes,
-   and a remedy written for one can regress the other: a #000 border is the
-   strongest edge available on a white page and is 1.30:1 - invisible - on the
-   dark one. So every remedy in this block that names an EXTREME is now a
-   token, and the one that names a MIDDLE stays a literal, with its numbers.
+   prefers-contrast and the colour mode are independent preferences, so a
+   remedy for one must not regress the other: a #000 border is the strongest
+   edge on a white page and 1.30:1 on the dark one. Remedies that want the
+   strongest edge use a token that flips; the one that needs a middle value
+   stays a literal, with its numbers.
 
-   What is NOT done here, deliberately: this block still fires on the soft
-   preference alone. It does not compensate for a site whose own palette is
-   low-contrast, and it is not Windows High Contrast Mode - that is
-   forced-colors: active, a different media feature with its own block further
-   down this file. */
+   This block does not compensate for a site whose own palette is
+   low-contrast, and it is not Windows High Contrast Mode, which is
+   forced-colors: active and has its own block further down this file. */
 @media (prefers-contrast: high) {
     /* ink-strong is --bs-emphasis-color: #000 on the light page (21.0:1
-       against the card face) and #fff on the dark one (16.2:1). The literal
-       this replaces was correct in exactly one of the two. */
+       against the card face) and #fff on the dark one (16.2:1). */
     .block_dimensions .competency-card {
         border: 2px solid var(--block-dimensions-ink-strong);
     }
 
-    /* The card's focus ring used to be restated here at a different width.
-       It is not restated any more: the base rule already draws the same 2px
-       ink-extreme outline, so the restatement had become a verbatim duplicate,
-       and a duplicate rule is how the next reader concludes the two must
-       differ for a reason nobody wrote down. */
     .block_dimensions .competency-card .card-title {
         color: var(--block-dimensions-ink-strong);
     }
 
-    /* This one stays a literal, and the measurement is the reason. It replaces
-       the decorative gradient with a flat fill, and a flat fill in the image
-       slot has to separate from the card face in BOTH modes at once, so it can
-       be neither extreme: #6c757d is 4.69:1 on the light card face and 3.45:1
-       on the dark one. A token that flips would turn the image area light on a
-       dark page, inverting the card. Nothing here carries meaning - the card's
-       title, tags and pill all paint their own ground - so no floor applies to
-       the fill itself; it only has to stay visible as a shape.
-
-       This literal is also what keeps the prefers-contrast entry on the token
-       contract's exemption list honest: an entry that matches no live literal
-       has rotted into a blanket, and the contract fails the build for it. */
+    /* A literal on purpose. The flat fill replacing the gradient has to
+       separate from the card face in both modes at once, so it cannot be an
+       extreme: #6c757d is 4.69:1 on the light card face and 3.45:1 on the dark
+       one, where a token that flips would turn the image area light on a dark
+       page. Nothing drawn on it relies on it for contrast; it only has to stay
+       visible as a shape. colour_tokens_test lists it in LITERAL_EXEMPTIONS,
+       and an exemption that matches no live literal fails the build. */
     .block_dimensions .competency-card-gradient,
     .block_dimensions .competency-card-gradient.has-custom-bg {
         background: #6c757d;
@@ -567,13 +508,12 @@ body[data-bs-theme="dark"],
 /* ============================================
    PRINT STYLES
    ============================================
-   No WCAG 2.x success criterion governs print output; this section used to
-   cite 1.4.10 Reflow, which is about 320 CSS px / 400% zoom and has nothing to
-   do with paper. The rules are good practice, not conformance evidence. */
+   Good practice, not WCAG conformance evidence: no WCAG 2.x success criterion
+   governs print output. */
 /* Paper is white whatever the screen is doing, and data-bs-theme stays on the
-   html element while printing - so ink resolved through a mode token would
-   print #dee2e6 on white from a dark page. Every literal in a @media print
-   block in this file is deliberate and mode-invariant for that reason. */
+   page while printing, so ink resolved through a mode token would print
+   #dee2e6 on white from a dark page. Every literal in a @media print block in
+   this file is deliberate and mode-invariant for that reason. */
 @media print {
     .block_dimensions .competency-card {
         break-inside: avoid;
@@ -589,19 +529,16 @@ body[data-bs-theme="dark"],
 
 /* ============================================
    CARD GRID - layout driven by the container, not the viewport
-   Replaces the Bootstrap columns (col-sm-6 col-lg-4), which answer to the
-   viewport, while a block is normally much narrower than the window. A flex
-   basis is a percentage OF THE CONTAINER, so a 30% basis caps the row at
-   three cards (four would need 120%) and the rem floor keeps a column
-   readable in a narrow block.
+   amd/src/filters.js still puts Bootstrap column classes (col-*) on most card
+   items. They answer to the viewport, while a block is usually much narrower
+   than the window, so the grid below overrides them and the minmax() floor
+   keeps a column readable in a narrow block.
    ============================================ */
 
-/* Override Bootstrap .row: an auto-fill track grid rather than the negative-margin grid.
-   auto-fill, not flex: a flex row grows its items to fill the line, so the last card of an
-   odd row stretched to the full width while the row above it kept three columns - the same
-   card in two sizes on one screen. auto-fill keeps the empty tracks, so every card is the
-   width of its column whatever the row holds. The competency grid below has always worked
-   this way; the plan grid now matches it. */
+/* Override Bootstrap .row with an auto-fill track grid. auto-fill, not a flex row: flex grows
+   the items of a short last row to fill the line, so a lone last card would stretch to the
+   full width. auto-fill keeps the empty tracks, so every card is its column's width whatever
+   the row holds. card_layout_test pins this. */
 .block_dimensions [data-cards-type] {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
@@ -658,8 +595,7 @@ body[data-bs-theme="dark"],
     box-shadow: 0 0.5rem 1rem var(--block-dimensions-shadow);
 }
 
-/* Same convergence as the competency card above: a real, mode-flipping
-   outline and no brand-coloured glow. */
+/* Same ring as the competency card; see FOCUS STATES above. */
 .block_dimensions .plan-card:focus-within {
     outline: 2px solid var(--block-dimensions-focus-ring);
     outline-offset: 2px;
@@ -674,10 +610,10 @@ body[data-bs-theme="dark"],
     flex-shrink: 0;
 }
 
-/* The cool half of the decorative pairing (see the competency twin above).
+/* The cool half of the decorative pairing (see the competency gradient above).
    brand-fill is the site's own primary and does not flip; brand-ink is core's
-   --bs-primary-text-emphasis, which does. Light reads #0f6cbf to #062b4c,
-   within a hair of the #0f6cbf/#0a5aa0 it replaces. */
+   --bs-primary-text-emphasis, which does. On Boost in light mode it runs from
+   #0f6cbf to #062b4c. */
 .block_dimensions .plan-card-gradient {
     background:
         linear-gradient(
@@ -687,7 +623,7 @@ body[data-bs-theme="dark"],
         );
 }
 
-/* See the competency twin above: applied from a class so an override can
+/* See the competency gradient above: applied from a class so an override can
    reach it. */
 .block_dimensions .plan-card-gradient.has-custom-bg {
     background: var(--dimension-custombgcolor);
@@ -706,9 +642,9 @@ body[data-bs-theme="dark"],
     font-weight: 600;
 }
 
-/* Plan status chip. Meaning rides the -ink / -tint / -edge triples, which are core's own
-   subtle-alert colours, so the chip is core's alert on the same page and flips with it in dark
-   mode without a rule of its own. Same geometry as the sibling plugin's grade badge. */
+/* Plan status chip. Meaning rides the -ink / -tint / -edge triples, core's own alert colours,
+   so the chip follows the colour mode without a rule of its own. Pill geometry follows
+   local_dimensions' grade badge. */
 .block_dimensions .dims-plan-status {
     display: inline-flex;
     align-items: center;
@@ -880,9 +816,8 @@ body[data-bs-theme="dark"],
     justify-content: center;
 }
 
-/* The glyph carried Bootstrap's .text-success in the markup, which is
-   !important and beat this rule (and, in dark mode, its counterpart); the
-   utility is gone and the plugin owns the tone. */
+/* The plugin owns this tone. Do not put Bootstrap's .text-success on the
+   glyph: its !important colour would override this rule in both modes. */
 .block_dimensions .trail-marker .fa-check-circle {
     font-size: 18px;
     color: var(--block-dimensions-success-ink);
@@ -891,13 +826,11 @@ body[data-bs-theme="dark"],
 .block_dimensions .trail-marker .empty-circle {
     width: 14px;
     height: 14px;
-    /* WCAG 1.4.11 — non-text contrast. The ring was #adb5bd at 2px, which
-       measured 2.07:1 against the card; it then became #6c757d at 1px, 4.69:1.
-       It is now ink-muted, which is 7.10:1 on the card surface in light and
-       clears the 3:1 floor by a wide margin in dark too. The stroke stays at
-       1px: darkening it alone would make every pending step read heavier than
-       the completed ones, 1.4.11 sets no minimum thickness, and the headroom
-       over 3:1 absorbs the antialiasing a 1px ring picks up around a circle. */
+    /* WCAG 1.4.11 non-text contrast: ink-muted is 7.10:1 on the card surface
+       in light and well over 3:1 in dark. The stroke stays 1px so pending
+       steps do not read heavier than completed ones; 1.4.11 sets no minimum
+       thickness, and the headroom over 3:1 absorbs the antialiasing of a 1px
+       ring around a circle. */
     border: 1px solid var(--block-dimensions-ink-muted);
     border-radius: 50%;
     background-color: var(--block-dimensions-surface);
@@ -1009,8 +942,7 @@ body[data-bs-theme="dark"],
     font-size: 0.8rem;
 }
 
-/* Hover/focus feedback for this pill is article-scoped too — see the
-   consolidated block at the end of this file. */
+/* Hover/focus feedback for this pill: see ACCESS PILL at the end of this file. */
 
 /* ============================================
    VERTICAL TRAIL - For Horizontal Card
@@ -1077,9 +1009,8 @@ body[data-bs-theme="dark"],
     bottom: 50%;
     width: 2px;
     height: 20px;
-    /* The dashed stub the SVG drew: a 9px period of 7px dash and 2px gap,
-       shown through a 2px window offset so the phase matches the original
-       viewBox exactly (dashes at 0-5, 7-14 and 16-20 down the 20px stub). */
+    /* A dashed 20px stub: 7px dashes on a 9px period, shifted up 2px so the
+       dashes fall at 0-5, 7-14 and 16-20px. */
     background-image:
         repeating-linear-gradient(
             to bottom,
@@ -1101,9 +1032,7 @@ body[data-bs-theme="dark"],
     top: 50%;
     width: 2px;
     height: 20px;
-    /* The dashed stub the SVG drew: a 9px period of 7px dash and 2px gap,
-       shown through a 2px window offset so the phase matches the original
-       viewBox exactly (dashes at 0-5, 7-14 and 16-20 down the 20px stub). */
+    /* The same dashed stub as .first::before above. */
     background-image:
         repeating-linear-gradient(
             to bottom,
@@ -1191,7 +1120,7 @@ body[data-bs-theme="dark"],
     white-space: nowrap;
     box-shadow: 0 2px 8px var(--block-dimensions-shadow);
     pointer-events: none;
-    /* decorative — parent <a> is the link */
+    /* Decorative (aria-hidden): the title's stretched link takes the click. */
     transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
@@ -1199,10 +1128,7 @@ body[data-bs-theme="dark"],
     font-size: 0.8rem;
 }
 
-/* The pill's hover/focus feedback is scoped to the article, not to the card
-   link — see the consolidated block at the end of this file. Both templates
-   put the pill inside the image wrapper and the link inside the card body, so
-   a link-descendant selector never reaches it. */
+/* Hover/focus feedback for the pill: see ACCESS PILL at the end of this file. */
 
 /* High contrast */
 @media (prefers-contrast: high) {
@@ -1254,37 +1180,24 @@ body[data-bs-theme="dark"],
     border-radius: 999px;
     /* Pill shape — 999px matches every other pill in this file */
     white-space: nowrap;
-    /* Chrome converges with the family's status pills: no drop shadow, a 1px
-       edge instead. The shadow was this chip's only separation from the card
-       art behind it, and swapping it for a border is not a downgrade of that
-       job - it is an upgrade, because a box-shadow is not painted at all under
-       forced-colors: active while a border is remapped to a system colour, so
-       the chip had no edge whatever in Windows High Contrast Mode.
+    /* A 1px edge, not a drop shadow, separates the chip from the card art: a
+       box-shadow is not painted under forced-colors: active, while a border is
+       remapped to a system colour.
 
-       currentcolor, not a tone -edge token, and that is the one place this
-       chip cannot follow the status pills. It has no tone: its fill is the
-       admin's own colour, arriving as --dimension-custombgcolor. currentcolor
-       resolves to the chip's own text colour, which the admin chose against
-       that fill (or, unconfigured, is ink on surface-inset at 13.66:1), so the
-       edge is guaranteed to contrast with the thing it encloses whatever the
-       admin picked. It is also the colour this file's own high-contrast block
-       already used for the same chip, so the two agree now instead of only
-       under a preference. */
+       currentcolor rather than a tone -edge token, because the chip has no
+       tone: its fill is the admin's colour (--dimension-custombgcolor), and
+       currentcolor is the text colour chosen against that fill (unconfigured,
+       ink on surface-inset at 13.66:1), so the edge contrasts with the fill
+       whatever the admin picked. */
     border: 1px solid currentcolor;
 }
 
-/* Card tags carry the admin's own colours, written inline on the article by
-   competency_card.mustache / plan_card.mustache. Those two properties are
-   instance data, not design tokens: the mode layer reads them and never
-   declares or overrides them, so a site's chosen colour stays its colour when
-   the page goes dark.
-
-   The FALLBACK slot is a different thing and is tokenised. Both templates emit
-   the properties only inside {{#hasbgcolor}} / {{#hastextcolor}}, so the
-   fallback is what an unconfigured chip actually renders - and an unconfigured
-   chip is not a branded island at all, it is page furniture. It was #212529 on
-   #fd7e14, 6.00:1, frozen light; it is now ink on surface-inset, 13.66:1 light
-   and 8.84:1 dark. ink on the old orange would have been 1.97:1 in dark. */
+/* Card tags carry the admin's own colours (not tokens; see COLOUR TOKENS at
+   the head of this file). The fallback slot is tokenised on purpose: both
+   templates emit the properties only when a colour is configured, so the
+   fallback is what an unconfigured chip renders, and that chip is page
+   furniture that must follow the colour mode. ink on surface-inset is 13.66:1
+   light and 8.84:1 dark. */
 .block_dimensions .competency-card .dimension-tag.cm-tag {
     background-color: var(--dimension-custombgcolor, var(--block-dimensions-surface-inset));
     color: var(--dimension-customtextcolor, var(--block-dimensions-ink));
@@ -1344,9 +1257,8 @@ body[data-bs-theme="dark"],
 }
 
 /* The destructive hover is core's own danger alert: -text-emphasis on
-   -bg-subtle, 10.58:1 light and 6.74:1 dark, against 7.42:1 for the
-   #842029-on-#f8d7da pair it replaces. The border stays on the ink rather
-   than dropping to danger-edge so the boundary keeps the weight it has now. */
+   -bg-subtle, 10.58:1 light and 6.74:1 dark. The border takes the ink rather
+   than the lighter danger-edge so the boundary keeps its weight. */
 .block_dimensions .dims-clear-filters-btn:hover {
     color: var(--block-dimensions-danger-ink);
     border-color: var(--block-dimensions-danger-ink);
@@ -1404,11 +1316,9 @@ body[data-bs-theme="dark"],
     max-width: 100%;
     height: calc(var(--dims-tabs-height));
     padding: var(--dims-tabs-platter-padding);
-    /* The platter's seven colour variables are gone; the use sites read the
-       tokens directly. They were a second naming layer over the same values,
-       and every one of them had a hard-coded light literal that no dark rule
-       could have reached. The metric variables that remain are read by
-       amd/src/filter_tabs_nav.js and stay. */
+    /* Colours come straight from the tokens; the --dims-tabs-* variables above
+       are metrics only. amd/src/filter_tabs_nav.js reads the platter padding
+       and scroll duration and writes the indicator start and width. */
     background: var(--block-dimensions-surface-inset);
     border-radius: 999px;
     overflow: hidden;
@@ -1509,14 +1419,8 @@ body[data-bs-theme="dark"],
     opacity: 1;
 }
 
-/* The inset box-shadow ring became a real outline with a negative offset,
-   which draws in the same place and, unlike a box-shadow, is still rendered
-   under forced-colors: active. The paired :focus { outline: none } rule that
-   used to sit above it is deleted: an author outline: none is not restored by
-   the browser, so the two together left this control with no focus indicator
-   at all in Windows High Contrast Mode. The offset is negative rather than
-   positive because the platter is overflow: hidden and would clip an outset
-   ring. */
+/* Negative offset: the platter is overflow: hidden and would clip an outset
+   ring. See FOCUS STATES. */
 .block_dimensions .block-dimensions-content .dims-filter-tab:focus-visible {
     outline: 2px solid var(--block-dimensions-focus-ring);
     outline-offset: -2px;
@@ -1648,9 +1552,8 @@ body[data-bs-theme="dark"],
 }
 
 /* The hover is one neutral rung past the rest state in both modes: the fill
-   takes the hairline value (#dee2e6 light, #495057 dark - exactly the step
-   this used to make by hand) and the border moves up to ink-muted so it stays
-   distinguishable from the fill it now shares a token family with. */
+   takes the hairline value (#dee2e6 light, #495057 dark) and the border moves
+   up to ink-muted so it stays distinguishable from that fill. */
 .block_dimensions .dims-filter-select:hover {
     background-color: var(--block-dimensions-line);
     border-color: var(--block-dimensions-ink-muted);
@@ -1774,22 +1677,17 @@ body[data-bs-theme="dark"],
 /* ============================================
    FILTER - Forced colours (Windows High Contrast Mode)
    ============================================
-   A different media feature from prefers-contrast above, and the only mode in
-   which this component loses state. Under forced-colors: active the browser
-   substitutes its own palette for every background-color on the page, so the
-   sliding white indicator behind the selected tag pill, and the filled
-   background on the active favourite / show-all pill, both flatten to the same
-   Canvas as their neighbours - and the selected filter becomes indistinguish-
-   able from the unselected ones (WCAG 1.4.1). Assistive technology is
-   unaffected either way: every one of these pills is a role="radio" carrying
+   Under forced-colors: active the browser replaces every background colour,
+   so the sliding indicator behind the selected tab and the filled background
+   of the active favourite / show-all pill flatten to the same Canvas as their
+   neighbours, and the selected filter no longer looks selected (WCAG 1.4.1).
+   Assistive technology is unaffected: every pill is a role="radio" with
    aria-checked, kept in sync by amd/src/filters.js.
 
-   An outline is the fix because outline IS remapped under forced colours,
-   where a background is overwritten and a box-shadow is not drawn at all. The
-   offset is negative for the same reason as the tab's focus ring: the platter
-   is overflow: hidden and would clip an outset ring. The declared colour is
-   irrelevant in this mode - the browser overrides it - but it names the
-   family's ring token rather than a literal so the rule reads the same as
+   An outline survives forced colours, where a background is overwritten and a
+   box-shadow is not drawn. The offset is negative for the same reason as the
+   tab's focus ring (overflow: hidden platter). The browser overrides the
+   declared colour in this mode; the token keeps the rule consistent with
    every other outline in the file. */
 @media (forced-colors: active) {
 
@@ -1826,12 +1724,12 @@ body[data-bs-theme="dark"],
 /* ============================================
    SECTION HEADERS - Card Group Titles
    ============================================ */
-/* The second stop is accent, not brand-fill. brand-fill is the site's own
-   --bs-primary and core never flips it: as ink on the dark page it measures
-   1.10:1 on the fleet's own m502 theme. accent is --bs-link-color, which does
-   flip - 5.36:1 light and 6.33:1 dark on the card surface, and this heading is
-   2rem so its floor is 3:1 anyway. In dark both stops resolve to the same
-   flipped tint and the fill reads flat, which is legible and deliberate. */
+/* The second stop is accent, not brand-fill: brand-fill is the site's own
+   --bs-primary, which does not flip and is not a safe ink on a dark page (see
+   Tier 1c). accent is --bs-link-color, which flips: 5.36:1 light and 6.33:1
+   dark on the card surface, and this heading is 2rem, so its floor is 3:1.
+   On Boost in dark mode both stops resolve to the same tint and the fill reads
+   flat, which is deliberate. */
 .block_dimensions .dims-section-header {
     font-size: 2rem;
     font-weight: 600;
@@ -1855,10 +1753,8 @@ body[data-bs-theme="dark"],
    to target each header independently. */
 
 /* `-webkit-text-fill-color: transparent` above wins over `color`, so an
-   override that only sets `color` paints nothing. The print rule below used
-   to do exactly that and had no visible effect; it now drops the gradient
-   fill first so the colour it sets actually applies. */
-/* Literal by design - see the print block in the competency-card section. */
+   override that only sets `color` paints nothing: this print rule resets the
+   fill before setting its colour. The literal is deliberate; see PRINT STYLES. */
 @media print {
     .block_dimensions .dims-section-header {
         background-image: none;
@@ -1915,9 +1811,9 @@ body[data-bs-theme="dark"],
     border: none;
     border-radius: 50%;
     /* The disc is a veil over arbitrary card art, so it is the scrim token:
-       72% white in light, 72% of the dark body ground in dark. The star that
-       sits on it measures 3.58:1 light and 6.30:1 dark against that composite,
-       both over the 3:1 floor 1.4.11 sets for an icon. */
+       72% white in light, 72% of the dark body ground in dark. The star on it
+       measures 3.58:1 light and 6.30:1 dark against the scrim colour itself;
+       the 28% of card art showing through moves the actual ground. */
     background: var(--block-dimensions-scrim);
     cursor: pointer;
     padding: 0;
@@ -1937,8 +1833,8 @@ body[data-bs-theme="dark"],
     transform: scale(1.1);
 }
 
-/* :focus-visible, not :focus. The plain form fires on a mouse click too, so
-   clicking the star used to leave a ring behind on the card. */
+/* :focus-visible, not :focus: :focus also matches after a mouse click and
+   would leave a ring on the card. */
 .block_dimensions .dims-fav-btn:focus-visible {
     outline: 2px solid var(--block-dimensions-focus-ring);
     outline-offset: 2px;
@@ -1948,12 +1844,10 @@ body[data-bs-theme="dark"],
     transform: scale(0.95);
 }
 
-/* Favourite star icons.
-   The hue changes, and it is measured rather than conventional: #ffc107 on
-   white is 1.63:1 and fails 1.4.11 outright. No single hue clears 3:1 on both
-   white and the dark platter, so the favourite token carries the only pair
-   that does - #e8590c light (3.58 / 3.40 / 3.02) and #fd7e14 dark
-   (6.30 / 5.33 / 4.48). The empty star takes ink-muted, 7.10:1 light. */
+/* Favourite star icons. Orange, not the conventional yellow: #ffc107 on white
+   is 1.63:1 and fails 1.4.11. No single hue clears 3:1 on both the light and
+   the dark ground, so the favourite token flips: #e8590c light, #fd7e14 dark.
+   The empty star takes ink-muted, 7.10:1 light. */
 .block_dimensions .dims-fav-icon-filled {
     font-size: 1rem;
     color: var(--block-dimensions-favourite);
@@ -2004,22 +1898,20 @@ body[data-bs-theme="dark"],
     gap: 0.35rem;
 }
 
-/* brand-fill under on-brand-fill is exactly .btn-primary's contract: the site
-   picked its primary with core's own tooling and core bears the same risk on
-   every button on the page. #fff on Boost's #0f6cbf is 5.36:1, and 14.68:1 on
-   the fleet's live theme. */
+/* brand-fill under on-brand-fill is .btn-primary's own pairing (see Tier 1c):
+   the site chose its primary, and core takes the same risk on every primary
+   button on the page. */
 .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active {
     background: var(--block-dimensions-brand-fill);
     color: var(--block-dimensions-on-brand-fill);
     box-shadow: 0 1px 3px var(--block-dimensions-shadow);
 }
 
-/* The hover darkens the fill with a filter rather than swapping in another
-   token, because no token in the system means "a darker version of the site's
-   own primary". accent-hover is --bs-link-hover-color, which core flips to a
-   LIGHTER tint in dark mode - white text on it would be about 2:1. brightness
-   is relative to whatever the admin chose, so it is correct in both modes and
-   on any brand. */
+/* The hover darkens the fill with a filter because no token means "a darker
+   version of the site's primary". accent-hover is --bs-link-hover-color,
+   which is a lighter tint in dark mode (white text on it is about 2:1).
+   brightness() is relative to whatever the site chose, so it holds in both
+   modes and on any brand. */
 .block_dimensions .block-dimensions-content .dims-fav-filter-btn.active:hover {
     filter: brightness(0.92);
 }
@@ -2046,10 +1938,9 @@ body[data-bs-theme="dark"],
 /* ============================================
    FILTER COUNT BADGE - N inside pills
    ============================================ */
-/* The rest badge converges on the family's answer: surface under ink-muted.
-   It used to paint surface-inset, the same value as the platter it sits on, so
-   the chip had no shape at all - only its bold text showed. surface gives it a
-   boundary and lifts ink-muted from 5.99:1 to 7.10:1 in light. */
+/* surface, not surface-inset: the badge sits on the surface-inset platter, and
+   a matching fill would give it no shape. ink-muted on surface is 7.10:1 in
+   light. */
 .block_dimensions .dims-filter-count {
     font-weight: 600;
     margin-left: 0.15rem;
@@ -2072,7 +1963,7 @@ body[data-bs-theme="dark"],
 }
 
 /* ============================================
-   GHOST CARD - "Show all (N)"
+   GHOST CARD - "View more items (N)"
    ============================================ */
 .block_dimensions .dims-ghost-card {
     display: flex;
@@ -2095,17 +1986,13 @@ body[data-bs-theme="dark"],
 
 .block_dimensions .dims-ghost-card-inner:hover {
     border-color: var(--block-dimensions-accent);
-    /* The 4% brand wash this replaces resolved to about #f7fafd on white and
-       to nothing at all on a dark page. surface-alt is the family's quiet wash
-       and is a visible step in both modes. */
+    /* surface-alt: a quiet wash that is a visible step in both modes. */
     background: var(--block-dimensions-surface-alt);
     transform: translateY(-2px);
 }
 
-/* :focus-visible, not :focus. This is a <button>, so the plain form fires on
-   a mouse click too and paints a ring the pointer user did not ask for. The
-   favourite button, the clear-filters button, the retry button and the search
-   clear button all already use the keyboard-only form. */
+/* :focus-visible, not :focus: on a <button>, :focus also matches after a
+   mouse click and paints a ring the pointer user did not ask for. */
 .block_dimensions .dims-ghost-card-inner:focus-visible {
     outline: 2px solid var(--block-dimensions-focus-ring);
     outline-offset: 2px;
@@ -2124,10 +2011,10 @@ body[data-bs-theme="dark"],
     height: 50px;
     border: 2px solid var(--block-dimensions-line);
     border-radius: 50%;
-    /* The glyph was #adb5bd, 2.07:1 on the card - below the 3:1 floor 1.4.11
-       sets for a meaningful icon. ink-faint would read as the "dimmed" token
-       but it is restricted to inactive-control text and placeholders and
-       measures 3.20:1 here, so ink-muted carries it at 7.10:1. */
+    /* ink-muted (7.10:1), not ink-faint: ink-faint would read as the "dimmed"
+       token, but it is reserved for inactive-control text and placeholders and
+       measures only 3.20:1 here, against the 3:1 floor 1.4.11 sets for an
+       icon. */
     color: var(--block-dimensions-ink-muted);
     font-size: 1.2rem;
     transition: border-color 0.2s ease, color 0.2s ease;
@@ -2138,7 +2025,7 @@ body[data-bs-theme="dark"],
     color: var(--block-dimensions-accent);
 }
 
-/* Title: "Mostrar tudo (N)" */
+/* Title: the ghostcardtitle string with the remaining count, e.g. "View more items (3)". */
 .block_dimensions .dims-ghost-card-title {
     font-size: 1.1rem;
     font-weight: 700;
@@ -2245,13 +2132,9 @@ body[data-bs-theme="dark"],
     text-decoration: none;
 }
 
-/* Belt-and-suspenders focus indicator on the title link itself, in addition
-   to the parent's :focus-within rule (WCAG 2.4.7). Useful when the article
-   sits inside layouts that disrupt :focus-within bubbling.
-
-   The offset was 4px, the only one in the file that was not 2px. When both
-   rings paint - the article's and this one's - two different offsets read as a
-   drawing error rather than as two indicators. */
+/* A focus indicator on the title link itself, in addition to the article's
+   :focus-within rule (WCAG 2.4.7). Same 2px offset as the article's ring, so
+   when both paint they read as two indicators rather than a drawing error. */
 .block_dimensions .plan-card-link.stretched-link:focus-visible,
 .block_dimensions .competency-card-link.stretched-link:focus-visible {
     outline: 2px solid var(--block-dimensions-focus-ring);
@@ -2276,14 +2159,12 @@ body[data-bs-theme="dark"],
     pointer-events: auto;
 }
 
-/* Sibling controls must remain clickable above the overlay.
-   Note: .dims-fav-btn is intentionally excluded — it's already
-   position:absolute; z-index:3 in its own block; including it here
-   would override that and break its top-left/top-right placement.
-   .dimension-tags is excluded from the position for the same reason, and it was not:
-   the strip is position:absolute over the image, and re-declaring it relative here put it
-   back in the flow, where the image wrapper's overflow:hidden cut the pills in half on the
-   horizontal card. Only the stacking belongs here. */
+/* Sibling controls must remain clickable above the overlay. .dims-fav-btn is
+   left out: it is already position: absolute; z-index: 3 in its own rule.
+   .dimension-tags gets its stacking only, never a position: it is
+   position: absolute over the image, and position: relative would put it back
+   in the flow, where the image wrapper's overflow: hidden clips it on the
+   horizontal card. card_layout_test pins this. */
 .block_dimensions .trail-item-link {
     position: relative;
     z-index: 2;
@@ -2293,7 +2174,7 @@ body[data-bs-theme="dark"],
     z-index: 2;
 }
 
-/* Trail items now render as <ul><li>; reset list styling. */
+/* The trail renders as a <ul>; reset list styling. */
 .block_dimensions .competency-trail {
     list-style: none;
     padding-left: 0;
@@ -2326,10 +2207,6 @@ body[data-bs-theme="dark"],
     text-decoration: underline;
 }
 
-/* The :focus { outline: none } that used to sit here is deleted. Browsers
-   only paint their own ring for :focus-visible now, so it suppressed nothing a
-   mouse user would have seen - but an author outline: none IS honoured under
-   forced-colors: active, where it took the indicator away entirely. */
 .block_dimensions .trail-item-link:focus-visible {
     outline: 2px solid var(--block-dimensions-focus-ring);
     outline-offset: 2px;
@@ -2339,24 +2216,19 @@ body[data-bs-theme="dark"],
 /* ============================================
    ACCESS PILL - Hover / focus feedback (article-scoped)
    ----------------------------------------------
-   This is the only place the pill reacts. The lift used to live on
-   `.card-link:hover .dims-card-access-btn`, which never matched: both templates
-   put the pill inside the image wrapper and the link inside the card body, so
-   the pill is the link's *sibling subtree*, never its descendant. Re-scoped to
-   the article, where stretched-link makes :hover and :focus-within bubble.
+   The only place the pill reacts. Scoped to the article, not the card link:
+   both templates put the pill inside the image wrapper and the link inside
+   the card body, so the pill is never a descendant of the link. The article
+   matches :hover and :focus-within whenever its stretched link does.
 
-   Hover and keyboard focus share one treatment on purpose. The article already
-   draws the focus indicator - a 2px outline around the whole card - so giving
-   the pill a second ring of its own would put two rings on screen for one focus
-   event. The pill is `aria-hidden` + `pointer-events: none` decoration; the
-   card's ring is the accessible indicator.
+   Hover and keyboard focus share one treatment on purpose: the article already
+   draws the focus indicator around the whole card, and a second ring on the
+   pill would put two rings on screen for one focus. The pill is aria-hidden,
+   pointer-events: none decoration.
 
-   NOTE FOR THE FOCUS-INDICATOR SCAN: this is the one rule in the file whose
-   selector mentions focus and which sets a box-shadow. It is not a focus
-   indicator and must not be read as one - it raises a decorative pill's
-   elevation when the card that OWNS the indicator takes focus. It draws no
-   outline on purpose, and the shadow disappearing under forced colours costs
-   nothing, because the article's own outline is what is being followed.
+   The box-shadow here is not a focus indicator; it lifts the pill when its
+   card, which owns the indicator, takes focus. Losing it under forced colours
+   costs nothing.
    ============================================ */
 .block_dimensions .plan-card:hover .dims-card-access-btn,
 .block_dimensions .competency-card:hover .dims-card-access-btn,
@@ -2365,12 +2237,9 @@ body[data-bs-theme="dark"],
 .block_dimensions .plan-card:hover .dims-card-access-btn-horizontal,
 .block_dimensions .plan-card:focus-within .dims-card-access-btn-horizontal {
     opacity: 1;
-    /* The ink goes to accent, which is what the sibling plugin's inline
-       "Continue" link paints at rest. The two controls keep their different
-       SHAPES - a filled pill has to stay legible over arbitrary photo art, a
-       quiet inline link must not compete with the section list beside it - but
-       from here on they answer a hover with the same colour. accent on surface
-       measures 5.36:1 light and 6.33:1 dark. */
+    /* accent, the colour local_dimensions' inline "Continue" link paints, so
+       the two controls answer a hover with the same colour while keeping their
+       different shapes. accent on surface: 5.36:1 light, 6.33:1 dark. */
     color: var(--block-dimensions-accent);
     box-shadow: 0 4px 14px var(--block-dimensions-shadow);
     transform: translateY(-1px);
@@ -2400,29 +2269,24 @@ body[data-bs-theme="dark"],
 /* ============================================
    BOOTSTRAP 4 UTILITY POLYFILL (Moodle 4.5 only)
    ============================================
-   Same contract as local_dimensions/styles.css: BS4 names resolve on both
-   branches, BS5 names only on 5.x, and the fix is to polyfill the BS5 name
-   rather than write the BS4 one - 5.x wraps every back-ported BS4 name in
+   Same contract as local_dimensions/styles.css: BS4 class names resolve on
+   both branches, BS5 names only on 5.x, and the fix is to polyfill the BS5
+   name rather than write the BS4 one. 5.x wraps every back-ported BS4 name in
    @include deprecated-styles() (a red outline under behat-site and
-   themedesignermode) and Moodle 6.0 removes the compat sheet entirely
-   (MDL-84465). This plugin used to sit on the wrong side of that asymmetry:
-   seven sr-only spans and one ml-2, all of them BS4 spellings.
+   themedesignermode), and Moodle 6.0 removes the compat sheet (MDL-84465).
 
-   GATED on .block-dimensions-bs4, added to the block's OWN ROOT by the summary
-   renderable when the site's branch is below 500. A block cannot use a body
-   class: theme/boost/layout/columns2.php calls body_attributes() one line
-   before it calls blocks('side-pre'), which is what invokes get_content(). The
-   reason is written out in full in block_dimensions\local\bootstrap. The gate
-   is not optional: plugin CSS loads after core's, so an ungated rule would
-   outrank core's own definition on 5.x and freeze 4.5's metrics onto the newer
-   branch.
+   Gated on .block-dimensions-bs4, which summary.mustache puts on the block's
+   content root when the site's branch is below 500; a block cannot add a body
+   class (see block_dimensions\local\bootstrap). The gate is not optional:
+   plugin CSS loads after core's, so an ungated rule would outrank core's own
+   definition on 5.x and freeze 4.5's metrics onto the newer branch.
 
    Bootstrap marks .visually-hidden !important; the gate supplies the extra
    specificity instead, because Moodle's stylelint forbids !important.
 
-   ml-2 needs no rule here: ms-2 is one of the handful of names Moodle 4.5's
-   own 116-line forward bridge already covers, so the BS5 spelling is correct
-   on both branches with nothing added. */
+   ms-* needs no rule here: Moodle 4.5's bs5-bridge.scss already defines it,
+   so the BS5 spelling is correct on both branches. bootstrap_compat_test
+   fails the build on a BS5 utility this block does not cover. */
 .block-dimensions-bs4 .visually-hidden {
     position: absolute;
     width: 1px;

@@ -30,13 +30,16 @@ use core_competency\plan;
  */
 final class dataset_provider_test extends advanced_testcase {
     /**
-     * Build a test double exposing protected helper methods.
+     * Build a test double exposing protected helper methods as public test_*() proxies.
+     *
+     * The constructor is skipped, so the plan list stays empty until test_set_plans() fills it,
+     * and the competency fetchers and build_competency_card() are stubbed.
      *
      * @return object
      */
     protected function get_provider_double() {
         return new class extends dataset_provider {
-            /** @var array Stubbed competency payload for get_plan_competencies. */
+            /** @var array Stubbed competency payload for fetch_plan_competencies_api(). */
             protected array $stubbedcompetencies = [];
             /** @var array Stubbed courses map for get_competencies_with_courses. */
             protected array $stubbedcourses = [];
@@ -367,6 +370,10 @@ final class dataset_provider_test extends advanced_testcase {
 
             /**
              * Get a field from the fake plan object.
+             *
+             * Every field but status reads 0. A templateid of 0 means no template, so
+             * count_plans_by_bucket() counts an active fake plan as a plan card without
+             * reading template metadata.
              *
              * @param string $field Field name.
              * @return int
