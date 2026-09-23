@@ -16,7 +16,8 @@
 /**
  * Pure state-management functions for block_dimensions filters.
  *
- * No DOM access. All functions accept and return plain objects.
+ * No DOM access: createState() builds a plain state object, the other functions read or update it,
+ * and normalizeText() works on plain strings.
  *
  * @module     block_dimensions/state
  * @copyright  2026 Anderson Blaine
@@ -57,8 +58,8 @@ define([], function() {
             searchTerm: '',
             normalizedSearch: '',
             activeFilters: {
-                // Keys mirror the `{type}_tag{n}` data-filter-field contract
-                // (filters.mustache + dynamic access) — keep snake_case.
+                // Keys are the data-filter-field values filters.js writes (type + '_' + tag)
+                // and are also built dynamically, so they stay snake_case.
                 'plan_tag1': '',
                 'plan_tag2': '',
                 'competency_tag1': '',

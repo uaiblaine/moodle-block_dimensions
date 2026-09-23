@@ -69,7 +69,9 @@ class get_block_dataset extends external_api {
     }
 
     /**
-     * Execute method.
+     * Build the plan and competency card dataset for the current user.
+     *
+     * With competencies disabled site-wide the dataset comes back empty rather than as an error.
      *
      * @param bool $favouritesonly Whether only favourites should be returned.
      * @param string $loadgroup Limit card building: 'plan', 'competency', or '' for both.

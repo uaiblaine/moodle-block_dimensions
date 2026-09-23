@@ -244,8 +244,8 @@ final class get_block_dataset_test extends advanced_testcase {
      * The tag pills a card draws survive the return allowlist.
      *
      * The provider builds `tags`/`hastags` and both card templates render them, but
-     * clean_returnvalue() strips whatever the structure does not declare - silently, with the
-     * pills simply never appearing. Nothing else in the pipeline reads a template variable.
+     * clean_returnvalue() silently strips whatever the structure does not declare, and the pills
+     * simply never appear.
      *
      * @covers ::execute_returns
      */
@@ -254,9 +254,8 @@ final class get_block_dataset_test extends advanced_testcase {
         $user = $this->seed_plans_in_every_status();
         $competency = $this->getDataGenerator()->get_plugin_generator('core_competency');
         $template = $competency->create_template();
-        /* The template must render a plan card, which is the display mode it does NOT default to:
-           without the field a template renders its competencies instead, and the fixture would
-           produce no plan card at all to carry a tag. */
+        /* The template must render a plan card, which is not its default display mode: without
+           the field it renders its competencies instead, and no plan card would carry a tag. */
         $this->set_template_field(
             (int) $template->get('id'),
             \local_dimensions\constants::CFIELD_DISPLAYMODE,
@@ -294,8 +293,8 @@ final class get_block_dataset_test extends advanced_testcase {
     /**
      * With no active plan the block opens on the first bucket that has one.
      *
-     * A learner whose plans have all finished must land on them rather than on an empty Active
-     * bucket with a notice - the reason the render gate was widened beyond active plans at all.
+     * The block renders for a learner whose plans have all finished, so it must open on those
+     * plans rather than on an empty Active bucket.
      *
      * @covers ::execute
      */

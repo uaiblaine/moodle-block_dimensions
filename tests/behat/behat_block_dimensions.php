@@ -32,31 +32,21 @@ use Moodle\BehatExtension\Exception\SkippedException;
 /**
  * Step definitions for block_dimensions Behat features.
  *
- * The colour-mode steps here drive the HOST's side of the dark-mode contract. The attribute they
- * set is the production signal - Bootstrap 5.3's own data-bs-theme, which Moodle 5.3's theme_boost
- * writes on the document element from its before_html_attributes listener and from the head script
- * that resolves "auto" with matchMedia. A step is needed only because no shipped theme in the
- * 4.05-5.02 range turns it on yet, so there is no way to ask the site for it.
+ * The colour-mode steps play the host's side of the dark-mode contract. They set Bootstrap's
+ * data-bs-theme on the document element, which Moodle 5.3's theme_boost writes from its
+ * before_html_attributes listener and from a head script that resolves "auto" with matchMedia. No
+ * core theme from 4.5 to 5.2 writes it, so a scenario cannot ask the site for it.
  *
- * The plugin itself must never write that attribute, and
- * block_dimensions\local\colour_tokens_test::test_plugin_never_writes_the_host_signal fails the
- * build if any file outside this directory does. Whether the page is dark is not knowable
- * server-side - core's own answer needs a stored preference plus a client-side matchMedia
- * resolution - and a wrong guess is exactly the defect the design exists to prevent.
+ * The plugin itself never writes that attribute: it belongs to the host, and whether the page is
+ * dark is not knowable server-side.
+ * {@see \block_dimensions\local\colour_tokens_test::test_plugin_never_writes_the_host_signal()} fails
+ * if any plugin source outside tests/behat does.
  *
- * executeScript for a DOM attribute follows core's own idiom in
- * lib/tests/behat/behat_navigation.php.
- *
- * THE STEP WORDING DIFFERS FROM THE SIBLING'S ON PURPOSE, AND IT IS NOT DRIFT. Behat step
- * definitions are site-global: Moodle loads every installed plugin's context into one suite, so
- * two contexts declaring the same regular expression is a hard failure - "Step ... is already
- * defined in ..." - that fails every scenario in BOTH plugins, not just the duplicate. Measured on
- * m502 with local_dimensions' identical steps present: 4 scenarios, 42 steps, all failed before a
- * single assertion ran. block_dimensions declares local_dimensions as a hard dependency in
- * version.php and its CI checks it out on every job, so the two contexts are always loaded
- * together and the collision is certain rather than hypothetical. These steps therefore say
- * "host" where the sibling says "page". The contract they assert is identical, and both files
- * remain greppable on "colour mode", "background colour" and "colour token should resolve to".
+ * The steps say "host" where local_dimensions' equivalent steps say "page", on purpose. Behat step
+ * definitions are site-global, and local_dimensions is a hard dependency, so the two contexts are
+ * always loaded together: a second context declaring the same pattern fails every scenario of both
+ * plugins with "Step ... is already defined". Check the sibling's context before adding a step to
+ * either.
  *
  * @package    block_dimensions
  * @category   test
@@ -123,16 +113,13 @@ class behat_block_dimensions extends behat_base {
     /**
      * Asserts the plugin surface tracks the page, whichever way the page went.
      *
-     * This is the whole of decision #1 written as an executable invariant, and it needs no branch
-     * tag: the plugin's ground IS the page's ground, so the two cannot disagree whether or not the
-     * host has a dark palette to move to. On Moodle 4.5, which ships none, nothing moves and the
-     * two are still equal; on 5.1 and 5.2 both move together. That is why this reads as one
-     * equality rather than as two branches - and the remembered value is reported alongside it, so
-     * a passing run says which of the two cases it actually exercised.
+     * The plugin's surface token reads the page's own background, so the two are equal on every
+     * branch without a branch tag: on Moodle 4.5, which ships no dark palette, neither moves; on
+     * 5.1 and 5.2 both move together. The failure message reports the remembered value, so it says
+     * which of the two cases the run exercised.
      *
-     * The transparency check is the anti-vacuity control. An element the plugin has stopped
-     * painting computes rgba(0, 0, 0, 0), which would "match" nothing at all and let this scenario
-     * pass over a surface that is no longer under test.
+     * A transparent element fails outright: an element the plugin has stopped painting computes
+     * rgba(0, 0, 0, 0), and comparing it would pass over a surface that is no longer under test.
      *
      * @Then /^the "(?P<selector_string>[^"]*)" element background should still match the host page$/
      * @param string $selector A CSS selector for the element under test.
@@ -178,10 +165,8 @@ class behat_block_dimensions extends behat_base {
      */
     public function the_colour_token_should_resolve_to(string $token, string $value): void {
         $escaped = str_replace(["\\", "'"], ["\\\\", "\\'"], $token);
-        /* Read at body, which is where the token block is declared. Custom properties inherit
-           DOWNWARDS only, so reading at documentElement returns the empty string for every one
-           of them. body is also correct against the older contract, when the block sat on
-           :root: the values were visible there by inheritance. */
+        /* Read at body, where styles.css declares the token block: custom properties inherit
+           downwards only, so documentElement would return the empty string for every one. */
         $actual = $this->evaluate_colour(
             "window.getComputedStyle(document.body).getPropertyValue('--" . $escaped . "')"
         );
@@ -198,11 +183,8 @@ class behat_block_dimensions extends behat_base {
     /**
      * Skips the scenario on a branch whose core ships no dark palette.
      *
-     * Detected at RUNTIME rather than from the branch number: the step sets the attribute, reads
+     * Detected at run time rather than from the branch number: the step sets the attribute, reads
      * the page background back, restores the previous state, and skips if the value did not move.
-     * Moodle 5.00 is a real CI leg for this plugin and nothing in this design has measured its
-     * compiled sheet, so a branch-number guard would be an assumption where a measurement is
-     * available.
      *
      * @Given /^the host ships a colour mode$/
      * @throws SkippedException

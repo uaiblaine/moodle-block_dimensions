@@ -17,10 +17,11 @@
 {{!
     @template block_dimensions/summary
 
-    Summary template for block_dimensions (hybrid lazy-load mode).
-
-    Initial HTML is intentionally minimal. The complete dataset is fetched
-    client-side through one non-paginated endpoint and rendered incrementally.
+    Server-rendered shell of the block; it carries no card. amd/src/filters.js
+    fetches the cards from the block_dimensions_get_block_dataset web service
+    (favourites first when they are enabled, the rest of each card group
+    when it is needed, and any other plan status bucket on first use) and
+    renders them with the plan_card and competency_card templates.
 
     Example context (json):
     {

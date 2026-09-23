@@ -49,6 +49,10 @@ All notable changes to this project will be documented in this file.
   `summary_test` now asserts every label the client draws is shipped.
 
 ### Changed
+- **Code comments rewritten to Moodle's guidance.** Every comment was checked against the code it
+  describes (74 contradicted it and were corrected), history and development-environment notes were
+  removed, and required docblocks, tags and Mustache example contexts were kept. The AMD builds were
+  rebuilt for the new module docblocks.
 - **The block renders nothing for a user with no plan it can show, as `block_lp` does.**
   `get_content()` calls `summary::has_content()` again, and core drops the empty block from the
   page; in editing mode it stays, with its controls, so it can still be moved or removed. The gate

@@ -17,11 +17,10 @@
 namespace block_dimensions\local;
 
 /**
- * Two card-layout invariants that only a browser ever showed.
+ * Two card-layout invariants of styles.css.
  *
- * Neither is visible to phpcs, the mustache lint or stylelint: both read syntax, and what breaks
- * here is geometry. Both defects below shipped, and both were found by looking at the rendered
- * block rather than by any gate.
+ * Neither is visible to phpcs, the mustache lint or stylelint: they read syntax, and what breaks
+ * here is geometry.
  *
  * @package    block_dimensions
  * @category   test
@@ -33,9 +32,8 @@ final class card_layout_test extends \basic_testcase {
     /**
      * Read the plugin stylesheet with its comments stripped.
      *
-     * The comments have to go before any rule matching: this very file's first draft read a
-     * comment that NAMES .dimension-tags as though it were the selector of the rule below it,
-     * and reported the wrong rule.
+     * Comments are stripped before any rule matching, or a comment naming a selector such as
+     * .dimension-tags is read as part of the selector of the rule below it.
      *
      * @return string
      */
@@ -67,8 +65,9 @@ final class card_layout_test extends \basic_testcase {
     /**
      * The card grids lay out on auto-fill tracks, so a lone last card keeps its column width.
      *
-     * With a flex row the last card of an odd row grew to the full width - the same card in two
-     * sizes on one screen, which is what a reviewer noticed on the first screenshot of the block.
+     * With a flex row, the last card of an incomplete row grows to the full width, so one screen
+     * shows the same card in two sizes. The item rule must not make the card a growing flex item
+     * either.
      *
      * @return void
      */
@@ -102,9 +101,9 @@ final class card_layout_test extends \basic_testcase {
     /**
      * The tag strip stays absolutely positioned over the card image.
      *
-     * A later rule lifting it above the stretched-link overlay re-declared `position: relative`,
-     * which put the strip back in the flow: inside the image wrapper's overflow:hidden it was cut
-     * in half on the horizontal card, and nothing failed.
+     * A rule lifting it above the stretched-link overlay must set only its stacking: re-declaring
+     * `position: relative` puts the strip back in the flow, where the image wrapper's
+     * overflow: hidden cuts it in half on the horizontal card.
      *
      * @return void
      */
