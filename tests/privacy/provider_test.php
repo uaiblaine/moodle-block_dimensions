@@ -65,6 +65,20 @@ final class provider_test extends provider_testcase {
     }
 
     /**
+     * The plugin counts as compliant with the privacy API.
+     *
+     * Core's own compliance test sweeps every component but is not in the plugin's testsuite,
+     * which is all moodle-plugin-ci runs, so the check is repeated here: a metadata provider
+     * without a request data provider fails it ({@see \core_privacy\manager::component_is_compliant()}).
+     *
+     * @covers \block_dimensions\privacy\provider
+     * @return void
+     */
+    public function test_the_component_is_compliant(): void {
+        $this->assertTrue((new \core_privacy\manager())->component_is_compliant('block_dimensions'));
+    }
+
+    /**
      * Test that metadata is returned correctly.
      *
      * @covers ::get_metadata
