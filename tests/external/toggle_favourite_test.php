@@ -34,7 +34,7 @@ use core_external\external_api;
  * @category   test
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversDefaultClass \block_dimensions\external\toggle_favourite
+ * @covers \block_dimensions\external\toggle_favourite
  */
 final class toggle_favourite_test extends advanced_testcase {
     /** @var string Web service function name registered in db/services.php. */
@@ -93,8 +93,6 @@ final class toggle_favourite_test extends advanced_testcase {
      * ownership/existence check instead — which, for an itemtype other than 'plan', looks the
      * itemid up in the competency table and throws a differently worded exception. Asserting the
      * exact debuginfo text is what tells the two apart.
-     *
-     * @covers ::execute
      */
     public function test_execute_rejects_invalid_itemtype(): void {
         $this->resetAfterTest();
@@ -118,8 +116,6 @@ final class toggle_favourite_test extends advanced_testcase {
      * Without the itemid <= 0 guard, execution reaches the ownership check with itemid 0, which
      * throws its own, differently worded, invalid_parameter_exception — so the exact debuginfo
      * text, not just the exception class, is what proves this guard fired.
-     *
-     * @covers ::execute
      */
     public function test_execute_rejects_non_positive_itemid(): void {
         $this->resetAfterTest();
@@ -141,8 +137,6 @@ final class toggle_favourite_test extends advanced_testcase {
 
     /**
      * A negative itemid must be what stops the call, not the ownership check further down.
-     *
-     * @covers ::execute
      */
     public function test_execute_rejects_negative_itemid(): void {
         $this->resetAfterTest();
@@ -170,8 +164,6 @@ final class toggle_favourite_test extends advanced_testcase {
      * errorcode alone already distinguishes it. The owned-plan fixture still matters: without it,
      * this test would pass even after the guard was deleted, because the final ownership check
      * would then throw its own invalid_parameter_exception instead.
-     *
-     * @covers ::execute
      */
     public function test_execute_throws_when_favourites_disabled(): void {
         $this->resetAfterTest();
@@ -188,12 +180,53 @@ final class toggle_favourite_test extends advanced_testcase {
     }
 
     /**
+     * A guest must be rejected before any itemtype, itemid or favourites guard runs.
+     */
+    public function test_execute_rejects_guest_user(): void {
+        $this->resetAfterTest();
+        $this->setGuestUser();
+
+        $response = $this->call('plan', 1);
+
+        $this->assertTrue($response['error']);
+        $this->assertSame('noguest', $response['exception']->errorcode);
+    }
+
+    /**
+     * A 'competency' itemtype is checked against the competency table, not the plan table.
+     *
+     * Without the competency branch of the existence check in execute(), an arbitrary or
+     * non-existent competency id could be favourited, or a real one wrongly refused.
+     */
+    public function test_execute_rejects_unknown_competency(): void {
+        $this->resetAfterTest();
+        set_debugging(DEBUG_DEVELOPER, true);
+
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+        set_config('enable_favourites', 1, 'block_dimensions');
+
+        $response = $this->call('competency', 999999);
+
+        $this->assertTrue($response['error']);
+        $this->assertSame('invalidparameter', $response['exception']->errorcode);
+        $this->assertStringContainsString('Unknown competency: 999999', $this->debuginfo($response));
+
+        // Control: a real competency id succeeds for the same guard.
+        $competency = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $competency->create_framework();
+        $compid = (int) $competency->create_competency(['competencyframeworkid' => $framework->get('id')])->get('id');
+
+        $control = $this->call('competency', $compid);
+        $this->assertFalse($control['error'], $control['exception']->message ?? '');
+        $this->assertTrue($control['data']['isfavourite']);
+    }
+
+    /**
      * A owner favouriting their own plan gets a written, then removed, favourite row.
      *
      * The control that closes B2: proves the endpoint can actually succeed at all, so the negative
      * tests above are excluding real callers rather than passing by accident.
-     *
-     * @covers ::execute
      */
     public function test_execute_succeeds_and_round_trips_for_the_owner(): void {
         global $DB;
@@ -224,11 +257,9 @@ final class toggle_favourite_test extends advanced_testcase {
     /**
      * A user cannot favourite another user's plan; the plan's own owner still can (the control).
      *
-     * toggle_favourite.php:94 is the only check standing between an arbitrary logged-in user and a
+     * The plan ownership check in execute() is the only one standing between an arbitrary logged-in user and a
      * favourite row for a plan they do not own. Running the owner through the same itemid in the
      * same test proves the guard rejects the attacker specifically, not every plan of that id.
-     *
-     * @covers ::execute
      */
     public function test_execute_rejects_another_users_plan(): void {
         $this->resetAfterTest();

@@ -137,6 +137,12 @@ All notable changes to this project will be documented in this file.
   AMD modules (209 checks), with a mutation mode that re-breaks each fix it pins (67 mutants); it is
   excluded from the release zip. `tests/coverage.php` adds the block class and the uninstall script to
   the PHPUnit coverage measurement.
+- **Tests for the code no test executed.** The `set_return_context` web service and the uninstall
+  script had no test at all. Neither did the block class's own settings, the privacy provider's
+  foreign-component and non-user-context guards, or several `dataset_provider` branches (group loading,
+  the template cache miss, a real plan trail, the custom type suffix). `@covers` is now class-scoped,
+  so the report credits every line a test runs: PHPUnit coverage reads 99.6% of lines, where it read
+  65.4% over a suite that already executed 91.3%.
 
 - **The block renders nothing for a user with no plan it can show, as `block_lp` does.**
   `get_content()` calls `summary::has_content()` again, and core drops the empty block from the
