@@ -311,4 +311,120 @@ final class provider_test extends provider_testcase {
             'userid' => $user->id,
         ]));
     }
+
+    /**
+     * A context list approved for another component exports nothing; the same list approved for
+     * this plugin (the control) exports the favourite.
+     *
+     * @covers ::export_user_data
+     */
+    public function test_export_user_data_ignores_other_components(): void {
+        $this->resetAfterTest();
+        $user = $this->getDataGenerator()->create_user();
+        $usercontext = context_user::instance($user->id);
+        $this->create_favourite((int) $user->id, 'plan', 101);
+
+        provider::export_user_data(new approved_contextlist($user, 'core_course', [$usercontext->id]));
+        $this->assertFalse(writer::with_context($usercontext)->has_any_data());
+
+        provider::export_user_data(new approved_contextlist($user, 'block_dimensions', [$usercontext->id]));
+        $this->assertTrue(writer::with_context($usercontext)->has_any_data());
+    }
+
+    /**
+     * Only the user's own context is exported, and an item type holding no favourite writes no
+     * subcontext.
+     *
+     * The competency favourite recorded against the system context is the row the context guard
+     * excludes: without the guard, the export would find it there and write it under that context.
+     *
+     * @covers ::export_user_data
+     */
+    public function test_export_user_data_exports_only_the_user_context(): void {
+        $this->resetAfterTest();
+        $user = $this->getDataGenerator()->create_user();
+        $usercontext = context_user::instance($user->id);
+        $systemcontext = context_system::instance();
+        $this->create_favourite((int) $user->id, 'plan', 101);
+        $this->create_favourite_at_context((int) $user->id, 'competency', 202, $systemcontext);
+
+        $approved = new approved_contextlist($user, 'block_dimensions', [$usercontext->id, $systemcontext->id]);
+        provider::export_user_data($approved);
+
+        $root = get_string('pluginname', 'block_dimensions');
+        $writer = writer::with_context($usercontext);
+        $this->assertSame(101, $writer->get_data([$root, 'plan'])->favourites[0]->itemid);
+        $this->assertEmpty($writer->get_data([$root, 'competency']));
+        $this->assertFalse(writer::with_context($systemcontext)->has_any_data());
+    }
+
+    /**
+     * A context list approved for another component deletes none of this plugin's favourites.
+     *
+     * Core's delete_favourites_for_user() takes the component as an argument rather than from the
+     * list, so without the component guard this call would delete them.
+     *
+     * @covers ::delete_data_for_user
+     */
+    public function test_delete_data_for_user_ignores_other_components(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $user = $this->getDataGenerator()->create_user();
+        $this->create_favourite((int) $user->id, 'plan', 1);
+        $this->create_favourite((int) $user->id, 'competency', 2);
+
+        $approved = new approved_contextlist($user, 'core_course', [context_user::instance($user->id)->id]);
+        provider::delete_data_for_user($approved);
+
+        $this->assertSame(2, $DB->count_records('favourite', [
+            'component' => 'block_dimensions',
+            'userid' => $user->id,
+        ]));
+    }
+
+    /**
+     * A user list approved for another component leaves that component's favourites alone.
+     *
+     * Core's delete_favourites_for_userlist() reads the component from the list, so the rows this
+     * guard protects are the other component's own favourites of the item types this plugin uses.
+     *
+     * @covers ::delete_data_for_users
+     */
+    public function test_delete_data_for_users_ignores_other_components(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $user = $this->getDataGenerator()->create_user();
+        $usercontext = context_user::instance($user->id);
+        \core_favourites\service_factory::get_service_for_user_context($usercontext)
+            ->create_favourite('core_course', 'plan', 1, $usercontext);
+
+        provider::delete_data_for_users(new approved_userlist($usercontext, 'core_course', [$user->id]));
+
+        $this->assertSame(1, $DB->count_records('favourite', [
+            'component' => 'core_course',
+            'userid' => $user->id,
+        ]));
+    }
+
+    /**
+     * A user list in a context other than a user's deletes nothing, even a favourite recorded
+     * against that context.
+     *
+     * @covers ::delete_data_for_users
+     */
+    public function test_delete_data_for_users_ignores_non_user_contexts(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $user = $this->getDataGenerator()->create_user();
+        $systemcontext = context_system::instance();
+        $this->create_favourite_at_context((int) $user->id, 'plan', 1, $systemcontext);
+
+        provider::delete_data_for_users(new approved_userlist($systemcontext, 'block_dimensions', [$user->id]));
+
+        $this->assertSame(1, $DB->count_records('favourite', [
+            'component' => 'block_dimensions',
+            'userid' => $user->id,
+            'contextid' => $systemcontext->id,
+        ]));
+    }
 }

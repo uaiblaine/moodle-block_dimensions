@@ -27,7 +27,7 @@ use local_dimensions\constants;
  * @category   test
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversDefaultClass \block_dimensions\local\dataset_provider
+ * @covers \block_dimensions\local\dataset_provider
  */
 final class dataset_provider_test extends advanced_testcase {
     /**
@@ -318,13 +318,132 @@ final class dataset_provider_test extends advanced_testcase {
             public function test_sanitize_image_url(?string $url): ?string {
                 return $this->sanitize_image_url($url);
             }
+
+            /**
+             * Proxy for the real build_competency_card(), bypassing this double's own stub above.
+             *
+             * `parent::` always resolves to dataset_provider's own method, regardless of which
+             * override is running, so this exercises the production code every other test in this
+             * file avoids by calling through the stub instead.
+             *
+             * @param int $planid Plan id.
+             * @param int $competencyid Competency id.
+             * @param \core_competency\competency $competency Competency object.
+             * @param array|null $metadata Pre-fetched metadata, or null to fetch on demand.
+             * @return array
+             */
+            public function test_build_competency_card(
+                int $planid,
+                int $competencyid,
+                \core_competency\competency $competency,
+                ?array $metadata = null
+            ): array {
+                return parent::build_competency_card($planid, $competencyid, $competency, $metadata);
+            }
         };
     }
 
     /**
-     * Trail start index should follow edge and centering rules.
+     * Set one of the sibling plugin's template custom fields.
      *
-     * @covers ::get_trail_start_index
+     * The save runs as the admin and restores the current user afterwards: instance_form_save()
+     * silently drops every field the current user cannot edit, so a fixture that saves as the
+     * learner writes nothing at all and the test that depends on it proves nothing.
+     *
+     * @param int $templateid Learning plan template id.
+     * @param string $shortname Custom field shortname.
+     * @param mixed $value Value to store.
+     * @return void
+     */
+    protected function set_template_field(int $templateid, string $shortname, $value): void {
+        global $USER;
+
+        $previous = $USER;
+        $this->setAdminUser();
+        \local_dimensions\helper::ensure_custom_fields_exist(\local_dimensions\helper::AREA_LP);
+        \local_dimensions\customfield\lp_handler::create()->instance_form_save((object) [
+            'id' => $templateid,
+            'customfield_' . $shortname => $value,
+        ], true);
+        $this->setUser($previous);
+    }
+
+    /**
+     * Set one of the sibling plugin's competency custom fields.
+     *
+     * @param int $competencyid Competency id.
+     * @param string $shortname Custom field shortname.
+     * @param mixed $value Value to store.
+     * @return void
+     */
+    protected function set_competency_field(int $competencyid, string $shortname, $value): void {
+        global $USER;
+
+        $previous = $USER;
+        $this->setAdminUser();
+        \local_dimensions\helper::ensure_custom_fields_exist(\local_dimensions\helper::AREA_COMPETENCY);
+        \local_dimensions\customfield\competency_handler::create()->instance_form_save((object) [
+            'id' => $competencyid,
+            'customfield_' . $shortname => $value,
+        ], true);
+        $this->setUser($previous);
+    }
+
+    /**
+     * Seed one learner with an active manual (plan-mode) plan and, in the same active bucket, a
+     * template-based plan set to competencies mode carrying two course-linked competencies.
+     *
+     * The second competency exists only to give favourite/visibility tests a real control: a
+     * competency the fixture never favourites, built by the same call, so a test can prove a flag
+     * was set for the one it favourited and not for every card the bucket holds.
+     *
+     * @return array{user: \stdClass, planid: int, compid: int, othercompid: int}
+     */
+    protected function seed_plan_and_competency_bucket(): array {
+        set_config('enabled', 1, 'core_competency');
+        $generator = $this->getDataGenerator();
+        $competency = $generator->get_plugin_generator('core_competency');
+
+        $framework = $competency->create_framework();
+        $comp = $competency->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $othercomp = $competency->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $course = $generator->create_course();
+        $competency->create_course_competency(['courseid' => $course->id, 'competencyid' => $comp->get('id')]);
+        $competency->create_course_competency(['courseid' => $course->id, 'competencyid' => $othercomp->get('id')]);
+
+        $comptemplate = $competency->create_template();
+        $competency->create_template_competency([
+            'templateid' => $comptemplate->get('id'),
+            'competencyid' => $comp->get('id'),
+        ]);
+        $competency->create_template_competency([
+            'templateid' => $comptemplate->get('id'),
+            'competencyid' => $othercomp->get('id'),
+        ]);
+        $this->set_template_field(
+            (int) $comptemplate->get('id'),
+            constants::CFIELD_DISPLAYMODE,
+            constants::DISPLAYMODE_COMPETENCIES
+        );
+
+        $user = $generator->create_user();
+        $plan = $competency->create_plan(['userid' => $user->id, 'status' => plan::STATUS_ACTIVE]);
+        $competency->create_plan([
+            'userid' => $user->id,
+            'templateid' => $comptemplate->get('id'),
+            'status' => plan::STATUS_ACTIVE,
+        ]);
+
+        return [
+            'user' => $user,
+            'planid' => (int) $plan->get('id'),
+            'compid' => (int) $comp->get('id'),
+            'othercompid' => (int) $othercomp->get('id'),
+        ];
+    }
+
+    /**
+     * Trail start index should follow edge and centering rules.
      */
     public function test_get_trail_start_index_edges_and_centering(): void {
         $provider = $this->get_provider_double();
@@ -336,9 +455,20 @@ final class dataset_provider_test extends advanced_testcase {
     }
 
     /**
-     * Trail selection should keep a 5-item window and set first/last markers.
+     * A centred window that would run past the end is pulled back to end exactly at the total.
      *
-     * @covers ::select_trail_competencies
+     * total=10, maxitems=5: index 8 is not "near the end" (that branch only fires at index >= 9),
+     * so the method centres a window at 8 - floor(5/2) = 6, which would read past index 9. Without
+     * the clamp this returns 6, a window that reads one item past the end of the trail.
+     */
+    public function test_get_trail_start_index_clamps_a_centered_window_past_the_end(): void {
+        $provider = $this->get_provider_double();
+
+        $this->assertSame(5, $provider->test_get_trail_start_index(10, 8));
+    }
+
+    /**
+     * Trail selection should keep a 5-item window and set first/last markers.
      */
     public function test_select_trail_competencies_window_and_markers(): void {
         $provider = $this->get_provider_double();
@@ -366,8 +496,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * Partial trail should only be true when there are both completed and pending items.
-     *
-     * @covers ::has_partial_trail
      */
     public function test_has_partial_trail_states(): void {
         $provider = $this->get_provider_double();
@@ -450,10 +578,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * Each bucket carries its own statuses, and a plain draft belongs to none of them.
-     *
-     * @covers ::get_plans_in_bucket
-     * @covers ::count_plans_by_bucket
-     * @covers ::has_displayable_plans
      */
     public function test_status_buckets_partition_the_plan_list(): void {
         $provider = $this->get_provider_double();
@@ -483,9 +607,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * A learner whose only plan is a draft has nothing the block could show.
-     *
-     * @covers ::count_plans_by_bucket
-     * @covers ::has_displayable_plans
      */
     public function test_a_draft_alone_is_not_content(): void {
         $provider = $this->get_provider_double();
@@ -504,10 +625,6 @@ final class dataset_provider_test extends advanced_testcase {
      *
      * It draws no plan card, so the active count stays at zero, but its competency cards are built
      * only in the active bucket: opening on the completed plan would leave them out of reach.
-     *
-     * @covers ::opening_bucket
-     * @covers ::has_active_plans
-     * @covers ::count_plans_by_bucket
      */
     public function test_an_active_plan_showing_competencies_opens_the_active_bucket(): void {
         $provider = $this->get_provider_double();
@@ -529,8 +646,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * Eligible competency IDs should exclude seen items and items without visible courses.
-     *
-     * @covers ::get_eligible_competency_ids
      */
     public function test_get_eligible_competency_ids_filters_by_seen_and_courses(): void {
         $provider = $this->get_provider_double();
@@ -580,8 +695,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * IDs-to-process should respect favourites-only mode.
-     *
-     * @covers ::get_ids_to_process
      */
     public function test_get_ids_to_process_respects_favourites_mode(): void {
         $provider = $this->get_provider_double();
@@ -602,8 +715,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * Trail competency helper should map payload and track last completed index.
-     *
-     * @covers ::build_trail_competency_data
      */
     public function test_build_trail_competency_data_maps_rows_and_last_completed_index(): void {
         $provider = $this->get_provider_double();
@@ -628,8 +739,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * Visibility helper should skip already-seen and unavailable competencies.
-     *
-     * @covers ::skip_competency_for_visibility
      */
     public function test_skip_competency_for_visibility_rules(): void {
         $provider = $this->get_provider_double();
@@ -645,8 +754,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * Favourites helper should skip only when favourites-only is enabled and id is not favourite.
-     *
-     * @covers ::skip_competency_for_favourites
      */
     public function test_skip_competency_for_favourites_rules(): void {
         $provider = $this->get_provider_double();
@@ -660,8 +767,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * Competency processor should count visible competencies and build card when allowed.
-     *
-     * @covers ::process_competency_dataset_item
      */
     public function test_process_competency_dataset_item_builds_card_when_eligible(): void {
         $provider = $this->get_provider_double();
@@ -698,8 +803,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * Competency processor should count but not return card for favourites-only skipped items.
-     *
-     * @covers ::process_competency_dataset_item
      */
     public function test_process_competency_dataset_item_counts_when_favourite_skipped(): void {
         $provider = $this->get_provider_double();
@@ -734,8 +837,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * Competency processor should not count when item is skipped by visibility.
-     *
-     * @covers ::process_competency_dataset_item
      */
     public function test_process_competency_dataset_item_does_not_count_when_visibility_skips(): void {
         $provider = $this->get_provider_double();
@@ -770,8 +871,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * Plan competency processor should count and collect cards for eligible items.
-     *
-     * @covers ::process_plan_competencies
      */
     public function test_process_plan_competencies_counts_and_collects_cards(): void {
         $this->resetAfterTest();
@@ -810,8 +909,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * Plan competency processor should return an empty result, and say why, when the API throws.
-     *
-     * @covers ::process_plan_competencies
      */
     public function test_process_plan_competencies_returns_empty_on_exception(): void {
         $this->resetAfterTest();
@@ -863,8 +960,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * Button data: continue on a partial trail, access otherwise, and view outside the active bucket.
-     *
-     * @covers ::get_plan_button_data
      */
     public function test_get_plan_button_data_returns_correct_strings(): void {
         $this->resetAfterTest();
@@ -892,8 +987,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * Resolve plan display context with null template should return plan display mode and empty metadata.
-     *
-     * @covers ::resolve_plan_display_context
      */
     public function test_resolve_plan_display_context_returns_plan_mode_for_null_template(): void {
         $provider = $this->get_provider_double();
@@ -903,9 +996,34 @@ final class dataset_provider_test extends advanced_testcase {
     }
 
     /**
-     * Eligible competency IDs should return empty array when all competencies have already been seen.
+     * With no display mode stubbed and no prior read cached, resolving a real template id reads
+     * the sibling plugin's cache directly rather than only ever taking the null-template shortcut.
      *
-     * @covers ::get_eligible_competency_ids
+     * The double's own prefetch_template_metadata() is a no-op (see get_provider_double()), so
+     * nothing has populated $this->templatemetadata before this call; this is the only route in
+     * this suite that reaches dataset_provider's own single-template cache read.
+     */
+    public function test_resolve_plan_display_context_reads_the_cache_on_a_miss(): void {
+        $this->resetAfterTest();
+
+        $template = $this->getDataGenerator()->get_plugin_generator('core_competency')->create_template();
+        $templateid = (int) $template->get('id');
+        $this->set_template_field($templateid, constants::CFIELD_DISPLAYMODE, constants::DISPLAYMODE_PLAN);
+
+        $provider = $this->get_provider_double();
+        [$templatemetadata, $displaymode] = $provider->test_resolve_plan_display_context($templateid);
+
+        $this->assertSame(constants::DISPLAYMODE_PLAN, $displaymode);
+        $this->assertSame(constants::DISPLAYMODE_PLAN, $templatemetadata['displaymode']);
+
+        // Control: a template whose field was never set defaults to competencies mode.
+        $bare = (int) $this->getDataGenerator()->get_plugin_generator('core_competency')->create_template()->get('id');
+        [, $baredisplaymode] = $provider->test_resolve_plan_display_context($bare);
+        $this->assertSame(constants::DISPLAYMODE_COMPETENCIES, $baredisplaymode);
+    }
+
+    /**
+     * Eligible competency IDs should return empty array when all competencies have already been seen.
      */
     public function test_get_eligible_competency_ids_all_seen_returns_empty(): void {
         $provider = $this->get_provider_double();
@@ -933,8 +1051,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * Trail selection with fewer items than window size should return all items with first/last markers.
-     *
-     * @covers ::select_trail_competencies
      */
     public function test_select_trail_competencies_with_fewer_than_window_items(): void {
         $provider = $this->get_provider_double();
@@ -956,8 +1072,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * Plan competency processor with no competencies should return zero counts and empty cards.
-     *
-     * @covers ::process_plan_competencies
      */
     public function test_process_plan_competencies_empty_stub_returns_zero(): void {
         $this->resetAfterTest();
@@ -983,8 +1097,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * Duplicate competency already seen in a previous plan should be skipped by the processor.
-     *
-     * @covers ::process_competency_dataset_item
      */
     public function test_process_competency_dataset_item_skips_already_seen_competency(): void {
         $provider = $this->get_provider_double();
@@ -1019,8 +1131,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * build_plan_dataset_card should return null when favourites-only and plan is not a favourite.
-     *
-     * @covers ::build_plan_dataset_card
      */
     public function test_build_plan_dataset_card_returns_null_for_non_favourite_in_favourites_mode(): void {
         $this->resetAfterTest();
@@ -1035,8 +1145,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * Trail start index when total items is below window size should always be zero.
-     *
-     * @covers ::get_trail_start_index
      */
     public function test_get_trail_start_index_short_total_stays_at_zero(): void {
         $provider = $this->get_provider_double();
@@ -1048,8 +1156,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * sanitize_color should accept hex colours and reject CSS injection payloads.
-     *
-     * @covers ::sanitize_color
      */
     public function test_sanitize_color_accepts_hex_and_rejects_injection(): void {
         $provider = $this->get_provider_double();
@@ -1070,8 +1176,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * sanitize_image_url should accept pluginfile URLs and reject CSS-breaking values.
-     *
-     * @covers ::sanitize_image_url
      */
     public function test_sanitize_image_url_accepts_urls_and_rejects_injection(): void {
         $provider = $this->get_provider_double();
@@ -1099,8 +1203,6 @@ final class dataset_provider_test extends advanced_testcase {
      *
      * PARAM_URL accepts a quote and parentheses in the query and the fragment, and the browser
      * decodes Mustache's &#39; before the CSS parser reads the style attribute.
-     *
-     * @covers ::sanitize_image_url
      */
     public function test_sanitize_image_url_encodes_what_param_url_lets_through(): void {
         $provider = $this->get_provider_double();
@@ -1127,8 +1229,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * Favourites are read for the user the provider was built for, not for whoever is logged in.
-     *
-     * @covers ::get_dataset
      */
     public function test_favourites_belong_to_the_provider_user(): void {
         global $USER;
@@ -1157,8 +1257,6 @@ final class dataset_provider_test extends advanced_testcase {
 
     /**
      * A custom field's display name is read afresh, so a rename shows on the very next read.
-     *
-     * @covers ::get_customfield_name
      */
     public function test_get_customfield_name_follows_a_rename(): void {
         global $DB;
@@ -1183,9 +1281,6 @@ final class dataset_provider_test extends advanced_testcase {
      *
      * A setting that was never saved counts as enabled, as it does for toggle_favourite; a raw
      * read of the setting would hide the star on such a site.
-     *
-     * @covers ::process_competency_dataset_item
-     * @covers ::favourite_fields
      */
     public function test_competency_card_offers_the_favourite_toggle_only_while_favourites_are_enabled(): void {
         $this->resetAfterTest();
@@ -1237,10 +1332,6 @@ final class dataset_provider_test extends advanced_testcase {
     /**
      * A plan card offers the favourite toggle only for an active plan, and only while favourites
      * are enabled.
-     *
-     * @covers ::get_dataset
-     * @covers ::build_plan_dataset_card
-     * @covers ::favourite_fields
      */
     public function test_plan_card_offers_the_favourite_toggle_only_while_favourites_are_enabled(): void {
         $this->resetAfterTest();
@@ -1264,5 +1355,236 @@ final class dataset_provider_test extends advanced_testcase {
         set_config('enable_favourites', 0, 'block_dimensions');
         $this->assertSame([false], $showfavourite(dataset_provider::BUCKET_ACTIVE));
         $this->assertSame([false], $showfavourite(dataset_provider::BUCKET_COMPLETE));
+    }
+
+    /**
+     * loadgroup='competency' still counts a plan-mode plan, but skips building its card.
+     *
+     * Phase 2 loading asks for one group at a time so the client does not re-process the group it
+     * already has; the count must still be right on that request, since filters.js reads it for the
+     * pill before the plan group ever loads.
+     */
+    public function test_get_dataset_skips_plan_cards_when_loading_the_competency_group_only(): void {
+        $this->resetAfterTest();
+        ['user' => $user, 'planid' => $planid, 'compid' => $compid] = $this->seed_plan_and_competency_bucket();
+        $this->setUser($user);
+        $provider = new dataset_provider((int) $user->id);
+
+        $result = $provider->get_dataset(false, 'competency', dataset_provider::BUCKET_ACTIVE);
+
+        $this->assertSame(1, $result['totalplans'], 'the plan-mode plan is still counted');
+        $this->assertSame([], $result['plancards'], 'building its card is skipped while only competencies are requested');
+        // The competencies-mode plan is not affected by this loadgroup.
+        $this->assertContains($compid, array_column($result['competencycards'], 'id'));
+
+        // Control: with no group restriction the plan card is built too.
+        $both = $provider->get_dataset(false, '', dataset_provider::BUCKET_ACTIVE);
+        $this->assertSame([$planid], array_column($both['plancards'], 'id'));
+    }
+
+    /**
+     * loadgroup='plan' skips a competencies-mode plan entirely: no card, and not counted either.
+     *
+     * Unlike the plan-mode side, the count and the cards are the same branch here
+     * (process_plan_competencies is the only place totalcompetencies is incremented), so skipping
+     * competency processing for this loadgroup also means the pill count stays at zero on this
+     * request - the client already holds it from the favourites-only phase.
+     */
+    public function test_get_dataset_skips_competency_cards_when_loading_the_plan_group_only(): void {
+        $this->resetAfterTest();
+        ['user' => $user, 'compid' => $compid] = $this->seed_plan_and_competency_bucket();
+        $this->setUser($user);
+        $provider = new dataset_provider((int) $user->id);
+
+        $result = $provider->get_dataset(false, 'plan', dataset_provider::BUCKET_ACTIVE);
+
+        $this->assertSame([], $result['competencycards'], 'competency processing is skipped for this loadgroup');
+        $this->assertSame(0, $result['totalcompetencies']);
+
+        // Control: with no group restriction the competency (and its fixture sibling) are built and counted.
+        $both = $provider->get_dataset(false, '', dataset_provider::BUCKET_ACTIVE);
+        $this->assertContains($compid, array_column($both['competencycards'], 'id'));
+        $this->assertSame(2, $both['totalcompetencies']);
+    }
+
+    /**
+     * preload_favourite_ids() reads competency favourites, not just plan favourites, and the map
+     * it builds is keyed by the exact id favourited - not "any favourite exists".
+     */
+    public function test_get_dataset_marks_only_the_favourited_competency_card(): void {
+        $this->resetAfterTest();
+        ['user' => $user, 'compid' => $compid, 'othercompid' => $othercompid] = $this->seed_plan_and_competency_bucket();
+        $usercontext = \context_user::instance($user->id);
+        $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
+        $ufservice->create_favourite('block_dimensions', 'competency', $compid, $usercontext);
+        // Precondition: the row this test depends on was actually written.
+        $this->assertTrue($ufservice->favourite_exists('block_dimensions', 'competency', $compid, $usercontext));
+
+        $this->setUser($user);
+        $result = (new dataset_provider((int) $user->id))->get_dataset(false, '', dataset_provider::BUCKET_ACTIVE);
+
+        $byid = [];
+        foreach ($result['competencycards'] as $card) {
+            $byid[$card['id']] = $card;
+        }
+        $this->assertArrayHasKey($compid, $byid, 'the fixture must produce the favourited competency card');
+        $this->assertArrayHasKey($othercompid, $byid, 'the fixture must produce the control competency card');
+        $this->assertTrue($byid[$compid]['isfavourite']);
+        $this->assertFalse($byid[$othercompid]['isfavourite']);
+    }
+
+    /**
+     * A template's custom "type" text replaces the default word in the plan card's competency count.
+     */
+    public function test_plan_card_uses_the_templates_custom_type_as_the_competency_suffix(): void {
+        $this->resetAfterTest();
+        set_config('enabled', 1, 'core_competency');
+        $generator = $this->getDataGenerator();
+        $competency = $generator->get_plugin_generator('core_competency');
+
+        $template = $competency->create_template();
+        $this->set_template_field((int) $template->get('id'), constants::CFIELD_TYPE, 1);
+        // A plan card is only built in plan-mode; the default without this field is competencies mode.
+        $this->set_template_field((int) $template->get('id'), constants::CFIELD_DISPLAYMODE, constants::DISPLAYMODE_PLAN);
+        $user = $generator->create_user();
+        $competency->create_plan([
+            'userid' => $user->id,
+            'templateid' => $template->get('id'),
+            'status' => plan::STATUS_ACTIVE,
+        ]);
+        $this->setUser($user);
+
+        $result = (new dataset_provider((int) $user->id))->get_dataset(false, 'plan', dataset_provider::BUCKET_ACTIVE);
+
+        $this->assertCount(1, $result['plancards'], 'the fixture must produce a plan card, or this proves nothing');
+        // Value 1 selects the first local_dimensions type_options entry, "Activities".
+        $this->assertSame('0 Activities', $result['plancards'][0]['competencycounttext']);
+
+        // Control: a template with no custom type falls back to the plugin's default word.
+        $plain = $competency->create_template();
+        $this->set_template_field((int) $plain->get('id'), constants::CFIELD_DISPLAYMODE, constants::DISPLAYMODE_PLAN);
+        $plainuser = $generator->create_user();
+        $competency->create_plan([
+            'userid' => $plainuser->id,
+            'templateid' => $plain->get('id'),
+            'status' => plan::STATUS_ACTIVE,
+        ]);
+        $this->setUser($plainuser);
+        $default = (new dataset_provider((int) $plainuser->id))->get_dataset(false, 'plan', dataset_provider::BUCKET_ACTIVE);
+        $this->assertCount(1, $default['plancards'], 'the control fixture must produce a plan card, or this proves nothing');
+        $this->assertSame(
+            '0 ' . get_string('competency_count_suffix', 'block_dimensions'),
+            $default['plancards'][0]['competencycounttext']
+        );
+    }
+
+    /**
+     * A manual plan's trail reads the real competencies linked to it and falls back to the first
+     * competency's own cached image when the plan card has none of its own.
+     *
+     * Every prior test in this file that reaches build_plan_card() does so with a plan that carries
+     * no competency at all, so the trail's total is always 0 and the branch building the trail
+     * payload from real rows never runs.
+     */
+    public function test_plan_card_trail_reads_real_competency_data(): void {
+        $this->resetAfterTest();
+        set_config('enabled', 1, 'core_competency');
+        $generator = $this->getDataGenerator();
+        $competency = $generator->get_plugin_generator('core_competency');
+
+        $framework = $competency->create_framework();
+        $comp = $competency->create_competency([
+            'competencyframeworkid' => $framework->get('id'),
+            'shortname' => 'Trail competency',
+        ]);
+        $user = $generator->create_user();
+        $plan = $competency->create_plan(['userid' => $user->id, 'status' => plan::STATUS_ACTIVE]);
+        $competency->create_plan_competency([
+            'planid' => $plan->get('id'),
+            'competencyid' => $comp->get('id'),
+        ]);
+        $emptyplan = $competency->create_plan(['userid' => $user->id, 'status' => plan::STATUS_ACTIVE]);
+        $this->setUser($user);
+
+        $result = (new dataset_provider((int) $user->id))->get_dataset(false, 'plan', dataset_provider::BUCKET_ACTIVE);
+        $byid = [];
+        foreach ($result['plancards'] as $card) {
+            $byid[$card['id']] = $card;
+        }
+
+        $card = $byid[(int) $plan->get('id')];
+        $this->assertTrue($card['hastrail'], 'a plan carrying a competency must build a non-empty trail');
+        $this->assertCount(1, $card['trail']);
+        $this->assertSame('Trail competency', $card['trail'][0]['shortname']);
+        $this->assertFalse($card['hasitemsbeforetrail']);
+        $this->assertFalse($card['hasitemsaftertrail']);
+        $this->assertSame('1 ' . get_string('competency_count_suffix', 'block_dimensions'), $card['competencycounttext']);
+
+        // Control: a plan carrying no competency at all builds an empty trail.
+        $emptycard = $byid[(int) $emptyplan->get('id')];
+        $this->assertFalse($emptycard['hastrail']);
+        $this->assertSame([], $emptycard['trail']);
+        $this->assertSame('0 ' . get_string('competency_count_suffix', 'block_dimensions'), $emptycard['competencycounttext']);
+    }
+
+    /**
+     * With no metadata pre-fetched, build_competency_card() fetches it itself and renders any tag.
+     *
+     * process_plan_competencies() always passes bulk-fetched metadata (possibly an empty array per
+     * id, never null), so a real dataset request never leaves $metadata null; the on-demand fetch
+     * exists for a caller building one card in isolation, which is what this test does directly
+     * through the double's parent-calling proxy (see get_provider_double()).
+     */
+    public function test_build_competency_card_fetches_metadata_when_none_is_given(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $competency = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $competency->create_framework();
+        $comp = $competency->create_competency([
+            'competencyframeworkid' => $framework->get('id'),
+            'shortname' => 'Tagged competency',
+        ]);
+        $compid = (int) $comp->get('id');
+        $this->set_competency_field($compid, constants::CFIELD_TAG1, 1);
+
+        $provider = $this->get_provider_double();
+        $card = $provider->test_build_competency_card(5, $compid, $comp, null);
+
+        $this->assertSame($compid, $card['id']);
+        $this->assertTrue($card['hastag1']);
+        // Value 1 selects the first local_dimensions tag1_options entry, "Edit me 1" (see set_competency_field()).
+        $this->assertSame('Edit me 1', $card['tag1']);
+        $this->assertTrue($card['hastags']);
+        $this->assertSame([['value' => 'Edit me 1']], $card['tags']);
+
+        // Control: metadata passed in explicitly is used as-is, so an empty payload draws no tag.
+        $bare = $provider->test_build_competency_card(5, $compid, $comp, []);
+        $this->assertFalse($bare['hastags']);
+        $this->assertFalse($bare['hastag1']);
+    }
+
+    /**
+     * A viewer who may not read the user's plans gets a provider holding none, not an exception.
+     *
+     * The owner building the same provider is the control: the plan is displayable, so an empty
+     * provider for the viewer can only come from the refused read.
+     */
+    public function test_a_viewer_who_cannot_read_the_plans_gets_an_empty_provider(): void {
+        $this->resetAfterTest();
+        set_config('enabled', 1, 'core_competency');
+        $generator = $this->getDataGenerator();
+        $owner = $generator->create_user();
+        $viewer = $generator->create_user();
+        $generator->get_plugin_generator('core_competency')->create_plan([
+            'userid' => $owner->id,
+            'status' => plan::STATUS_ACTIVE,
+        ]);
+
+        $this->setUser($owner);
+        $this->assertTrue((new dataset_provider((int) $owner->id))->has_displayable_plans());
+
+        $this->setUser($viewer);
+        $this->assertFalse((new dataset_provider((int) $owner->id))->has_displayable_plans());
     }
 }
