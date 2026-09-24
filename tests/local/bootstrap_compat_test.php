@@ -49,7 +49,8 @@ final class bootstrap_compat_test extends \basic_testcase {
             '/\bvisually-hidden\b/' => 'visually-hidden',
             '/\bform-select(-sm)?\b/' => 'form-select',
             '/\bgap-[0-9]\b/' => 'gap-*',
-            '/\bfw-(bold|medium|normal|semibold|light)\b/' => 'fw-*',
+            '/\bfw-(bold|bolder|medium|normal|semibold|light|lighter)\b/' => 'fw-*',
+            '/\bfst-(italic|normal)\b/' => 'fst-*',
             '/\bfont-monospace\b/' => 'font-monospace',
             '/\bform-switch\b/' => 'form-switch',
             '/\bform-label\b/' => 'form-label',
@@ -59,14 +60,15 @@ final class bootstrap_compat_test extends \basic_testcase {
     /**
      * Bootstrap 4 class names that 5.x resolves only through its deprecated compatibility sheet.
      *
-     * Each is paired with the BS5 spelling to write instead; see
+     * Each is paired with what to write instead: the BS5 spelling, or, for the font utilities, a
+     * declaration in styles.css, since 4.5 defines neither fw-* nor fst-*. See
      * test_no_deprecated_bootstrap4_class_names() for why.
      *
      * The patterns require the token to stand alone: without the lookarounds, border-left would
      * match a CSS property name in a JS style string and text-right would match inside a longer
      * class token.
      *
-     * @return array Regex => the BS5 spelling to use instead.
+     * @return array Regex => what to write instead.
      */
     private function deprecated_bs4_utilities(): array {
         return [
@@ -84,6 +86,8 @@ final class bootstrap_compat_test extends \basic_testcase {
             '/(?<![-\w])rounded-left(?![-\w])/' => 'rounded-start',
             '/(?<![-\w])rounded-right(?![-\w])/' => 'rounded-end',
             '/(?<![-\w])no-gutters(?![-\w])/' => 'g-0',
+            '/(?<![-\w])font-weight-(bold|bolder|normal|light|lighter)(?![-\w])/' => 'a font-weight rule in styles.css',
+            '/(?<![-\w])font-italic(?![-\w])/' => 'a font-style rule in styles.css',
         ];
     }
 
@@ -303,9 +307,10 @@ final class bootstrap_compat_test extends \basic_testcase {
      * 5.x resolves these only through bs4-compat.scss, which wraps every one in a
      * deprecated-styles mixin - a red outline under behat-site and themedesignermode - and
      * which Moodle 6.0 deletes outright. Every replacement listed here resolves on 4.5 too:
-     * visually-hidden through this plugin's polyfill, the rest through core's own forward bridge.
-     * So the BS5 name alone is correct on both branches, and writing the pair buys nothing and
-     * costs the deprecation.
+     * visually-hidden through this plugin's polyfill, the spacing, float, border, rounded and
+     * gutter names through core's own forward bridge, and a font-weight or font-style declaration
+     * in the plugin's stylesheet everywhere. So the replacement alone is correct on both branches,
+     * and writing the pair buys nothing and costs the deprecation.
      *
      * @return void
      */

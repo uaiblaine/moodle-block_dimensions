@@ -182,7 +182,7 @@ tests/                       PHPUnit: dataset_provider (double pattern),
                              external functions, privacy, generator,
                              local/colour_tokens_test, local/bootstrap_compat_test,
                              local/card_layout_test
-tests/behat/                 colour_mode, visibility and status_filter features
+tests/behat/                 colour_mode, visibility, status_filter and card_filters features
                              + behat_block_dimensions.php
 docs/block-kit/              As-is visual replica of the block (excluded from
                              the release zip via .gitattributes)
@@ -295,7 +295,21 @@ than quietly serving the active one. Facts worth keeping:
   pill in that window. A failed switch returns the grid, its tag filters and its favourites
   filter to the bucket it left, so the failed bucket can be picked again. The Active bucket kept
   from the favourites-only first request is restored under the favourites pill, never under
-  "Show all" with cards missing.
+  "Show all" with cards missing - except under a search or with favourites disabled, where the
+  favourites filter stays off and the plans that first request left out are fetched (the search
+  handler's rule: a search always sees every card). So "switching back costs no request" has that
+  one exception.
+- **Every response goes through `state.js applySharedMetadata()`** (hasactiveplans, plancounts,
+  favouritesenabled, filtersettings). A handler that copied these itself once left stale state
+  behind; the function also drops both favourites filters when a response says favourites are off,
+  and `loadWhatFavouritesLeftOut()` then fetches whatever the favourites-only request left out.
+- **One group load at a time, and no "no result" while one is pending.** A load of a group
+  already in flight is reused, not sent again, and `canClaimNoResult()` decides for both the
+  visible empty line and the results announcement: never while a ghost card offers more, nor
+  while a pending load can still add cards. Only `[data-results-status]` is a live region; the
+  visible empty line is not, or a search that found nothing was announced twice.
+- **The bucket loading line names the bucket** (`statusloadingactive` / `statusloadingreview` /
+  `statusloadingcomplete`, all shipped in `labelsjson`).
 - **Retry starts a new client session.** `loadData()` rebuilds the state through
   `state.js resetSession()` (keeping only the search term and server settings), `resetView()`
   empties both lists and filter hosts, and every response or failure from the replaced session is
@@ -464,7 +478,7 @@ with an outline, or a dark rule that assigns a decorative shadow from one that
 assigns a whole surface. **That is why every rule of the design is a test method
 rather than a paragraph.** Each method names the mutation that must redden it.
 
-- `tests/local/colour_tokens_test.php` (21 methods, `\basic_testcase`) — the
+- `tests/local/colour_tokens_test.php` (24 methods, `\basic_testcase`) — the
   exact 34 declarations by **string equality**, not a shape regex (a pattern
   cannot prove a chain terminates in a literal, and the terminating literal *is*
   the plugin's Moodle 4.5 behaviour); the suffix list and its byte-identity with
@@ -486,10 +500,12 @@ rather than a paragraph.** Each method names the mutation that must redden it.
   `bs4-compat.scss`, which Moodle 6.0 deletes), badges state their text colour,
   data-API attributes are paired (`data-toggle` **and** `data-bs-toggle`), no
   `--mds-*` squatting on core's design-system namespace, and the block root
-  actually carries the Bootstrap marker. Both scanners strip Mustache comment
+  actually carries the Bootstrap marker. The BS4 list includes the `font-weight-*`
+  and `font-italic` families (the card titles set their weight in the stylesheet
+  instead). Both scanners strip Mustache comment
   spans before reading a template as markup, since a docblock's continuation
   lines carry no comment marker of their own.
-- `tests/local/card_layout_test.php` (9 methods) — the card-layout invariants
+- `tests/local/card_layout_test.php` (10 methods) — the card-layout invariants
   below, plus the rules the preference media queries depend on: every
   `prefers-contrast` / `prefers-reduced-motion` query uses a defined value (a
   `prefers-contrast: high` query matches in no browser), every override in those
@@ -497,6 +513,10 @@ rather than a paragraph.** Each method names the mutation that must redden it.
   lost on specificity and did nothing), every `transform` has a reduced-motion
   reset, the plan and competency card shells get the same preference treatment,
   and the checked pill's count badge stands off the indicator it sits on.
+  `colour_tokens_test` holds the matching contrast floors: both count-badge edges
+  (checked and resting) reach 3:1 against what they sit on, and every unchecked
+  pill label and count clears 4.5:1 against the platter with every opacity on the
+  way multiplied in (an `opacity: 0.8` once put the labels at 4.07:1).
 
 ### Metadata comes from local_dimensions caches only
 `dataset_provider` reads card metadata exclusively through the
@@ -530,7 +550,8 @@ use it everywhere, never raw `get_config('block_dimensions',
 star only through `dataset_provider::favourite_fields()`: `showfavourite` is that
 check AND, for a plan card, the active bucket; both templates gate the button on
 it, and `get_block_dataset` declares it for both card types. With the setting
-off, a star used to render on every card while the WS refused every click.
+off, a star used to render on every card while the WS refused every click. The
+web service also ignores `favouritesonly` while favourites are disabled.
 `toggle_favourite` validates ownership (plan must belong to the user;
 competency must exist) before writing — keep that guard.
 
@@ -632,12 +653,16 @@ HTML; **zero `html_writer`** in plugin code.
 
 ## Behat
 
-Three feature files: `colour_mode.feature` (4 scenarios, the colour-mode
-contract), `visibility.feature` (6, the render gate and the status pills) and
+Four feature files: `colour_mode.feature` (4 scenarios, the colour-mode
+contract), `visibility.feature` (6, the render gate and the status pills),
 `status_filter.feature` (2: a learner whose only active plan is competencies-mode
 opens on Active, with a count-less pill, and keeps the competency section across
 a round trip to Completed; and a search from the Completed bucket still loads the
-competency cards from the active bucket), plus the step-definition context
+competency cards from the active bucket) and `card_filters.feature` (4: a search
+that matches nothing says so; returning to Active keeps the favourites view and
+its ghost card; a tag value holding a double quote survives a filter-bar rebuild;
+returning to Active under a search finds the plans the favourites view left out),
+plus the step-definition context
 `tests/behat/behat_block_dimensions.php`. Run a feature locally with the
 **absolute container path** — the relative forms match nothing:
 
@@ -733,9 +758,8 @@ kit's whole credibility rests on that claim staying true.
 
 **A change to `styles.css` that moves a colour, a focus shape, a class name or a
 responsive trigger falsifies the kit, and nothing in CI notices.** Re-baseline
-it in the same commit. It has been re-baselined twice, on 2026-07-27 and
-2026-09-05, and `token-migration.md` records both plus which open questions each
-closed. `docs/` is excluded from the release zip via `.gitattributes`
+it in the same commit. `token-migration.md` records every re-baseline and the
+open questions each closed. `docs/` is excluded from the release zip via `.gitattributes`
 (`/docs export-ignore`), so nothing here ships to a site.
 
 The one gate that *does* read this folder is the development-leftover checker,

@@ -78,6 +78,13 @@ define([], function() {
             // Group loads in flight: the first request and every fetch of the rest of a card type.
             // The loading line is shown while this or statusLoading says something is on its way.
             groupLoads: 0,
+            // The fetch of the rest of each card type while it is on its way, as its promise, or null.
+            // One request can fetch both types. A type on its way is never asked for again; see
+            // loadGroupDataset() in filters.js.
+            groupRequests: {
+                plan: null,
+                competency: null
+            },
             // Whether this session's first dataset has arrived. Before it the lists are empty because
             // nothing has been fetched, not because the learner has nothing to show.
             datasetReady: false,
@@ -110,12 +117,13 @@ define([], function() {
      * fetched again.
      *
      * Everything earlier responses built is dropped: the cards, the kept status buckets, a bucket
-     * still loading, the count of group loads in flight (their responses are dropped too), the
-     * flags saying the dataset arrived or a group or a card list is complete, the favourites
-     * filter and the tag filters. A flag left set would make the next load skip a fetch or a
-     * render it needs. Kept are the search term, which its input still holds, the settings the
-     * server sent last, and renderToken, which must never repeat. session goes up by one, so a
-     * response to a request of the previous session can be told apart and dropped.
+     * still loading, the group loads in flight, both their count and the fetch of each card type
+     * (their responses are dropped too), the flags saying the dataset arrived or a group or a card
+     * list is complete, the favourites filter and the tag filters. A flag left set would make the
+     * next load skip a fetch or a render it needs, and a fetch left recorded would make it wait
+     * for a response that is dropped. Kept are the search term, which its input still holds, the
+     * settings the server sent last, and renderToken, which must never repeat. session goes up by
+     * one, so a response to a request of the previous session can be told apart and dropped.
      *
      * @param {Object} state Application state (mutated in place).
      */
@@ -129,6 +137,41 @@ define([], function() {
         fresh.renderToken = state.renderToken;
         fresh.session = state.session + 1;
         Object.assign(state, fresh);
+    }
+
+    /**
+     * Store the part of a get_block_dataset response that does not depend on the request.
+     *
+     * Every response carries the same plan counts, hasactiveplans, favourites flag and filter
+     * settings, whichever status bucket or card type it was asked for, and each is the server's
+     * latest word on them. Every response handler in filters.js calls this before merging the cards
+     * it asked for, so no handler can leave one of them stale: the counts and hasactiveplans decide
+     * which status pills are drawn, and the other two shape the filter bar.
+     *
+     * Favourites can be disabled by an admin in the middle of a session. Both favourites filters
+     * are then dropped: the bar draws no favourites pill and the grid no ghost card while they are
+     * off, so a filter left on would hide the other cards with nothing on screen to show them. The
+     * lists still holding only the favourites of the first request are fetched by filters.js; see
+     * loadWhatFavouritesLeftOut() there.
+     *
+     * @param {Object} state Application state (mutated in place).
+     * @param {Object} dataset The web service response.
+     */
+    function applySharedMetadata(state, dataset) {
+        state.rawDataset.hasactiveplans = !!dataset.hasactiveplans;
+        if (dataset.plancounts) {
+            state.planCounts = dataset.plancounts;
+        }
+        if (typeof dataset.favouritesenabled !== 'undefined') {
+            state.favouritesEnabled = !!dataset.favouritesenabled;
+        }
+        if (!state.favouritesEnabled) {
+            state.favouriteFilterActive.plan = false;
+            state.favouriteFilterActive.competency = false;
+        }
+        if (dataset.filtersettings) {
+            state.filterSettings = dataset.filtersettings;
+        }
     }
 
     /**
@@ -208,6 +251,7 @@ define([], function() {
         normalizeText,
         createState,
         resetSession,
+        applySharedMetadata,
         isCardVisible,
         applyFilters,
         hasActiveFiltersForType,

@@ -89,6 +89,7 @@ final class summary_test extends advanced_testcase {
             'statusactive',
             'statusreview',
             'statuscomplete',
+            'statusloadingactive',
             'statusloadingreview',
             'statusloadingcomplete',
         ];

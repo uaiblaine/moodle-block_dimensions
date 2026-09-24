@@ -38,7 +38,7 @@ theme that writes it one level down. There is also an `@media (prefers-color-sch
 `[data-dimensions-media-optin]`, which nothing in either plugin ever writes, and a PHPUnit test fails
 the build if it ever becomes reachable.
 
-**As-is only — and the as-is has moved four times.** There are no to-be panels. On **2026-07-27** the
+**As-is only — and the as-is has moved five times.** There are no to-be panels. On **2026-07-27** the
 plugin's palette was migrated to Moodle DS (every colour, both card gradients, one consolidated focus
 ring) and the horizontal card's title/star collision was fixed. On **2026-09-05** the literals that
 migration produced were replaced wholesale by the 34-token contract above (declared on `:root` at
@@ -61,8 +61,23 @@ pill is drawn whenever the learner has an active plan, and a search or filter th
 says so. Later that day the plan card took the competency card's raised-contrast and print
 treatment, a checked status pill's count badge took the brand-tint fill every other checked pill
 already had, the access pill stopped regaining its shadow under raised contrast while its card is
-hovered or focused, and the stars stopped being drawn while favourites are disabled. The panels
-were re-baselined for each.
+hovered or focused, and the stars stopped being drawn while favourites are disabled. Last that
+day the checked badge took a 1px `brand-ink` border, because its tint alone stands off the
+indicator at only 1.33:1. On **2026-09-24** the resting badge took a 1px `ink-muted` border for the
+same reason, its `surface` fill standing off the `surface-inset` platter at only 1.19:1 in light, with
+both badges now sharing a `0 5px` padding, and the card titles took their bold weight from the
+stylesheet instead of the Bootstrap 4 class `font-weight-bold`, which 5.x resolves only through its
+deprecated compatibility sheet. The same day two paths stopped leaving a card list short with
+nothing on screen to reach the rest: going back to the Active bucket under a search, and a response
+saying an admin has disabled favourites mid-session; both now fetch the cards the favourites-only
+first request left out. Later still that day the unchecked filter pill lost the `opacity: 0.8` it
+had rested at (its hover step and the checked pill's own `opacity: 1` went with it): the fade brought
+the pill's label and count badge below AA against the platter, and neither carried a role the fade
+was needed for, since the checked pill is already told apart by its indicator and accent colour. And
+the empty-state message stopped claiming "No results found." — and the live region stopped announcing
+it — while a group load already on its way could still add cards to the bucket on screen, and a
+caller asking for a card type already being fetched now waits on that fetch instead of sending a
+second one. The panels were re-baselined for each.
 
 **Two behaviours the second re-baseline genuinely lost**, recorded here rather than quietly dropped:
 the horizontal plan card no longer stacks on a narrow *block column* at a wide viewport (the
@@ -75,8 +90,8 @@ own stylelint config, which the deleted `.stylelintrc.json` had been suppressing
 | File | What it is |
 |---|---|
 | `tokens.html` | The 34-token contract `styles.css` declares on `body`, tokenized as `--bk-*` and resolved **three** ways per row — 5.x light, 5.x dark and the Moodle 4.5 fallback — because one declaration has to be right on all three. Covers the four tiers (surfaces/ink/accent, the six tone families, brand-as-fill, and the four core cannot supply), the two admin-data names deliberately excluded from the token system, both card gradients, status colours, radii and the type scale. Also the source of the canonical scaffold every screen inlines. |
-| `token-migration.md` | Repo-only companion: the record of **both** implemented migrations — 2026-07-27 Material/Google → Moodle DS (what moved, to what, the contrast corrections the swap forced, the defects fixed in passing, the eight repairs that completed the then-dark skin) and 2026-09-05 literals → the 34-token contract, which closed three of the five questions the first had left open and answered a fourth by deleting the thing it was about — then the 2026-09-23 re-baseline, which moved the contract from `:root` to `body`. |
-| `screens/states.html` | Interactive states and focus as they really ship: hover, focus, high contrast, reduced motion, print, and the new `forced-colors: active` block. Now documents **one** focus indicator, full stop — the same `outline: 2px solid var(--…-focus-ring); outline-offset: 2px` in both modes, with two documented `-2px` exceptions; the block root, which takes focus only after a focused Retry, has no rule of its own and shows the browser's default ring. It used to be four blues in light and two in dark, then one blue that eleven of thirteen indicators kept on a dark surface at 2.15:1. |
+| `token-migration.md` | Repo-only companion: the record of **both** implemented migrations — 2026-07-27 Material/Google → Moodle DS (what moved, to what, the contrast corrections the swap forced, the defects fixed in passing, the eight repairs that completed the then-dark skin) and 2026-09-05 literals → the 34-token contract, which closed three of the five questions the first had left open and answered a fourth by deleting the thing it was about — then the 2026-09-23 re-baseline, which moved the contract from `:root` to `body`, and the 2026-09-24 one, which edged the resting count badge and moved the card titles' weight into the stylesheet. |
+| `screens/states.html` | Interactive states and focus as they really ship: hover, focus, high contrast, reduced motion, print, and the new `forced-colors: active` block. Now documents **one** focus indicator, full stop — the same `outline: 2px solid var(--…-focus-ring); outline-offset: 2px` in both modes, with two documented `-2px` exceptions; the block root, which takes focus only after a focused Retry, draws the same ring through `.block-dimensions-content:focus-visible`. It used to be four blues in light and two in dark, then one blue that eleven of thirteen indicators kept on a dark surface at 2.15:1. |
 
 ## Screens (`screens/`)
 | File | Screen |
@@ -140,12 +155,20 @@ resolves to a row; the twelve `STA-*` badges resolve to `states.html` itself.
   `filtersettingsjson` and a handful of flags — no cards.
 - `amd/src/filters.js` calls the web service `block_dimensions_get_block_dataset` and renders
   `plan_card` / `competency_card` client-side through `core/templates`. **Two-phase loading**: the
-  first request asks for favourites only, then `loadgroup` (`plan` / `competency`) fetches the missing
-  group, always from the active bucket. **Status buckets**: plan cards are scoped to one of three
+  first request asks for favourites only (the server ignores that flag once favourites are disabled,
+  so a page rendered before an admin switched them off still gets its cards), then `loadgroup`
+  (`plan` / `competency`) fetches the missing group, always from the active bucket, and a card type
+  already on its way is never asked for again — a second caller reuses the pending request's promise
+  (`state.groupRequests`, `loadGroupDataset()`). **Status buckets**: plan cards are scoped to one of three
   buckets (`planstatus` = `active` / `review` / `complete`); the first request names none, so the
   server opens on the first bucket holding any plan, and every other bucket is fetched on first use
   and kept. Competency cards belong to the active plans whichever bucket is on screen.
-  `amd/src/state.js` holds the pure filter/search predicates;
+  `amd/src/state.js` holds the pure filter/search predicates and `applySharedMetadata()`, which
+  every response handler calls to store the plan counts, `hasactiveplans`, the favourites flag and
+  the filter settings, whatever the request asked for, and which drops both favourites filters once
+  a response says favourites are disabled; `filters.js` then fetches whole every list still holding
+  only the favourites of the first request (`loadWhatFavouritesLeftOut()`), since with favourites
+  off neither the favourites pill nor the ghost card is drawn to offer the rest;
   `amd/src/filter_tabs_nav.js` adds the platter's mask, sliding indicator and scroll paddles.
 - The **filter bar is not a template** — `renderFilterControls()` in `amd/src/filters.js` builds it
   by string concatenation, and it is the only definition of the bar's markup; its docblock carries the
@@ -157,7 +180,7 @@ resolves to a row; the twelve `STA-*` badges resolve to `states.html` itself.
   itemtypes `plan` / `competency`, written by `block_dimensions_toggle_favourite`. A card draws its
   star only while favourites are enabled (`showfavourite`, from `dataset_provider::favourite_fields()`),
   and a plan card only in the active bucket.
-- Styles: `styles.css` (2374 lines; component rules are scoped under `.block_dimensions`, except
+- Styles: `styles.css` (2402 lines; component rules are scoped under `.block_dimensions`, except
   the mobile open-panel rule, keyed on `.block-dimensions-content.dims-filters-open`, and the
   polyfill below; the token block itself is on `body` on purpose — `body` is the ancestor of every
   node the plugin paints, including anything appended to `document.body`, it carries the colour-mode
@@ -188,28 +211,34 @@ class-vocabulary bug shipped three times, was correctly root-caused each time, a
 with CI fully green. As of 2026-09-05 the parts of this kit that describe the colour system are
 backed by tests that fail the build, so a future change cannot silently falsify them again:
 
-- `tests/local/colour_tokens_test.php` — 21 methods, each naming the mutation that must redden it.
+- `tests/local/colour_tokens_test.php` — 24 methods, each naming the mutation that must redden it.
   It pins the exact 34 declarations by string equality (not a shape regex, because a pattern cannot
   prove a chain terminates in a literal, and the terminating literal *is* the plugin's Moodle 4.5
   behaviour); the suffix list and its byte-identity with `local_dimensions`, and that CI checks the
   sibling out so that comparison runs; that the activation block assigns only the three
   plugin-owned tokens and that every colour-mode selector has `body` as its subject; that the media
-  block is unreachable; contrast floors in all three resolutions; that the favourite star sits on an
-  opaque ground; that no focus indicator is drawn with a `box-shadow` or in a brand colour; that the
+  block is unreachable; contrast floors in all three resolutions; that a pill's count badge is edged
+  in a token those floors hold at 3:1 against what it sits on, the platter while the pill is
+  unchecked and the indicator while it is checked; that the favourite star sits on
+  an opaque ground; that no focus indicator is drawn with a `box-shadow` or in a brand colour; that the
   admin-colour names are never declared by the mode layer and still reach the stylesheet; that the
-  plugin never writes the host's colour-mode signal; and that every token read is a token declared.
+  plugin never writes the host's colour-mode signal; that every token read is a token declared; and
+  that an unchecked pill's label and count badge clear 4.5:1 against the platter through any opacity
+  on the way to it, so a fade like the pill's own former `opacity: 0.8` cannot silently return.
 - `tests/local/bootstrap_compat_test.php` — 8 methods: every BS5 utility used is polyfilled, the
-  polyfill carries nothing unused, no deprecated BS4 class names, badges state their text colour,
+  polyfill carries nothing unused, no deprecated BS4 class names (`font-weight-*` and `font-italic`
+  among them, whose replacement is a declaration in `styles.css`), badges state their text colour,
   data-API attributes are paired, no `--mds-*` squatting on core's design-system namespace, the
   block root actually carries the Bootstrap marker, and Mustache docblock prose is not scanned as
   markup.
-- `tests/local/card_layout_test.php` — 9 methods on layout claims no linter reads: both card grids
+- `tests/local/card_layout_test.php` — 10 methods on layout claims no linter reads: both card grids
   are auto-fill tracks, no track floor exceeds the block, every preference query asks for a value
   the feature defines, no preference override is outranked by its base rule (print blocks
   included), a property a preference switches off stays off in every state (the access pill's
   shadow while its card is hovered or focused), the two card shells share their raised-contrast
-  and print treatment, a checked pill's count badge stands off the indicator for every pill class
-  `filters.js` draws, every transform has a reduced-motion reset that wins, and the tag strip
+  and print treatment, a pill's count badge stands off what it sits on and is edged, against the
+  platter while the pill is unchecked and against the indicator while it is checked, for every pill
+  class `filters.js` draws, every transform has a reduced-motion reset that wins, and the tag strip
   stays `position: absolute`.
 - `tests/behat/colour_mode.feature` — 4 scenarios, the block's first Behat coverage. B1 drives the
   host into dark and asserts the card still matches the page; **B2 is the anti-vacuity control**,
@@ -223,11 +252,31 @@ backed by tests that fail the build, so a future change cannot silently falsify 
   completed plans and the competency cards are both reachable; and a search typed on the completed
   bucket fetches the competency cards a favourites-only first load left out, which only works
   because that fetch names the active bucket.
+- `tests/behat/card_filters.feature` — 4 scenarios on the filters over the cards: a search that
+  hides every card says "No results found.", not that the learner has no competencies, with the
+  unsearched cards as its control; a learner with a favourite plan who goes to Completed and back
+  finds the Active bucket still under the favourites pill with the ghost card offering the rest, not
+  under "Show all" over a partial list; a search run on the Completed bucket, then a switch back to
+  Active before the search fetches what the favourites-only first request left out of it, still
+  finds those plans and drops the favourites view, so the switch does not race the search's own
+  fetch of the same cards; and a plan tag value holding a double quote survives a
+  filter-bar rebuild, with the cards still drawn and focus back on its pill.
+- `tests/output/summary_test.php` — among its methods, one asserting that every label the status
+  pills and the loading line draw ships in `labelsjson`, `statusloadingactive` included, so no
+  bucket fetched alone is worded with a bare key.
+- `tests/external/get_block_dataset_test.php` — among its methods, one asserting that a
+  favourites-only request made while favourites are disabled returns the full lists and no
+  non-favourite flag, after a control in which the same request with favourites enabled still cuts
+  both lists to the favourites; and one rendering a tagged plan card through its real template in
+  both layouts and finding its labelled tag group inside the card, with an untagged card as the
+  control that must draw none. That test is the only gate on
+  the horizontal copy of the group: the mustache lint renders a template's single Example context,
+  which can draw only one of the two layouts, and the example draws the vertical one.
 
 What is **not** pinned by anything, and should be read with that in mind: the `file:line`
 citations in `maps/*.md` and in the screens' ID legends. Every one of them — `styles.css`, the
 templates, the AMD modules, the PHP classes and the lang file — was re-derived by hand against the
-working tree on 2026-09-23, and any later edit to a cited file can move them again. Where a section
+working tree on 2026-09-24, and any later edit to a cited file can move them again. Where a section
 rather than one rule is the honest anchor, the citation is a banner name
 (`styles.css · CARD GRID banner`), which does not rot when a rule moves.
 
