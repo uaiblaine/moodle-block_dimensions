@@ -319,7 +319,7 @@ final class card_layout_test extends \basic_testcase {
     /**
      * Whether the overlapping parts of one override rule win against a base selector part.
      *
-     * A rival whose subject compound names no simple selector the base part lacks matches every
+     * A rival naming no simple selector the base part lacks, in any of its compounds, matches every
      * element the base part matches, so when such broad rivals exist one of them has to win. A
      * narrower rival matches only some of those elements, so it cannot settle the pair for the
      * rest; without a broad rival, every narrow one has to win on the elements it does match.
@@ -331,12 +331,11 @@ final class card_layout_test extends \basic_testcase {
      * @return bool True when the override applies wherever it competes with the base part.
      */
     private function rivals_win(array $rivals, int $order, string $basepart, int $baseorder): bool {
-        $basetokens = $this->subject($basepart)[2];
+        $basetokens = $this->simple_selectors($basepart);
         $broad = [];
         $narrow = [];
         foreach ($rivals as $part) {
-            $tokens = $this->subject($part)[2];
-            if (array_diff($tokens, $basetokens)) {
+            if (array_diff($this->simple_selectors($part), $basetokens)) {
                 $narrow[] = $part;
             } else {
                 $broad[] = $part;
@@ -374,9 +373,9 @@ final class card_layout_test extends \basic_testcase {
      * covers it.
      *
      * Changes that must make it fail: write the raised-contrast tab border, or the reduced-motion
-     * tab transition, as .block_dimensions .dims-filter-tab again; drop the hidden paddle, or the
-     * clickable trail marker, from its reduced-motion rule; move the plan card's reduced-motion
-     * rule, or the card shells' raised-contrast or print block, above the plan card's own rules;
+     * tab transition, as .block_dimensions .dims-filter-tab again; drop the hidden paddle from its
+     * reduced-motion rule; move the plan card's reduced-motion rule, or the card shells'
+     * raised-contrast or print block, above the plan card's own rules;
      * drop the .block_dimensions ancestor from the plain gradient parts of the print fill, which
      * the .has-custom-bg parts beside them must not be taken to cover.
      *
@@ -863,7 +862,8 @@ final class card_layout_test extends \basic_testcase {
      * skipped, since none of them applies when reduced motion is asked for.
      *
      * Changes that must make it fail: delete the plan card's reduced-motion rule; move it above the
-     * plan card's own rules; drop .dims-fav-btn:active from the favourite star's reset.
+     * plan card's own rules; drop .dims-fav-btn:active from the favourite star's reset; drop the
+     * clickable trail marker from its reduced-motion rule.
      *
      * @return void
      */
@@ -950,7 +950,12 @@ final class card_layout_test extends \basic_testcase {
      * The parts of an override selector that target the same elements as a base selector part.
      *
      * Two parts overlap when they are in the same user-action state, name the same pseudo-element,
-     * and the simple selectors of one subject compound include those of the other.
+     * the simple selectors of one subject compound include those of the other, and so do the simple
+     * selectors of the whole parts: then every element the longer part matches, the shorter one
+     * matches too. Parts that each name something the other lacks (.a button and button.b) may never
+     * meet on one element, and nothing here can tell, so they are not compared. A universal subject
+     * (.x *) names no simple selector, so it would include every other; its ancestors alone decide
+     * what it matches, so it is left out too.
      *
      * @param array $parts The override rule's selector parts.
      * @param string $basepart One selector part of the base rule.
@@ -958,13 +963,17 @@ final class card_layout_test extends \basic_testcase {
      */
     private function overlapping_parts(array $parts, string $basepart): array {
         [$basestate, $baseelement, $basetokens] = $this->subject($basepart);
+        $basefull = $this->simple_selectors($basepart);
         $overlapping = [];
         foreach ($parts as $part) {
             [$state, $element, $tokens] = $this->subject($part);
-            if ($state !== $basestate || $element !== $baseelement) {
+            if ($state !== $basestate || $element !== $baseelement || !$tokens || !$basetokens) {
                 continue;
             }
-            if (!array_diff($tokens, $basetokens) || !array_diff($basetokens, $tokens)) {
+            $full = $this->simple_selectors($part);
+            $subjects = !array_diff($tokens, $basetokens) || !array_diff($basetokens, $tokens);
+            $wholes = !array_diff($full, $basefull) || !array_diff($basefull, $full);
+            if ($subjects && $wholes) {
                 $overlapping[] = $part;
             }
         }
