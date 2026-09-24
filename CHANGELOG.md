@@ -133,6 +133,10 @@ All notable changes to this project will be documented in this file.
   view surviving a bucket round trip, a tag value holding a double quote, and a search on returning
   to *Active*; each scenario was checked against the defect it pins. PHPUnit renders a tagged plan
   card in both layouts, and both card templates' example contexts now exercise the tag group.
+- **Development tooling.** `tests/jsharness` is a headless-Chromium regression suite over the three
+  AMD modules (209 checks), with a mutation mode that re-breaks each fix it pins (67 mutants); it is
+  excluded from the release zip. `tests/coverage.php` adds the block class and the uninstall script to
+  the PHPUnit coverage measurement.
 
 - **The block renders nothing for a user with no plan it can show, as `block_lp` does.**
   `get_content()` calls `summary::has_content()` again, and core drops the empty block from the
