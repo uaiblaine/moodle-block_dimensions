@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>block_dimensions JS harness</title>
+</head>
+<body>
+<div id="host"></div>
+<script>
+/*
+ * Loads the plugin's real AMD modules (state, filter_tabs_nav, filters) through a define() shim and
+ * runs scenarios.js over them. core/ajax is replaced by promises that each scenario settles by hand,
+ * in whatever order it needs; core/templates renders a stub. See README.md.
+ *
+ * Query parameters:
+ *   auto=1   run the suite on load and append the verdict to the page, as the element #out;
+ *   src=DIR  load the modules from DIR instead of the plugin's amd/src (a mutant copy).
+ */
+
+// Headless Chromium may not run animation frames at all; a zero timer keeps them deterministic.
+window.requestAnimationFrame = (cb) => setTimeout(() => cb(performance.now()), 0);
+window.cancelAnimationFrame = (id) => clearTimeout(id);
+
+window.__mods = {};
+window.__calls = [];
+window.define = function(deps, factory) {
+    const name = document.currentScript.dataset.module;
+    window.__mods[name] = factory.apply(null, deps.map((d) => window.__mods[d]));
+};
+window.define.amd = true;
+
+// Every web service call stays pending until a scenario resolves or rejects it.
+window.__mods['core/ajax'] = {call: (reqs) => reqs.map((r) => new Promise((res, rej) => {
+    window.__calls.push({methodname: r.methodname, args: r.args, res: res, rej: rej, settled: false});
+}))};
+window.__mods['core/templates'] = {
+    render: (name, ctx) => Promise.resolve('<div class="tpl" data-t="' + name + '">' + ctx.name + '</div>'),
+    runTemplateJS: () => {}
+};
+
+// The directory the modules are read from, with a trailing slash. scenarios.js reads it too.
+window.srcBase = (new URLSearchParams(location.search).get('src') || '../../amd/src').replace(/\/?$/, '/');
+if (/["<>]/.test(window.srcBase)) {
+    throw new Error('Unusable src parameter: ' + window.srcBase);
+}
+
+// Dependencies first: filters.js takes the other two from the shim.
+['state', 'filter_tabs_nav', 'filters'].forEach((module) => {
+    document.write('<script data-module="block_dimensions/' + module + '" src="' + window.srcBase + module
+        + '.js"><\/script>');
+});
+</script>
+<script src="./scenarios.js"></script>
+</body>
+</html>
