@@ -210,6 +210,12 @@ class dataset_provider {
      * are fully built, but totals are always counted so the frontend can display
      * accurate pill counts and decide when to load the full dataset.
      *
+     * $favouritesonly is ignored while favourites are disabled ({@see is_favourites_enabled()}):
+     * filters.js asks for favourites first whenever the page was rendered with them enabled, and
+     * an admin can disable them before that request arrives. No card is a favourite then, so
+     * honouring the flag would return no cards, flag every list as holding non-favourites, and
+     * send the client back for the full lists in a second request.
+     *
      * When $loadgroup is set to 'plan' or 'competency', only cards for that
      * group are built. This enables per-group Phase 2 loading so the frontend
      * can fetch the missing group without re-processing the group that was
@@ -227,7 +233,7 @@ class dataset_provider {
      * 'hasactiveplans' says whether any active plan exists ({@see has_active_plans()}); the two
      * differ when an active plan shows competency cards instead of a plan card.
      *
-     * @param bool $favouritesonly If true, only return favourited cards.
+     * @param bool $favouritesonly If true and favourites are enabled, only return favourited cards.
      * @param string $loadgroup Limit card building: 'plan', 'competency', or '' for both.
      * @param string $planstatus Status bucket to build, or '' to open on the first one with plans.
      * @return array<string, mixed>
@@ -245,8 +251,11 @@ class dataset_provider {
         $plancounts = $this->count_plans_by_bucket();
         $this->prefetch_template_metadata($bucketplans);
 
-        // Pre-load favourite IDs if the feature is enabled.
         $favouritesenabled = self::is_favourites_enabled();
+        // A favourites-only request made while favourites are disabled gets the full lists; see the docblock.
+        $favouritesonly = $favouritesonly && $favouritesenabled;
+
+        // Pre-load favourite IDs if the feature is enabled.
         $planfavids = [];
         $compfavids = [];
         if ($favouritesenabled) {

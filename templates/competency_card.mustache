@@ -39,10 +39,11 @@
         "name": "Competency",
         "url": "#",
         "hasimage": false,
-        "hastag1": true,
-        "tag1": "2026",
-        "hastag2": true,
-        "tag2": "Category",
+        "hastags": true,
+        "tags": [
+            {"value": "2026"},
+            {"value": "Category"}
+        ],
         "showfavourite": true,
         "isfavourite": false,
         "favouritearialabel": "Add to favourites",
@@ -92,7 +93,7 @@
         </span>
     </div>
     <div class="card-body p-3">
-        <h4 class="card-title mb-0 font-weight-bold" id="competency-title-{{id}}">
+        <h4 class="card-title mb-0" id="competency-title-{{id}}">
             <a href="{{url}}" class="competency-card-link stretched-link text-decoration-none">{{name}}</a>
         </h4>
     </div>

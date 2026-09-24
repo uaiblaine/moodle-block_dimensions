@@ -91,6 +91,7 @@ class summary implements renderable, templatable {
             'statusactive' => get_string('statusactive', 'block_dimensions'),
             'statusreview' => get_string('statusreview', 'block_dimensions'),
             'statuscomplete' => get_string('statuscomplete', 'block_dimensions'),
+            'statusloadingactive' => get_string('statusloadingactive', 'block_dimensions'),
             'statusloadingreview' => get_string('statusloadingreview', 'block_dimensions'),
             'statusloadingcomplete' => get_string('statusloadingcomplete', 'block_dimensions'),
         ];

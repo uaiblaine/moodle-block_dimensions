@@ -48,7 +48,7 @@ class get_block_dataset extends external_api {
         return new external_function_parameters([
             'favouritesonly' => new external_value(
                 PARAM_BOOL,
-                'If true, only return favourited items',
+                'If true and favourites are enabled, only return favourited items',
                 VALUE_DEFAULT,
                 false
             ),
@@ -73,7 +73,7 @@ class get_block_dataset extends external_api {
      *
      * With competencies disabled site-wide the dataset comes back empty rather than as an error.
      *
-     * @param bool $favouritesonly Whether only favourites should be returned.
+     * @param bool $favouritesonly Whether only favourites should be returned; ignored while favourites are disabled.
      * @param string $loadgroup Limit card building: 'plan', 'competency', or '' for both.
      * @param string $planstatus Status bucket to build, or '' to open on the first one with plans.
      * @return array<string, mixed>

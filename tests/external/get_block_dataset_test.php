@@ -154,6 +154,118 @@ final class get_block_dataset_test extends advanced_testcase {
     }
 
     /**
+     * Seed one learner with plain active plans, each drawing a plan card, and one active plan on a
+     * competencies-mode template, drawing one competency card.
+     *
+     * @param int $plans Number of plain active plans.
+     * @return array{user: \stdClass, planids: int[]} The learner, and the ids of the plain plans.
+     */
+    protected function seed_plan_and_competency_cards(int $plans): array {
+        set_config('enabled', 1, 'core_competency');
+        $generator = $this->getDataGenerator();
+        $competency = $generator->get_plugin_generator('core_competency');
+
+        $framework = $competency->create_framework();
+        $comp = $competency->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $course = $generator->create_course();
+        $competency->create_course_competency(['courseid' => $course->id, 'competencyid' => $comp->get('id')]);
+        $template = $competency->create_template();
+        $competency->create_template_competency(['templateid' => $template->get('id'), 'competencyid' => $comp->get('id')]);
+        $this->set_template_field(
+            (int) $template->get('id'),
+            \local_dimensions\constants::CFIELD_DISPLAYMODE,
+            \local_dimensions\constants::DISPLAYMODE_COMPETENCIES
+        );
+
+        $user = $generator->create_user();
+        $planids = [];
+        for ($i = 0; $i < $plans; $i++) {
+            $plan = $competency->create_plan(['userid' => $user->id, 'status' => plan::STATUS_ACTIVE]);
+            $planids[] = (int) $plan->get('id');
+        }
+        $competency->create_plan([
+            'userid' => $user->id,
+            'templateid' => $template->get('id'),
+            'status' => plan::STATUS_ACTIVE,
+        ]);
+
+        return ['user' => $user, 'planids' => $planids];
+    }
+
+    /**
+     * Seed the learner of {@see seed_plans_in_every_status()} with one more active plan, whose
+     * template draws a plan card carrying a tag pill.
+     *
+     * The active bucket then holds two plan cards: the untagged one the status seed made, and the
+     * tagged one.
+     *
+     * @return array{user: \stdClass, taggedid: int} The learner, and the id of the tagged plan.
+     */
+    protected function seed_tagged_plan_card(): array {
+        $user = $this->seed_plans_in_every_status();
+        $competency = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $template = $competency->create_template();
+        /* The template must render a plan card, which is not its default display mode: without
+           the field it renders its competencies instead, and no plan card would carry a tag. */
+        $this->set_template_field(
+            (int) $template->get('id'),
+            \local_dimensions\constants::CFIELD_DISPLAYMODE,
+            \local_dimensions\constants::DISPLAYMODE_PLAN
+        );
+        $this->set_template_field((int) $template->get('id'), \local_dimensions\constants::CFIELD_TAG1, 1);
+        $plan = $competency->create_plan([
+            'userid' => $user->id,
+            'templateid' => $template->get('id'),
+            'status' => plan::STATUS_ACTIVE,
+        ]);
+
+        return ['user' => $user, 'taggedid' => (int) $plan->get('id')];
+    }
+
+    /**
+     * Parse one rendered card and read the tag groups drawn inside it.
+     *
+     * The search is scoped to the card's article element, so a group drawn outside the card does
+     * not count, and the output must hold exactly one card.
+     *
+     * @param string $html The markup of one render of a card template.
+     * @return array{classes: string[], groups: array} The article's classes, and one entry per
+     *     element with role="group" inside it: 'classes', 'label' (its aria-label) and 'pills' (the
+     *     text of each tag pill, in order).
+     */
+    protected function read_card_tag_groups(string $html): array {
+        $dom = new \DOMDocument();
+        // The parser knows HTML 4 only and reports every HTML5 element, such as article, as an error.
+        $dom->loadHTML(
+            '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">' . $html,
+            LIBXML_NOERROR | LIBXML_NOWARNING
+        );
+        $xpath = new \DOMXPath($dom);
+        $articles = $xpath->query('//article');
+        $this->assertSame(1, $articles->length, 'one render must draw exactly one card');
+        $article = $articles->item(0);
+
+        $pillquery = './/*[contains(concat(" ", normalize-space(@class), " "), " dimension-tag ")]';
+        $groups = [];
+        foreach ($xpath->query('.//*[@role="group"]', $article) as $group) {
+            $pills = [];
+            foreach ($xpath->query($pillquery, $group) as $pill) {
+                $pills[] = trim($pill->textContent);
+            }
+            $groups[] = [
+                'classes' => preg_split('/\s+/', trim($group->getAttribute('class'))),
+                'label' => $group->getAttribute('aria-label'),
+                'pills' => $pills,
+            ];
+        }
+
+        return [
+            'classes' => preg_split('/\s+/', trim($article->getAttribute('class'))),
+            'groups' => $groups,
+        ];
+    }
+
+    /**
      * Every bucket's count rides the first response, whichever bucket's cards it carries.
      *
      * @covers ::execute
@@ -251,23 +363,7 @@ final class get_block_dataset_test extends advanced_testcase {
      */
     public function test_card_tag_pills_survive_the_return_allowlist(): void {
         $this->resetAfterTest();
-        $user = $this->seed_plans_in_every_status();
-        $competency = $this->getDataGenerator()->get_plugin_generator('core_competency');
-        $template = $competency->create_template();
-        /* The template must render a plan card, which is not its default display mode: without
-           the field it renders its competencies instead, and no plan card would carry a tag. */
-        $this->set_template_field(
-            (int) $template->get('id'),
-            \local_dimensions\constants::CFIELD_DISPLAYMODE,
-            \local_dimensions\constants::DISPLAYMODE_PLAN
-        );
-        $this->set_template_field((int) $template->get('id'), \local_dimensions\constants::CFIELD_TAG1, 1);
-        $competency->create_plan([
-            'userid' => $user->id,
-            'templateid' => $template->get('id'),
-            'status' => plan::STATUS_ACTIVE,
-        ]);
-        $this->setUser($user);
+        $this->setUser($this->seed_tagged_plan_card()['user']);
 
         $raw = get_block_dataset::execute(false);
         $tagged = null;
@@ -291,6 +387,59 @@ final class get_block_dataset_test extends advanced_testcase {
     }
 
     /**
+     * A tagged plan card draws its labelled tag group inside the card in both layouts.
+     *
+     * Each layout of the plan card template carries its own copy of the group, and the template's
+     * Example context can render only one layout, so the mustache lint never reads the horizontal
+     * copy. The untagged card served beside it is the control: it must draw no group, so a group
+     * found in the tagged card cannot be some other element of the card.
+     *
+     * @covers ::execute
+     * @covers ::execute_returns
+     */
+    public function test_a_tagged_plan_card_draws_its_tag_group_in_both_layouts(): void {
+        global $OUTPUT;
+        $this->resetAfterTest();
+        ['user' => $user, 'taggedid' => $taggedid] = $this->seed_tagged_plan_card();
+        $this->setUser($user);
+        $label = get_string('cardtags', 'block_dimensions');
+
+        foreach (['vertical', 'horizontal'] as $layout) {
+            set_config('plancard_layout', $layout, 'block_dimensions');
+            $clean = \core_external\external_api::clean_returnvalue(
+                get_block_dataset::execute_returns(),
+                get_block_dataset::execute(false)
+            );
+            $tagged = array_filter($clean['plancards'], static function (array $card): bool {
+                return $card['hastags'];
+            });
+            $this->assertCount(2, $clean['plancards'], 'the fixture must serve a tagged and an untagged plan card');
+            $this->assertSame([$taggedid], array_column($tagged, 'id'), 'the fixture must serve a tagged plan card');
+
+            foreach ($clean['plancards'] as $card) {
+                $message = $layout . ' ' . ($card['hastags'] ? 'tagged' : 'untagged') . ' card';
+                // Precondition: the setting reached the card, so this pass renders the layout it names.
+                $this->assertSame($layout === 'horizontal', $card['ishorizontal'], $message);
+                $this->assertSame($layout === 'vertical', $card['isvertical'], $message);
+
+                $read = $this->read_card_tag_groups($OUTPUT->render_from_template('block_dimensions/plan_card', $card));
+                $this->assertSame($layout === 'horizontal', in_array('plan-card-horizontal', $read['classes'], true), $message);
+
+                if (!$card['hastags']) {
+                    $this->assertSame([], $read['groups'], $message);
+                    continue;
+                }
+                $this->assertCount(1, $read['groups'], $message);
+                $group = $read['groups'][0];
+                $this->assertContains('dimension-tags', $group['classes'], $message);
+                $this->assertSame($label, $group['label'], $message);
+                $this->assertNotEmpty($card['tags'], $message);
+                $this->assertSame(array_column($card['tags'], 'value'), $group['pills'], $message);
+            }
+        }
+    }
+
+    /**
      * No card offers the favourite toggle while favourites are disabled, through the return
      * allowlist and the card templates.
      *
@@ -304,30 +453,7 @@ final class get_block_dataset_test extends advanced_testcase {
     public function test_no_card_offers_the_favourite_toggle_while_favourites_are_disabled(): void {
         global $OUTPUT;
         $this->resetAfterTest();
-        set_config('enabled', 1, 'core_competency');
-        $generator = $this->getDataGenerator();
-        $competency = $generator->get_plugin_generator('core_competency');
-
-        // One active plan draws a plan card; another, on a competencies-mode template, a competency card.
-        $framework = $competency->create_framework();
-        $comp = $competency->create_competency(['competencyframeworkid' => $framework->get('id')]);
-        $course = $generator->create_course();
-        $competency->create_course_competency(['courseid' => $course->id, 'competencyid' => $comp->get('id')]);
-        $template = $competency->create_template();
-        $competency->create_template_competency(['templateid' => $template->get('id'), 'competencyid' => $comp->get('id')]);
-        $this->set_template_field(
-            (int) $template->get('id'),
-            \local_dimensions\constants::CFIELD_DISPLAYMODE,
-            \local_dimensions\constants::DISPLAYMODE_COMPETENCIES
-        );
-        $user = $generator->create_user();
-        $competency->create_plan(['userid' => $user->id, 'status' => plan::STATUS_ACTIVE]);
-        $competency->create_plan([
-            'userid' => $user->id,
-            'templateid' => $template->get('id'),
-            'status' => plan::STATUS_ACTIVE,
-        ]);
-        $this->setUser($user);
+        $this->setUser($this->seed_plan_and_competency_cards(1)['user']);
 
         /* Every card as the client receives it, each paired with the markup its template draws: the
            plan card once per layout, since each layout carries its own copy of the button. */
@@ -377,6 +503,52 @@ final class get_block_dataset_test extends advanced_testcase {
             $this->assertFalse($card['showfavourite'], $card['type'] . ' card');
             $this->assertSame(0, $card['stars'], $card['type'] . ' card');
         }
+    }
+
+    /**
+     * A favourites-only request made while favourites are disabled returns the full lists.
+     *
+     * The client asks for favourites first whenever the page was rendered with them enabled, and
+     * an admin can disable them before that request arrives. Honoured then, the flag would return
+     * no card, since no card is a favourite, and flag both lists as holding non-favourites.
+     *
+     * @covers ::execute
+     */
+    public function test_favourites_only_is_ignored_while_favourites_are_disabled(): void {
+        $this->resetAfterTest();
+        ['user' => $user, 'planids' => $planids] = $this->seed_plan_and_competency_cards(2);
+        $usercontext = \context_user::instance($user->id);
+        \core_favourites\service_factory::get_service_for_user_context($usercontext)
+            ->create_favourite('block_dimensions', 'plan', $planids[0], $usercontext);
+        $this->setUser($user);
+        $served = static function (): array {
+            return \core_external\external_api::clean_returnvalue(
+                get_block_dataset::execute_returns(),
+                get_block_dataset::execute(true)
+            );
+        };
+
+        // Control: with favourites enabled the request cuts both lists down to the favourites.
+        set_config('enable_favourites', 1, 'block_dimensions');
+        $result = $served();
+        $this->assertSame([$planids[0]], array_column($result['plancards'], 'id'));
+        $this->assertSame([], $result['competencycards']);
+        $this->assertTrue($result['hasnonfavouriteplans']);
+        $this->assertTrue($result['hasnonfavouritecompetencies']);
+        $this->assertSame(2, $result['totalplans']);
+        $this->assertSame(1, $result['totalcompetencies']);
+
+        set_config('enable_favourites', 0, 'block_dimensions');
+        $result = $served();
+        $this->assertFalse($result['favouritesenabled']);
+        $this->assertEqualsCanonicalizing($planids, array_column($result['plancards'], 'id'));
+        $this->assertTrue($result['hasplancards']);
+        $this->assertCount(1, $result['competencycards']);
+        $this->assertTrue($result['hascompetencies']);
+        $this->assertFalse($result['hasnonfavouriteplans']);
+        $this->assertFalse($result['hasnonfavouritecompetencies']);
+        $this->assertSame(2, $result['totalplans']);
+        $this->assertSame(1, $result['totalcompetencies']);
     }
 
     /**

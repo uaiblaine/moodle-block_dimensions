@@ -34,6 +34,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
     const normalizeText = State.normalizeText;
     const createState = State.createState;
     const resetSession = State.resetSession;
+    const applySharedMetadata = State.applySharedMetadata;
     const applyFilters = State.applyFilters;
     const hasActiveFiltersForType = State.hasActiveFiltersForType;
     const updateFavouriteCounts = State.updateFavouriteCounts;
@@ -519,6 +520,41 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         });
     }
 
+    /**
+     * Whether a group load on its way can still add cards to the grid on screen.
+     *
+     * Competency cards are shown whichever bucket is on screen. The plan cards a group load fetches
+     * are the active bucket's (see loadGroupDataset()), so they reach the grid only while it shows
+     * that bucket. Until such a load lands, an empty grid is not a result: the loading line is up,
+     * and the render that follows the response says what was found.
+     *
+     * @param {Object} state Application state.
+     * @return {boolean}
+     */
+    function groupLoadCanAddCards(state) {
+        return !!state.groupRequests.competency
+            || (!!state.groupRequests.plan && state.planStatus === 'active');
+    }
+
+    /**
+     * Whether the block may say that no card matched.
+     *
+     * Not while a ghost card offers more items to load, nor while a load on its way can still add
+     * cards (see groupLoadCanAddCards()). The visible empty line and the results announcement both
+     * ask here, so they cannot disagree.
+     *
+     * @param {HTMLElement} container Block container.
+     * @param {Object} state Application state.
+     * @return {boolean}
+     */
+    function canClaimNoResult(container, state) {
+        const ghostCard = container.querySelector('.dims-ghost-card');
+        if (ghostCard && ghostCard.style.display !== 'none') {
+            return false;
+        }
+        return !groupLoadCanAddCards(state);
+    }
+
     function updateEmptyState(container, state, labels) {
         const empty = container.querySelector('.dims-empty-state');
         if (!empty) {
@@ -540,9 +576,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         }
 
         if (!state.filteredDataset.plancards.length && !state.filteredDataset.competencycards.length) {
-            // Don't show "no items" if ghost card is visible (there are more items to load).
-            const ghostCard = container.querySelector('.dims-ghost-card');
-            if (ghostCard && ghostCard.style.display !== 'none') {
+            if (!canClaimNoResult(container, state)) {
                 return;
             }
             // When the search or a filter hides every card, the cards exist: say no result matched.
@@ -551,6 +585,17 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
             empty.style.display = '';
         }
     }
+
+    /**
+     * The label key that words the loading line while each status bucket is fetched alone.
+     *
+     * A label missing from the payload leaves the line with the page's own loading text.
+     */
+    const BUCKET_LOADING_LABELS = {
+        active: 'statusloadingactive',
+        review: 'statusloadingreview',
+        complete: 'statusloadingcomplete'
+    };
 
     /**
      * Show, word or hide the loading line from what is still on its way.
@@ -578,8 +623,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         if (state.groupLoads > 0) {
             message = loading.dataset.defaultText;
         } else if (state.statusLoading) {
-            message = (state.statusLoading === 'complete' ? labels.statusloadingcomplete : labels.statusloadingreview)
-                || loading.dataset.defaultText;
+            message = labels[BUCKET_LOADING_LABELS[state.statusLoading]] || loading.dataset.defaultText;
         }
 
         // The line is a polite live region: rewriting the same text would announce it again.
@@ -699,6 +743,10 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
             const compCount = state.filteredDataset.competencycards.length;
             let message;
             if (planCount === 0 && compCount === 0) {
+                // The announcement follows the same rule as the visible line.
+                if (!canClaimNoResult(container, state)) {
+                    return;
+                }
                 message = labels.resultsnonefound || '';
             } else {
                 message = (labels.resultsfound || '')
@@ -1014,7 +1062,10 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
      * The active bucket can still hold only the favourite plans of the favourites-only first
      * request. Such a list is shown under the favourites pill, whose ghost card offers the rest:
      * under "Show all" it would sit beside a count the grid does not hold, with nothing to load
-     * the missing plans.
+     * the missing plans. Two cases leave the filter off, and the rest of the list is fetched
+     * instead: a search, which runs over every card (see searchNeedsPlans()), and favourites
+     * being disabled, when neither the pill nor its ghost card is drawn (see
+     * loadWhatFavouritesLeftOut()).
      *
      * @param {Object} state Application state.
      * @param {string} bucket 'active', 'review' or 'complete'.
@@ -1024,19 +1075,38 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         state.rawDataset.hasplancards = state.rawDataset.plancards.length > 0;
         updateFavouriteCounts(state);
         state.favouriteFilterActive.plan = bucket === 'active'
+            && state.favouritesEnabled
+            && !state.normalizedSearch
             && state.favouriteCountPlan > 0
             && !state.fullDatasetLoaded.plan
             && state.hasnonfavouriteplans;
     }
 
     /**
+     * Whether a search must fetch plans before it can run over the plan grid.
+     *
+     * Only the active bucket can be missing plans: it may still hold the favourite plans alone,
+     * from the favourites-only first request, while every other bucket arrives whole.
+     *
+     * @param {Object} state Application state.
+     * @return {boolean}
+     */
+    function searchNeedsPlans(state) {
+        return state.planStatus === 'active' && !state.fullDatasetLoaded.plan && state.hasnonfavouriteplans;
+    }
+
+    /**
      * Switch the plan grid to another status bucket, fetching it the first time.
      *
      * Only the bucket the block opens on arrives with the first request; every other bucket is
-     * built when it is asked for and kept afterwards, so a second visit costs nothing.
+     * built when it is asked for and kept afterwards, so a second visit costs no request. The one
+     * exception is a kept active list still missing plans that nothing on screen would offer, under
+     * a search or with favourites disabled: those plans are fetched; see showBucketCards().
      * Competency cards are untouched: they are about work in progress and belong to the active
      * plans alone. When the fetch fails the grid goes back to the bucket it left, with the plan
-     * filters it had, so the failed bucket can be picked again.
+     * filters it had, so the failed bucket can be picked again; a search typed while the bucket
+     * loaded lifts those filters instead, as it does outside a switch. The bucket gone back to is
+     * then treated as a kept one: what it is missing and nothing on screen offers is fetched.
      *
      * @param {HTMLElement} container Block container.
      * @param {Object} state Application state.
@@ -1057,6 +1127,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
             tag1: state.activeFilters.plan_tag1,
             tag2: state.activeFilters.plan_tag2
         };
+        const previousSearch = state.normalizedSearch;
         state.statusCards[previous] = state.rawDataset.plancards;
         state.planStatus = bucket;
         state.favouriteFilterActive.plan = false;
@@ -1071,6 +1142,15 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         if (state.statusCards[bucket]) {
             showBucketCards(state, bucket);
             rerender(container, state, options);
+            /* The kept active list can still miss plans that nothing on screen offers; see
+               showBucketCards(). They are fetched under a search, as the search handler would,
+               and while favourites are disabled; see loadWhatFavouritesLeftOut(). Plans already
+               on their way are not asked for again; see loadGroupDataset(). */
+            if (state.normalizedSearch && searchNeedsPlans(state)) {
+                loadGroupDataset(container, state, options, 'plan');
+            } else {
+                loadWhatFavouritesLeftOut(container, state, options);
+            }
             return Promise.resolve();
         }
 
@@ -1094,11 +1174,8 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
             }
             state.statusLoading = null;
             clearStatusSkeleton(container, state, options.labels);
+            applySharedMetadata(state, dataset);
             state.statusCards[bucket] = dataset.plancards || [];
-            state.rawDataset.hasactiveplans = !!dataset.hasactiveplans;
-            if (dataset.plancounts) {
-                state.planCounts = dataset.plancounts;
-            }
             if (bucket === 'active') {
                 // Fetched without the favourites-only cut, so this is the whole active list.
                 state.totalplans = dataset.totalplans || 0;
@@ -1109,6 +1186,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
             state.filtersRendered = false;
             state.cardsRendered.plan = false;
             rerender(container, state, options);
+            loadWhatFavouritesLeftOut(container, state, options);
             return null;
         }).catch(() => {
             if (session !== state.session) {
@@ -1118,16 +1196,33 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
             clearStatusSkeleton(container, state, options.labels);
             state.planStatus = previous;
             showBucketCards(state, previous);
-            // The same cards as before the switch, so the learner's filters over them still hold.
-            state.favouriteFilterActive.plan = previousFilters.favourite;
+            /* The same cards as before the switch, so the learner's filters over them still hold,
+               unless a search was typed while the bucket loaded. The search handler lifts the plan
+               filters, and would have lifted these had the grid stayed; it fetches only the plans
+               of the bucket on screen, so the plans this bucket is missing are fetched below. The
+               favourites filter also stays off when a response disabled favourites meanwhile; see
+               state.applySharedMetadata(). */
+            const searched = state.normalizedSearch !== '' && state.normalizedSearch !== previousSearch;
+            const filters = searched ? {favourite: false, tag1: '', tag2: ''} : previousFilters;
+            state.favouriteFilterActive.plan = filters.favourite && state.favouritesEnabled;
             /* eslint-disable camelcase */
-            state.activeFilters.plan_tag1 = previousFilters.tag1;
-            state.activeFilters.plan_tag2 = previousFilters.tag2;
+            state.activeFilters.plan_tag1 = filters.tag1;
+            state.activeFilters.plan_tag2 = filters.tag2;
             /* eslint-enable camelcase */
             state.filtersRendered = false;
             state.cardsRendered.plan = false;
             rerender(container, state, options);
             showError(container, options.labels.loaderror);
+            /* Fetch what the bucket gone back to is missing and nothing on screen offers, as the
+               cached path above does and for the reasons given there. A response that disabled
+               favourites during the switch, followed by a failed fetch of what they left out,
+               would otherwise leave the active list at its favourite plans, with no pill and no
+               ghost card to reach the rest. */
+            if (searched && searchNeedsPlans(state)) {
+                loadGroupDataset(container, state, options, 'plan');
+            } else {
+                loadWhatFavouritesLeftOut(container, state, options);
+            }
         });
     }
 
@@ -1152,7 +1247,13 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
      * bucket: competency cards are built from the active plans alone, and every other bucket
      * arrives with all its plan cards, so only the active plan list can be missing some. Plan
      * cards that arrive while another bucket is on screen are kept for the active bucket and leave
-     * the grid alone.
+     * the grid alone. A response that disables favourites makes this fetch next whatever list is
+     * still missing cards, and the returned promise waits for that too; see
+     * loadWhatFavouritesLeftOut().
+     *
+     * A card type already on its way is not asked for again, whichever caller sent it: the
+     * returned promise waits for that load as well, whose response renders its cards. Only the
+     * types not yet on their way are fetched, if any.
      *
      * @param {HTMLElement} container Block container.
      * @param {Object} state Application state.
@@ -1161,10 +1262,19 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
      * @return {Promise}
      */
     function loadGroupDataset(container, state, options, group) {
-        const loadPlans = group !== 'competency' && !state.fullDatasetLoaded.plan;
-        const loadCompetencies = group !== 'plan' && !state.fullDatasetLoaded.competency;
+        const wantPlans = group !== 'competency' && !state.fullDatasetLoaded.plan;
+        const wantCompetencies = group !== 'plan' && !state.fullDatasetLoaded.competency;
+        const pending = [];
+        if (wantPlans && state.groupRequests.plan) {
+            pending.push(state.groupRequests.plan);
+        }
+        if (wantCompetencies && state.groupRequests.competency) {
+            pending.push(state.groupRequests.competency);
+        }
+        const loadPlans = wantPlans && !state.groupRequests.plan;
+        const loadCompetencies = wantCompetencies && !state.groupRequests.competency;
         if (!loadPlans && !loadCompetencies) {
-            return Promise.resolve();
+            return Promise.all(pending);
         }
 
         startGroupLoad(container, state, options.labels);
@@ -1172,7 +1282,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         /* The bucket is always named: leaving it out asks the server to pick the bucket to open on
            again, and a competency request for any other bucket comes back empty. */
         const session = state.session;
-        return fetchDataset(options.endpointmethod, {
+        const request = fetchDataset(options.endpointmethod, {
             favouritesonly: false,
             loadgroup: loadGroupFor(loadPlans, loadCompetencies),
             planstatus: 'active'
@@ -1181,19 +1291,8 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                 if (session !== state.session) {
                     return null;
                 }
-                state.rawDataset.hasactiveplans = !!dataset.hasactiveplans;
-
-                if (dataset.filtersettings) {
-                    state.filterSettings = dataset.filtersettings;
-                }
-
-                if (typeof dataset.favouritesenabled !== 'undefined') {
-                    state.favouritesEnabled = !!dataset.favouritesenabled;
-                }
-
-                if (dataset.plancounts) {
-                    state.planCounts = dataset.plancounts;
-                }
+                forgetGroupRequest(state, loadPlans, loadCompetencies);
+                applySharedMetadata(state, dataset);
 
                 // Merge: only update the group(s) that were loaded.
                 if (loadPlans) {
@@ -1219,16 +1318,68 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                 updateFavouriteCounts(state);
                 state.filtersRendered = false;
                 rerender(container, state, options);
+                // A follow-up load counts in before this one counts out, so the loading line stays up.
+                const next = loadWhatFavouritesLeftOut(container, state, options);
                 endGroupLoad(container, state, options.labels);
-                return null;
+                return next;
             })
             .catch(() => {
                 if (session !== state.session) {
                     return;
                 }
+                forgetGroupRequest(state, loadPlans, loadCompetencies);
                 endGroupLoad(container, state, options.labels);
                 showError(container, options.labels.loaderror);
+                // No render follows a failure: the empty-state line held for this load is settled here.
+                updateEmptyState(container, state, options.labels);
             });
+
+        if (loadPlans) {
+            state.groupRequests.plan = request;
+        }
+        if (loadCompetencies) {
+            state.groupRequests.competency = request;
+        }
+        return pending.length ? Promise.all(pending.concat(request)) : request;
+    }
+
+    /**
+     * Clear the record of a group load once its response, or its failure, has landed.
+     *
+     * @param {Object} state Application state.
+     * @param {boolean} plans Whether the load fetched the plan cards.
+     * @param {boolean} competencies Whether it fetched the competency cards.
+     */
+    function forgetGroupRequest(state, plans, competencies) {
+        if (plans) {
+            state.groupRequests.plan = null;
+        }
+        if (competencies) {
+            state.groupRequests.competency = null;
+        }
+    }
+
+    /**
+     * Fetch whole every card list that still holds only the favourites of the first request, once
+     * favourites are disabled.
+     *
+     * A response says so when an admin disables favourites in the middle of a session, and
+     * state.applySharedMetadata() then drops the favourites filters. The lists those filters
+     * narrowed can still miss their other cards, and with favourites off nothing on screen offers
+     * them: no favourites pill, no ghost card.
+     *
+     * @param {HTMLElement} container Block container.
+     * @param {Object} state Application state.
+     * @param {Object} options Init options.
+     * @return {Promise}
+     */
+    function loadWhatFavouritesLeftOut(container, state, options) {
+        const plans = !state.fullDatasetLoaded.plan && state.hasnonfavouriteplans;
+        const competencies = !state.fullDatasetLoaded.competency && state.hasnonfavouritecompetencies;
+        if (state.favouritesEnabled || (!plans && !competencies)) {
+            return Promise.resolve();
+        }
+        return loadGroupDataset(container, state, options, loadGroupFor(plans, competencies));
     }
 
     /**
@@ -1302,9 +1453,9 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                     /* The search reaches the plan bucket on screen and every competency card, so
                        fetch first whatever of those the favourites-only first request left out.
                        Only the active bucket can be missing plans; the competency cards can be
-                       missing some whichever bucket is on screen. */
-                    const needPlans = state.planStatus === 'active' && !state.fullDatasetLoaded.plan
-                        && state.hasnonfavouriteplans;
+                       missing some whichever bucket is on screen. A bucket switch that fails
+                       applies the same rule to the bucket it returns to; see pickStatus(). */
+                    const needPlans = searchNeedsPlans(state);
                     const needCompetencies = !state.fullDatasetLoaded.competency && state.hasnonfavouritecompetencies;
                     if (state.normalizedSearch && (needPlans || needCompetencies)) {
                         const group = loadGroupFor(needPlans, needCompetencies);
@@ -1593,30 +1744,17 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                     return null;
                 }
                 state.rawDataset = {
-                    hasactiveplans: !!dataset.hasactiveplans,
                     hasplancards: !!dataset.hasplancards,
                     hascompetencies: !!dataset.hascompetencies,
                     plancards: dataset.plancards || [],
                     competencycards: dataset.competencycards || []
                 };
+                applySharedMetadata(state, dataset);
                 state.datasetReady = true;
                 // Both lists are rebuilt from this dataset, whatever a render drew while it was on
                 // its way: a search typed meanwhile renders them empty and marks them done.
                 resetRenderedState(container, state);
 
-                if (dataset.filtersettings) {
-                    state.filterSettings = dataset.filtersettings;
-                }
-
-                // Update favourites enabled from server response.
-                if (typeof dataset.favouritesenabled !== 'undefined') {
-                    state.favouritesEnabled = !!dataset.favouritesenabled;
-                }
-
-                // The status axis: every bucket's count rides this first response.
-                if (dataset.plancounts) {
-                    state.planCounts = dataset.plancounts;
-                }
                 state.planStatus = dataset.planstatus || 'active';
                 state.statusCards[state.planStatus] = state.rawDataset.plancards;
 

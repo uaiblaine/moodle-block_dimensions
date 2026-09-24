@@ -212,6 +212,66 @@ class behat_block_dimensions extends behat_base {
     }
 
     /**
+     * Makes a learning plan one of its owner's favourites in the block.
+     *
+     * Writes the row the star on a plan card writes through toggle_favourite: a core_favourites
+     * favourite in the owner's user context, component block_dimensions, item type plan.
+     *
+     * @Given :username has marked the learning plan :planname as a favourite
+     * @param string $username The plan's owner.
+     * @param string $planname The plan name.
+     * @return void
+     */
+    public function has_marked_the_learning_plan_as_a_favourite(string $username, string $planname): void {
+        global $DB;
+
+        $userid = (int) $DB->get_field('user', 'id', ['username' => $username], MUST_EXIST);
+        $planid = (int) $DB->get_field('competency_plan', 'id', ['userid' => $userid, 'name' => $planname], MUST_EXIST);
+        $usercontext = \context_user::instance($userid);
+        \core_favourites\service_factory::get_service_for_user_context($usercontext)
+            ->create_favourite('block_dimensions', 'plan', $planid, $usercontext);
+    }
+
+    /**
+     * Shows the plans of a template as plan cards carrying a plan tag.
+     *
+     * The block's plan tag filter reads local_dimensions' tag 1 select field on the plan's
+     * template, so the value is added to that field's options when it is not one already, and
+     * the template selects it. The template's display mode is set to the plan card too: an active
+     * plan whose template shows competency cards has no plan card for the tag to filter.
+     *
+     * @Given /^the learning plan template "(?P<shortname_string>[^"]*)" shows plan cards tagged "(?P<tag_string>(?:[^"]|\\")*)"$/
+     * @param string $shortname The short name of the template.
+     * @param string $tag The tag value, which may hold a double quote.
+     * @return void
+     */
+    public function the_learning_plan_template_shows_plan_cards_tagged(string $shortname, string $tag): void {
+        global $DB;
+
+        $templateid = (int) $DB->get_field('competency_template', 'id', ['shortname' => $shortname], MUST_EXIST);
+        $generator = \testing_util::get_data_generator()->get_plugin_generator('core_customfield');
+
+        // A select field stores the 1-based position of the chosen option.
+        $displaymode = \local_dimensions\helper::get_display_mode_field();
+        $generator->add_instance_data($displaymode, $templateid, \local_dimensions\constants::DISPLAYMODE_PLAN);
+
+        $field = \local_dimensions\helper::get_tag1_field('lp');
+        $options = array_map('trim', explode("\n", (string) $field->get_configdata_property('options')));
+        $position = array_search($tag, $options, true);
+        if ($position === false) {
+            $options[] = $tag;
+            $position = count($options) - 1;
+            $config = $field->get('configdata');
+            $config['options'] = implode("\n", $options);
+            $field->set('configdata', json_encode($config));
+            $field->save();
+        }
+        $generator->add_instance_data($field, $templateid, $position + 1);
+
+        \local_dimensions\template_metadata_cache::invalidate_template($templateid);
+    }
+
+    /**
      * Skips the scenario on a branch whose core ships no dark palette.
      *
      * Detected at run time rather than from the branch number: the step sets the attribute, reads
