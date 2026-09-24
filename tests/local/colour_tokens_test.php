@@ -224,6 +224,12 @@ final class colour_tokens_test extends \basic_testcase {
      * Every row is checked in three resolutions - 5.x light, 5.x dark and the Moodle 4.5 fallback -
      * so a chain that is right on one branch and wrong on another cannot pass.
      *
+     * brand-ink on surface at 3:1 is the border of a checked pill's count badge against the
+     * indicator it sits on; test_checked_pill_badge_edge_is_pinned() ties that rule to this row.
+     * The ink-muted rows on surface-inset and surface also pin the resting badge's border, against
+     * the platter and against the indicator (test_resting_pill_badge_edge_is_pinned() and the
+     * checked test).
+     *
      * Deliberately absent: accent, brand-ink and danger-ink as normal text on surface-inset, which
      * measure 4.495, 4.495 and 4.20 in dark with core's own values, so
      * test_no_low_contrast_ink_on_the_inset_surface() forbids the pairing instead; and ink-faint,
@@ -252,6 +258,7 @@ final class colour_tokens_test extends \basic_testcase {
         ['favourite', 'surface', 3.0],
         ['favourite', 'surface-alt', 3.0],
         ['favourite', 'surface-inset', 3.0],
+        ['brand-ink', 'surface', 3.0],
         ['brand-ink', 'brand-tint', 4.5],
         ['success-ink', 'success-tint', 4.5],
         ['warning-ink', 'warning-tint', 4.5],
@@ -754,10 +761,51 @@ final class colour_tokens_test extends \basic_testcase {
         if ($fore[3] < 1) {
             $fore = $this->composite($fore, $back);
         }
-        $lighter = max($this->luminance($fore), $this->luminance($back));
-        $darker = min($this->luminance($fore), $this->luminance($back));
+
+        return $this->ratio($fore, $back);
+    }
+
+    /**
+     * WCAG 2.x contrast ratio between two opaque colours.
+     *
+     * @param array $one [r, g, b, a] with a assumed 1.
+     * @param array $two [r, g, b, a] with a assumed 1.
+     * @return float The ratio, 1 or more.
+     */
+    private function ratio(array $one, array $two): float {
+        $lighter = max($this->luminance($one), $this->luminance($two));
+        $darker = min($this->luminance($one), $this->luminance($two));
 
         return ($lighter + 0.05) / ($darker + 0.05);
+    }
+
+    /**
+     * Contrast of an ink drawn inside a layer that an opacity fades onto its ground.
+     *
+     * CSS opacity renders the element first and then composites the whole layer onto what lies
+     * behind it, so the ink and any fill the layer paints fade together: an ink of alpha a inside a
+     * layer at opacity o reaches the ground at alpha a * o. With a fill, the ink is read against
+     * the faded fill; without one, against the ground itself.
+     *
+     * @param string $ink The ink's CSS colour, possibly translucent.
+     * @param string $ground The opaque CSS colour behind the layer.
+     * @param float $opacity The layer's opacity, the product of every opacity on its way to the ground.
+     * @param string|null $fill The CSS colour the layer paints under the ink, or null when it paints none.
+     * @return float|null The ratio, or null when a colour could not be parsed.
+     */
+    private function faded_contrast(string $ink, string $ground, float $opacity, ?string $fill = null): ?float {
+        $text = $this->parse_colour($ink);
+        $back = $this->parse_colour($ground);
+        $face = $fill === null ? null : $this->parse_colour($fill);
+        if ($text === null || $back === null || ($fill !== null && $face === null)) {
+            return null;
+        }
+        $under = $face === null ? $back : $this->composite($face, $back);
+        $drawn = $this->composite($text, $under);
+        $fadedink = $this->composite([$drawn[0], $drawn[1], $drawn[2], $opacity], $back);
+        $fadedground = $face === null ? $back : $this->composite([$under[0], $under[1], $under[2], $opacity], $back);
+
+        return $this->ratio($fadedink, $fadedground);
     }
 
     /**
@@ -1535,6 +1583,405 @@ final class colour_tokens_test extends \basic_testcase {
             $offenders,
             'The favourite star must sit on an opaque disc it clears 3:1 against, in every mode: '
                 . implode('; ', $offenders)
+        );
+    }
+
+    /**
+     * The plugin token a top-level rule with exactly this selector paints its background in.
+     *
+     * @param string $selector The whole selector of the rule, whitespace collapsed.
+     * @return string|null The token suffix, or null when no such rule paints a plugin token.
+     */
+    private function ground_token(string $selector): ?string {
+        $tokenpattern = '/var\(\s*' . preg_quote(self::PREFIX, '/') . '([a-z0-9-]+)\s*\)/';
+        $ground = null;
+        foreach ($this->stylesheets() as $path) {
+            foreach ($this->rules($path) as $rule) {
+                if ($rule['at'] !== '' || $rule['selector'] !== $selector) {
+                    continue;
+                }
+                $declarations = $this->declarations($rule['body']);
+                $fill = $declarations['background-color'] ?? $declarations['background'] ?? '';
+                $ground = preg_match($tokenpattern, $fill, $m) ? $m[1] : $ground;
+            }
+        }
+
+        return $ground;
+    }
+
+    /**
+     * Every border colour that can reach a filter pill's count badge in one state.
+     *
+     * A part can reach the badge when the badge is its subject, it is in no user-action state, and
+     * outside :not() it names nothing only the other state carries: .active and aria-checked="true"
+     * for a checked pill, aria-checked="false" for an unchecked one. So the resting badge's rule,
+     * which names neither, is held to both grounds. That is deliberate rather than an
+     * approximation of the cascade, which card_layout_test models: the checked rule overrides the
+     * resting border today, but the resting border is what a checked badge falls back to if the
+     * checked one goes.
+     *
+     * @param bool $checked True for a checked pill's badge, false for an unchecked one's.
+     * @return array [edges, offenders]: site => token suffix for each border colour naming a plugin
+     *               token, and a message for each border that names none.
+     */
+    private function pill_badge_edges(bool $checked): array {
+        $tokenpattern = '/var\(\s*' . preg_quote(self::PREFIX, '/') . '([a-z0-9-]+)\s*\)/';
+        $other = $checked ? '/\[aria-checked="false"\]/' : '/\.active(?![\w-])|\[aria-checked="true"\]/';
+        $own = $checked ? '/\.active(?![\w-])|\[aria-checked="true"\]/' : '/\[aria-checked="false"\]/';
+        $edges = [];
+        $offenders = [];
+        foreach ($this->stylesheets() as $path) {
+            foreach ($this->rules($path) as $rule) {
+                if ($rule['at'] !== '') {
+                    continue;
+                }
+                $declarations = $this->declarations($rule['body']);
+                $where = $rule['file'] . ':' . $rule['line'];
+                foreach (explode(',', $rule['selector']) as $part) {
+                    $part = trim($part);
+                    preg_match_all('/:not\(([^()]*)\)/', $part, $negations);
+                    $positive = (string) preg_replace('/:not\([^()]*\)/', '', $part);
+                    $reaches = preg_match('/\.dims-filter-count$/', $part)
+                        && !preg_match('/:(?:hover|active|focus)/', $positive)
+                        && !preg_match($other, $positive)
+                        && !preg_match($own, implode(' ', $negations[1]));
+                    if (!$reaches) {
+                        continue;
+                    }
+                    foreach ($declarations as $property => $value) {
+                        if (!str_starts_with($property, 'border') || $property === 'border-radius') {
+                            continue;
+                        }
+                        if (!preg_match_all($tokenpattern, $value, $tokens)) {
+                            $offenders[] = $where . ' ' . $part . ' sets ' . $property . ': ' . $value
+                                . ', which names no plugin token';
+                            continue;
+                        }
+                        foreach ($tokens[1] as $token) {
+                            $edges[$where . ' ' . $part . ' ' . $property] = $token;
+                        }
+                    }
+                }
+            }
+        }
+
+        return [$edges, $offenders];
+    }
+
+    /**
+     * The edges that PAIRS does not pin at 3:1 or more against a ground.
+     *
+     * @param array $edges Site => token suffix, from pill_badge_edges().
+     * @param string $ground The ground's token suffix.
+     * @return array One message per unpinned edge.
+     */
+    private function unpinned_edges(array $edges, string $ground): array {
+        $offenders = [];
+        foreach ($edges as $site => $token) {
+            $pinned = false;
+            foreach (self::PAIRS as [$foreground, $background, $floor]) {
+                if ($foreground === $token && $background === $ground && $floor >= 3.0) {
+                    $pinned = true;
+                }
+            }
+            if (!$pinned) {
+                $offenders[] = $site . ' draws ' . $token . ', and PAIRS has no ' . $token . ' on ' . $ground
+                    . ' row with a floor of 3:1 or more';
+            }
+        }
+
+        return $offenders;
+    }
+
+    /**
+     * A checked pill's count badge is edged in a token pinned at 3:1 against the indicator.
+     *
+     * The badge of a checked status or show-all pill sits on the sliding indicator, and its
+     * brand-tint fill measures 1.33:1 against the indicator's surface in light and 1.13:1 in dark,
+     * so the badge's outline is its border. The border colours and the indicator's fill are read
+     * out of the stylesheet, and each pairing must be a row of PAIRS with a floor of at least 3:1
+     * (WCAG 1.4.11), where test_declared_values_clear_their_floor() measures it in all three
+     * resolutions. pill_badge_edges() says which borders count. card_layout_test checks that a
+     * border reaches every checked pill.
+     *
+     * Changes that must make it fail: draw the checked badge's border in brand-edge; delete the
+     * brand-ink on surface row from PAIRS; delete both the checked and the resting badge's border.
+     *
+     * @return void
+     */
+    public function test_checked_pill_badge_edge_is_pinned(): void {
+        $indicator = $this->ground_token('.block_dimensions .dims-filter-tabs-indicator');
+        $this->assertNotNull($indicator, 'The indicator paints no plugin token, so there is nothing to measure against.');
+        [$edges, $offenders] = $this->pill_badge_edges(true);
+        $this->assertNotEmpty(
+            $edges,
+            'No rule draws a border on a checked pill\'s count badge, so its fill is its only outline, and '
+                . 'brand-tint on the indicator is 1.33:1 in light.'
+        );
+        $offenders = array_merge($offenders, $this->unpinned_edges($edges, $indicator));
+        sort($offenders);
+        $this->assertSame(
+            [],
+            $offenders,
+            'A checked pill\'s count badge must be edged in a token PAIRS pins at 3:1 against the indicator: '
+                . implode('; ', $offenders)
+        );
+    }
+
+    /**
+     * An unchecked pill's count badge is edged in a token pinned at 3:1 against the platter.
+     *
+     * An unchecked pill paints no fill, so its badge sits on the filter platter, and the badge's
+     * surface fill measures 1.19:1 against the platter's surface-inset in light and 1.41:1 in dark:
+     * as on a checked pill, the badge's outline is its border. Each border colour that can reach
+     * the badge must be a row of PAIRS against the platter's fill with a floor of at least 3:1.
+     *
+     * Changes that must make it fail: delete the resting badge's border; draw it in line; delete
+     * the ink-muted on surface-inset row from PAIRS.
+     *
+     * @return void
+     */
+    public function test_resting_pill_badge_edge_is_pinned(): void {
+        $platter = $this->ground_token('.block_dimensions .block-dimensions-content .dims-filter-tabs');
+        $this->assertNotNull($platter, 'The platter paints no plugin token, so there is nothing to measure against.');
+        [$edges, $offenders] = $this->pill_badge_edges(false);
+        $this->assertNotEmpty(
+            $edges,
+            'No rule draws a border on an unchecked pill\'s count badge, so its fill is its only outline, and '
+                . 'surface on the platter is 1.19:1 in light.'
+        );
+        $offenders = array_merge($offenders, $this->unpinned_edges($edges, $platter));
+        sort($offenders);
+        $this->assertSame(
+            [],
+            $offenders,
+            'An unchecked pill\'s count badge must be edged in a token PAIRS pins at 3:1 against the platter: '
+                . implode('; ', $offenders)
+        );
+    }
+
+    /**
+     * The factor by which an opacity or filter declaration fades an element, when it can be read.
+     *
+     * CSS clamps both opacity and the opacity() filter function to 1, and an empty opacity()
+     * means 1.
+     *
+     * @param string $property opacity or filter.
+     * @param string $value Its value.
+     * @return float|null The factor in 0..1, or null for a value this model cannot measure: a var(),
+     *                    or a filter function other than opacity(), which changes colours in ways a
+     *                    single factor does not describe.
+     */
+    private function fade_factor(string $property, string $value): ?float {
+        $amount = static function (string $text): ?float {
+            if (!preg_match('/^([0-9]*\.?[0-9]+)(%?)$/', trim($text), $m)) {
+                return null;
+            }
+
+            return min(1.0, (float) $m[1] / ($m[2] === '%' ? 100 : 1));
+        };
+        $value = strtolower(trim($value));
+        if ($property === 'opacity') {
+            return $amount($value);
+        }
+        if ($value === 'none') {
+            return 1.0;
+        }
+        $pattern = '/([a-z-]+)\(([^()]*)\)/';
+        if (!preg_match_all($pattern, $value, $functions, PREG_SET_ORDER) || trim(preg_replace($pattern, '', $value)) !== '') {
+            return null;
+        }
+        $factor = 1.0;
+        foreach ($functions as [, $name, $argument]) {
+            $part = trim($argument) === '' ? 1.0 : $amount($argument);
+            if ($name !== 'opacity' || $part === null) {
+                return null;
+            }
+            $factor *= $part;
+        }
+
+        return $factor;
+    }
+
+    /**
+     * What the stylesheets paint and fade on an unchecked filter pill.
+     *
+     * A selector part reaches an unchecked pill when, outside :not(), it names neither .active nor
+     * aria-checked="true" nor an inactive state (WCAG 1.4.3 exempts inactive text), and no :not()
+     * excludes aria-checked="false". User-action states count, so a hover rule is read with the
+     * resting one, and so does every at-rule but print. The subject decides what the part styles:
+     * the pill itself (.dims-filter-tab, or a pill type's own class), its count badge, or the track
+     * between the pill and the platter (.dims-filter-tabs-items, .dims-filter-tabs-mask), whose
+     * opacity fades the pill with it. The lowest opacity found for each is kept, whatever state
+     * sets it, so a fade on hover alone is measured against the resting colour too.
+     *
+     * @param array $paths Absolute stylesheet paths.
+     * @return array With keys inks (pill and badge, each site => color value), fills (pill and
+     *               badge, each site => background value, transparent left out), opacity (track,
+     *               pill and badge => the lowest factor, 1.0 when none is set) and offenders (one
+     *               message per fade the model cannot measure).
+     */
+    private function unchecked_pill_paint(array $paths): array {
+        $paint = [
+            'inks' => ['pill' => [], 'badge' => []],
+            'fills' => ['pill' => [], 'badge' => []],
+            'opacity' => ['track' => 1.0, 'pill' => 1.0, 'badge' => 1.0],
+            'offenders' => [],
+        ];
+        $excluded = '/\.active(?![\w-])|\[aria-checked="true"\]|:disabled|\[aria-disabled|\.disabled(?![\w-])/';
+        foreach ($paths as $path) {
+            foreach ($this->rules($path) as $rule) {
+                if (preg_match('/(?<![\w-])print(?![\w-])/', $rule['at'])) {
+                    continue;
+                }
+                $declarations = $this->declarations($rule['body']);
+                $where = $rule['file'] . ':' . $rule['line'];
+                foreach (explode(',', $rule['selector']) as $part) {
+                    $part = trim($part);
+                    preg_match_all('/:not\(([^()]*)\)/', $part, $negations);
+                    $positive = trim((string) preg_replace('/:not\([^()]*\)/', '', $part));
+                    if (preg_match($excluded, $positive) || preg_match('/\[aria-checked="false"\]/', implode(' ', $negations[1]))) {
+                        continue;
+                    }
+                    $compounds = preg_split('/\s*[>+~]\s*|\s+/', $positive);
+                    $subject = (string) end($compounds);
+                    if (preg_match('/\.dims-filter-tab(?![\w-])|\.dims-[a-z]+-filter-btn(?![\w-])/', $subject)) {
+                        $role = 'pill';
+                    } else if (preg_match('/\.dims-filter-count(?![\w-])/', $subject)) {
+                        $role = 'badge';
+                    } else if (preg_match('/\.dims-filter-tabs-(?:items|mask)(?![\w-])/', $subject)) {
+                        $role = 'track';
+                    } else {
+                        continue;
+                    }
+                    $site = $where . ' ' . $part;
+                    foreach ($declarations as $property => $value) {
+                        if ($property === 'opacity' || $property === 'filter') {
+                            $factor = $this->fade_factor($property, $value);
+                            if ($factor === null) {
+                                $paint['offenders'][] = $site . ' sets ' . $property . ': ' . $value
+                                    . ', which the contrast model cannot measure';
+                                continue;
+                            }
+                            $paint['opacity'][$role] = min($paint['opacity'][$role], $factor);
+                        } else if ($role === 'track') {
+                            continue;
+                        } else if ($property === 'color') {
+                            $paint['inks'][$role][$site] = $value;
+                        } else if ($property === 'background' || $property === 'background-color') {
+                            if (!in_array($value, ['transparent', 'none'], true)) {
+                                $paint['fills'][$role][$site] = $value;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return $paint;
+    }
+
+    /**
+     * An unchecked filter pill's label and count clear 4.5:1 on the platter, any opacity applied.
+     *
+     * The pills are enabled radio options, so their text takes the 4.5:1 floor (0.875rem at weight
+     * 500, and the count's 0.75rem at 600, are normal-size text). PAIRS measures a token on a
+     * token, but an opacity on the pill multiplies into its colour: at 0.8 the ink-muted label
+     * falls to 4.07:1 on the platter in light, and the count to 4.42:1 on its badge. So every
+     * colour that reaches an unchecked pill's label or count, resting or hovered, is resolved in
+     * all three resolutions and measured through every opacity on its way to the platter, the
+     * label against the platter (or a fill the pill paints) and the count against its badge's
+     * fill. unchecked_pill_paint() says which rules count. The badge's border is pinned by
+     * test_resting_pill_badge_edge_is_pinned().
+     *
+     * Two controls keep the test from passing blind: a fixture stylesheet with the 0.8 opacity must
+     * be read as 0.8, and the arithmetic must fail the ink-muted label at that opacity.
+     *
+     * Changes that must make it fail, applied to styles.css: put opacity: 0.8 back on the tab rule,
+     * or on its hover alone; write it as filter: opacity(0.8); set opacity: 0.8 on the count badge,
+     * or on .dims-filter-tabs-items; give the unchecked label ink-faint.
+     *
+     * @return void
+     */
+    public function test_unchecked_pill_text_clears_aa_on_the_platter(): void {
+        $fixture = make_request_directory() . '/styles.css';
+        file_put_contents(
+            $fixture,
+            ".block_dimensions .block-dimensions-content .dims-filter-tab {\n"
+                . "    color: var(" . self::PREFIX . "ink-muted);\n    opacity: 0.8;\n}\n"
+                . ".block_dimensions .block-dimensions-content .dims-filter-tab.active {\n    opacity: 0.5;\n}\n"
+        );
+        $control = $this->unchecked_pill_paint([$fixture]);
+        $this->assertSame(0.8, $control['opacity']['pill'], 'The model no longer reads a resting pill\'s opacity.');
+        $this->assertCount(1, $control['inks']['pill'], 'The model no longer reads a resting pill\'s label colour.');
+        $this->assertLessThan(
+            4.5,
+            (float) $this->faded_contrast(
+                (string) $this->resolve('ink-muted', 'light'),
+                (string) $this->resolve('surface-inset', 'light'),
+                0.8
+            ),
+            'The arithmetic no longer lets an opacity fade the label, so it cannot catch one.'
+        );
+
+        $platter = $this->ground_token('.block_dimensions .block-dimensions-content .dims-filter-tabs');
+        $this->assertNotNull($platter, 'The platter paints no plugin token, so there is nothing to measure against.');
+        $paint = $this->unchecked_pill_paint($this->stylesheets());
+        $this->assertNotEmpty($paint['inks']['pill'], 'No rule colours an unchecked pill\'s label, so this test checks nothing.');
+        $this->assertNotEmpty($paint['inks']['badge'], 'No rule colours an unchecked pill\'s count, so this test checks nothing.');
+        $this->assertNotEmpty($paint['fills']['badge'], 'No rule fills an unchecked pill\'s count, so this test checks nothing.');
+
+        $fade = $paint['opacity']['track'] * $paint['opacity']['pill'];
+        $measures = [];
+        foreach ($paint['inks']['pill'] as $site => $ink) {
+            foreach (array_merge([null], array_values($paint['fills']['pill'])) as $fill) {
+                $measures[] = [$site, $ink, $fill, $fade];
+            }
+        }
+        foreach ($paint['inks']['badge'] as $site => $ink) {
+            foreach ($paint['fills']['badge'] as $fill) {
+                $measures[] = [$site, $ink, $fill, $fade * $paint['opacity']['badge']];
+            }
+        }
+
+        $tokenpattern = '/^var\(' . preg_quote(self::PREFIX, '/') . '([a-z0-9-]+)\)$/';
+        $offenders = $paint['offenders'];
+        foreach (['light', 'dark', 'bs4'] as $mode) {
+            $ground = (string) $this->resolve($platter, $mode);
+            foreach ($measures as [$site, $ink, $fill, $opacity]) {
+                $istoken = preg_match($tokenpattern, $ink, $inktoken)
+                    && ($fill === null || preg_match($tokenpattern, $fill, $filltoken));
+                if (!$istoken) {
+                    $offenders[] = $site . ' paints ' . $ink . ($fill === null ? '' : ' on ' . $fill)
+                        . ', which is not one plugin token';
+                    continue;
+                }
+                $ratio = $this->faded_contrast(
+                    (string) $this->resolve($inktoken[1], $mode),
+                    $ground,
+                    $opacity,
+                    $fill === null ? null : (string) $this->resolve($filltoken[1], $mode)
+                );
+                if ($ratio === null || $ratio < 4.5) {
+                    $offenders[] = sprintf(
+                        '%s: %s (%s) on %s at opacity %.2f is %.3f:1, floor 4.5',
+                        $mode,
+                        $inktoken[1],
+                        $site,
+                        $fill === null ? $platter : $filltoken[1],
+                        $opacity,
+                        (float) $ratio
+                    );
+                }
+            }
+        }
+        $offenders = array_values(array_unique($offenders));
+        sort($offenders);
+        $this->assertSame(
+            [],
+            $offenders,
+            'An unchecked pill\'s label and count must clear 4.5:1 in every resolution, through any opacity on the '
+                . 'pill: ' . implode('; ', $offenders)
         );
     }
 

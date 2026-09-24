@@ -84,6 +84,29 @@ All notable changes to this project will be documented in this file.
   translucent over arbitrary images; it is now opaque.
 - **A checked status pill's count badge had no visible shape.** The checked-badge rule named only
   the favourites and show-all pills.
+- **Unchecked filter-pill labels fell below the AA text floor.** They were drawn at `opacity: 0.8`
+  (4.07:1 in light, 4.30:1 in dark, 4.28:1 on Moodle 4.5; the count 4.42:1). Unchecked pills now
+  rest at full strength and the hover changes the colour instead; `colour_tokens_test` measures pill
+  text through every opacity on the way to the platter.
+- **Filter-pill count badges had a faint outline.** Both the checked and the resting badge now carry
+  a 1px edge that reaches 3:1 against what it sits on, pinned by `colour_tokens_test`.
+- **The status filter could still show the wrong list in a few paths.** Coming back to *Active*
+  while a search was set, or after a switch that failed while a search was typed, turned the
+  favourites filter back on over the favourites-only list, so the search missed the other plans;
+  it now fetches them. When favourites are switched off during a learner's session, the block drops
+  the favourites filters and fetches what the favourites-only request left out, instead of leaving
+  the grid filtered with no pill to undo it.
+- **"No results found" appeared, and was announced, while cards were still loading** or while a ghost
+  card offered more items; the visible line and the announcement now follow one rule, and only one
+  live region speaks, so a search that finds nothing is no longer announced twice. A card group
+  already loading is not requested a second time.
+- **The loading line of the Active bucket read "Loading plans in review…".** It now has its own
+  string, `statusloadingactive`.
+- **A favourites-only request made after favourites were disabled returned no cards.** The web service
+  ignores `favouritesonly` while favourites are disabled.
+- **Card titles used the Bootstrap 4 class `font-weight-bold`,** which 5.x serves only through its
+  deprecated compatibility sheet; the weight is set in the stylesheet, and `bootstrap_compat_test`
+  now rejects the `font-weight-*` and `font-italic` families.
 
 ### Changed
 - **Code comments rewritten to Moodle's guidance.** Every comment was checked against the code it
@@ -106,6 +129,10 @@ All notable changes to this project will be documented in this file.
   privacy tests gained controls; the source-scanning tests no longer read Mustache docblock prose
   as markup; the sibling token comparison fails instead of skipping; and `status_filter.feature`
   pins the status pills end to end.
+- **More pins for the client.** `card_filters.feature` covers a search with no result, the favourites
+  view surviving a bucket round trip, a tag value holding a double quote, and a search on returning
+  to *Active*; each scenario was checked against the defect it pins. PHPUnit renders a tagged plan
+  card in both layouts, and both card templates' example contexts now exercise the tag group.
 
 - **The block renders nothing for a user with no plan it can show, as `block_lp` does.**
   `get_content()` calls `summary::has_content()` again, and core drops the empty block from the

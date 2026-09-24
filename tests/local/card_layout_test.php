@@ -635,79 +635,220 @@ final class card_layout_test extends \basic_testcase {
     }
 
     /**
-     * A checked pill's count badge keeps a shape against the indicator it sits on.
+     * The pill classes amd/src/filters.js draws with a count badge.
      *
-     * A checked pill with no fill of its own sits on the sliding indicator, which paints what the
-     * badge paints at rest, so a badge keeping its rest fill there has no shape. For every pill
-     * class amd/src/filters.js draws, the badge fill that wins the cascade while the pill is checked
-     * must differ from the indicator's. A selector part applies to that badge when it ends in
-     * .dims-filter-count, is in no user-action state, and every class and attribute in it belongs
-     * to the badge, to the checked pill (.dims-filter-tab, the pill class, .active, role="radio",
-     * aria-checked="true") or to the block's own containers.
-     *
-     * Changes that must make it fail: narrow the checked-badge rule to the favourite and show-all
-     * pills again; give it the surface token; delete it.
-     *
-     * @return void
+     * @return array Class names without the leading dot, e.g. dims-status-filter-btn.
      */
-    public function test_checked_pill_badge_stands_off_the_indicator(): void {
+    private function badge_pills(): array {
         $js = (string) file_get_contents(__DIR__ . '/../../amd/src/filters.js');
         preg_match_all('/class="dims-filter-tab (dims-[a-z]+-filter-btn)(?![\w-])/', $js, $matches);
         $pills = array_values(array_unique($matches[1]));
         $this->assertNotEmpty($pills, 'No pill class was found in amd/src/filters.js, so this test checks nothing.');
 
-        $rules = $this->flat_rules();
-        $indicator = null;
-        foreach ($rules as $rule) {
-            if ($rule['at'] === '' && $rule['selector'] === '.block_dimensions .dims-filter-tabs-indicator') {
+        return $pills;
+    }
+
+    /**
+     * The background a top-level rule with exactly this selector paints.
+     *
+     * @param string $selector The whole selector of the rule, whitespace collapsed.
+     * @return string|null The background value, or null when no such rule paints one.
+     */
+    private function ground(string $selector): ?string {
+        $fill = null;
+        foreach ($this->flat_rules() as $rule) {
+            if ($rule['at'] === '' && $rule['selector'] === $selector) {
                 $declarations = $this->declarations($rule['body']);
-                $indicator = $declarations['background-color'] ?? $declarations['background'] ?? $indicator;
+                $fill = $declarations['background-color'] ?? $declarations['background'] ?? $fill;
             }
         }
+
+        return $fill;
+    }
+
+    /**
+     * The fill and border that win the cascade on one pill's count badge in one state.
+     *
+     * A selector part applies to the badge when it ends in .dims-filter-count, is in no user-action
+     * state, every class and attribute outside :not() belongs to the badge, to the pill in that
+     * state (.dims-filter-tab, the pill class, role="radio", and .active with aria-checked="true"
+     * when checked or aria-checked="false" when not) or to the block's own containers, and no
+     * :not() excludes something the badge or the pill carries. The border is resolved per
+     * component, so a longhand in a rule that wins overrides that part of the shorthand, and a
+     * shorthand resets whatever it leaves out.
+     *
+     * @param string $pill The pill class, without the leading dot.
+     * @param bool $checked True for a checked pill, false for an unchecked one.
+     * @return array With keys fill, style, width and color, each the winning value or null.
+     */
+    private function winning_badge_style(string $pill, bool $checked): array {
+        $carried = ['.dims-filter-count', '.dims-filter-tab', '.' . $pill, '[role="radio"]'];
+        $carried = array_merge($carried, $checked ? ['.active', '[aria-checked="true"]'] : ['[aria-checked="false"]']);
+        $containers = [
+            '.block_dimensions', '.block-dimensions-content', '.dims-filter-tabs', '.dims-filter-tabs-mask',
+            '.dims-filter-tabs-items',
+        ];
+        $allowed = array_merge($carried, $containers);
+        $winners = [];
+        foreach ($this->flat_rules() as $order => $rule) {
+            if ($rule['at'] !== '') {
+                continue;
+            }
+            foreach (array_map('trim', explode(',', $rule['selector'])) as $part) {
+                if (preg_match(self::STATE_PSEUDO, $part) || !preg_match('/\.dims-filter-count$/', $part)) {
+                    continue;
+                }
+                preg_match_all('/:not\(([^()]*)\)/', $part, $negations);
+                preg_match_all('/[#.][\w-]+|\[[^\]]*\]/', implode(' ', $negations[1]), $negated);
+                preg_match_all('/[#.][\w-]+|\[[^\]]*\]/', (string) preg_replace('/:not\([^()]*\)/', '', $part), $simple);
+                if (array_diff($simple[0], $allowed) || array_intersect($negated[0], $carried)) {
+                    continue;
+                }
+                foreach ($this->declarations($rule['body']) as $property => $value) {
+                    foreach ($this->badge_components($property, $value) as $component => $componentvalue) {
+                        $current = $winners[$component] ?? null;
+                        $samerule = $current !== null && $current[1] === $part && $current[2] === $order;
+                        if ($current === null || $samerule || $this->outranks($part, $order, $current[1], $current[2])) {
+                            $winners[$component] = [$componentvalue, $part, $order];
+                        }
+                    }
+                }
+            }
+        }
+        $style = [];
+        foreach (['fill', 'style', 'width', 'color'] as $component) {
+            $style[$component] = $winners[$component][0] ?? null;
+        }
+
+        return $style;
+    }
+
+    /**
+     * The badge components one declaration sets.
+     *
+     * @param string $property Lower-case property name.
+     * @param string $value Its value.
+     * @return array Component (fill, style, width or color) => value. A border shorthand sets all
+     *               three border components, each it leaves out at its initial value.
+     */
+    private function badge_components(string $property, string $value): array {
+        if ($property === 'background' || $property === 'background-color') {
+            return ['fill' => $value];
+        }
+        if (in_array($property, ['border-style', 'border-width', 'border-color'], true)) {
+            return [substr($property, 7) => $value];
+        }
+        if ($property !== 'border') {
+            return [];
+        }
+        $components = ['style' => 'none', 'width' => 'medium', 'color' => 'currentcolor'];
+        preg_match_all('/[^\s(]+(?:\([^()]*\))?/', $value, $words);
+        foreach ($words[0] as $word) {
+            if (preg_match('/^(?:none|hidden|dotted|dashed|solid|double|groove|ridge|inset|outset)$/i', $word)) {
+                $components['style'] = $word;
+            } else if (preg_match('/^(?:[0-9.]|thin$|medium$|thick$)/i', $word)) {
+                $components['width'] = $word;
+            } else {
+                $components['color'] = $word;
+            }
+        }
+
+        return $components;
+    }
+
+    /**
+     * Why a badge's winning style gives it no shape on its ground, if it does not.
+     *
+     * @param array $style From winning_badge_style().
+     * @param string $ground The ground's background value.
+     * @return array Messages, empty when the fill differs from the ground and the border draws a
+     *               line in a plugin token other than the ground's.
+     */
+    private function shapeless(array $style, string $ground): array {
+        $problems = [];
+        if ($style['fill'] === null || $style['fill'] === $ground) {
+            $problems[] = 'fill ' . ($style['fill'] ?? 'not set');
+        }
+        $drawn = $style['style'] !== null
+            && !preg_match('/^(?:none|hidden)$/i', $style['style'])
+            && !preg_match('/^0(?:[a-z]*)$/i', (string) $style['width'])
+            && preg_match('/^var\(--block-dimensions-[a-z0-9-]+\)$/', (string) $style['color'])
+            && $style['color'] !== $ground;
+        if (!$drawn) {
+            $problems[] = 'border ' . implode(' ', [$style['style'] ?? 'none', $style['width'] ?? '-', $style['color'] ?? '-']);
+        }
+
+        return $problems;
+    }
+
+    /**
+     * A checked pill's count badge keeps a shape against the indicator it sits on.
+     *
+     * A checked pill with no fill of its own sits on the sliding indicator, which paints what the
+     * badge paints at rest, so a badge keeping its rest fill there has no shape. For every pill
+     * class amd/src/filters.js draws, the badge fill that wins the cascade while the pill is checked
+     * must differ from the indicator's. The fill differs only faintly (brand-tint on surface), so
+     * the border that wins must also draw a line, in a plugin token other than the indicator's
+     * fill; colour_tokens_test measures that token. winning_badge_style() says which rules apply.
+     *
+     * Changes that must make it fail: narrow the checked-badge rule to the favourite and show-all
+     * pills again; give it the surface token; delete it; delete its border together with the
+     * resting badge's; draw its border in the surface token; give the status pill's checked badge
+     * border: none, or border-style: none, in a rule of its own. Deleting only its border does not:
+     * the resting badge's border then edges it, in a token colour_tokens_test pins against the
+     * indicator too.
+     *
+     * @return void
+     */
+    public function test_checked_pill_badge_stands_off_the_indicator(): void {
+        $indicator = $this->ground('.block_dimensions .dims-filter-tabs-indicator');
         $this->assertNotNull($indicator, 'The indicator paints no background, so there is nothing to stand off from.');
 
         $offenders = [];
-        foreach ($pills as $pill) {
-            $allowed = [
-                '.block_dimensions', '.block-dimensions-content', '.dims-filter-tabs', '.dims-filter-tabs-mask',
-                '.dims-filter-tabs-items', '.dims-filter-count', '.dims-filter-tab', '.' . $pill, '.active',
-                '[role="radio"]', '[aria-checked="true"]',
-            ];
-            $fill = null;
-            $winner = null;
-            foreach ($rules as $order => $rule) {
-                if ($rule['at'] !== '') {
-                    continue;
-                }
-                $declarations = $this->declarations($rule['body']);
-                $value = $declarations['background'] ?? $declarations['background-color'] ?? null;
-                if ($value === null) {
-                    continue;
-                }
-                foreach (array_map('trim', explode(',', $rule['selector'])) as $part) {
-                    if (preg_match(self::STATE_PSEUDO, $part) || !preg_match('/\.dims-filter-count$/', $part)) {
-                        continue;
-                    }
-                    preg_match_all('/[#.][\w-]+|\[[^\]]*\]/', $part, $simple);
-                    if (array_diff($simple[0], $allowed)) {
-                        continue;
-                    }
-                    if ($winner === null || $this->outranks($part, $order, $winner[0], $winner[1])) {
-                        $fill = $value;
-                        $winner = [$part, $order];
-                    }
-                }
-            }
-            if ($fill === null || $fill === $indicator) {
-                $offenders[] = $pill . ' (' . ($fill ?? 'no fill') . ')';
+        foreach ($this->badge_pills() as $pill) {
+            foreach ($this->shapeless($this->winning_badge_style($pill, true), $indicator) as $problem) {
+                $offenders[] = $pill . ' (' . $problem . ')';
             }
         }
 
         $this->assertSame(
             [],
             $offenders,
-            'A checked pill\'s count badge must not take the indicator\'s fill (' . $indicator . '), or it has no '
-                . 'shape: ' . implode('; ', $offenders)
+            'A checked pill\'s count badge must not take the indicator\'s fill (' . $indicator . '), and must be '
+                . 'edged in a plugin token other than it, or it has almost no shape: ' . implode('; ', $offenders)
+        );
+    }
+
+    /**
+     * An unchecked pill's count badge keeps a shape against the platter it sits on.
+     *
+     * An unchecked pill paints no fill, so its badge sits on the filter platter. The badge's
+     * surface fill differs from the platter's surface-inset by 1.19:1 in light and 1.41:1 in dark,
+     * so, as on a checked pill, the border that wins must draw a line in a plugin token other than
+     * the platter's fill; colour_tokens_test measures that token against the platter.
+     *
+     * Changes that must make it fail: delete the resting badge's border; draw it in the
+     * surface-inset token; give the fill surface-inset; give an unchecked status pill's badge
+     * border-style: none in a rule of its own.
+     *
+     * @return void
+     */
+    public function test_resting_pill_badge_stands_off_the_platter(): void {
+        $platter = $this->ground('.block_dimensions .block-dimensions-content .dims-filter-tabs');
+        $this->assertNotNull($platter, 'The platter paints no background, so there is nothing to stand off from.');
+
+        $offenders = [];
+        foreach ($this->badge_pills() as $pill) {
+            foreach ($this->shapeless($this->winning_badge_style($pill, false), $platter) as $problem) {
+                $offenders[] = $pill . ' (' . $problem . ')';
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $offenders,
+            'An unchecked pill\'s count badge must not take the platter\'s fill (' . $platter . '), and must be '
+                . 'edged in a plugin token other than it, or it has almost no shape: ' . implode('; ', $offenders)
         );
     }
 
