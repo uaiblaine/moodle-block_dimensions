@@ -26,13 +26,12 @@ use core_competency\plan;
  * @category   test
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversDefaultClass \block_dimensions\external\get_block_dataset
+ * @covers \block_dimensions\external\get_block_dataset
+ * @covers \block_dimensions\local\dataset_provider
  */
 final class get_block_dataset_test extends advanced_testcase {
     /**
      * Guest user should be rejected with moodle_exception.
-     *
-     * @covers ::execute
      */
     public function test_execute_throws_for_guest_user(): void {
         $this->resetAfterTest();
@@ -44,8 +43,6 @@ final class get_block_dataset_test extends advanced_testcase {
 
     /**
      * When core_competency is disabled the endpoint should return a zero-item dataset.
-     *
-     * @covers ::execute
      */
     public function test_execute_returns_empty_dataset_when_competencies_disabled(): void {
         $this->resetAfterTest();
@@ -67,8 +64,6 @@ final class get_block_dataset_test extends advanced_testcase {
 
     /**
      * Logged-in user with competencies enabled should receive a dataset with expected keys.
-     *
-     * @covers ::execute
      */
     public function test_execute_returns_expected_keys_for_logged_in_user(): void {
         $this->resetAfterTest();
@@ -267,8 +262,6 @@ final class get_block_dataset_test extends advanced_testcase {
 
     /**
      * Every bucket's count rides the first response, whichever bucket's cards it carries.
-     *
-     * @covers ::execute
      */
     public function test_execute_counts_every_bucket_while_building_one(): void {
         $this->resetAfterTest();
@@ -284,8 +277,6 @@ final class get_block_dataset_test extends advanced_testcase {
 
     /**
      * A non-active bucket builds its own cards: chip, no favourite toggle, read-only button.
-     *
-     * @covers ::execute
      */
     public function test_execute_builds_the_requested_bucket(): void {
         $this->resetAfterTest();
@@ -321,8 +312,6 @@ final class get_block_dataset_test extends advanced_testcase {
      * A competencies-mode template becomes competency cards in the section below, so counting it
      * as a plan card would put a number on the pill that the grid never reaches - and disagree
      * with the "Show all" count beside it.
-     *
-     * @covers ::execute
      */
     public function test_active_count_excludes_a_plan_that_renders_as_competencies(): void {
         $this->resetAfterTest();
@@ -358,8 +347,6 @@ final class get_block_dataset_test extends advanced_testcase {
      * The provider builds `tags`/`hastags` and both card templates render them, but
      * clean_returnvalue() silently strips whatever the structure does not declare, and the pills
      * simply never appear.
-     *
-     * @covers ::execute_returns
      */
     public function test_card_tag_pills_survive_the_return_allowlist(): void {
         $this->resetAfterTest();
@@ -393,9 +380,6 @@ final class get_block_dataset_test extends advanced_testcase {
      * Example context can render only one layout, so the mustache lint never reads the horizontal
      * copy. The untagged card served beside it is the control: it must draw no group, so a group
      * found in the tagged card cannot be some other element of the card.
-     *
-     * @covers ::execute
-     * @covers ::execute_returns
      */
     public function test_a_tagged_plan_card_draws_its_tag_group_in_both_layouts(): void {
         global $OUTPUT;
@@ -446,9 +430,6 @@ final class get_block_dataset_test extends advanced_testcase {
      * clean_returnvalue() silently strips a flag the structure does not declare, and a template
      * that does not read the flag draws the star anyway: a focusable toggle whose click
      * toggle_favourite refuses.
-     *
-     * @covers ::execute
-     * @covers ::execute_returns
      */
     public function test_no_card_offers_the_favourite_toggle_while_favourites_are_disabled(): void {
         global $OUTPUT;
@@ -511,8 +492,6 @@ final class get_block_dataset_test extends advanced_testcase {
      * The client asks for favourites first whenever the page was rendered with them enabled, and
      * an admin can disable them before that request arrives. Honoured then, the flag would return
      * no card, since no card is a favourite, and flag both lists as holding non-favourites.
-     *
-     * @covers ::execute
      */
     public function test_favourites_only_is_ignored_while_favourites_are_disabled(): void {
         $this->resetAfterTest();
@@ -556,8 +535,6 @@ final class get_block_dataset_test extends advanced_testcase {
      *
      * The block renders for a learner whose plans have all finished, so it must open on those
      * plans rather than on an empty Active bucket.
-     *
-     * @covers ::execute
      */
     public function test_execute_opens_on_the_first_bucket_with_plans(): void {
         $this->resetAfterTest();
@@ -597,8 +574,6 @@ final class get_block_dataset_test extends advanced_testcase {
      * active pill counts nothing; but the learner does hold an active plan, and competency cards
      * are built only in the active bucket. Opening on the completed plan would leave them out of
      * reach, and a "no active plans" notice would be false.
-     *
-     * @covers ::execute
      */
     public function test_an_active_plan_showing_competencies_opens_the_active_bucket(): void {
         $this->resetAfterTest();
@@ -650,8 +625,6 @@ final class get_block_dataset_test extends advanced_testcase {
 
     /**
      * A bucket name the block does not know is refused rather than quietly served as active.
-     *
-     * @covers ::execute
      */
     public function test_execute_refuses_an_unknown_bucket(): void {
         $this->resetAfterTest();
@@ -659,5 +632,16 @@ final class get_block_dataset_test extends advanced_testcase {
 
         $this->expectException(\invalid_parameter_exception::class);
         get_block_dataset::execute(false, '', 'draft');
+    }
+
+    /**
+     * A loadgroup value the block does not know is refused rather than quietly building both groups.
+     */
+    public function test_execute_refuses_an_unknown_loadgroup(): void {
+        $this->resetAfterTest();
+        $this->setUser($this->getDataGenerator()->create_user());
+
+        $this->expectException(\invalid_parameter_exception::class);
+        get_block_dataset::execute(false, 'course');
     }
 }

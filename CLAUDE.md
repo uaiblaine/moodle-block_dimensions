@@ -648,10 +648,17 @@ HTML; **zero `html_writer`** in plugin code.
   `@covers` on the docblock; `$this->resetAfterTest()` in any DB test.
 - Coverage: `mdl ci moodle-block_dimensions --branch MOODLE_502_STABLE --php 8.4 --coverage`.
   `tests/coverage.php` adds `block_dimensions.php` and `db/uninstall.php`, which
-  core's default list leaves out. Measured 2026-09-24: 65.4% of lines (596/911),
-  40.9% of methods (27/66); without the file 65.6% (583/889), so the omission barely
-  flattered it here. The real gaps: `external/set_return_context` and
-  `db/uninstall.php` at 0%, `dataset_provider` at 51%.
+  core's default list leaves out. Measured 2026-09-24: 99.6% of lines (905/909),
+  97.0% of methods (64/66). The four lines left are defensive: the
+  `$info === null` / empty-items skips in the privacy export (the favourite row was
+  just read, so core cannot return null for it) and the `catch (\Exception)` in
+  `build_plan_trail_payload()`, which needs a real database failure.
+- `@covers` is **class-scoped** and names every production class the file really
+  executes (`dimensions_test` runs the renderer and `summary` too). The method-scoped
+  form this suite used before credited only the named method and discarded every other
+  line the test ran: it read 65.4% over a suite that executed 91.3%. It stays in docblock
+  form, not attributes, while 4.5 is supported. `provider_test.php` still uses the
+  method form.
 - `dataset_provider_test.php` uses an **anonymous-class double** exposing
   protected helpers as `test_*()` proxies (they are not tests) and stubbing the
   data fetchers (`fetch_bulk_competency_metadata`, which reads the

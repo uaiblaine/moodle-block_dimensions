@@ -27,6 +27,7 @@ use block_dimensions\local\dataset_provider;
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \block_dimensions\output\summary
+ * @covers     \block_dimensions\local\bootstrap
  */
 final class summary_test extends advanced_testcase {
     /**
