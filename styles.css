@@ -428,8 +428,12 @@ body[data-bs-theme="dark"],
    CARD TITLE - WCAG 1.4.4 Resize Text
    Text can resize up to 200% without loss
    ============================================ */
+/* The weight is declared here, for this title and the plan card's, rather than
+   with a class: font-weight-bold reaches 5.x only through the deprecated
+   bs4-compat sheet, and fw-bold does not exist on 4.5. */
 .block_dimensions .competency-card .card-title {
     font-size: 0.9rem;
+    font-weight: 700;
     line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -588,6 +592,7 @@ body[data-bs-theme="dark"],
 
 .block_dimensions .plan-card .card-title {
     font-size: 0.9rem;
+    font-weight: 700;
     line-height: 1.4;
 }
 
@@ -1310,7 +1315,6 @@ body[data-bs-theme="dark"],
 
 /* ============================================
    FILTER TABS - Horizontal Scrolling Pill Style
-   Adapted from Apple MacBook Neo tabnav-pill.
    ============================================ */
 
 /* --- Wrapper: enforces max-width on desktop --- */
@@ -1428,6 +1432,13 @@ body[data-bs-theme="dark"],
 }
 
 /* --- Tab button: individual pill item --- */
+/* An unchecked pill rests at full strength and is told from the checked one by
+   the indicator and the accent label. It takes no opacity: an opacity
+   multiplies into the label's colour, and 0.8 would bring ink-muted on the
+   platter from 6.46:1 to 4.07:1 in light, below AA for text this size. The
+   hover steps the label up to ink, as the paddles do. colour_tokens_test
+   measures the label and its count badge against the platter with any
+   opacity applied. */
 .block_dimensions .block-dimensions-content .dims-filter-tab {
     display: inline-flex;
     align-items: center;
@@ -1443,14 +1454,15 @@ body[data-bs-theme="dark"],
     white-space: nowrap;
     position: relative;
     z-index: 2;
-    transition: color 120ms ease-out, opacity 100ms ease-in-out;
-    opacity: 0.8;
+    transition: color 120ms ease-out;
     -webkit-user-select: none;
     user-select: none;
 }
 
-.block_dimensions .block-dimensions-content .dims-filter-tab:hover {
-    opacity: 1;
+/* :not(.active) keeps the checked label on its accent whatever the source
+   order. ink on the platter is 13.66:1 in light and 8.84:1 in dark. */
+.block_dimensions .block-dimensions-content .dims-filter-tab:not(.active):hover {
+    color: var(--block-dimensions-ink);
 }
 
 /* Negative offset: the platter is overflow: hidden and would clip an outset
@@ -1466,7 +1478,6 @@ body[data-bs-theme="dark"],
 .block_dimensions .block-dimensions-content .dims-filter-tab.active {
     background: transparent;
     color: var(--block-dimensions-accent);
-    opacity: 1;
     cursor: default;
 }
 
@@ -1980,15 +1991,21 @@ body[data-bs-theme="dark"],
    FILTER COUNT BADGE - N inside pills
    ============================================ */
 /* surface, not surface-inset: the badge sits on the surface-inset platter, and
-   a matching fill would give it no shape. ink-muted on surface is 7.10:1 in
-   light. */
+   a matching fill would give it no shape. The fill is still only 1.19:1 on the
+   platter in light and 1.41:1 in dark, so, as on a checked pill, the badge's
+   edge is a border in its own ink. ink-muted clears 3:1 against the platter
+   in light, in dark and on 4.5: 5.38:1 at the lowest as drawn over the
+   badge's own fill. The number, ink-muted on surface, is 7.10:1 in light.
+   card_layout_test and colour_tokens_test pin this border as they pin the
+   checked one. */
 .block_dimensions .dims-filter-count {
     font-weight: 600;
     margin-left: 0.15rem;
+    border: 1px solid var(--block-dimensions-ink-muted);
     background: var(--block-dimensions-surface);
     color: var(--block-dimensions-ink-muted);
     border-radius: 999px;
-    padding: 0 6px;
+    padding: 0 5px;
     font-size: 0.75rem;
 }
 
@@ -1996,9 +2013,14 @@ body[data-bs-theme="dark"],
    because every checked pill without a fill of its own (status, show all) sits
    on the indicator, which paints surface: a badge keeping its surface rest
    fill there has no shape. brand-ink on brand-tint is core's primary alert
-   pairing, and it keeps a shape on the favourites pill's brand-fill as well.
-   card_layout_test pins it for every pill filters.js draws. */
+   pairing. The tint alone is only 1.33:1 on the indicator in light and 1.13:1
+   in dark, so the badge's edge is a border in its own ink, 14.41:1 and 6.33:1
+   there; brand-edge, core's border for the pairing, reaches 1.83:1 and 1.55:1.
+   On the favourites pill's brand-fill the tint alone is 4.04:1 and 3.42:1.
+   card_layout_test pins the fill and the border for every pill filters.js
+   draws, and colour_tokens_test the border's contrast. */
 .block_dimensions .dims-filter-tab.active .dims-filter-count {
+    border: 1px solid var(--block-dimensions-brand-ink);
     background: var(--block-dimensions-brand-tint);
     color: var(--block-dimensions-brand-ink);
 }
@@ -2284,7 +2306,6 @@ body[data-bs-theme="dark"],
 .block_dimensions .competency-card:focus-within .dims-card-access-btn,
 .block_dimensions .plan-card:hover .dims-card-access-btn-horizontal,
 .block_dimensions .plan-card:focus-within .dims-card-access-btn-horizontal {
-    opacity: 1;
     /* accent, the colour local_dimensions' inline "Continue" link paints, so
        the two controls answer a hover with the same colour while keeping their
        different shapes. accent on surface: 5.36:1 light, 6.33:1 dark. */

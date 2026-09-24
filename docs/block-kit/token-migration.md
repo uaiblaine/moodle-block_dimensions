@@ -170,25 +170,25 @@ section below closes, along with the dark-mode gaps that sweeping for it exposed
 > reads, and the pending marker's source comment has since dropped its measurement history, which
 > this file keeps. Each entry says what shipped on 2026-07-27, then what the cited rule holds today.
 
-- **`styles.css:937`** — `.plan-card-horizontal .card-title` gained `padding-right: 1.75rem`. This
-  layout moves the favourite star to the card's top-right (1851-1854) but nothing reserved that
+- **`styles.css:942`** — `.plan-card-horizontal .card-title` gained `padding-right: 1.75rem`. This
+  layout moves the favourite star to the card's top-right (1868-1872) but nothing reserved that
   space in the body, so a long first line ran underneath the 32px star. Unchanged since; the
-  comment beside the declaration (929-933) gives the arithmetic.
-- **`styles.css:529`** — the plan-card border was a malformed four-argument
+  comment beside the declaration (948-952) gives the arithmetic.
+- **`styles.css:533`** — the plan-card border was a malformed four-argument
   `rgb(228, 228, 228, 0.44)`; the fix made it `rgba(0, 0, 0, 0.125)`, the competency card's
   border. That literal is gone: both cards now read `border: 1px solid var(--block-dimensions-line)`
-  (600 here, 324 on `.competency-card`) — core's `--bs-border-color`, `#dee2e6` on 4.5 — so they
+  (541 here, 324 on `.competency-card`) — core's `--bs-border-color`, `#dee2e6` on 4.5 — so they
   still match.
-- **`styles.css:860-871`** — a source comment asserted the pending marker's ring was "≈ 3.1:1"
+- **`styles.css:865-876`** — a source comment asserted the pending marker's ring was "≈ 3.1:1"
   against white. It never was; the real figure was 2.07:1, and the fix rewrote the comment to say so
   and to give the reasoning behind the 1px `#6c757d` ring that replaced it (4.69:1). The comment on
-  that rule (849-853) now states only the current contract — `ink-muted` on the card surface, and
+  that rule (868-872) now states only the current contract — `ink-muted` on the card surface, and
   why the stroke stays 1px — and the measurements live here, under *Dark-mode completion* and *The
   eight dark contrast repairs, retired without regression*.
-- **`styles.css:529`** — the near-white `#FFFEFC` plan-card background, invisible against `#fff` in
+- **`styles.css:533`** — the near-white `#FFFEFC` plan-card background, invisible against `#fff` in
   practice and identical to it in dark mode, was normalised to `#fff` so both card types shared one
   surface; the uppercase literals `#FFFEFC`, `#004C94` and `#297BC4` went with it. Both cards now
-  read `background-color: var(--block-dimensions-surface)` (601 here, 325 on `.competency-card`) —
+  read `background-color: var(--block-dimensions-surface)` (542 here, 325 on `.competency-card`) —
   core's `--bs-body-bg`, Boost's `--white` on 4.5 — so they still share one surface.
 
 ## Dark-mode completion (applied after the migration)
@@ -244,7 +244,7 @@ it never needed a dark variant.
 **Access pill, hover and focus (2131-2185).** Three rules styled the pill **as a descendant of the
 card link** — the hover lift (`0 4px 14px/.22` + `translateY(-1px)`) and its own `:focus-visible`
 ring. It never is one: both templates put the pill inside the image wrapper and the link inside the
-card body (`plan_card.mustache:103` vs `:109`, `competency_card.mustache:90` vs `:96`), so they are
+card body (`plan_card.mustache:109` vs `:115`, `competency_card.mustache:91` vs `:97`), so they are
 sibling subtrees. The lift had never fired for a single user, and the article-scoped block that was
 meant to replace them only set `opacity: 1` — itself a no-op, since nothing sets the pill's opacity
 below 1.
@@ -476,7 +476,9 @@ keep in step:
 
 The count badge picked up a real improvement on the way. Its rest fill had been `#e9ecef`, the same
 value as the platter it sits on, so the chip had no shape at all and only its bold text showed; it is
-`surface` now, which gives it a boundary and lifts its ink from 5.99:1 to 7.10:1 in light.
+`surface` now, which gives it a boundary and lifts its ink from 5.99:1 to 7.10:1 in light. That
+boundary was a faint one, 1.19:1 against the platter in light; since 2026-09-24 a 1px `ink-muted`
+border edges the badge (see the last section).
 
 ## What this migration cost
 
@@ -567,6 +569,14 @@ and four rules that never took effect.
   `.dims-filter-tab.active .dims-filter-count` (`brand-ink` on `brand-tint`), and
   `card_layout_test::test_checked_pill_badge_stands_off_the_indicator` checks the winning badge fill
   against the indicator for every pill class `filters.js` draws.
+- **That badge then had a shape, but a faint one.** `brand-tint` stands off the indicator's
+  `surface` at 1.33:1 in light and 1.13:1 in dark, so the checked badge now carries a 1px `brand-ink`
+  border, 14.41:1 and 6.33:1 against it, with its padding cut from `0 6px` to `0 5px` so the pill
+  kept its width (since 2026-09-24 the resting badge is edged too and the checked rule takes its
+  padding from it; see the next section). `brand-edge`, core's own border for the pairing, was measured and rejected at
+  1.83:1 and 1.55:1. `colour_tokens_test` gained `brand-ink` on `surface` as a 3:1 row of its contrast
+  pairs, and `test_checked_pill_badge_edge_is_pinned` fails if the badge's border names a token that
+  row does not hold; `card_layout_test` checks the border reaches every checked pill as well.
 
 Every `file:line` citation in the kit — `styles.css`, the templates, the AMD modules, the PHP
 classes and the lang file — was re-anchored to the current files in the same pass.
@@ -576,3 +586,58 @@ stylesheet of 2026-07-27 (the competency card hover, the image heights, the trai
 ghost card hover) had not moved with it. The *Defects fixed in passing* entries had the opposite
 problem: their line numbers followed the file while their prose still described the 2026-07-27
 literals, so each now also says what its cited rule holds today.
+
+# Re-baseline — the resting count badge and the card titles (2026-09-24)
+
+No token value changed, and no token was added.
+
+- **The resting count badge had the checked badge's faint outline.** An unchecked pill paints no
+  fill, so its badge sits on the `surface-inset` platter, and its `surface` fill stands off that at
+  1.19:1 in light and on 4.5 and 1.41:1 in dark. It now carries a 1px `ink-muted` border, the same
+  token as its number, which clears 3:1 against the platter in every resolution: 5.99:1, 5.38:1 and
+  6.90:1 as drawn over the badge's own fill. (The unchecked pill still carried an `opacity: 0.8` at
+  the time, which multiplied into this border and its own label; that opacity is gone as of the next
+  re-baseline below, so the badge and the label it sits beside now draw at the numbers above, full
+  strength.) The resting padding went from `0 6px` to `0 5px`, and the checked rule no
+  longer sets one of its own: both badges are as wide as the unbordered badge was, so neither state
+  moves a pill. `ink-muted` on `surface-inset` was already a 4.5:1 row of the contrast pairs;
+  `colour_tokens_test::test_resting_pill_badge_edge_is_pinned` fails when the resting badge's border
+  names a token no row holds against the platter, and
+  `card_layout_test::test_resting_pill_badge_stands_off_the_platter` checks, for every pill class
+  `filters.js` draws, that the winning resting border draws a line in a token other than the
+  platter's fill.
+- **The card titles take their weight from the stylesheet.** Both card templates set their titles
+  bold with the Bootstrap 4 class `font-weight-bold`, which 5.x resolves only through
+  `bs4-compat.scss`, inside the deprecated-styles mixin (a red outline under behat-site and
+  themedesignermode), and which Moodle 6.0 removes; its Bootstrap 5 spelling, `fw-bold`, does not
+  exist on 4.5. The `.card-title` rules of both cards declare `font-weight: 700` instead
+  (`styles.css:431-446`, `:593-597`), which renders the same on every branch, and
+  `bootstrap_compat_test` now rejects the `font-weight-*` family and `font-italic` with the other
+  Bootstrap 4 names.
+
+The kit's `file:line` citations were re-anchored in the same pass: the title rules moved every
+`styles.css` line after them by four or five, and the badge rules and the status-filter code in
+`filters.js` and `state.js` moved the lines around them.
+
+# Re-baseline — the unchecked pill loses its opacity (2026-09-24)
+
+No token value changed. **`.dims-filter-tab` no longer carries `opacity: 0.8` at rest or
+`opacity: 1` on hover/active.** An opacity multiplies into everything the pill paints, including its
+own label and the count badge sitting inside it, and 0.8 was enough to fail AA for text this size:
+`ink-muted` on the platter measured 6.46:1 / 5.76:1 / 6.90:1 (light / dark / 4.5) as declared, but
+4.07:1 / 4.30:1 / 4.28:1 as drawn — under the 4.5:1 floor on every branch. `colour_tokens_test`'s
+`PAIRS` table held the declared numbers only; nothing measured the opacity-drawn ones, so the defect
+had no gate.
+
+The fix removes the opacity rather than raising it: the checked/unchecked distinction was never
+carried by fade alone (the checked pill already sits on the sliding indicator and takes the accent
+colour), so nothing needs it. `:hover` no longer restates `opacity: 1` either — it is scoped to
+`:not(.active)` and steps the label from `ink-muted` to `ink` (13.66:1 light, 8.84:1 dark on the
+platter) instead, which is the effect the fade was standing in for. `colour_tokens_test` now reads
+the label and the count badge against the platter with **any** opacity applied to the rule or an
+ancestor, so a future fade regresses the same way this one did, loudly.
+
+This also retires the discount every "through the unchecked pill's 0.8 opacity" figure in this file,
+`tokens.html` and `maps/block.md` carried for the resting count badge's border and label: those
+numbers were always the true worst case, and now they are also the numbers as drawn, with no
+multiplication to track.

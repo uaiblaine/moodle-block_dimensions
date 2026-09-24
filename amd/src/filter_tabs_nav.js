@@ -16,7 +16,7 @@
 /**
  * Horizontal-scrolling pill tab navigation for block_dimensions filters.
  *
- * Adapted from the Apple MacBook Neo tabnav-pill pattern. Provides:
+ * Provides:
  * - Smooth horizontal scroll when tabs overflow the container.
  * - Animated indicator that follows the active tab.
  * - Left/right paddle (arrow) buttons with auto-hide at edges.

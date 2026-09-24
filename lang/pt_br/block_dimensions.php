@@ -118,6 +118,7 @@ $string['status_pending'] = 'pendente';
 $string['statusactive'] = 'Ativos';
 $string['statuscomplete'] = 'Concluídos';
 $string['statusfilter'] = 'Status do plano';
+$string['statusloadingactive'] = 'Carregando planos ativos...';
 $string['statusloadingcomplete'] = 'Carregando planos concluídos...';
 $string['statusloadingreview'] = 'Carregando planos em revisão...';
 $string['statusreview'] = 'Em revisão';
