@@ -130,6 +130,17 @@ missing, so an `amd/src` edit reaches the page only after
 `mdl grunt m502 blocks/dimensions`. A JS mutation test that skips the rebuild
 silently tests the old build.
 
+**Run `tests/jsharness/run.sh --mutants` before committing any `amd/src` change.**
+It is a headless-Chromium suite over the real modules (209 checks: web service
+calls stay pending until a scenario settles them, so it reaches orderings Behat
+cannot - a failed switch under a typed search, a retry over a late response),
+and the mutant mode re-breaks every fix it pins (67 mutants) and fails if any
+survives or no longer applies. A `NOT APPLIED` line means a guarded pattern moved
+and its mutant must be ported in `tests/jsharness/mutants.py`. It reads `amd/src`
+directly, so it needs no grunt run and says nothing about a stale `amd/build`;
+needs only Docker; export-ignored and not run by CI. `tests/jsharness/README.md`
+explains how to add a check and its mutant.
+
 **Do not add a `.stylelintrc.json` back.** The repo used to carry one, and it
 was deleted on 2026-09-05 because it had **no `extends`** — stylelint replaces
 its config rather than merging, so a bare `{"rules": {...}}` file was silently
@@ -183,6 +194,10 @@ tests/                       PHPUnit: dataset_provider (double pattern),
                              local/colour_tokens_test, local/bootstrap_compat_test,
                              local/card_layout_test
 tests/behat/                 colour_mode, visibility, status_filter and card_filters features
+tests/jsharness/             JS regression harness for amd/src (headless Chromium,
+                             run.sh; --mutants); export-ignored, no CI step
+tests/coverage.php           adds block_dimensions.php and db/uninstall.php to the
+                             coverage measurement (core's default list skips them)
                              + behat_block_dimensions.php
 docs/block-kit/              As-is visual replica of the block (excluded from
                              the release zip via .gitattributes)
@@ -631,6 +646,12 @@ HTML; **zero `html_writer`** in plugin code.
 ## PHPUnit tests
 - `tests/<area>/<thing>_test.php`; class extends `\advanced_testcase`;
   `@covers` on the docblock; `$this->resetAfterTest()` in any DB test.
+- Coverage: `mdl ci moodle-block_dimensions --branch MOODLE_502_STABLE --php 8.4 --coverage`.
+  `tests/coverage.php` adds `block_dimensions.php` and `db/uninstall.php`, which
+  core's default list leaves out. Measured 2026-09-24: 65.4% of lines (596/911),
+  40.9% of methods (27/66); without the file 65.6% (583/889), so the omission barely
+  flattered it here. The real gaps: `external/set_return_context` and
+  `db/uninstall.php` at 0%, `dataset_provider` at 51%.
 - `dataset_provider_test.php` uses an **anonymous-class double** exposing
   protected helpers as `test_*()` proxies (they are not tests) and stubbing the
   data fetchers (`fetch_bulk_competency_metadata`, which reads the
