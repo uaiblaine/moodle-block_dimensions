@@ -461,8 +461,12 @@ at the head of `styles.css`. In short:
 
 `styles.css` ends with a polyfill for the BS5 utility families Moodle 4.5 does
 not define, gated on `.block-dimensions-bs4`. The gate is **not optional**:
-plugin CSS loads after core's, so an ungated rule would outrank core's own
-definition on 5.x and freeze 4.5's metrics onto the newer branch.
+a polyfill rule is scoped to the block's root (two classes), so on 5.x it
+outranks core's one-class utility by specificity and would freeze 4.5's
+metrics onto the newer branch. Not by order: plugin CSS is compiled BEFORE
+the theme's, Bootstrap included, so a plugin rule of equal specificity to a
+core rule always loses (fleet `CLAUDE.md`, "Plugin CSS is compiled BEFORE the
+theme's").
 
 **The gate is on the block's content root (`div.block-dimensions-content`,
 written by `summary.mustache` from the renderable's `isbs4`), and that is a
