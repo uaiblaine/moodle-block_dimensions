@@ -11,3 +11,4 @@
 /package.json export-ignore
 /phpcs.xml export-ignore
 /tests/jsharness export-ignore
+/.mdlshield          export-ignore
