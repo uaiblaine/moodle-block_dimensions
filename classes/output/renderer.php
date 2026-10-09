@@ -44,4 +44,15 @@ class renderer extends plugin_renderer_base {
         $data = $summary->export_for_template($this);
         return parent::render_from_template('block_dimensions/summary', $data);
     }
+
+    /**
+     * The block's own page: the summary shell inside the page's wrapper.
+     *
+     * @param page $page The page renderable.
+     * @return string
+     */
+    public function render_page(page $page) {
+        $data = $page->export_for_template($this);
+        return parent::render_from_template('block_dimensions/page', $data);
+    }
 }
