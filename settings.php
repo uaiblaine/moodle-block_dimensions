@@ -56,6 +56,15 @@ if ($ADMIN->fulltree) {
         0
     ));
 
+    // The block's own page: off by default; on, /blocks/dimensions/index.php renders the block's
+    // content alone and "Dimensions" appears among the start page choices.
+    $settings->add(new admin_setting_configcheckbox(
+        'block_dimensions/enable_page',
+        get_string('enable_page', 'block_dimensions'),
+        get_string('enable_page_desc', 'block_dimensions'),
+        0
+    ));
+
     // Enable search field.
     $settings->add(new admin_setting_configcheckbox(
         'block_dimensions/enable_search',

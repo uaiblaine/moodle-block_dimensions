@@ -126,6 +126,15 @@ All settings live under *Site administration → Plugins → Blocks → Dimensio
 - **Filters**: enable each of the four tag filters independently (`enable_plan_tag1_filter`, `enable_plan_tag2_filter`, `enable_competency_tag1_filter`, `enable_competency_tag2_filter`) and pick each one's control style (`*_displaymode`, pills or dropdown).
 - **Favourites**: enable the favourites feature (`enable_favourites`, on by default).
 - **Trail**: make trail steps clickable links with return-to-plan integration (`enable_trail_links`).
+- **Own page**: serve the block's content on a page of its own (`enable_page`, off by default) — see below.
+
+### The Dimensions page and the start page
+
+With `enable_page` on, `/blocks/dimensions/index.php` shows the block's content and nothing else: the theme's navigation bar, the page heading ("Dimensions") and the footer around it, on the `base` layout — no block regions, so no block drawer, no other blocks and no "Add a block" in editing mode. Every logged-in user other than a guest can open it; the cards are the viewer's own, exactly as the block shows them, and a learner without a plan sees the "no active plans" notice instead of an empty page.
+
+While the page is enabled, **"Dimensions" is offered as a choice for *Start page for users*** (*Site administration → Appearance → Navigation*), through core's `extend_default_homepage` hook. Chosen there, the site root and every login land on the page; when that setting is *User preference*, each user finds "Dimensions" among their own start page choices. Everything after the choice is core's: the Dashboard stays reachable at `/my/`, and the navigation bar keeps its Home, Dashboard and My courses items (hiding the Dashboard item is a theme setting, not this plugin's).
+
+Off — the default, so an upgrade changes nothing — or while core competencies are disabled, the option is withdrawn and the page redirects to the Dashboard, so a start page stored earlier still lands somewhere.
 
 
 Capabilities

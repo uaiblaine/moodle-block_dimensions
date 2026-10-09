@@ -142,8 +142,10 @@ block_dimensions.php         Block class — content renders only for logged-in
                              (summary::has_content()), gated on
                              get_config('core_competency', 'enabled');
                              can_block_be_added() enforces the same
+index.php                    The block's own page (enable_page): base layout,
+                             system context, the summary shell via output\page
 settings.php                 Admin settings (visibility, filters, favourites,
-                             plan-card layout)
+                             plan-card layout, enable_page)
 version.php                  component / version / requires / supported / dependencies
 classes/
   local/dataset_provider.php Builds the whole dataset: plan cards, competency
@@ -156,16 +158,21 @@ classes/
                              deliberately — see below
   output/summary.php         Renderable shell — ships labels + config JSON only
                              (incl. `isbs4` for the polyfill gate)
-  output/renderer.php        render_from_template wrapper
+  output/page.php            The page's renderable: a summary subclass, its two
+                             gates (require_access) and is_enabled()
+  output/renderer.php        render_from_template wrapper (summary, page)
+  hook_callbacks.php         extend_default_homepage: offers the page as a
+                             start page while page::is_enabled()
   external/                  get_block_dataset, toggle_favourite,
                              set_return_context (one class each)
   privacy/provider.php       Exports/deletes core_favourites rows
-db/                          access, services, uninstall  (NO install.xml)
+db/                          access, hooks, services, uninstall  (NO install.xml)
 styles.css                   34 colour tokens on body, one body-anchored
                              [data-bs-theme="dark"] activation rule, one
                              inert prefers-color-scheme block, and a Bootstrap 4
                              utility polyfill at the tail
-templates/                   summary (server-rendered shell), plan_card,
+templates/                   summary (server-rendered shell), page (the
+                             summary inside a .block_dimensions wrapper), plan_card,
                              competency_card (client-rendered). The filter bar
                              has no template: renderFilterControls() in
                              filters.js is its only definition
@@ -177,7 +184,7 @@ tests/                       PHPUnit: dataset_provider (double pattern),
                              external functions, privacy, generator,
                              local/colour_tokens_test, local/bootstrap_compat_test,
                              local/card_layout_test
-tests/behat/                 colour_mode, visibility, status_filter and card_filters features
+tests/behat/                 colour_mode, visibility, status_filter, card_filters and page features
 tests/jsharness/             JS regression harness for amd/src (headless Chromium,
                              run.sh; --mutants); export-ignored, no CI step
 tests/coverage.php           adds block_dimensions.php and db/uninstall.php to the
@@ -200,6 +207,25 @@ docs/proposals/              To-be designs and the decisions behind them, one
 `favouritesonly` first, then `loadgroup` (`plan` / `competency`) fetches the
 missing group. **Don't add server-side card building back into `summary.php`**
 — an earlier refactor removed exactly that dead path.
+
+### The block's own page and the start page option
+
+`index.php` renders `output\page` (a `summary` subclass) through `renderer::render_page()` on
+the `base` layout, in the system context, with the secondary navigation off — the same design as
+`block_compass`'s page (its ADR-012 records the core facts). Four things to keep:
+
+- **The wrapper carries `block_dimensions`.** Every rule in `styles.css` is written under that
+  class, which core puts on the block's `<section>`; the page has no section, so
+  `templates/page.mustache` reproduces the class (plus `dims-page` for selectors), and never core's
+  `block card` chrome.
+- **The page does not read `has_content()`.** An empty block disappears; a start page cannot, so a
+  viewer without a plan gets the shell and the client's "no active plans" notice.
+- **One predicate gates both the page and the option:** `page::is_enabled()` — `enable_page`
+  holds an explicit 1 AND core competencies are enabled. Off, `require_access()` redirects to
+  `/my/` (a stored start page must land somewhere) and the hook offers nothing.
+- **The hook runs well beyond the settings page:** core dispatches `extend_default_homepage`
+  when it builds the `user_home_page_preference` definition, which every user preference write
+  validates. The callback catches `\Throwable` and reads config only.
 
 ### No plan the block can show, no block — like block_lp
 
@@ -669,7 +695,9 @@ HTML; **zero `html_writer`** in plugin code.
 
 ## Behat
 
-Four feature files: `colour_mode.feature` (4 scenarios, the colour-mode
+Five feature files: `page.feature` (2: the page shows the block alone and opens from the
+site root once it is the start page; switched off, it redirects to the Dashboard),
+`colour_mode.feature` (4 scenarios, the colour-mode
 contract), `visibility.feature` (6, the render gate and the status pills),
 `status_filter.feature` (2: a learner whose only active plan is competencies-mode
 opens on Active, with a count-less pill, and keeps the competency section across
