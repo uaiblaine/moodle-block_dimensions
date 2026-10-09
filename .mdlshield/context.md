@@ -37,8 +37,16 @@ database tables of its own**; the only rows it writes are core favourites.
     cache for the floating button of `local_dimensions`. The plan is read with
     `api::read_plan()`, which enforces core's plan permission, and the feature is gated by a
     `local_dimensions` setting.
-- No page scripts, no tasks, no hooks, no observers, no file serving, no outbound HTTP and no
-  evaluation of user input. SQL uses placeholders.
+- One page script, `index.php`, behind the `enable_page` setting (off by default) and core
+  competencies being enabled (`output\page::is_enabled()`): `require_login(null, false)`, a guest
+  refused with `noguest`, then the block's own shell for `$USER` in the system context on the
+  `base` layout. It takes no parameter, writes nothing and renders only the caller's own cards
+  through the web service above; while off it redirects to `/my/`.
+- One hook callback (`db/hooks.php`): `core_user\hook\extend_default_homepage`, which offers
+  `/blocks/dimensions/index.php` as a start page choice while the page is enabled. It reads two
+  config values and catches `\Throwable`.
+- No tasks, no observers, no file serving, no outbound HTTP and no evaluation of user input.
+  SQL uses placeholders.
 - Privacy: a plugin provider with a user-context favourites export and the userlist
   provider; `db/uninstall.php` removes the plugin's `favourite` rows because core does not.
 
