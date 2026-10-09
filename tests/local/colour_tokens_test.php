@@ -622,7 +622,10 @@ final class colour_tokens_test extends \basic_testcase {
             if ($rule['selector'] !== 'body' || $rule['at'] !== '') {
                 continue;
             }
-            if (!str_contains($rule['body'], $prefix . 'surface')) {
+            /* The block that declares the surface token, as token_block() picks it: a substring
+               match would also take a rule that only reads a surface-* token, such as the
+               sibling's state aliases, which it keeps outside the contract on purpose. */
+            if (!isset($this->declarations($rule['body'])[$prefix . 'surface'])) {
                 continue;
             }
             foreach (explode("\n", $rule['body']) as $line) {
