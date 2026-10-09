@@ -1,3 +1,8 @@
+== 2026100900 ==
+* New page /blocks/dimensions/index.php behind the enable_page setting (off by
+  default), and a db/hooks.php callback on core_user\hook\extend_default_homepage
+  offering it as a start page while it is enabled.
+
 == 2026071300 ==
 * Release v2.0; maturity raised to STABLE.
 * The local_dimensions dependency is now pinned to 2026071306 (its v2.0) —

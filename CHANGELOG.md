@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- **A page of the block's own, offered as the start page.** A new setting, `enable_page` (off by
+  default), serves the block's content at `/blocks/dimensions/index.php` with only the theme's
+  navigation bar, page heading and footer around it: the `base` layout, which has no block regions,
+  in the system context with the secondary navigation off. The page renders the block's own shell
+  (`\block_dimensions\output\page`, a `summary` subclass) inside a wrapper carrying
+  `block_dimensions`, so every stylesheet rule applies, and it renders for a viewer without a plan
+  too - a start page cannot vanish the way an empty block does. While enabled, a callback on core's
+  `\core_user\hook\extend_default_homepage` (`db/hooks.php`) offers "Dimensions" for *Start page
+  for users* and, when that setting leaves the choice to users, in each user's own preferences. Off,
+  or while core competencies are disabled, the option is withdrawn and the page redirects to the
+  Dashboard. The same feature as `block_compass`'s page.
 - **A plan status filter, with every bucket but the active one loaded on demand.** The plan grid now
   groups plans as *Active*, *In review* (both review statuses, the way core groups its own draft
   statuses) and *Completed*. Only the opening bucket arrives with the page; another bucket is fetched
