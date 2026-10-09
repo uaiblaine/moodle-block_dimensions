@@ -45,6 +45,12 @@ All notable changes to this project will be documented in this file.
   the client draws) and a `@javascript` scenario in `visibility.feature`.
 
 ### Fixed
+- **The token parity test compared a rule outside the contract.** `local_dimensions` added its
+  enrolment state aliases (`--local-dimensions-state-*`) in a second `body` rule, kept apart from
+  the 34-token block on purpose, and one of them reads `surface-inset`. `colour_tokens_test` picked
+  the block by the substring `surface`, so it took that rule too and reported 18 tokens the block
+  "lacked". It now picks the rule that declares the surface token, as `token_block()` already did;
+  the 34-token contract itself is unchanged and still identical in both plugins.
 - **Card tag pills had not rendered since the move to the web service.** The provider builds `tags`
   and `hastags` and both card templates draw them, but `execute_returns()` never declared either, so
   `clean_returnvalue()` stripped them - silently, the way an allowlist always does. Declared for both
