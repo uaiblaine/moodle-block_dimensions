@@ -75,7 +75,13 @@ class page extends summary {
         }
         $home = get_default_home_page_url();
 
-        return $home !== null && $home->compare(new \moodle_url(self::PATH), URL_MATCH_BASE);
+        if ($home === null) {
+            return false;
+        }
+        // The directory form ('/blocks/dimensions/', with or without the slash) is served by index.php too.
+        $path = rtrim(preg_replace('~/index\.php$~', '', $home->get_path(false)), '/');
+
+        return $path === (new \moodle_url(dirname(self::PATH)))->get_path(false);
     }
 
     /**
