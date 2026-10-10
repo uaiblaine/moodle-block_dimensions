@@ -176,7 +176,7 @@ final class page_test extends advanced_testcase {
         $CFG->defaulthomepage = '/blocks/dimensions2/';
         $this->assertTrue($this->redirects(), 'a sibling directory is another page');
 
-        foreach (['/blocks/dimensions/', '/blocks/dimensions'] as $directory) {
+        foreach (['/blocks/dimensions/', '/blocks/dimensions', '/blocks/dimensions/index.php/'] as $directory) {
             $CFG->defaulthomepage = $directory;
             try {
                 page::require_access();
