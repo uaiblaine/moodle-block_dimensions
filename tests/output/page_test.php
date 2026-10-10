@@ -161,6 +161,33 @@ final class page_test extends advanced_testcase {
     }
 
     /**
+     * The directory forms of the page's path are this page too, a sibling directory is not.
+     *
+     * @return void
+     */
+    public function test_a_guest_whose_home_is_the_directory_form_is_refused(): void {
+        global $CFG;
+
+        $this->resetAfterTest();
+        set_config('enabled', 1, 'core_competency');
+        set_config('enable_page', 1, 'block_dimensions');
+        $this->setGuestUser();
+
+        $CFG->defaulthomepage = '/blocks/dimensions2/';
+        $this->assertTrue($this->redirects(), 'a sibling directory is another page');
+
+        foreach (['/blocks/dimensions/', '/blocks/dimensions'] as $directory) {
+            $CFG->defaulthomepage = $directory;
+            try {
+                page::require_access();
+                $this->fail('The directory form "' . $directory . '" was let through.');
+            } catch (\moodle_exception $e) {
+                $this->assertSame('noguest', $e->errorcode);
+            }
+        }
+    }
+
+    /**
      * A signed-in user is not affected by the guest gate, whatever the home page is.
      *
      * @return void
