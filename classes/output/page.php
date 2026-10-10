@@ -79,7 +79,7 @@ class page extends summary {
             return false;
         }
         // The directory form ('/blocks/dimensions/', with or without the slash) is served by index.php too.
-        $path = rtrim(preg_replace('~/index\.php$~', '', $home->get_path(false)), '/');
+        $path = rtrim(preg_replace('~/index\.php$~', '', rtrim($home->get_path(false), '/')), '/');
 
         return $path === (new \moodle_url(dirname(self::PATH)))->get_path(false);
     }
