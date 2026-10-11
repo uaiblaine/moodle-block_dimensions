@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Changed
+- **A guest on the block's page goes to the site home.** Instead of the "No guests here!" error,
+  `/blocks/dimensions/index.php` redirects a guest to `/`, the way core's `my/index.php` does. A guest
+  whose home page is this very page still gets the error, because core's front page always redirects a
+  URL-type home and the redirect would loop; the directory form (`/blocks/dimensions/`, with or
+  without the slash) counts as this page. The web service keeps refusing guests.
+
 ### Added
 - **A page of the block's own, offered as the start page.** A new setting, `enable_page` (off by
   default), serves the block's content at `/blocks/dimensions/index.php` with only the theme's
