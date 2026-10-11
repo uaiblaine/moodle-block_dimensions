@@ -111,19 +111,95 @@ final class page_test extends advanced_testcase {
     }
 
     /**
-     * A guest is refused, as the block's web service refuses one.
+     * A guest whose home page is this very page is refused: redirecting home would loop.
+     *
+     * The control is the next test: the same guest with another home page is redirected.
      *
      * @return void
      */
-    public function test_a_guest_is_refused(): void {
+    public function test_a_guest_whose_home_is_this_page_is_refused(): void {
+        global $CFG;
+
+        $this->resetAfterTest();
+        set_config('enabled', 1, 'core_competency');
+        set_config('enable_page', 1, 'block_dimensions');
+        $CFG->defaulthomepage = page::PATH;
+        $this->setGuestUser();
+        $this->assertSame(HOMEPAGE_URL, get_home_page());
+
+        $this->expectException(\moodle_exception::class);
+        $this->expectExceptionMessage(get_string('noguest', 'error'));
+        page::require_access();
+    }
+
+    /**
+     * A guest is sent to the site home, whatever the home page is, unless it is this page.
+     *
+     * @return void
+     */
+    public function test_a_guest_is_redirected_to_the_site_home(): void {
+        global $CFG;
+
         $this->resetAfterTest();
         set_config('enabled', 1, 'core_competency');
         set_config('enable_page', 1, 'block_dimensions');
         $this->setGuestUser();
 
+        $CFG->defaulthomepage = HOMEPAGE_SITE;
+        $this->assertNotSame(HOMEPAGE_URL, get_home_page());
+        $this->assertTrue($this->redirects(), 'a guest with the site front page as home was not redirected');
+
+        $CFG->defaulthomepage = '/course/index.php';
+        $this->assertSame(HOMEPAGE_URL, get_home_page());
+        $this->assertTrue($this->redirects(), 'a guest whose home is another URL was not redirected');
+
+        $CFG->defaulthomepage = page::PATH . '?x=1';
+        $this->assertSame(HOMEPAGE_URL, get_home_page());
         $this->expectException(\moodle_exception::class);
         $this->expectExceptionMessage(get_string('noguest', 'error'));
         page::require_access();
+    }
+
+    /**
+     * The directory forms of the page's path are this page too, a sibling directory is not.
+     *
+     * @return void
+     */
+    public function test_a_guest_whose_home_is_the_directory_form_is_refused(): void {
+        global $CFG;
+
+        $this->resetAfterTest();
+        set_config('enabled', 1, 'core_competency');
+        set_config('enable_page', 1, 'block_dimensions');
+        $this->setGuestUser();
+
+        $CFG->defaulthomepage = '/blocks/dimensions2/';
+        $this->assertTrue($this->redirects(), 'a sibling directory is another page');
+
+        foreach (['/blocks/dimensions/', '/blocks/dimensions', '/blocks/dimensions/index.php/'] as $directory) {
+            $CFG->defaulthomepage = $directory;
+            try {
+                page::require_access();
+                $this->fail('The directory form "' . $directory . '" was let through.');
+            } catch (\moodle_exception $e) {
+                $this->assertSame('noguest', $e->errorcode);
+            }
+        }
+    }
+
+    /**
+     * A signed-in user is not affected by the guest gate, whatever the home page is.
+     *
+     * @return void
+     */
+    public function test_a_user_is_not_affected_by_the_guest_gate(): void {
+        global $CFG;
+
+        $this->resetAfterTest();
+        $this->enable_page_for_a_user();
+        $CFG->defaulthomepage = page::PATH;
+
+        $this->assertFalse($this->redirects(), 'a signed-in user was sent away from the enabled page');
     }
 
     /**

@@ -61,18 +61,47 @@ class page extends summary {
     }
 
     /**
+     * Whether sending a guest to the site home would bring them straight back to this page.
+     *
+     * The site front page (index.php) always redirects a home page of type URL, even with redirect=0,
+     * so a guest whose home resolves to this page's own URL would bounce between the two. The test
+     * reads the home page of the current user, the guest, the way core resolves it.
+     *
+     * @return bool
+     */
+    private static function home_redirect_would_loop(): bool {
+        if (get_home_page() !== HOMEPAGE_URL) {
+            return false;
+        }
+        $home = get_default_home_page_url();
+
+        if ($home === null) {
+            return false;
+        }
+        // The directory form ('/blocks/dimensions/', with or without the slash) is served by index.php too.
+        $path = rtrim(preg_replace('~/index\.php$~', '', rtrim($home->get_path(false), '/')), '/');
+
+        return $path === (new \moodle_url(dirname(self::PATH)))->get_path(false);
+    }
+
+    /**
      * The page's two gates, after require_login(): no guest, and no page while it is off.
      *
-     * A guest is refused the way the block's web service refuses one. A page that is off redirects
-     * to the Dashboard: a start page stored before the setting changed must land somewhere, and the
-     * Dashboard is where the block already is.
+     * A guest goes to the site home, the way core's my/index.php sends a guest away from a Dashboard
+     * that is off for guests. The exception is a home page that is this very page: the redirect would
+     * loop, so that guest still gets the "no guests" error. The block's web service keeps refusing
+     * a guest outright. A page that is off redirects to the Dashboard: a start page stored before the
+     * setting changed must land somewhere, and the Dashboard is where the block already is.
      *
      * @return void
-     * @throws \moodle_exception For a guest.
+     * @throws \moodle_exception For a guest whose home page is this page.
      */
     public static function require_access(): void {
         if (isguestuser()) {
-            throw new \moodle_exception('noguest');
+            if (self::home_redirect_would_loop()) {
+                throw new \moodle_exception('noguest');
+            }
+            redirect(new \moodle_url('/'));
         }
         if (!self::is_enabled()) {
             redirect(new \moodle_url('/my/'));
