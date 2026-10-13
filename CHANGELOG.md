@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Changed
+- **The block's dataset no longer holds the session lock.** `block_dimensions_get_block_dataset`,
+  the one read service, now declares `'readonlysession' => true`, as core does for its own reads, so
+  the Dashboard's block loads no longer wait for the page's other requests of the same session, or
+  delay them. It takes effect only on a site that sets `$CFG->enable_read_only_sessions`, with its
+  session-mode caches mapped outside the session store. Nothing on its path writes `$SESSION`: the
+  metadata comes from `local_dimensions`' application-mode caches, and the session cache the
+  return-to-plan button uses is written only by `set_return_context`, a write service.
+  `tests/external/readonly_session_test.php` checks that every read and no write carries the flag
+  and compares `$SESSION` around the first load, the competency group and the favourites filter.
+  Measured on Moodle 5.2 with the site flag on, four simultaneous calls took 3.0 and 3.6 times one
+  call before the change and 1.7 and 2.3 times after it.
 - **A guest on the block's page goes to the site home.** Instead of the "No guests here!" error,
   `/blocks/dimensions/index.php` redirects a guest to `/`, the way core's `my/index.php` does. A guest
   whose home page is this very page still gets the error, because core's front page always redirects a

@@ -32,6 +32,7 @@ $functions = [
         'description' => 'Returns the complete non-paginated dataset for block_dimensions cards and filters.',
         'type' => 'read',
         'ajax' => true,
+        'readonlysession' => true,
     ],
     'block_dimensions_toggle_favourite' => [
         'classname' => 'block_dimensions\\external\\toggle_favourite',
