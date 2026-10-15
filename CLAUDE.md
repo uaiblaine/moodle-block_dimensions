@@ -507,7 +507,7 @@ rather than a paragraph.** Each method names the mutation that must redden it.
   of core's compiled values (Boost's `theme/styles.php` sheet on 5.2, Boost Union's
   on 4.5): re-read them from the compiled sheets when Moodle updates Bootstrap,
   or the floors are measured against colours core no longer ships.
-- `tests/local/bootstrap_markup_test.php` (5 methods, `@coversNothing`) — no
+- `tests/local/bootstrap_markup_test.php` (5 methods, `#[CoversNothing]`) — no
   Bootstrap 4 class names (`ml-*`, `sr-only`, `text-left`… resolve on 5.x only
   through `bs4-compat.scss`, which Moodle 6.0 deletes), badges state their text
   colour, no BS4 data-API attributes (`data-toggle`… — 5.3 reads `data-bs-*`
@@ -640,7 +640,8 @@ HTML; **zero `html_writer`** in plugin code.
 
 ## PHPUnit tests
 - `tests/<area>/<thing>_test.php`; class extends `\advanced_testcase`;
-  `@covers` on the docblock; `$this->resetAfterTest()` in any DB test.
+  `#[CoversClass]` attributes on the class (docblock `@covers` on the older branches);
+  `$this->resetAfterTest()` in any DB test.
 - Coverage: `mdl ci moodle-block_dimensions --branch MOODLE_503_STABLE --php 8.4 --coverage`.
   `tests/coverage.php` adds `block_dimensions.php` and `db/uninstall.php`, which
   core's default list leaves out. Measured 2026-09-24: 99.6% of lines (905/909),
@@ -648,12 +649,14 @@ HTML; **zero `html_writer`** in plugin code.
   `$info === null` / empty-items skips in the privacy export (the favourite row was
   just read, so core cannot return null for it) and the `catch (\Exception)` in
   `build_plan_trail_payload()`, which needs a real database failure.
-- `@covers` is **class-scoped** and names every production class the file really
+- Coverage metadata is **class-scoped** and names every production class the file really
   executes (`dimensions_test` runs the renderer and `summary` too). The method-scoped
   form this suite used before credited only the named method and discarded every other
-  line the test ran: it read 65.4% over a suite that executed 91.3%. It stays in docblock
-  form, not attributes, on this branch as on the others. `provider_test.php` still uses the
-  method form.
+  line the test ran: it read 65.4% over a suite that executed 91.3%. Metadata is in attributes
+  (`#[CoversClass]`, `#[CoversFunction]`, `#[CoversNothing]`, `#[DataProvider]`) on `main` (5.3, PHPUnit
+  11), because moodle-cs on the 4.5 leg cannot see them; `MOODLE_405/501/502_STABLE` keep docblock
+  tags, and there `provider_test.php` still uses the method form. On `main` it carries a class-level
+  `#[CoversClass]` for the provider.
 - `dataset_provider_test.php` uses an **anonymous-class double** exposing
   protected helpers as `test_*()` proxies (they are not tests) and stubbing the
   data fetchers (`fetch_bulk_competency_metadata`, which reads the

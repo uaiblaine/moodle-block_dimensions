@@ -19,6 +19,7 @@ namespace block_dimensions\local;
 use advanced_testcase;
 use core_competency\plan;
 use local_dimensions\constants;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * PHPUnit tests for dataset provider helper behavior.
@@ -27,8 +28,8 @@ use local_dimensions\constants;
  * @category   test
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers \block_dimensions\local\dataset_provider
  */
+#[CoversClass(\block_dimensions\local\dataset_provider::class)]
 final class dataset_provider_test extends advanced_testcase {
     /**
      * Build a test double exposing protected helper methods as public test_*() proxies.

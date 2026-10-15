@@ -18,6 +18,7 @@ namespace block_dimensions\output;
 
 use advanced_testcase;
 use block_dimensions\local\dataset_provider;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the summary renderable's block gate.
@@ -26,8 +27,8 @@ use block_dimensions\local\dataset_provider;
  * @category   test
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \block_dimensions\output\summary
  */
+#[CoversClass(\block_dimensions\output\summary::class)]
 final class summary_test extends advanced_testcase {
     /**
      * A failure reading the plan list opens the gate instead of throwing, and is logged.

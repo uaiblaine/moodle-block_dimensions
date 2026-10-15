@@ -28,21 +28,19 @@ namespace block_dimensions;
 use advanced_testcase;
 use block_dimensions\output\page;
 use core_user\hook\extend_default_homepage;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * The start page option: offered while the page is enabled, and resolved by core.
  *
  * The hook is dispatched through core's hook manager, so db/hooks.php is part of what is tested.
- * The metadata stays in docblock form while the plugin supports 4.5: moodle-cs on that leg cannot
- * see attributes and warns per method.
- *
  * @package    block_dimensions
  * @category   test
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \block_dimensions\hook_callbacks
- * @covers     \block_dimensions\output\page
  */
+#[CoversClass(\block_dimensions\hook_callbacks::class)]
+#[CoversClass(\block_dimensions\output\page::class)]
 final class hook_callbacks_test extends advanced_testcase {
     /**
      * The options core's start page setting gets from every callback.

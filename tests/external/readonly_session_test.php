@@ -19,6 +19,7 @@ namespace block_dimensions\external;
 use advanced_testcase;
 use core_competency\plan;
 use core_external\external_api;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * A service declared 'readonlysession' runs without the session lock, so nothing it writes to
@@ -30,16 +31,13 @@ use core_external\external_api;
  * every call the block makes, the way the browser makes it, with local_dimensions' caches cold so
  * every fill runs. $USER is not compared, as core does not compare it.
  *
- * The metadata stays in docblocks rather than attributes because the plugin still supports
- * Moodle 4.5, whose moodle-cs cannot see attributes.
- *
  * @package    block_dimensions
  * @category   test
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers \block_dimensions\external\get_block_dataset
- * @covers \block_dimensions\local\dataset_provider
  */
+#[CoversClass(\block_dimensions\external\get_block_dataset::class)]
+#[CoversClass(\block_dimensions\local\dataset_provider::class)]
 final class readonly_session_test extends advanced_testcase {
     /** @var string[] The local_dimensions cache definitions the dataset reads, purged before every call. */
     private const CACHES = ['template_metadata', 'competency_metadata', 'plan_trail'];

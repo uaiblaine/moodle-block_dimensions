@@ -22,6 +22,7 @@ use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\writer;
 use core_privacy\tests\provider_testcase;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * PHPUnit tests for the block_dimensions privacy provider.
@@ -30,8 +31,8 @@ use core_privacy\tests\provider_testcase;
  * @category   test
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversDefaultClass \block_dimensions\privacy\provider
  */
+#[CoversClass(\block_dimensions\privacy\provider::class)]
 final class provider_test extends provider_testcase {
     /**
      * Create a block_dimensions favourite in the user's own context, where the plugin keeps all of them.
@@ -71,7 +72,6 @@ final class provider_test extends provider_testcase {
      * which is all moodle-plugin-ci runs, so the check is repeated here: a metadata provider
      * without a request data provider fails it ({@see \core_privacy\manager::component_is_compliant()}).
      *
-     * @covers \block_dimensions\privacy\provider
      * @return void
      */
     public function test_the_component_is_compliant(): void {
@@ -80,8 +80,6 @@ final class provider_test extends provider_testcase {
 
     /**
      * Test that metadata is returned correctly.
-     *
-     * @covers ::get_metadata
      */
     public function test_get_metadata(): void {
         $collection = new \core_privacy\local\metadata\collection('block_dimensions');
@@ -92,8 +90,6 @@ final class provider_test extends provider_testcase {
 
     /**
      * Test that correct contexts are returned for a user.
-     *
-     * @covers ::get_contexts_for_userid
      */
     public function test_get_contexts_for_userid(): void {
         $this->resetAfterTest();
@@ -113,8 +109,6 @@ final class provider_test extends provider_testcase {
 
     /**
      * Test that users in a context are returned correctly.
-     *
-     * @covers ::get_users_in_context
      */
     public function test_get_users_in_context(): void {
         $this->resetAfterTest();
@@ -149,8 +143,6 @@ final class provider_test extends provider_testcase {
      * nothing here whether or not this plugin's own guard runs first - deleting the guard cannot
      * change this test's outcome. Kept as a regression check on that underlying assumption, which
      * every other test in this file relies on for isolation between components.
-     *
-     * @covers ::get_users_in_context
      */
     public function test_get_users_in_context_ignores_other_components(): void {
         $this->resetAfterTest();
@@ -172,8 +164,6 @@ final class provider_test extends provider_testcase {
      * whether or not the instanceof context_user guard ran, because there would be nothing for
      * core's own contextid filter to find either way. The control seeds exactly the row that filter
      * WOULD find, so only the plugin's own guard keeps it out of the answer.
-     *
-     * @covers ::get_users_in_context
      */
     public function test_get_users_in_context_ignores_non_user_contexts(): void {
         $this->resetAfterTest();
@@ -190,8 +180,6 @@ final class provider_test extends provider_testcase {
 
     /**
      * Test that user data is exported correctly.
-     *
-     * @covers ::export_user_data
      */
     public function test_export_user_data(): void {
         $this->resetAfterTest();
@@ -219,8 +207,6 @@ final class provider_test extends provider_testcase {
 
     /**
      * Test that all user data in a context is deleted correctly.
-     *
-     * @covers ::delete_data_for_all_users_in_context
      */
     public function test_delete_data_for_all_users_in_context(): void {
         global $DB;
@@ -247,8 +233,6 @@ final class provider_test extends provider_testcase {
      * context_user guard runs, so on its own it would not catch the guard's deletion. The
      * system-context favourite is the row the guard actually protects: without it, core's filter
      * would find and delete that row too.
-     *
-     * @covers ::delete_data_for_all_users_in_context
      */
     public function test_delete_data_for_all_users_in_context_ignores_non_user_context(): void {
         global $DB;
@@ -273,8 +257,6 @@ final class provider_test extends provider_testcase {
 
     /**
      * Test that user data is deleted correctly for a specific user.
-     *
-     * @covers ::delete_data_for_user
      */
     public function test_delete_data_for_user(): void {
         global $DB;
@@ -305,8 +287,6 @@ final class provider_test extends provider_testcase {
 
     /**
      * Test that data is deleted correctly for multiple users.
-     *
-     * @covers ::delete_data_for_users
      */
     public function test_delete_data_for_users(): void {
         global $DB;
@@ -329,8 +309,6 @@ final class provider_test extends provider_testcase {
     /**
      * A context list approved for another component exports nothing; the same list approved for
      * this plugin (the control) exports the favourite.
-     *
-     * @covers ::export_user_data
      */
     public function test_export_user_data_ignores_other_components(): void {
         $this->resetAfterTest();
@@ -351,8 +329,6 @@ final class provider_test extends provider_testcase {
      *
      * The competency favourite recorded against the system context is the row the context guard
      * excludes: without the guard, the export would find it there and write it under that context.
-     *
-     * @covers ::export_user_data
      */
     public function test_export_user_data_exports_only_the_user_context(): void {
         $this->resetAfterTest();
@@ -377,8 +353,6 @@ final class provider_test extends provider_testcase {
      *
      * Core's delete_favourites_for_user() takes the component as an argument rather than from the
      * list, so without the component guard this call would delete them.
-     *
-     * @covers ::delete_data_for_user
      */
     public function test_delete_data_for_user_ignores_other_components(): void {
         global $DB;
@@ -401,8 +375,6 @@ final class provider_test extends provider_testcase {
      *
      * Core's delete_favourites_for_userlist() reads the component from the list, so the rows this
      * guard protects are the other component's own favourites of the item types this plugin uses.
-     *
-     * @covers ::delete_data_for_users
      */
     public function test_delete_data_for_users_ignores_other_components(): void {
         global $DB;
@@ -423,8 +395,6 @@ final class provider_test extends provider_testcase {
     /**
      * A user list in a context other than a user's deletes nothing, even a favourite recorded
      * against that context.
-     *
-     * @covers ::delete_data_for_users
      */
     public function test_delete_data_for_users_ignores_non_user_contexts(): void {
         global $DB;
