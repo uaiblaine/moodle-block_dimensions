@@ -19,43 +19,15 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  # One reusable-workflow call per supported Moodle branch (version.php
-  # $plugin->supported) — update these when the supported range changes.
-  # The highest branch runs the full PHP x DB matrix; older branches run
-  # PostgreSQL only. PHPUnit and Behat run on every runtime leg.
-  # block_dimensions depends on local_dimensions (cross-installed below)
-  # and tool_lp (core, already present).
-  ci-502:
-    name: Moodle 5.02
+  # One branch per Moodle version: this branch serves Moodle 5.3 only ($plugin->supported =
+  # [503, 503]), so it has one job, with the full PHP x DB matrix. The other versions live on their
+  # own MOODLE_*_STABLE branches, each with its own ci.yml.
+  # block_dimensions depends on local_dimensions (version.php $plugin->dependencies), installed
+  # below from the branch that serves the same Moodle version, and on tool_lp (core).
+  ci-503:
+    name: Moodle 5.03
     uses: moodle-an-hochschulen/moodle-workflows/.github/workflows/moodle-plugin-ci.yml@main
     with:
-      moodle-core-branch: MOODLE_502_STABLE
-      plugin-dependencies: |
-        uaiblaine/moodle-local_dimensions,main
-
-  ci-501:
-    name: Moodle 5.01
-    uses: moodle-an-hochschulen/moodle-workflows/.github/workflows/moodle-plugin-ci.yml@main
-    with:
-      moodle-core-branch: MOODLE_501_STABLE
-      one-db-only: true
-      plugin-dependencies: |
-        uaiblaine/moodle-local_dimensions,main
-
-  ci-500:
-    name: Moodle 5.00
-    uses: moodle-an-hochschulen/moodle-workflows/.github/workflows/moodle-plugin-ci.yml@main
-    with:
-      moodle-core-branch: MOODLE_500_STABLE
-      one-db-only: true
-      plugin-dependencies: |
-        uaiblaine/moodle-local_dimensions,main
-
-  ci-405:
-    name: Moodle 4.05
-    uses: moodle-an-hochschulen/moodle-workflows/.github/workflows/moodle-plugin-ci.yml@main
-    with:
-      moodle-core-branch: MOODLE_405_STABLE
-      one-db-only: true
+      moodle-core-branch: MOODLE_503_STABLE
       plugin-dependencies: |
         uaiblaine/moodle-local_dimensions,main

@@ -13,7 +13,8 @@ A Moodle block plugin that turns the learner's active learning plans into a dash
 Requirements
 ------------
 
-- Moodle 4.5 or later (tested up to Moodle 5.2)
+- Moodle 5.3 (branch `MOODLE_503_STABLE`; each Moodle version has its own branch:
+  `MOODLE_405_STABLE`, `MOODLE_501_STABLE`, `MOODLE_502_STABLE`, `MOODLE_503_STABLE` = `main`)
 - Core competencies enabled (`core_competency`)
 - [local_dimensions](https://moodle.org/plugins/local_dimensions) v2.0 or later — the block reads all card metadata through its caches
 
