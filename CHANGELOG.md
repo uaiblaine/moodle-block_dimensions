@@ -2,7 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## [v4.5-r1] - Unreleased
+
+### Upgrading
+
+- **One branch per Moodle version.** This is `MOODLE_405_STABLE`, for Moodle 4.5 only
+  (`$plugin->supported = [405, 405]`, version `2024100700`), and it requires local_dimensions from its
+  own `MOODLE_405_STABLE` branch (`2024100700`). The other Moodle versions are served by
+  `MOODLE_501_STABLE`, `MOODLE_502_STABLE`, `MOODLE_503_STABLE`. Each branch numbers its releases inside its Moodle version's namespace, as
+  moodle.org expects, so every number is below the date-numbered releases that came before (the
+  last was `2026101300`, v2.0). Moodle 5.0 is no longer supported.
+- **Switching a site from a date-numbered release**: replace the files of both plugins with the
+  branch for the site's Moodle, then
+  `php admin/cli/cfg.php --component=block_dimensions --name=version --set=2024100699` and the same
+  for local_dimensions, then `php admin/cli/upgrade.php`. Without the version reset Moodle
+  refuses the new files as a downgrade. The block has no upgrade steps.
 
 ### Changed
 - **The block's dataset no longer holds the session lock.** `block_dimensions_get_block_dataset`,
