@@ -22,6 +22,8 @@ use context_course;
 use context_system;
 use core_competency\api;
 use core_competency\plan;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * PHPUnit block_dimensions tests
@@ -30,10 +32,10 @@ use core_competency\plan;
  * @category   test
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers \block_dimensions
- * @covers \block_dimensions\output\renderer
- * @covers \block_dimensions\output\summary
  */
+#[CoversClass(\block_dimensions::class)]
+#[CoversClass(\block_dimensions\output\renderer::class)]
+#[CoversClass(\block_dimensions\output\summary::class)]
 final class dimensions_test extends advanced_testcase {
     public static function setUpBeforeClass(): void {
         require_once(__DIR__ . '/../../moodleblock.class.php');
@@ -159,10 +161,10 @@ final class dimensions_test extends advanced_testcase {
      * the plan list, so the draft case is excluded for its status and not merely hidden by a
      * capability - without that, it would pass having tested nothing.
      *
-     * @dataProvider plan_status_provider
      * @param int $status Status of the only plan the viewer holds.
      * @param bool $rendered Whether the block is expected to render.
      */
+    #[DataProvider('plan_status_provider')]
     public function test_get_content_follows_the_plan_status(int $status, bool $rendered): void {
         global $CFG;
         $this->resetAfterTest();

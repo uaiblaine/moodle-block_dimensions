@@ -16,6 +16,8 @@
 
 namespace block_dimensions\local;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
+
 /**
  * Layout and cascade invariants of styles.css.
  *
@@ -26,8 +28,8 @@ namespace block_dimensions\local;
  * @category   test
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversNothing
  */
+#[CoversNothing]
 final class card_layout_test extends \basic_testcase {
     /** @var string The custom property every card grid reads its track floor from. */
     private const TRACK_FLOOR = '--dims-card-track-min';

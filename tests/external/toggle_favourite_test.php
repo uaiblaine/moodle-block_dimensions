@@ -18,6 +18,7 @@ namespace block_dimensions\external;
 
 use advanced_testcase;
 use core_external\external_api;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * PHPUnit tests for toggle_favourite external endpoint.
@@ -34,8 +35,8 @@ use core_external\external_api;
  * @category   test
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers \block_dimensions\external\toggle_favourite
  */
+#[CoversClass(\block_dimensions\external\toggle_favourite::class)]
 final class toggle_favourite_test extends advanced_testcase {
     /** @var string Web service function name registered in db/services.php. */
     private const WSFUNCTION = 'block_dimensions_toggle_favourite';
