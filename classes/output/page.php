@@ -43,7 +43,7 @@ namespace block_dimensions\output;
  */
 class page extends summary {
     /** @var string The page's local path: the start page option's key and the URL index.php sets. */
-    public const PATH = '/blocks/dimensions/index.php';
+    public const string PATH = '/blocks/dimensions/index.php';
 
     /**
      * Whether the page is served: enable_page holds an explicit 1 and competencies are enabled.
