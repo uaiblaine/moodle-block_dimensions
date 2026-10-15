@@ -26,6 +26,7 @@ namespace block_dimensions\output;
 
 use renderable;
 use renderer_base;
+use stdClass;
 use templatable;
 use block_dimensions\local\dataset_provider;
 
@@ -41,7 +42,7 @@ use block_dimensions\local\dataset_provider;
  */
 class summary implements renderable, templatable {
     /** @var stdClass The user. */
-    protected $user;
+    protected readonly stdClass $user;
 
     /**
      * Constructor.
@@ -61,6 +62,7 @@ class summary implements renderable, templatable {
      * @param renderer_base $output
      * @return array
      */
+    #[\Override]
     public function export_for_template(renderer_base $output) {
         $uiconfig = dataset_provider::get_ui_config();
 

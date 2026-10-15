@@ -206,6 +206,8 @@ docs/proposals/              To-be designs and the decisions behind them, one
 
 ## Architecture gotchas
 
+- **The 5.3 line uses PHP 8.3 constructs** (`#[\Override]`, typed class constants, `readonly`; PHP 8.4 syntax stays out). A cherry-pick to the older branches drops them. `#[\Override]` goes only on methods core or an interface declares: not on `init()`, nor on `execute*()` of an `external_api` subclass, which core does not declare.
+
 ### Client-side rendering, server-side shell
 `summary.mustache` is a shell: `summary::export_for_template()` only exports
 `labelsjson` / `filtersettingsjson` / flags. `amd/src/filters.js` calls the WS

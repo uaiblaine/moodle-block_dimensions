@@ -66,13 +66,13 @@ class dataset_provider {
     }
 
     /** @var string The plans the learner is working on. */
-    public const BUCKET_ACTIVE = 'active';
+    public const string BUCKET_ACTIVE = 'active';
 
     /** @var string Plans waiting for a review and plans a reviewer has already opened. */
-    public const BUCKET_REVIEW = 'review';
+    public const string BUCKET_REVIEW = 'review';
 
     /** @var string Plans that have been completed. */
-    public const BUCKET_COMPLETE = 'complete';
+    public const string BUCKET_COMPLETE = 'complete';
 
     /**
      * @var array The statuses each status bucket carries, keyed by bucket name.
@@ -81,7 +81,7 @@ class dataset_provider {
      * only plan is a draft would open a block with nothing in it. The two review statuses share one
      * bucket; core counts both as draft statuses ({@see \core_competency\plan::get_draft_statuses()}).
      */
-    protected const BUCKET_STATUSES = [
+    protected const array BUCKET_STATUSES = [
         self::BUCKET_ACTIVE => [plan::STATUS_ACTIVE],
         self::BUCKET_REVIEW => [plan::STATUS_WAITING_FOR_REVIEW, plan::STATUS_IN_REVIEW],
         self::BUCKET_COMPLETE => [plan::STATUS_COMPLETE],

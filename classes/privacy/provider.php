@@ -48,10 +48,10 @@ class provider implements
     \core_privacy\local\request\core_userlist_provider,
     \core_privacy\local\request\plugin\provider {
     /** @var string Frankenstyle component name used by this plugin. */
-    private const COMPONENT = 'block_dimensions';
+    private const string COMPONENT = 'block_dimensions';
 
     /** @var string[] Item types in core_favourites; keep in step with {@see \block_dimensions\external\toggle_favourite}. */
-    private const ITEMTYPES = ['plan', 'competency'];
+    private const array ITEMTYPES = ['plan', 'competency'];
 
     /**
      * Returns meta data about this system.
@@ -59,6 +59,7 @@ class provider implements
      * @param collection $collection The initialised collection to add items to.
      * @return collection A listing of user data stored through this system.
      */
+    #[\Override]
     public static function get_metadata(collection $collection): collection {
         $collection->add_subsystem_link(
             'core_favourites',
@@ -74,6 +75,7 @@ class provider implements
      * @param int $userid The user to search.
      * @return contextlist The list of contexts used in this plugin.
      */
+    #[\Override]
     public static function get_contexts_for_userid(int $userid): contextlist {
         $contextlist = new contextlist();
         foreach (self::ITEMTYPES as $itemtype) {
@@ -92,6 +94,7 @@ class provider implements
      *
      * @param userlist $userlist The userlist containing the list of users who have data.
      */
+    #[\Override]
     public static function get_users_in_context(userlist $userlist) {
         if ($userlist->get_component() !== self::COMPONENT) {
             return;
@@ -109,6 +112,7 @@ class provider implements
      *
      * @param approved_contextlist $contextlist The approved contexts to export information for.
      */
+    #[\Override]
     public static function export_user_data(approved_contextlist $contextlist) {
         global $DB;
 
@@ -168,6 +172,7 @@ class provider implements
      *
      * @param context $context The specific context to delete data for.
      */
+    #[\Override]
     public static function delete_data_for_all_users_in_context(context $context) {
         if (!$context instanceof context_user) {
             return;
@@ -186,6 +191,7 @@ class provider implements
      *
      * @param approved_contextlist $contextlist The approved contexts and user to delete data for.
      */
+    #[\Override]
     public static function delete_data_for_user(approved_contextlist $contextlist) {
         if ($contextlist->get_component() !== self::COMPONENT) {
             return;
@@ -204,6 +210,7 @@ class provider implements
      *
      * @param approved_userlist $userlist The approved context and users to delete data for.
      */
+    #[\Override]
     public static function delete_data_for_users(approved_userlist $userlist) {
         if ($userlist->get_component() !== self::COMPONENT) {
             return;
