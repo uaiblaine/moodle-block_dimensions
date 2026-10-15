@@ -19,43 +19,15 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  # One reusable-workflow call per supported Moodle branch (version.php
-  # $plugin->supported) — update these when the supported range changes.
-  # The highest branch runs the full PHP x DB matrix; older branches run
-  # PostgreSQL only. PHPUnit and Behat run on every runtime leg.
-  # block_dimensions depends on local_dimensions (cross-installed below)
-  # and tool_lp (core, already present).
-  ci-502:
-    name: Moodle 5.02
-    uses: moodle-an-hochschulen/moodle-workflows/.github/workflows/moodle-plugin-ci.yml@main
-    with:
-      moodle-core-branch: MOODLE_502_STABLE
-      plugin-dependencies: |
-        uaiblaine/moodle-local_dimensions,main
-
+  # One branch per Moodle version: this branch serves Moodle 5.1 only ($plugin->supported =
+  # [501, 501]), so it has one job, with the full PHP x DB matrix. The other versions live on their
+  # own MOODLE_*_STABLE branches, each with its own ci.yml.
+  # block_dimensions depends on local_dimensions (version.php $plugin->dependencies), installed
+  # below from the branch that serves the same Moodle version, and on tool_lp (core).
   ci-501:
     name: Moodle 5.01
     uses: moodle-an-hochschulen/moodle-workflows/.github/workflows/moodle-plugin-ci.yml@main
     with:
       moodle-core-branch: MOODLE_501_STABLE
-      one-db-only: true
       plugin-dependencies: |
-        uaiblaine/moodle-local_dimensions,main
-
-  ci-500:
-    name: Moodle 5.00
-    uses: moodle-an-hochschulen/moodle-workflows/.github/workflows/moodle-plugin-ci.yml@main
-    with:
-      moodle-core-branch: MOODLE_500_STABLE
-      one-db-only: true
-      plugin-dependencies: |
-        uaiblaine/moodle-local_dimensions,main
-
-  ci-405:
-    name: Moodle 4.05
-    uses: moodle-an-hochschulen/moodle-workflows/.github/workflows/moodle-plugin-ci.yml@main
-    with:
-      moodle-core-branch: MOODLE_405_STABLE
-      one-db-only: true
-      plugin-dependencies: |
-        uaiblaine/moodle-local_dimensions,main
+        uaiblaine/moodle-local_dimensions,MOODLE_501_STABLE
