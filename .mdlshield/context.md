@@ -4,7 +4,7 @@
 competencies of those plans as cards, with status tabs, tag filters and a favourite star. It is
 a sibling of `local_dimensions` and depends on it (and on `tool_lp`): card metadata (tags,
 colours, images, trails) comes only from `local_dimensions` cache classes, and plans come from
-the core competency API. It supports Moodle 4.5 through 5.2 on one branch. **It defines no
+the core competency API. It supports Moodle 4.5 through 5.3, one branch per Moodle version (main is 5.3). **It defines no
 database tables of its own**; the only rows it writes are core favourites.
 
 ## Who is trusted
@@ -70,8 +70,9 @@ database tables of its own**; the only rows it writes are core favourites.
   in `get_block_dataset::execute_returns()`.
 - **`styles.css` ends with a Bootstrap 4 polyfill** scoped to the block's content root, and
   colours come from theme tokens with fallbacks. Neither is a security matter.
-- **One branch spans Moodle 4.5 to 5.2**, so code that branches on version or checks for a
-  helper before calling it is deliberate.
+- **Each branch serves one Moodle version, and 4.5 through 5.2 carry the code of the 5.3
+  `main` from before its 4.5 compatibility code was dropped**, so code that branches on version
+  or checks for a helper before calling it may still be there, deliberately.
 
 ## De-emphasise
 

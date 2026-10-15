@@ -18,9 +18,23 @@ tags, colours, trail data) comes from that plugin's MUC caches
 It defines **no database tables of its own** (`db/` has no `install.xml`); the
 only persistent data it produces is **favourites in the core `favourite`
 table** under component `block_dimensions`. Depends on `tool_lp` (core) and
-`local_dimensions` (`version.php` `$plugin->dependencies`). Supports Moodle
-**4.5 through 5.2** (`$plugin->requires = 2024100702`,
-`$plugin->supported = [405, 502]`). Development happens on Moodle 5.1.
+`local_dimensions` (`version.php` `$plugin->dependencies`).
+
+**One branch per Moodle version** (since v*-r1, 2026-10-15), each `$plugin->supported = [N, N]`
+with its own `version.php`, `ci.yml` (one MAH job, full matrix) and README line, and each
+depending on local_dimensions' branch for the same Moodle version (its first number):
+
+| Branch | Version namespace | Checkout (`~/dev`) | Stacks |
+|---|---|---|---|
+| `MOODLE_405_STABLE` | `20241007XX` (requires `2024100702`) | `moodle-block_dimensions-405` | m405 |
+| `MOODLE_501_STABLE` | `20251006XX` | `moodle-block_dimensions-501` | m501 |
+| `MOODLE_502_STABLE` | `20260420XX` | `moodle-block_dimensions-502` | m502, m502b |
+| `MOODLE_503_STABLE` = `main` | `20261005XX` | `moodle-block_dimensions` | m503, m503b |
+
+4.5, 5.1 and 5.2 carry the same code; only 5.3 (`main`) sheds the 4.5 compatibility code and
+takes new features. A fix lands on `main` and is cherry-picked to the other three, each keeping
+its own `version.php` and bumping its own counter; after a `version.php` conflict re-read all
+`$plugin->` lines. Moodle 5.0 has no branch.
 
 ## Agent orchestration budget (fleet rule, repeated here on purpose)
 
@@ -51,16 +65,13 @@ definition, and none runs on the session model.
 
 ## Commands
 
-The plugin repo is `~/dev/moodle-block_dimensions` (`uaiblaine/moodle-block_dimensions`,
-branch `main`) and is **bind-mounted** into every stack its `$plugin->supported`
-range admits (m405, m501, m502) per the fleet manifest
-`~/dev/moodle-dev/plugins.conf`. One edit is live in every Moodle version at
-once — there is no clone inside a Moodle checkout any more, and nothing to
-rsync. Run git from this directory (or `git -C`), and `git fetch && git pull`
+Each branch's checkout (table above) is **bind-mounted** into the stacks of its Moodle
+version per the fleet manifest `~/dev/moodle-dev/plugins.conf`; an edit is live in those
+stacks only. Run git from this directory (or `git -C`), and `git fetch && git pull`
 before starting so you do not build on a stale base.
 
-`local_dimensions` is a hard dependency in `version.php`, so it is mounted
-alongside on every stack and checked out by every CI job. That matters beyond
+`local_dimensions` is a hard dependency in `version.php`, so its same-branch checkout is
+mounted alongside on every stack and checked out by every CI job. That matters beyond
 installation — see the Behat step-wording rule below.
 
 ### Gates run locally now — this supersedes the old "GitHub is the gate" note
@@ -71,25 +82,24 @@ mustache-lint had no local runner. **That is no longer true**, and the fleet's
 absolute path from an agent's Bash) runs the same legs GitHub does:
 
 ```sh
-mdl ci moodle-block_dimensions --only phpcs,phpdoc,mustache,grunt   # static pass, one leg
-mdl ci moodle-block_dimensions --only leftover                      # the docs-safe gate
-mdl ci moodle-block_dimensions --matrix --behat                     # every leg GitHub runs
-mdl phpunit m502 block_dimensions
-mdl behat m502 /var/www/html/public/blocks/dimensions/tests/behat/colour_mode.feature
+mdl ci moodle-block_dimensions --branch MOODLE_503_STABLE --only phpcs,phpdoc,mustache,grunt
+mdl ci moodle-block_dimensions --branch MOODLE_503_STABLE --only leftover   # the docs-safe gate
+mdl ci moodle-block_dimensions-502 --matrix --behat   # the branch's checkout: every leg GitHub runs
+mdl phpunit m503 block_dimensions
+mdl behat m503 /var/www/html/public/blocks/dimensions/tests/behat/colour_mode.feature
 ```
 
 `mdl ci` with no flags is **one leg**, not the pipeline — it defaults to
-`MOODLE_501_STABLE` / PHP 8.3 / pgsql. Use `--matrix` before pushing. A
+`MOODLE_501_STABLE` / PHP 8.3 / pgsql, so always name the branch of the checkout. Use `--matrix` before pushing. A
 `version.php` bump stales the stacks' test sites, so `mdl phpunit-init <stack>`
 / `mdl behat-init <stack>` first.
 
 ### CI pipeline (`.github/workflows/ci.yml`)
 
-The **moodle-an-hochschulen/moodle-workflows** reusable workflow, called once
-per supported Moodle branch (5.02 full PHP × DB matrix; 5.01/5.00/4.05
-one-DB-only). Each call cross-installs `uaiblaine/moodle-local_dimensions,main`
-as a plugin dependency — keep that in every job, and **update the calls when
-`$plugin->supported` changes**. The `push:` trigger is **filtered to `main` and
+The **moodle-an-hochschulen/moodle-workflows** reusable workflow, called once, for the
+branch's own Moodle version, with the full PHP × DB matrix. The call cross-installs
+`uaiblaine/moodle-local_dimensions` from the branch for the same Moodle version (`main` on 5.3)
+as a plugin dependency — keep it, and **update the call when `$plugin->supported` changes**. The `push:` trigger is **filtered to `main` and
 `MOODLE_*_STABLE`** and a `concurrency` block supersedes a superseded run on a
 pull request but **never on `main`**; both are deliberate — a bare `push:` ran
 the whole pipeline twice for one commit, since `pull_request` fires on it too.
@@ -660,7 +670,7 @@ HTML; **zero `html_writer`** in plugin code.
 ## PHPUnit tests
 - `tests/<area>/<thing>_test.php`; class extends `\advanced_testcase`;
   `@covers` on the docblock; `$this->resetAfterTest()` in any DB test.
-- Coverage: `mdl ci moodle-block_dimensions --branch MOODLE_502_STABLE --php 8.4 --coverage`.
+- Coverage: `mdl ci moodle-block_dimensions --branch MOODLE_503_STABLE --php 8.4 --coverage`.
   `tests/coverage.php` adds `block_dimensions.php` and `db/uninstall.php`, which
   core's default list leaves out. Measured 2026-09-24: 99.6% of lines (905/909),
   97.0% of methods (64/66). The four lines left are defensive: the
@@ -836,7 +846,8 @@ reviews).
   key it names; an invalid file stops reviews for the repository until it is fixed, and an
   unknown key only raises a warning on the summary comment.
 - **One Moodle version per repository.** There is no per-branch mapping, so the file pins
-  `moodle.versions: ["5.2"]`. The plugin also runs on older cores, so read a finding about a core API with that in mind.
+  `moodle.versions: ["5.3"]`, the version `main` serves. Review a change on `main`, never its
+  cherry-picks to the older branches, and read a finding about a core API with those in mind.
 - `fail_on.severity` is `high`: the check fails on an open finding at or above it. Code
   quality findings never block, only security findings do.
 - The context file is project knowledge that **influences** the reviewer and is not a
