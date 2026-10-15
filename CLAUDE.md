@@ -161,13 +161,10 @@ classes/
   local/dataset_provider.php Builds the whole dataset: plan cards, competency
                              cards, trail windowing, favourites, UI config.
                              Owns sanitize_color()/sanitize_image_url()
-  local/bootstrap.php        Bootstrap major-version marker for the block's own
-                             root element — gates the BS4 polyfill in styles.css
   local/colour_mode.php      Constants only: the attribute names in the family's
                              dark-mode activation contract. No is_dark() helper,
                              deliberately — see below
   output/summary.php         Renderable shell — ships labels + config JSON only
-                             (incl. `isbs4` for the polyfill gate)
   output/page.php            The page's renderable: a summary subclass, its two
                              gates (require_access) and is_enabled()
   output/renderer.php        render_from_template wrapper (summary, page)
@@ -192,8 +189,8 @@ amd/build/                   Committed minified output (grunt) — keep in sync
 lang/{en,pt_br}/             Both kept in sync, alphabetically sorted
 tests/                       PHPUnit: dataset_provider (double pattern),
                              external functions, privacy, generator,
-                             local/colour_tokens_test, local/bootstrap_compat_test,
-                             local/card_layout_test
+                             local/colour_tokens_test, local/card_layout_test,
+                             local/bootstrap_markup_test
 tests/behat/                 colour_mode, visibility, status_filter, card_filters and page features
 tests/jsharness/             JS regression harness for amd/src (headless Chromium,
                              run.sh; --mutants); export-ignored, no CI step
@@ -477,36 +474,13 @@ at the head of `styles.css`. In short:
   `--bs-emphasis-color` and deliberately *not* `--bs-focus-ring-color`, which
   core fails to flip (`rgba(15, 108, 191, 0.25)`, 1.26:1 on the dark page).
 
-### The Bootstrap 4 polyfill rides the block's content root, not a body class
+### The Bootstrap 4 polyfill exists only on MOODLE_405_STABLE
 
-`styles.css` ends with a polyfill for the BS5 utility families Moodle 4.5 does
-not define, gated on `.block-dimensions-bs4`. The gate is **not optional**:
-a polyfill rule is scoped to the block's root (two classes), so on 5.x it
-outranks core's one-class utility by specificity and would freeze 4.5's
-metrics onto the newer branch. Not by order: plugin CSS is compiled BEFORE
-the theme's, Bootstrap included, so a plugin rule of equal specificity to a
-core rule always loses (fleet `CLAUDE.md`, "Plugin CSS is compiled BEFORE the
-theme's").
-
-**The gate is on the block's content root (`div.block-dimensions-content`,
-written by `summary.mustache` from the renderable's `isbs4`), and that is a
-forced divergence from `local_dimensions`, which uses a body class.** A block
-cannot add a body class: its content is built while the theme layout renders,
-and the layout is included from `$OUTPUT->header()`, by which point
-`moodle_page::add_body_class()` throws ("after output has been started").
-Boost's `drawers.php` does call `blocks('side-pre')` before `body_attributes()`,
-but the page state has already left `STATE_BEFORE_HEADER`, and a content-region
-block renders after the header anyway. `block_dimensions\local\bootstrap`
-therefore has **no `mark_page()`**; do not add one, because there is no point in
-the block's lifecycle at which it could work, and a helper that silently does
-nothing is worse than an absent one. It is safe here specifically because the
-block renders nothing outside its own subtree — no `core/modal`, no
-`document.body` append — so there is no node a body class would have reached
-that the root class does not.
-
-Add a family to the polyfill *before* using its BS5 name;
-`bootstrap_compat_test` fails the build on a BS5 utility the polyfill does not
-cover, and equally on a polyfill rule nothing uses any more.
+This branch serves Moodle 5.3 only. `block_dimensions\local\bootstrap`, the
+`isbs4` export, the `block-dimensions-bs4` root class, the BS4 polyfill in
+`styles.css` and `tests/local/bootstrap_compat_test.php` live on
+`MOODLE_405_STABLE` (a block cannot add a body class, so the marker rode its
+content root there). Do not port them back; write BS5 class names only.
 
 ### What the enforcement tests pin
 
@@ -533,17 +507,14 @@ rather than a paragraph.** Each method names the mutation that must redden it.
   of core's compiled values (Boost's `theme/styles.php` sheet on 5.2, Boost Union's
   on 4.5): re-read them from the compiled sheets when Moodle updates Bootstrap,
   or the floors are measured against colours core no longer ships.
-- `tests/local/bootstrap_compat_test.php` (8 methods) — every BS5 utility used
-  is polyfilled, the polyfill carries nothing unused, no deprecated BS4 class
-  names anywhere (`ml-*`, `sr-only`, `text-left`… resolve on 5.x only through
-  `bs4-compat.scss`, which Moodle 6.0 deletes), badges state their text colour,
-  data-API attributes are paired (`data-toggle` **and** `data-bs-toggle`), no
-  `--mds-*` squatting on core's design-system namespace, and the block root
-  actually carries the Bootstrap marker. The BS4 list includes the `font-weight-*`
-  and `font-italic` families (the card titles set their weight in the stylesheet
-  instead). Both scanners strip Mustache comment
-  spans before reading a template as markup, since a docblock's continuation
-  lines carry no comment marker of their own.
+- `tests/local/bootstrap_markup_test.php` (5 methods, `@coversNothing`) — no
+  Bootstrap 4 class names (`ml-*`, `sr-only`, `text-left`… resolve on 5.x only
+  through `bs4-compat.scss`, which Moodle 6.0 deletes), badges state their text
+  colour, no BS4 data-API attributes (`data-toggle`… — 5.3 reads `data-bs-*`
+  only), no `--mds-*` declarations in the stylesheet, and the scanner skips
+  Mustache docblock prose. Each scan is a method over one file's lines, so a
+  control can feed it a mutated copy without touching the tree. The
+  polyfill-coverage arms exist only on `MOODLE_405_STABLE`.
 - `tests/local/card_layout_test.php` (10 methods) — the card-layout invariants
   below, plus the rules the preference media queries depend on: every
   `prefers-contrast` / `prefers-reduced-motion` query uses a defined value (a
@@ -681,7 +652,7 @@ HTML; **zero `html_writer`** in plugin code.
   executes (`dimensions_test` runs the renderer and `summary` too). The method-scoped
   form this suite used before credited only the named method and discarded every other
   line the test ran: it read 65.4% over a suite that executed 91.3%. It stays in docblock
-  form, not attributes, while 4.5 is supported. `provider_test.php` still uses the
+  form, not attributes, on this branch as on the others. `provider_test.php` still uses the
   method form.
 - `dataset_provider_test.php` uses an **anonymous-class double** exposing
   protected helpers as `test_*()` proxies (they are not tests) and stubbing the
@@ -691,12 +662,12 @@ HTML; **zero `html_writer`** in plugin code.
   seeded plans. The suite still needs `local_dimensions` installed: the provider
   uses its constants and caches directly. Extend that double for new helpers.
 - Generator ids come back as **string** under some drivers — cast `(int)`.
-- `colour_tokens_test` and `bootstrap_compat_test` extend **`\basic_testcase`**,
+- `colour_tokens_test`, `card_layout_test` and `bootstrap_markup_test` extend **`\basic_testcase`**,
   not `advanced_testcase`: they read `styles.css`, the templates and the AMD
   sources off disk and touch no database. Keep them that way — they are the
   fastest gate in the repo and run on every leg.
 - **Mutation-check every assertion you add to them.** Two drafts of
-  `bootstrap_compat_test` passed while blind to the very defect they were
+  `bootstrap_compat_test` (now only on `MOODLE_405_STABLE`) passed while blind to the very defect they were
   written for: one filtered badges by the word "badge" appearing on the same
   line, which missed `match` arms whose method name carried it; the other
   checked class *families*, so removing `.gap-2` still matched via `.gap-1`. A
