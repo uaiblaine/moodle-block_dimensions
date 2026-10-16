@@ -416,6 +416,7 @@ at the head of `styles.css`. In short:
   Moodle 4.5 declares zero `--bs-*` names and Moodle 5.2 declares zero BS4
   legacy names, so **one chain is correct on every supported branch with no
   branch test anywhere**. Never add a branch conditional to a colour.
+- **Family tokens.** Every contract token is wrapped `--block-dimensions-x: var(--dimensions-x, <own chain>)`, the dark redeclarations of `shadow` and `scrim` too (a bare dark literal would beat the theme's dark value); `favourite` stays a literal. The contract lives in `theme_dimensions/docs/tokens.md`; the plugin never declares a `--dimensions-*` name. `colour_tokens_test::test_contract_tokens_read_the_family_token_first` holds it.
 - `body`, not a plugin class and not `:root`, on purpose. `body` is the ancestor
   of every node the plugin paints, including anything core relocates to
   `document.body`, and an unresolved `var()` **does not fall back to its
