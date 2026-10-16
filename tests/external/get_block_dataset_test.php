@@ -18,6 +18,7 @@ namespace block_dimensions\external;
 
 use advanced_testcase;
 use core_competency\plan;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * PHPUnit tests for get_block_dataset external endpoint.
@@ -26,9 +27,9 @@ use core_competency\plan;
  * @category   test
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers \block_dimensions\external\get_block_dataset
- * @covers \block_dimensions\local\dataset_provider
  */
+#[CoversClass(\block_dimensions\external\get_block_dataset::class)]
+#[CoversClass(\block_dimensions\local\dataset_provider::class)]
 final class get_block_dataset_test extends advanced_testcase {
     /**
      * Guest user should be rejected with moodle_exception.

@@ -26,21 +26,19 @@
 namespace block_dimensions\output;
 
 use advanced_testcase;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * The block's own page: the block's shell in the stylesheet's scope, behind its gates.
- *
- * The metadata stays in docblock form while the plugin supports 4.5: moodle-cs on that leg cannot
- * see attributes and warns per method.
  *
  * @package    block_dimensions
  * @category   test
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \block_dimensions\output\page
- * @covers     \block_dimensions\output\renderer
- * @covers     \block_dimensions\output\summary
  */
+#[CoversClass(\block_dimensions\output\page::class)]
+#[CoversClass(\block_dimensions\output\renderer::class)]
+#[CoversClass(\block_dimensions\output\summary::class)]
 final class page_test extends advanced_testcase {
     /**
      * Turn the page and competencies on, and log a fresh user in.

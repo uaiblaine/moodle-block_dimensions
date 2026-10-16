@@ -16,6 +16,8 @@
 
 namespace block_dimensions\local;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
+
 /**
  * Scans the plugin's markup and stylesheet for Bootstrap spellings that fail on Moodle 5.3.
  *
@@ -30,8 +32,8 @@ namespace block_dimensions\local;
  * @package    block_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversNothing
  */
+#[CoversNothing]
 final class bootstrap_markup_test extends \basic_testcase {
     /**
      * Bootstrap 4 class names that 5.x resolves only through its deprecated compatibility sheet.

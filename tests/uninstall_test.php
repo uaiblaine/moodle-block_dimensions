@@ -18,6 +18,7 @@ namespace block_dimensions;
 
 use advanced_testcase;
 use context_user;
+use PHPUnit\Framework\Attributes\CoversFunction;
 
 /**
  * PHPUnit tests for block_dimensions' uninstall hook.
@@ -26,8 +27,8 @@ use context_user;
  * @category   test
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers ::xmldb_block_dimensions_uninstall
  */
+#[CoversFunction('xmldb_block_dimensions_uninstall')]
 final class uninstall_test extends advanced_testcase {
     public static function setUpBeforeClass(): void {
         require_once(__DIR__ . '/../db/uninstall.php');
