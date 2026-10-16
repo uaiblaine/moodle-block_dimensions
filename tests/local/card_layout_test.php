@@ -26,7 +26,7 @@ namespace block_dimensions\local;
  * @category   test
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \block_dimensions\local\bootstrap
+ * @coversNothing
  */
 final class card_layout_test extends \basic_testcase {
     /** @var string The custom property every card grid reads its track floor from. */
