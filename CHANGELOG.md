@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
   Version `2026100501`.
 
 ### Changed
+- **PHP 8.3 constructs on the 5.3 line.** `#[\Override]` on the 13 core and interface overrides (block, summary renderable, privacy provider), typed class constants (`const string` / `const array`) on the 11 constants in `classes/`, and `summary::$user` is `readonly`. No behaviour change. Version `2026100502`.
 - **The block's dataset no longer holds the session lock.** `block_dimensions_get_block_dataset`,
   the one read service, now declares `'readonlysession' => true`, as core does for its own reads, so
   the Dashboard's block loads no longer wait for the page's other requests of the same session, or
