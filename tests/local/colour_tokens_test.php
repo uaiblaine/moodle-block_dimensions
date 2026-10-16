@@ -16,6 +16,8 @@
 
 namespace block_dimensions\local;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Build gate for the colour-token contract declared at the head of styles.css.
  *
@@ -28,8 +30,8 @@ namespace block_dimensions\local;
  * @package    block_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \block_dimensions\local\colour_mode
  */
+#[CoversClass(\block_dimensions\local\colour_mode::class)]
 final class colour_tokens_test extends \basic_testcase {
     /** @var string This plugin's token namespace. The sibling's differs only in the frankenstyle part. */
     private const PREFIX = '--block-dimensions-';

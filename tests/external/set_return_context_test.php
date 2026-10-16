@@ -21,6 +21,7 @@ use core_competency\plan;
 use core_external\external_api;
 use local_dimensions\helper;
 use moodle_url;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * PHPUnit tests for set_return_context external endpoint.
@@ -36,8 +37,8 @@ use moodle_url;
  * @category   test
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers \block_dimensions\external\set_return_context
  */
+#[CoversClass(\block_dimensions\external\set_return_context::class)]
 final class set_return_context_test extends advanced_testcase {
     /** @var string Web service function name registered in db/services.php. */
     private const WSFUNCTION = 'block_dimensions_set_return_context';
