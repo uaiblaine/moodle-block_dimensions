@@ -47,47 +47,47 @@
    ============================================ */
 body {
     /* Tier 1 - surfaces, hairline, ink, accent. */
-    --block-dimensions-surface: var(--bs-body-bg, var(--white, #fff));
-    --block-dimensions-surface-alt: var(--bs-tertiary-bg, var(--light, #f8f9fa));
-    --block-dimensions-surface-inset: var(--bs-secondary-bg, #e9ecef);
-    --block-dimensions-line: var(--bs-border-color, #dee2e6);
-    --block-dimensions-ink: var(--bs-body-color, #1d2125);
-    --block-dimensions-ink-muted: var(--bs-secondary-color, #495057);
-    --block-dimensions-ink-faint: var(--bs-tertiary-color, #6a737b);
-    --block-dimensions-ink-strong: var(--bs-emphasis-color, var(--gray-dark, #343a40));
-    --block-dimensions-accent: var(--bs-link-color, var(--primary, #0f6cbf));
-    --block-dimensions-accent-hover: var(--bs-link-hover-color, #0c5699);
+    --block-dimensions-surface: var(--dimensions-surface, var(--bs-body-bg, var(--white, #fff)));
+    --block-dimensions-surface-alt: var(--dimensions-surface-alt, var(--bs-tertiary-bg, var(--light, #f8f9fa)));
+    --block-dimensions-surface-inset: var(--dimensions-surface-inset, var(--bs-secondary-bg, #e9ecef));
+    --block-dimensions-line: var(--dimensions-line, var(--bs-border-color, #dee2e6));
+    --block-dimensions-ink: var(--dimensions-ink, var(--bs-body-color, #1d2125));
+    --block-dimensions-ink-muted: var(--dimensions-ink-muted, var(--bs-secondary-color, #495057));
+    --block-dimensions-ink-faint: var(--dimensions-ink-faint, var(--bs-tertiary-color, #6a737b));
+    --block-dimensions-ink-strong: var(--dimensions-ink-strong, var(--bs-emphasis-color, var(--gray-dark, #343a40)));
+    --block-dimensions-accent: var(--dimensions-accent, var(--bs-link-color, var(--primary, #0f6cbf)));
+    --block-dimensions-accent-hover: var(--dimensions-accent-hover, var(--bs-link-hover-color, #0c5699));
 
     /* Tier 1b - the six tone families. Each is core's own -text-emphasis / -bg-subtle /
        -border-subtle triple, which is what core's alert of that tone paints, so a plugin chip
        matches core's alert on the same page. Meaning rides these; a solid --bs-<tone> never
        carries state, because the solids do not change with the colour mode. */
-    --block-dimensions-brand-ink: var(--bs-primary-text-emphasis, #062b4c);
-    --block-dimensions-brand-tint: var(--bs-primary-bg-subtle, #cfe2f2);
-    --block-dimensions-brand-edge: var(--bs-primary-border-subtle, #9fc4e5);
-    --block-dimensions-success-ink: var(--bs-success-text-emphasis, #153114);
-    --block-dimensions-success-tint: var(--bs-success-bg-subtle, #d7e4d6);
-    --block-dimensions-success-edge: var(--bs-success-border-subtle, #aecaad);
-    --block-dimensions-warning-ink: var(--bs-warning-text-emphasis, #60451f);
-    --block-dimensions-warning-tint: var(--bs-warning-bg-subtle, #fcefdc);
-    --block-dimensions-warning-edge: var(--bs-warning-border-subtle, #f9deb8);
-    --block-dimensions-danger-ink: var(--bs-danger-text-emphasis, #51140d);
-    --block-dimensions-danger-tint: var(--bs-danger-bg-subtle, #f4d6d2);
-    --block-dimensions-danger-edge: var(--bs-danger-border-subtle, #eaada6);
-    --block-dimensions-info-ink: var(--bs-info-text-emphasis, #00343c);
-    --block-dimensions-info-tint: var(--bs-info-bg-subtle, #cce6ea);
-    --block-dimensions-info-edge: var(--bs-info-border-subtle, #99cdd5);
-    --block-dimensions-neutral-ink: var(--bs-secondary-text-emphasis, #525557);
-    --block-dimensions-neutral-tint: var(--bs-secondary-bg-subtle, #f5f6f8);
-    --block-dimensions-neutral-edge: var(--bs-secondary-border-subtle, #ebeef0);
+    --block-dimensions-brand-ink: var(--dimensions-brand-ink, var(--bs-primary-text-emphasis, #062b4c));
+    --block-dimensions-brand-tint: var(--dimensions-brand-tint, var(--bs-primary-bg-subtle, #cfe2f2));
+    --block-dimensions-brand-edge: var(--dimensions-brand-edge, var(--bs-primary-border-subtle, #9fc4e5));
+    --block-dimensions-success-ink: var(--dimensions-success-ink, var(--bs-success-text-emphasis, #153114));
+    --block-dimensions-success-tint: var(--dimensions-success-tint, var(--bs-success-bg-subtle, #d7e4d6));
+    --block-dimensions-success-edge: var(--dimensions-success-edge, var(--bs-success-border-subtle, #aecaad));
+    --block-dimensions-warning-ink: var(--dimensions-warning-ink, var(--bs-warning-text-emphasis, #60451f));
+    --block-dimensions-warning-tint: var(--dimensions-warning-tint, var(--bs-warning-bg-subtle, #fcefdc));
+    --block-dimensions-warning-edge: var(--dimensions-warning-edge, var(--bs-warning-border-subtle, #f9deb8));
+    --block-dimensions-danger-ink: var(--dimensions-danger-ink, var(--bs-danger-text-emphasis, #51140d));
+    --block-dimensions-danger-tint: var(--dimensions-danger-tint, var(--bs-danger-bg-subtle, #f4d6d2));
+    --block-dimensions-danger-edge: var(--dimensions-danger-edge, var(--bs-danger-border-subtle, #eaada6));
+    --block-dimensions-info-ink: var(--dimensions-info-ink, var(--bs-info-text-emphasis, #00343c));
+    --block-dimensions-info-tint: var(--dimensions-info-tint, var(--bs-info-bg-subtle, #cce6ea));
+    --block-dimensions-info-edge: var(--dimensions-info-edge, var(--bs-info-border-subtle, #99cdd5));
+    --block-dimensions-neutral-ink: var(--dimensions-neutral-ink, var(--bs-secondary-text-emphasis, #525557));
+    --block-dimensions-neutral-tint: var(--dimensions-neutral-tint, var(--bs-secondary-bg-subtle, #f5f6f8));
+    --block-dimensions-neutral-edge: var(--dimensions-neutral-edge, var(--bs-secondary-border-subtle, #ebeef0));
 
     /* Tier 1c - brand as a solid fill, under on-brand-fill text, and nothing else.
        --bs-primary does not change with the colour mode, so it is not a safe ink on a dark
        page (Boost's #0f6cbf is 3.02:1 on the dark body). As a fill under white text it is
        .btn-primary's own pairing, 5.36:1 on Boost. Never an ink, never a stateful border,
        never a ring. */
-    --block-dimensions-brand-fill: var(--bs-primary, var(--primary, #0f6cbf));
-    --block-dimensions-on-brand-fill: #fff;
+    --block-dimensions-brand-fill: var(--dimensions-brand-fill, var(--bs-primary, var(--primary, #0f6cbf)));
+    --block-dimensions-on-brand-fill: var(--dimensions-on-brand-fill, #fff);
 
     /* Tier 2 - the four core cannot supply. focus-ring chains --bs-emphasis-color, which
        flips with the colour mode, and deliberately not --bs-focus-ring-color, which does not.
@@ -95,9 +95,9 @@ body {
        bound keeps this plugin from painting a dark surface on a light page: the worst a
        wrongly firing activation block can do is deepen a shadow, darken a veil and brighten
        a star. */
-    --block-dimensions-focus-ring: var(--bs-emphasis-color, var(--gray-dark, #343a40));
-    --block-dimensions-shadow: rgb(0 0 0 / 10%);
-    --block-dimensions-scrim: rgb(255 255 255 / 72%);
+    --block-dimensions-focus-ring: var(--dimensions-focus-ring, var(--bs-emphasis-color, var(--gray-dark, #343a40)));
+    --block-dimensions-shadow: var(--dimensions-shadow, rgb(0 0 0 / 10%));
+    --block-dimensions-scrim: var(--dimensions-scrim, rgb(255 255 255 / 72%));
     --block-dimensions-favourite: #e8590c;
 }
 
@@ -128,8 +128,8 @@ body {
    ============================================ */
 body[data-bs-theme="dark"],
 [data-bs-theme="dark"] body {
-    --block-dimensions-shadow: rgb(0 0 0 / 55%);
-    --block-dimensions-scrim: rgb(29 33 37 / 72%);
+    --block-dimensions-shadow: var(--dimensions-shadow, rgb(0 0 0 / 55%));
+    --block-dimensions-scrim: var(--dimensions-scrim, rgb(29 33 37 / 72%));
     --block-dimensions-favourite: #fd7e14;
 }
 
@@ -166,8 +166,8 @@ body[data-bs-theme="dark"],
     /* Switch-on: remove [data-dimensions-media-optin] from this selector. */
     :root:not([data-bs-theme="light"])
     body[data-dimensions-media-optin]:not([data-bs-theme="light"]) {
-        --block-dimensions-shadow: rgb(0 0 0 / 55%);
-        --block-dimensions-scrim: rgb(29 33 37 / 72%);
+        --block-dimensions-shadow: var(--dimensions-shadow, rgb(0 0 0 / 55%));
+        --block-dimensions-scrim: var(--dimensions-scrim, rgb(29 33 37 / 72%));
         --block-dimensions-favourite: #fd7e14;
     }
 }

@@ -47,6 +47,9 @@ All notable changes to this project will be documented in this file.
   without the slash) counts as this page. The web service keeps refusing guests.
 
 ### Added
+- **Family colour tokens.** Under `theme_dimensions` the plugin reads the theme's family tokens
+  (`--dimensions-*`, contract in `theme_dimensions/docs/tokens.md`) first, in the light and the dark
+  rules, with its own chain as the fallback. Without the theme nothing changes.
 - **A page of the block's own, offered as the start page.** A new setting, `enable_page` (off by
   default), serves the block's content at `/blocks/dimensions/index.php` with only the theme's
   navigation bar, page heading and footer around it: the `base` layout, which has no block regions,
