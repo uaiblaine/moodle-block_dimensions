@@ -430,7 +430,7 @@ body[data-bs-theme="dark"],
    ============================================ */
 /* The weight is declared here, for this title and the plan card's, rather than
    with a class: font-weight-bold reaches 5.x only through the deprecated
-   bs4-compat sheet, and fw-bold does not exist on 4.5. */
+   bs4-compat sheet. */
 .block_dimensions .competency-card .card-title {
     font-size: 0.9rem;
     font-weight: 700;
@@ -2366,37 +2366,4 @@ body[data-bs-theme="dark"],
     .block_dimensions .plan-card:hover {
         transform: none;
     }
-}
-
-/* ============================================
-   BOOTSTRAP 4 UTILITY POLYFILL (Moodle 4.5 only)
-   ============================================
-   Same contract as local_dimensions/styles.css: BS4 class names resolve on
-   both branches, BS5 names only on 5.x, and the fix is to polyfill the BS5
-   name rather than write the BS4 one. 5.x wraps every back-ported BS4 name in
-   @include deprecated-styles() (a red outline under behat-site and
-   themedesignermode), and Moodle 6.0 removes the compat sheet (MDL-84465).
-
-   Gated on .block-dimensions-bs4, which summary.mustache puts on the block's
-   content root when the site's branch is below 500; a block cannot add a body
-   class (see block_dimensions\local\bootstrap). The gate is not optional:
-   plugin CSS loads after core's, so an ungated rule would outrank core's own
-   definition on 5.x and freeze 4.5's metrics onto the newer branch.
-
-   Bootstrap marks .visually-hidden !important; the gate supplies the extra
-   specificity instead, because Moodle's stylelint forbids !important.
-
-   ms-* needs no rule here: Moodle 4.5's bs5-bridge.scss already defines it,
-   so the BS5 spelling is correct on both branches. bootstrap_compat_test
-   fails the build on a BS5 utility this block does not cover. */
-.block-dimensions-bs4 .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
 }

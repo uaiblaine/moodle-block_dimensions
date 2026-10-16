@@ -18,6 +18,15 @@ All notable changes to this project will be documented in this file.
   for local_dimensions, then `php admin/cli/upgrade.php`. Without the version reset Moodle
   refuses the new files as a downgrade. The block has no upgrade steps.
 
+### Removed
+
+- **The Moodle 4.5 compatibility code.** This branch serves Moodle 5.3 only, so
+  `block_dimensions\local\bootstrap` (the Bootstrap major-version marker), the `isbs4` export of the
+  summary renderable, the `block-dimensions-bs4` class on the block's root, the Bootstrap 4
+  `.visually-hidden` polyfill in `styles.css` and `tests/local/bootstrap_compat_test.php` are gone.
+  Moodle 4.5 keeps them on `MOODLE_405_STABLE`. The colour-token fallback chains are unchanged.
+  Version `2026100501`.
+
 ### Changed
 - **The block's dataset no longer holds the session lock.** `block_dimensions_get_block_dataset`,
   the one read service, now declares `'readonlysession' => true`, as core does for its own reads, so
