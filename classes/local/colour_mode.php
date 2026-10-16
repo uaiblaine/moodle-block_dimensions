@@ -35,14 +35,14 @@ namespace block_dimensions\local;
  */
 class colour_mode {
     /** @var string Bootstrap's colour-mode attribute. The host page sets it on html (core) or body (e.g. theme_moove). */
-    public const HOST_ATTRIBUTE = 'data-bs-theme';
+    public const string HOST_ATTRIBUTE = 'data-bs-theme';
 
     /** @var string The value of HOST_ATTRIBUTE that activates the plugin's dark layer. */
-    public const DARK = 'dark';
+    public const string DARK = 'dark';
 
     /** @var string The value of HOST_ATTRIBUTE that pins light. */
-    public const LIGHT = 'light';
+    public const string LIGHT = 'light';
 
     /** @var string Gate on the inert OS-preference block in styles.css; nothing writes it. */
-    public const MEDIA_OPTIN_ATTRIBUTE = 'data-dimensions-media-optin';
+    public const string MEDIA_OPTIN_ATTRIBUTE = 'data-dimensions-media-optin';
 }

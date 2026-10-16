@@ -38,6 +38,7 @@ class block_dimensions extends block_base {
      *
      * @return array
      */
+    #[\Override]
     public function applicable_formats() {
         return ['site' => true, 'course' => true, 'my' => true];
     }
@@ -56,6 +57,7 @@ class block_dimensions extends block_base {
      *
      * @return void
      */
+    #[\Override]
     public function specialization() {
         if (get_config('block_dimensions', 'hide_block_title')) {
             $this->title = '';
@@ -67,6 +69,7 @@ class block_dimensions extends block_base {
      *
      * @return stdClass
      */
+    #[\Override]
     public function get_content() {
         if (isset($this->content)) {
             return $this->content;
@@ -100,6 +103,7 @@ class block_dimensions extends block_base {
      *
      * @return bool
      */
+    #[\Override]
     public function has_config() {
         return true;
     }
@@ -110,6 +114,7 @@ class block_dimensions extends block_base {
      * @param moodle_page $page
      * @return bool
      */
+    #[\Override]
     public function can_block_be_added(moodle_page $page): bool {
         return get_config('core_competency', 'enabled');
     }
