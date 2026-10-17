@@ -384,7 +384,7 @@ deepen a shadow, darken a veil and brighten a star. It cannot paint a dark surfa
 
 The rule is **anchored at `:root` on purpose**. A bare `[data-bs-theme="dark"]` matches through any
 ancestor at any depth, and CSS descendant combinators have no nearest-ancestor-wins rule. That is not
-hypothetical: `theme_boost_union_fundaseg` sets `data-bs-theme="dark"` on the navbar element itself,
+hypothetical: a Boost Union child theme in use sets `data-bs-theme="dark"` on the navbar element itself,
 and `theme_boost_union` then re-pins `data-bs-theme="light"` by hand on five nested templates to stop
 the dark scope leaking into its own submenus. A bare selector would ignore those re-pins. `:root`
 restricts the match to the `html` element and forecloses the whole class at zero cost — and it is
@@ -393,7 +393,7 @@ restricts the match to the `html` element and forecloses the whole class at zero
 ## What was deleted, and why it was dead
 
 **154 rules — 77 keyed off `.theme-dark` and 77 off `body.dark`.** Nothing in Moodle 4.5, 5.0, 5.1,
-5.2 or 5.3-dev, and nothing in `theme_boost_union` or `theme_boost_union_fundaseg`, has ever emitted
+5.2 or 5.3-dev, and nothing in `theme_boost_union` has ever emitted
 either selector. They could not fire on any site the plugin supports.
 
 The signal that *does* exist is Bootstrap 5.3's own `data-bs-theme`, and Moodle **5.3** core writes it

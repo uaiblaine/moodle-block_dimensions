@@ -125,13 +125,13 @@ missing, so an `amd/src` edit reaches the page only after
 silently tests the old build.
 
 **Run `tests/jsharness/run.sh --mutants` before committing any `amd/src` change.**
-It is a headless-Chromium suite over the real modules (209 checks: web service
+It is a headless-Chromium suite over the real modules (228 checks: web service
 calls stay pending until a scenario settles them, so it reaches orderings Behat
 cannot - a failed switch under a typed search, a retry over a late response),
-and the mutant mode re-breaks every fix it pins (67 mutants) and fails if any
+and the mutant mode re-breaks every fix it pins (75 mutants) and fails if any
 survives or no longer applies. A `NOT APPLIED` line means a guarded pattern moved
 and its mutant must be ported in `tests/jsharness/mutants.py`. It reads `amd/src`
-directly, so it needs no grunt run and says nothing about a stale `amd/build`;
+directly (`runner.py` also copies `filter_line.js`), so it needs no grunt run and says nothing about a stale `amd/build`;
 needs only Docker; export-ignored and not run by CI. `tests/jsharness/README.md`
 explains how to add a check and its mutant.
 
@@ -180,18 +180,21 @@ styles.css                   34 colour tokens on body, one body-anchored
                              utility polyfill at the tail
 templates/                   summary (server-rendered shell), page (the
                              summary inside a .block_dimensions wrapper), plan_card,
-                             competency_card (client-rendered). The filter bar
-                             has no template: renderFilterControls() in
-                             filters.js is its only definition
+                             competency_card (client-rendered), filter_line (one
+                             filter line per section)
 amd/src/                     filters.js (fetch + render), state.js (pure state
-                             fns), filter_tabs_nav.js — plain AMD, NOT ESM here
+                             fns), filter_tabs_nav.js, filter_line.js (the
+                             line's presentation) — plain AMD, NOT ESM here
 amd/build/                   Committed minified output (grunt) — keep in sync
 lang/{en,pt_br}/             Both kept in sync, alphabetically sorted
 tests/                       PHPUnit: dataset_provider (double pattern),
                              external functions, privacy, generator,
                              local/colour_tokens_test, local/card_layout_test,
-                             local/bootstrap_markup_test
-tests/behat/                 colour_mode, visibility, status_filter, card_filters and page features
+                             local/bootstrap_markup_test, output/filter_line_markup_test,
+                             output/filter_line_source_test, lang_strings_test
+tests/behat/                 colour_mode, visibility, status_filter, card_filters,
+                             filter_line and page features
+mutations/                   gates.conf + one perl script per gate (mdl mutate --fast)
 tests/jsharness/             JS regression harness for amd/src (headless Chromium,
                              run.sh; --mutants); export-ignored, no CI step
 tests/coverage.php           adds block_dimensions.php and db/uninstall.php to the
@@ -205,6 +208,19 @@ docs/proposals/              To-be designs and the decisions behind them, one
 ```
 
 ## Architecture gotchas
+
+- **Filter line** (`moodle-dev/docs/filter-line/CONTRACT.md`): `amd/src/filter_line.js` presents
+  and folds, `filters.js` filters and supplies the hooks (`filters()`, `items()`, ...); every hook is a data attribute of
+  `templates/filter_line.mustache`, pinned by `filter_line_markup_test` and
+  `filter_line_source_test`; gates in `mutations/gates.conf`.
+  - One line per section, with one star per type (owner decisions B1 and B2); each line folds on
+    its own width.
+  - A section's search reaches only its own cards. Typing releases that section's star, so a
+    search reaches every card, keeping the two-phase rule.
+  - Line controls are 44px. Nothing is remembered between visits.
+  - `filter_line.js` is plain AMD `define`, one instance per line (`create()`).
+  - The code is written to travel to the 405/501/502 branches: no 8.3-only syntax, plugin-owned
+    class names, no Bootstrap data-API.
 
 - **The 5.3 line uses PHP 8.3 constructs** (`#[\Override]`, typed class constants, `readonly`; PHP 8.4 syntax stays out). A cherry-pick to the older branches drops them. `#[\Override]` goes only on methods core or an interface declares: not on `init()`, nor on `execute*()` of an `external_api` subclass, which core does not declare.
 
@@ -318,18 +334,16 @@ than quietly serving the active one. Facts worth keeping:
   plan cards each bucket shows. A learner whose active plans are all competencies-mode gets an
   Active pill with no number, not "Active 0" above a list of competency cards. Mixing the two once
   left such a learner opening on Completed with no way back to their competency cards.
-- **The pills belong to the filter bar.** `renderStatusPills()` pushes them first into the bar
-  `renderFilterControls()` builds, beside the favourites pills and the tag filters, so on a phone
-  they appear with everything else when the panel is opened. They were briefly given a host of
-  their own outside that panel (2026-09-22) and the owner asked for them back in the bar: the
-  block keeps one place where filtering happens.
+- **The status pills are the scope of the filter line.** They reuse the `.dims-filter-tab` platter,
+  and `filter_tabs_nav` skips hidden pills when it moves along them. Every bucket is written, with
+  the ones nobody chose hidden, so the measured step follows the width and not the counts.
 - **Only the opening bucket is loaded with the page.** `filters.js` keeps each fetched bucket in
   `state.statusCards`, so switching back costs no request; the first switch to a bucket draws
   skeleton cards while it loads, and nothing may render the previous bucket's cards under the new
   pill in that window. A failed switch returns the grid, its tag filters and its favourites
   filter to the bucket it left, so the failed bucket can be picked again. The Active bucket kept
-  from the favourites-only first request is restored under the favourites pill, never under
-  "Show all" with cards missing - except under a search or with favourites disabled, where the
+  from the favourites-only first request is restored with its star pressed, never with the star released
+  and cards missing - except under a search or with favourites disabled, where the
   favourites filter stays off and the plans that first request left out are fetched (the search
   handler's rule: a search always sees every card). So "switching back costs no request" has that
   one exception.
@@ -353,7 +367,7 @@ than quietly serving the active one. Facts worth keeping:
   read in one batch through `template_metadata_cache::get_metadata_for_many()`
   (`prefetch_template_metadata()`, memoised per request) - the active count skips a
   competencies-mode template, which becomes competency cards rather than a plan card. Without that
-  the pill said 5 while the "Show all" pill beside it said 4.
+  the scope cell said 5 while the grid beside it drew 4.
 - **A bucket with no plans is not drawn.** An empty *In review* would read as "you have none",
   while on most sites it means "you cannot see them": the review statuses are core's draft
   statuses, and a learner needs `moodle/competency:planviewowndraft`, which no archetype holds.
@@ -440,13 +454,13 @@ at the head of `styles.css`. In short:
 - **`body` is the subject of both arms, never a bare `[data-bs-theme="dark"]`.**
   With `body` as the subject, the only ancestor the second arm can match is
   `<html>`. A bare selector matches through any ancestor at any depth and CSS has
-  no nearest-ancestor-wins rule: `theme_boost_union_fundaseg` really does set
+  no nearest-ancestor-wins rule: a Boost Union child theme in use sets
   `data-bs-theme="dark"` on the navbar and `theme_boost_union` re-pins `light` by
   hand on five nested templates, and a bare selector would ignore those re-pins.
   `colour_tokens_test::test_activation_selectors_have_body_as_subject` pins it.
 - **`.theme-dark` and `body.dark` are not accepted, and must never come back.**
   Nothing in Moodle 4.5, 5.0, 5.1, 5.2 or 5.3-dev, and nothing in
-  `theme_boost_union` or `theme_boost_union_fundaseg`, has ever emitted either.
+  `theme_boost_union` has ever emitted either.
   The plugin's 77 + 77 rules keyed off them were dead code and were deleted.
   Moodle **5.3** core does write `data-bs-theme` on `<html>`, from
   `theme_boost\colour_mode` via `before_html_attributes`, gated behind
@@ -682,7 +696,7 @@ HTML; **zero `html_writer`** in plugin code.
 
 ## Behat
 
-Five feature files: `page.feature` (2: the page shows the block alone and opens from the
+Six feature files: `page.feature` (2: the page shows the block alone and opens from the
 site root once it is the start page; switched off, it redirects to the Dashboard),
 `colour_mode.feature` (4 scenarios, the colour-mode
 contract), `visibility.feature` (6, the render gate and the status pills),
@@ -691,9 +705,11 @@ opens on Active, with a count-less pill, and keeps the competency section across
 a round trip to Completed; and a search from the Completed bucket still loads the
 competency cards from the active bucket) and `card_filters.feature` (4: a search
 that matches nothing says so; returning to Active keeps the favourites view and
-its ghost card; a tag value holding a double quote survives a filter-bar rebuild;
-returning to Active under a search finds the plans the favourites view left out),
-plus the step-definition context
+its ghost card; a tag value holding a double quote survives a filter panel rebuild;
+returning to Active under a search finds the plans the favourites view left out) and
+`filter_line.feature` (3: each section searches its own cards; a tag picked in the Filters panel
+shows as a chip that drops it; a section's star shows its favourites alone and releases to every
+card), plus the step-definition context
 `tests/behat/behat_block_dimensions.php`. Run a feature locally with the
 **absolute container path** — the relative forms match nothing:
 
