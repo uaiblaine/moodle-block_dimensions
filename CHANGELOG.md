@@ -19,6 +19,20 @@ All notable changes to this project will be documented in this file.
   refuses the new files as a downgrade. The block has no upgrade steps.
 
 ### Changed
+- **The section headings are one string each** ("Advance in your learning plans", "Find courses
+  for each competency"): the forced line break and the `sectionheader_*_line1`/`_line2` strings
+  are gone, in both languages; a heading wraps only where the width requires.
+- **Each section searches its own cards.** The header's search moved into each line: the plans'
+  field searches the plans, the competencies' the competencies. A section's new text releases that
+  section's star alone (the two-phase load's rule that a search reaches every card), and no longer
+  clears the tag filters, which now combine with the text as chips. `enable_search` off leaves the
+  search out of both lines.
+- **The favourites star replaces the "My Favourites / Show all" pills**, one per section, each its
+  own `favouriteFilterActive`. The ghost card and the favourites-first load are unchanged.
+- **"Clear filters" clears the panel's tag filters**, not the star, which is on the line.
+- **The mobile sliders toggle is gone**: the line's folding replaces it. The strings `myfavourites`,
+  `showallitems`, `togglefilters`, `search_placeholder` and `searchlabel` go with it; `line_*` strings
+  are new.
 - **The block's dataset no longer holds the session lock.** `block_dimensions_get_block_dataset`,
   the one read service, now declares `'readonlysession' => true`, as core does for its own reads, so
   the Dashboard's block loads no longer wait for the page's other requests of the same session, or
@@ -37,6 +51,16 @@ All notable changes to this project will be documented in this file.
   without the slash) counts as this page. The web service keeps refusing guests.
 
 ### Added
+- **A filter line per section** (stage D2 of the fleet's filter line,
+  moodle-dev/docs/filter-line/CONTRACT.md). Plans and competencies each get one line under their
+  heading (`templates/filter_line.mustache`, folded and searched by the new
+  `block_dimensions/filter_line`), in the contract's order: the status pills (plans only), a pill
+  search with a magnifier and an eraser, a favourites star (`aria-pressed`) and Filters, whose panel
+  holds the section's tag groups with a count on every option and a count badge on the button; a row
+  of chips under the line with "Clear all" from two. Each line folds on its own width (full, Filters
+  without its word, the search as an icon, two lines); from the third step the search grows over the
+  line; the suggestions list filters first, accent- and case-insensitive, then the section's cards;
+  "/" opens the search; at the two-line step the panel is a bottom sheet. Version `2026042001`.
 - **A page of the block's own, offered as the start page.** A new setting, `enable_page` (off by
   default), serves the block's content at `/blocks/dimensions/index.php` with only the theme's
   navigation bar, page heading and footer around it: the `base` layout, which has no block regions,
@@ -275,7 +299,7 @@ All notable changes to this project will be documented in this file.
   colour-mode attribute and the one Moodle itself writes, from `theme_boost`'s
   `before_html_attributes` listener, gated behind `theme_boost/enablecolourmodes` (off by
   default). Anchoring at `:root` is not decoration: a bare `[data-bs-theme="dark"]` matches
-  through any ancestor at any depth, and `theme_boost_union_fundaseg` really does set the
+  through any ancestor at any depth, and a Boost Union child theme in use sets the
   attribute on the navbar, which `theme_boost_union` then has to re-pin to `light` on five nested
   templates. `:root` forecloses that whole class of leak at zero cost, and wins on specificity
   (0,2,0 against the token block's 0,1,0) rather than on source order.
@@ -288,7 +312,7 @@ All notable changes to this project will be documented in this file.
   the gate substring from the selector. It carries only the same three plugin-owned tokens, so
   even fully enabled it cannot produce a dark plugin on a light page.
 - **The 77 `.theme-dark` and 77 `body.dark` rules are deleted — 430 lines.** Nothing in Moodle
-  4.5, 5.1, 5.2 or 5.3-dev, and nothing in `theme_boost_union` or `theme_boost_union_fundaseg`,
+  4.5, 5.1, 5.2 or 5.3-dev, and nothing in `theme_boost_union`,
   has ever emitted either class, so they had never rendered a single pixel since they were added.
   Their *values* were audited and defect-free, and are not lost: `#dee2e6` is the `ink` token's
   dark value, `#495057` the `line`'s, `#343a40` the `surface-inset`'s, `#adb5bd` the

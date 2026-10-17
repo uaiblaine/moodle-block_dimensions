@@ -1,7 +1,7 @@
 # JS regression harness
 
-A behaviour suite for the block's three AMD modules, `amd/src/filters.js`, `state.js` and
-`filter_tabs_nav.js`, run in headless Chromium, plus a mutation mode that proves each check can fail.
+A behaviour suite for the block's four AMD modules, `amd/src/filters.js`, `state.js`,
+`filter_tabs_nav.js` and `filter_line.js`, run in headless Chromium, plus a mutation mode that proves each check can fail.
 It is development tooling only: `.gitattributes` keeps `tests/jsharness` out of the release zip, and
 no CI step runs it.
 

@@ -8,9 +8,10 @@
 <div id="host"></div>
 <script>
 /*
- * Loads the plugin's real AMD modules (state, filter_tabs_nav, filters) through a define() shim and
- * runs scenarios.js over them. core/ajax is replaced by promises that each scenario settles by hand,
- * in whatever order it needs; core/templates renders a stub. See README.md.
+ * Loads the plugin's real AMD modules (state, filter_tabs_nav, filter_line, filters) through a define()
+ * shim and runs scenarios.js over them. core/ajax is replaced by promises that each scenario settles by
+ * hand, in whatever order it needs; core/templates renders a stub and core/pending does nothing. See
+ * README.md.
  *
  * Query parameters:
  *   auto=1   run the suite on load and append the verdict to the page, as the element #out;
@@ -33,6 +34,9 @@ window.define.amd = true;
 window.__mods['core/ajax'] = {call: (reqs) => reqs.map((r) => new Promise((res, rej) => {
     window.__calls.push({methodname: r.methodname, args: r.args, res: res, rej: rej, settled: false});
 }))};
+window.__mods['core/pending'] = function() {
+    this.resolve = () => null;
+};
 window.__mods['core/templates'] = {
     render: (name, ctx) => Promise.resolve('<div class="tpl" data-t="' + name + '">' + ctx.name + '</div>'),
     runTemplateJS: () => {}
@@ -44,8 +48,8 @@ if (/["<>]/.test(window.srcBase)) {
     throw new Error('Unusable src parameter: ' + window.srcBase);
 }
 
-// Dependencies first: filters.js takes the other two from the shim.
-['state', 'filter_tabs_nav', 'filters'].forEach((module) => {
+// Dependencies first: filters.js takes the other three from the shim.
+['state', 'filter_tabs_nav', 'filter_line', 'filters'].forEach((module) => {
     document.write('<script data-module="block_dimensions/' + module + '" src="' + window.srcBase + module
         + '.js"><\/script>');
 });
