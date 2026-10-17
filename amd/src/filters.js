@@ -18,8 +18,13 @@
  *
  * Supports two-phase loading: with favourites enabled, only favourite cards are
  * loaded first for a fast initial render, and the rest of a card type is fetched
- * on demand (for example by a search, the "Show all" pill or the ghost card).
+ * on demand (for example by a search, the favourites star released or the ghost card).
  * Plan cards are also scoped to a status bucket; see pickStatus().
+ *
+ * Each section, plans and competencies, has a filter line of its own
+ * (templates/filter_line.mustache, folded and searched by block_dimensions/filter_line): the
+ * status pills (plans only), its own search, its own favourites star and a Filters panel holding
+ * its tag filters. This module fills the parts that depend on the dataset and filters the cards.
  *
  * @module     block_dimensions/filters
  * @copyright  2026 Anderson Blaine
@@ -27,8 +32,9 @@
  */
 /* eslint-disable jsdoc/require-jsdoc, jsdoc/require-param, jsdoc/check-param-names, max-len */
 
-define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'block_dimensions/state'],
-    function(Ajax, Templates, FilterTabsNav, State) {
+define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'block_dimensions/state',
+        'block_dimensions/filter_line'],
+    function(Ajax, Templates, FilterTabsNav, State, FilterLine) {
     const BATCH_SIZE = 24;
 
     const normalizeText = State.normalizeText;
@@ -36,8 +42,53 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
     const resetSession = State.resetSession;
     const applySharedMetadata = State.applySharedMetadata;
     const applyFilters = State.applyFilters;
-    const hasActiveFiltersForType = State.hasActiveFiltersForType;
+    const activeTagCount = State.activeTagCount;
+    const countWith = State.countWith;
     const updateFavouriteCounts = State.updateFavouriteCounts;
+
+    /** The card types, which are also the block's two sections, in the order they are drawn. */
+    const TYPES = ['plan', 'competency'];
+
+    /**
+     * Each block's two filter lines (block_dimensions/filter_line instances), keyed by its container.
+     * Kept outside the state, which a retry rebuilds; the lines are the page's and outlive a session.
+     */
+    const LINES = new WeakMap();
+
+    /**
+     * The toolbar of one section's filter line.
+     *
+     * @param {HTMLElement} container Block container.
+     * @param {string} type 'plan' or 'competency'.
+     * @return {HTMLElement|null}
+     */
+    function lineToolbar(container, type) {
+        return container.querySelector('[data-region="dims-line-toolbar"][data-line-type="' + type + '"]');
+    }
+
+    /**
+     * One part of a section's filter line.
+     *
+     * @param {HTMLElement} container Block container.
+     * @param {string} type 'plan' or 'competency'.
+     * @param {string} selector The part, inside the toolbar.
+     * @return {HTMLElement|null}
+     */
+    function linePart(container, type, selector) {
+        const toolbar = lineToolbar(container, type);
+        return toolbar ? toolbar.querySelector(selector) : null;
+    }
+
+    /**
+     * The search field of one section, or null where the search is off.
+     *
+     * @param {HTMLElement} container Block container.
+     * @param {string} type 'plan' or 'competency'.
+     * @return {HTMLInputElement|null}
+     */
+    function searchField(container, type) {
+        return container.querySelector('.dims-line-input[data-search-type="' + type + '"]');
+    }
 
     const escapeHtml = (value) => String(value)
         .replace(/&/g, '&amp;')
@@ -68,41 +119,51 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
     }
 
     /**
-     * Push the plan status pills: Active, In review, Completed.
+     * Whether a status bucket is a choice the scope offers.
      *
-     * They sit inside the filter bar, so on a phone they open and close with the other filters.
      * A bucket with no plans is not drawn unless it is the one on screen: an empty "In review"
      * would read as "you have none", while on most sites it means "you cannot see them" - the
      * review statuses are core's draft statuses and need moodle/competency:planviewowndraft, which
-     * no archetype holds. A single bucket is not a choice, so nothing is drawn unless two qualify.
+     * no archetype holds. An active plan whose template shows competency cards adds no plan card,
+     * so the Active pill is drawn whenever the learner has an active plan (hasactiveplans).
+     *
+     * @param {Object} state Application state.
+     * @param {string} key 'active', 'review' or 'complete'.
+     * @return {boolean}
+     */
+    function bucketOffered(state, key) {
+        return (state.planCounts[key] || 0) > 0
+            || key === state.planStatus
+            || (key === 'active' && state.rawDataset.hasactiveplans);
+    }
+
+    /**
+     * Push the plan status pills, the scope of the plans' line: Active, In review, Completed.
+     *
+     * Every bucket is written, so the line measures its widest scope whatever the counts (the
+     * contract's folding rule); a bucket that is not a choice is written hidden. A single bucket is
+     * not a choice, so the scope is drawn only where two qualify.
      *
      * The count is the number of plan cards the bucket shows. An active plan whose template shows
-     * competency cards adds none, so the Active pill is drawn whenever the learner has an active
-     * plan (hasactiveplans), and without a number when its count is 0: "Active 0" above a list of
-     * competency cards would be wrong.
+     * competency cards adds none, so the Active pill is drawn without a number when its count is 0:
+     * "Active 0" above a list of competency cards would be wrong.
      *
      * @param {Array} html Markup accumulator, appended in place.
      * @param {Object} state Application state.
      * @param {Object} labels Localized labels.
-     * @param {string} groupLabel Fallback accessible name for the radiogroup.
-     * @return {boolean} Whether anything was drawn.
+     * @return {boolean} Whether the scope is a choice, and so drawn.
      */
-    function renderStatusPills(html, state, labels, groupLabel) {
+    function renderStatusPills(html, state, labels) {
         const buckets = [
             {key: 'active', label: labels.statusactive},
             {key: 'review', label: labels.statusreview},
             {key: 'complete', label: labels.statuscomplete}
-        ].filter((bucket) => (state.planCounts[bucket.key] || 0) > 0
-            || bucket.key === state.planStatus
-            || (bucket.key === 'active' && state.rawDataset.hasactiveplans));
-
-        if (buckets.length < 2) {
-            return false;
-        }
+        ];
+        const offered = buckets.filter((bucket) => bucketOffered(state, bucket.key));
 
         html.push('<div class="dims-filter-tabs-wrapper" data-filter-group="planstatus">');
         html.push('<div class="dims-filter-tabs" role="radiogroup" aria-label="'
-            + escapeHtml(labels.statusfilter || groupLabel) + '">');
+            + escapeHtml(labels.statusfilter || labels.filterbyplan || '') + '">');
         buckets.forEach((bucket) => {
             const isSelected = state.planStatus === bucket.key;
             const isBusy = state.statusLoading === bucket.key;
@@ -117,75 +178,65 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                 + (isSelected ? ' active' : '') + '" role="radio" aria-checked="'
                 + (isSelected ? 'true' : 'false') + '" tabindex="' + (isSelected ? '0' : '-1')
                 + '" aria-busy="' + (isBusy ? 'true' : 'false')
-                + '" data-status-filter="' + bucket.key + '">'
+                + '" data-status-filter="' + bucket.key + '"'
+                + (offered.indexOf(bucket) < 0 ? ' hidden' : '') + '>'
                 + escapeHtml(bucket.label || bucket.key)
                 + suffix
                 + '</button>');
         });
         html.push('</div></div>');
 
-        return true;
+        return offered.length >= 2;
     }
 
     /**
-     * Push the favourites / show-all pill pair for one card type.
+     * The accessible name of one tag group of a section, and the group's words on its chips.
      *
-     * Not drawn when favourites are disabled or the type has no favourite, nor for plans outside
-     * the active status bucket, whose cards carry no favourite toggle.
+     * The admin-configured custom-field name ("Year") when there is one, so each radiogroup or
+     * select has a unique, meaningful name (WCAG 2.4.6, 4.1.2); the section's own filter label
+     * otherwise.
      *
-     * @param {Array} html Markup accumulator, appended in place.
-     * @param {string} type 'plan' or 'competency'.
      * @param {Object} state Application state.
+     * @param {string} type 'plan' or 'competency'.
+     * @param {string} tag 'tag1' or 'tag2'.
      * @param {Object} labels Localized labels.
-     * @param {string} groupLabel Accessible name for the radiogroup.
-     * @return {boolean} Whether anything was drawn.
+     * @return {string}
      */
-    function renderFavouritePills(html, type, state, labels, groupLabel) {
-        if (!state.favouritesEnabled || (type === 'plan' && state.planStatus !== 'active')) {
-            return false;
-        }
-
-        const typeFavCount = type === 'plan' ? state.favouriteCountPlan : state.favouriteCountCompetency;
-        if (typeFavCount <= 0) {
-            return false;
-        }
-
-        const typeTotal = type === 'plan' ? state.totalplans : state.totalcompetencies;
-        const isFavActive = state.favouriteFilterActive[type];
-
-        html.push('<div class="dims-filter-tabs-wrapper" data-filter-group="fav_' + type + '">');
-        html.push('<div class="dims-filter-tabs" role="radiogroup" aria-label="' + escapeHtml(groupLabel) + '">');
-
-        // "My Favourites (N)" pill — radio button.
-        html.push('<button type="button" class="dims-filter-tab dims-fav-filter-btn'
-            + (isFavActive ? ' active' : '') + '" role="radio" aria-checked="'
-            + (isFavActive ? 'true' : 'false') + '" tabindex="' + (isFavActive ? '0' : '-1')
-            + '" data-fav-filter-type="' + type + '">'
-            + '<i class="fa fa-star dims-fav-filter-icon" aria-hidden="true"></i> '
-            + escapeHtml(labels.myfavourites)
-            + ' <span class="dims-filter-count">' + typeFavCount + '</span>'
-            + '</button>');
-
-        // "Show all (N)" pill — radio button.
-        html.push('<button type="button" class="dims-filter-tab dims-all-filter-btn'
-            + (!isFavActive ? ' active' : '') + '" role="radio" aria-checked="'
-            + (!isFavActive ? 'true' : 'false') + '" tabindex="' + (!isFavActive ? '0' : '-1')
-            + '" data-all-filter-type="' + type + '">'
-            + escapeHtml(labels.showallitems) + ' <span class="dims-filter-count">' + typeTotal + '</span>'
-            + '</button>');
-
-        html.push('</div></div>');
-
-        return true;
+    function tagLabel(state, type, tag, labels) {
+        const settings = state.filterSettings[type] || {};
+        const groupLabel = type === 'plan'
+            ? (labels.filterbyplan || labels.filterall)
+            : (labels.filterbycompetency || labels.filterall);
+        return settings[tag + 'label'] || groupLabel;
     }
 
     /**
-     * Build the filter bar of one card type into its host.
+     * The tag groups a section offers: each enabled tag with at least one value among its cards.
      *
-     * This is the only definition of the bar's markup; no template renders it. Every pill set is
-     * a radiogroup of radio buttons carrying aria-checked, not a tablist, which would need a
-     * tabpanel for each tab. A tag filter in dropdown mode is a native select. The bar is left
-     * empty when none of its groups has anything to offer.
+     * @param {Object} state Application state.
+     * @param {string} type 'plan' or 'competency'.
+     * @param {Array} cards The section's cards.
+     * @return {Array} Entries of {tag, field, mode, values}.
+     */
+    function tagGroups(state, type, cards) {
+        const settings = state.filterSettings[type] || {};
+        return ['tag1', 'tag2'].filter((tag) => settings[tag + 'enabled']).map((tag) => ({
+            tag: tag,
+            field: type + '_' + tag,
+            mode: settings[tag + 'displaymode'] === 'dropdown' ? 'dropdown' : 'tabs',
+            values: getUniqueTagValues(cards, tag)
+        })).filter((group) => group.values.length > 0);
+    }
+
+    /**
+     * Build the dataset's part of one section's filter line: the status pills of its scope (plans
+     * only) and the tag groups of its Filters panel.
+     *
+     * The line itself is the server's (templates/filter_line.mustache); this is the only definition
+     * of the pills and the groups. Every pill set is a radiogroup of radio buttons carrying
+     * aria-checked, not a tablist, which would need a tabpanel for each tab. A tag group in
+     * dropdown mode is a native select. Each option carries a count, filled by
+     * syncFilterActiveState(), and an option that would leave nothing is hidden unless chosen.
      *
      * @param {HTMLElement} container Block container.
      * @param {string} type 'plan' or 'competency'.
@@ -194,142 +245,143 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
      * @param {Object} labels Localized labels.
      */
     function renderFilterControls(container, type, cards, state, labels) {
+        const scope = linePart(container, type, '[data-region="dims-line-scope"]');
+        if (scope) {
+            const pills = [];
+            const offered = renderStatusPills(pills, state, labels);
+            FilterTabsNav.destroyAll(scope);
+            scope.innerHTML = pills.join('');
+            scope.hidden = !offered;
+            FilterTabsNav.initAll(scope, {labels: labels});
+        }
+
         const host = container.querySelector('.dims-filters-host[data-filters-type="' + type + '"]');
         if (!host) {
             return;
         }
-
-        const settings = state.filterSettings[type] || {};
         const html = [];
-        let hasAnyFilter = false;
-        // Accessible name of the toolbar; the pill groups and tag filters in it reuse or
-        // extend it (WCAG 2.4.6, 4.1.2).
-        const groupLabel = type === 'plan'
-            ? (labels.filterbyplan || labels.filterall)
-            : (labels.filterbycompetency || labels.filterall);
-
-        html.push('<div class="dims-filters-bar" role="toolbar" aria-label="' + escapeHtml(groupLabel) + '">');
-
-        // Status pills (plans only) come first, then the favourites / show-all pair. Each pill set
-        // is a radiogroup (WCAG 4.1.2) with a roving tabindex: only the checked pill has
-        // tabindex="0", so the group is one tab stop and filter_tabs_nav.js moves within it on
-        // arrow keys.
-        if (type === 'plan') {
-            hasAnyFilter = renderStatusPills(html, state, labels, groupLabel) || hasAnyFilter;
-        }
-
-        hasAnyFilter = renderFavouritePills(html, type, state, labels, groupLabel) || hasAnyFilter;
-
-        ['tag1', 'tag2'].forEach((tag) => {
-            const enabledKey = tag + 'enabled';
-            const modeKey = tag + 'displaymode';
-            if (!settings[enabledKey]) {
-                return;
-            }
-
-            const field = type + '_' + tag;
-            const values = getUniqueTagValues(cards, tag);
-            if (!values.length) {
-                return;
-            }
-
-            hasAnyFilter = true;
-            const mode = settings[modeKey] === 'dropdown' ? 'dropdown' : 'tabs';
-            const selectedValue = state.activeFilters[field] || '';
-            // Combine the type-specific label ("Filter learning plans") with
-            // the admin-configured custom-field name ("Year") when available,
-            // so each radiogroup/select has a unique, meaningful name
-            // (WCAG 2.4.6, 4.1.2). Falls back to the generic group label when
-            // the customfield isn't defined.
-            const tagLabel = settings[tag + 'label'];
-            const fieldLabel = tagLabel ? (groupLabel + ' — ' + tagLabel) : groupLabel;
-
-            if (mode === 'tabs') {
-                html.push('<div class="dims-filter-tabs-wrapper" data-filter-group="' + field + '">');
-                html.push('<div class="dims-filter-tabs" role="radiogroup" aria-label="' + escapeHtml(fieldLabel) + '">');
-                html.push('<button type="button" class="dims-filter-tab ' + (selectedValue === '' ? 'active' : '')
+        tagGroups(state, type, cards).forEach((group) => {
+            const selectedValue = state.activeFilters[group.field] || '';
+            const fieldLabel = tagLabel(state, type, group.tag, labels);
+            const labelid = host.closest('[data-region="dims-line-panel"]').id + '-' + group.tag;
+            html.push('<div class="dims-line-group" data-filter-group="' + group.field + '">');
+            html.push('<span class="dims-line-grouplabel" id="' + labelid + '">' + escapeHtml(fieldLabel) + '</span>');
+            if (group.mode === 'tabs') {
+                html.push('<div class="dims-filter-tabs-wrapper">');
+                html.push('<div class="dims-filter-tabs" role="radiogroup" aria-labelledby="' + labelid + '">');
+                html.push('<button type="button" class="dims-filter-tab dims-tag-filter-btn' + (selectedValue === '' ? ' active' : '')
                     + '" role="radio" aria-checked="' + (selectedValue === '' ? 'true' : 'false')
                     + '" tabindex="' + (selectedValue === '' ? '0' : '-1')
-                    + '" data-filter-field="' + field + '" data-filter-value="">' + escapeHtml(labels.filterall) + '</button>');
-                values.forEach((value) => {
+                    + '" data-filter-field="' + group.field + '" data-filter-value="">' + escapeHtml(labels.filterall)
+                    + ' <span class="dims-filter-count" data-filter-count></span></button>');
+                group.values.forEach((value) => {
                     const isSelected = selectedValue === value;
-                    html.push('<button type="button" class="dims-filter-tab ' + (isSelected ? 'active' : '')
+                    html.push('<button type="button" class="dims-filter-tab dims-tag-filter-btn' + (isSelected ? ' active' : '')
                         + '" role="radio" aria-checked="' + (isSelected ? 'true' : 'false')
                         + '" tabindex="' + (isSelected ? '0' : '-1')
-                        + '" data-filter-field="' + field + '" data-filter-value="' + escapeHtml(value) + '">'
-                        + escapeHtml(value) + '</button>');
+                        + '" data-filter-field="' + group.field + '" data-filter-value="' + escapeHtml(value) + '">'
+                        + escapeHtml(value) + ' <span class="dims-filter-count" data-filter-count></span></button>');
                 });
                 html.push('</div></div>');
             } else {
-                html.push('<div class="dims-filter-dropdown-wrapper" data-filter-group="' + field + '">');
-                html.push('<select class="dims-filter-select" data-filter-field="' + field
-                    + '" aria-label="' + escapeHtml(fieldLabel) + '">');
-                html.push('<option value=""' + (selectedValue === '' ? ' selected' : '') + '>' + escapeHtml(labels.filterall) + '</option>');
-                values.forEach((value) => {
+                html.push('<select class="dims-filter-select" data-filter-field="' + group.field
+                    + '" aria-labelledby="' + labelid + '">');
+                html.push('<option value=""' + (selectedValue === '' ? ' selected' : '') + ' data-label="'
+                    + escapeHtml(labels.filterall) + '">' + escapeHtml(labels.filterall) + '</option>');
+                group.values.forEach((value) => {
                     const isSelected = selectedValue === value;
-                    html.push('<option value="' + escapeHtml(value) + '"' + (isSelected ? ' selected' : '') + '>' + escapeHtml(value) + '</option>');
+                    html.push('<option value="' + escapeHtml(value) + '"' + (isSelected ? ' selected' : '') + ' data-label="'
+                        + escapeHtml(value) + '">' + escapeHtml(value) + '</option>');
                 });
-                html.push('</select></div>');
+                html.push('</select>');
             }
+            html.push('</div>');
         });
 
-        // "Clear filters" button — rendered inside the bar, shown/hidden dynamically.
-        if (hasAnyFilter) {
-            html.push('<button type="button" class="dims-clear-filters-btn" data-clear-type="'
-                + type + '" style="display:none" aria-label="' + escapeHtml(labels.clearfilters || 'Clear filters') + '">'
-                + '<i class="fa fa-eraser" aria-hidden="true"></i> '
-                + escapeHtml(labels.clearfilters || 'Clear filters')
-                + '</button>');
+        FilterTabsNav.destroyAll(host);
+        host.innerHTML = html.join('');
+        // Initialize horizontal-scrolling tab navigation. Pass labels so
+        // paddle aria-labels can be localized (WCAG 3.1.2).
+        FilterTabsNav.initAll(host, {labels: labels});
+        const slot = linePart(container, type, '[data-region="dims-line-filters"]');
+        if (slot) {
+            slot.hidden = html.length === 0;
         }
+    }
 
-        html.push('</div>');
-        if (hasAnyFilter) {
-            // Destroy existing tab nav instances before replacing HTML.
-            FilterTabsNav.destroyAll(host);
-            host.innerHTML = '<div class="dims-filters-panel-inner">' + html.join('') + '</div>';
-            // Initialize horizontal-scrolling tab navigation. Pass labels so
-            // paddle aria-labels can be localized (WCAG 3.1.2).
-            FilterTabsNav.initAll(host, {labels: labels});
-        } else {
-            FilterTabsNav.destroyAll(host);
-            host.innerHTML = '';
+    /**
+     * Bring one section's star in line with the state: drawn while favourites are on and the section
+     * holds a favourite, and for the plans only in the active bucket, whose cards alone carry a star;
+     * pressed while the section shows its favourites alone.
+     *
+     * @param {HTMLElement} container Block container.
+     * @param {Object} state Application state.
+     * @param {string} type 'plan' or 'competency'.
+     */
+    function syncStar(container, state, type) {
+        const star = linePart(container, type, '[data-region="dims-line-star"]');
+        if (!star) {
+            return;
+        }
+        const favCount = type === 'plan' ? state.favouriteCountPlan : state.favouriteCountCompetency;
+        star.hidden = !state.favouritesEnabled || favCount <= 0 || (type === 'plan' && state.planStatus !== 'active');
+        const pressed = !!state.favouriteFilterActive[type];
+        star.setAttribute('aria-pressed', pressed ? 'true' : 'false');
+        const icon = star.querySelector('i');
+        if (icon) {
+            icon.className = 'fa ' + (pressed ? 'fa-star' : 'fa-star-o');
+        }
+        const count = star.querySelector('[data-fav-count]');
+        if (count) {
+            count.textContent = String(favCount);
         }
     }
 
     function syncFilterActiveState(container, state) {
         // Tag-value radios. Each radiogroup keeps a single tab stop: the
         // currently checked radio gets tabindex="0", the others tabindex="-1"
-        // (roving tabindex pattern, WCAG 2.1.1 + 2.4.3).
-        container.querySelectorAll(
-            '.dims-filter-tab:not(.dims-fav-filter-btn):not(.dims-all-filter-btn):not(.dims-status-filter-btn)'
-        ).forEach(function(tab) {
+        // (roving tabindex pattern, WCAG 2.1.1 + 2.4.3). Each carries the count
+        // of the section's cards it would show, the section's search applied,
+        // and one that would show none is hidden unless it is the chosen one.
+        container.querySelectorAll('.dims-filter-tab.dims-tag-filter-btn').forEach(function(tab) {
             var field = tab.dataset.filterField;
             var value = tab.dataset.filterValue || '';
             var isActive = (state.activeFilters[field] || '') === value;
+            var type = field.split('_')[0];
+            var changes = {};
+            changes[field] = value;
+            var count = countWith(state, type, changes, true);
             tab.classList.toggle('active', isActive);
             tab.setAttribute('aria-checked', isActive ? 'true' : 'false');
             tab.setAttribute('tabindex', isActive ? '0' : '-1');
+            tab.hidden = value !== '' && count === 0 && !isActive;
+            var badge = tab.querySelector('[data-filter-count]');
+            if (badge) {
+                badge.textContent = String(count);
+            }
         });
 
         container.querySelectorAll('.dims-filter-select').forEach(function(select) {
             var field = select.dataset.filterField;
+            var type = field.split('_')[0];
             select.value = state.activeFilters[field] || '';
+            Array.prototype.forEach.call(select.options, function(option) {
+                var changes = {};
+                changes[field] = option.value;
+                var count = countWith(state, type, changes, true);
+                option.textContent = (option.dataset.label || option.value) + ' (' + count + ')';
+                option.hidden = option.value !== '' && count === 0 && !option.selected;
+            });
         });
 
-        // Sync favourite / all pills (also a radiogroup).
-        container.querySelectorAll('.dims-fav-filter-btn').forEach(function(btn) {
-            var favType = btn.dataset.favFilterType;
-            var isActive = state.favouriteFilterActive[favType];
-            btn.classList.toggle('active', isActive);
-            btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
-            btn.setAttribute('tabindex', isActive ? '0' : '-1');
-        });
-        container.querySelectorAll('.dims-all-filter-btn').forEach(function(btn) {
-            var allType = btn.dataset.allFilterType;
-            var isActive = !state.favouriteFilterActive[allType];
-            btn.classList.toggle('active', isActive);
-            btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
-            btn.setAttribute('tabindex', isActive ? '0' : '-1');
+        TYPES.forEach(function(type) {
+            syncStar(container, state, type);
+            var badge = linePart(container, type, '[data-region="dims-line-badge"]');
+            if (badge) {
+                var count = activeTagCount(state, type);
+                badge.textContent = String(count);
+                badge.hidden = count === 0;
+            }
         });
 
         // Update the animated indicator position in all tab nav instances.
@@ -337,12 +389,49 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
     }
 
     /**
-     * Show or hide the "Clear filters" button for each type based on active state.
+     * Show or hide the "Clear filters" button of each section's panel: shown while a tag filter of
+     * that section is in force.
      */
     function updateClearFilterButtons(container, state) {
         container.querySelectorAll('.dims-clear-filters-btn').forEach(function(btn) {
             var clearType = btn.dataset.clearType;
-            btn.style.display = hasActiveFiltersForType(state, clearType) ? '' : 'none';
+            btn.style.display = activeTagCount(state, clearType) > 0 ? '' : 'none';
+        });
+    }
+
+    /**
+     * Show each section's filter line once it has something to filter, and bring it in line with
+     * the list just applied (block_dimensions/filter_line repaint()).
+     *
+     * The plans' line shows while its scope is a choice, a bucket is loading or the bucket on
+     * screen holds plan cards; the competencies' line while there are competency cards. Nothing
+     * shows before the session's first dataset.
+     *
+     * @param {HTMLElement} container Block container.
+     * @param {Object} state Application state.
+     */
+    function syncLines(container, state) {
+        const lines = LINES.get(container) || {};
+        TYPES.forEach((type) => {
+            const toolbar = lineToolbar(container, type);
+            if (!toolbar) {
+                return;
+            }
+            let has;
+            if (type === 'plan') {
+                const scope = toolbar.querySelector('[data-region="dims-line-scope"]');
+                has = (!!scope && !scope.hidden) || !!state.statusLoading || state.rawDataset.plancards.length > 0;
+            } else {
+                has = state.rawDataset.competencycards.length > 0;
+            }
+            toolbar.hidden = !state.datasetReady || !has;
+            if (toolbar.hidden && lines[type]) {
+                lines[type].closePanel(false);
+                lines[type].closeSearch(false);
+            }
+            if (lines[type]) {
+                lines[type].repaint();
+            }
         });
     }
 
@@ -690,33 +779,6 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
     }
 
     /**
-     * Update the counts on the favourites and show-all pills in place, without rebuilding the
-     * filter bar, so toggleFavourite keeps focus on the star button (WCAG 2.4.3).
-     */
-    function updateFavouritePillCounts(container, state) {
-        ['plan', 'competency'].forEach(function(type) {
-            const favCount = type === 'plan' ? state.favouriteCountPlan : state.favouriteCountCompetency;
-            const total = type === 'plan' ? state.totalplans : state.totalcompetencies;
-
-            const favBtn = container.querySelector('.dims-fav-filter-btn[data-fav-filter-type="' + type + '"]');
-            if (favBtn) {
-                const span = favBtn.querySelector('.dims-filter-count');
-                if (span) {
-                    span.textContent = String(favCount);
-                }
-            }
-
-            const allBtn = container.querySelector('.dims-all-filter-btn[data-all-filter-type="' + type + '"]');
-            if (allBtn) {
-                const span = allBtn.querySelector('.dims-filter-count');
-                if (span) {
-                    span.textContent = String(total);
-                }
-            }
-        });
-    }
-
-    /**
      * The pending results announcement of each block, keyed by its container, so that two blocks
      * on one page do not cancel each other's.
      */
@@ -809,12 +871,6 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                another bucket was loading, or when its bucket failed to load. */
             return {selector: '.dims-status-filter-btn[aria-checked="true"]'};
         }
-        if (active.matches('.dims-fav-filter-btn[data-fav-filter-type]')) {
-            return {selector: '.dims-fav-filter-btn[data-fav-filter-type="' + selectorValue(active.dataset.favFilterType) + '"]'};
-        }
-        if (active.matches('.dims-all-filter-btn[data-all-filter-type]')) {
-            return {selector: '.dims-all-filter-btn[data-all-filter-type="' + selectorValue(active.dataset.allFilterType) + '"]'};
-        }
         if (active.matches('.dims-filter-tab[data-filter-field]')) {
             const field = selectorValue(active.dataset.filterField);
             const value = selectorValue(active.dataset.filterValue || '');
@@ -904,21 +960,10 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                 }
             }
 
-            // The fav/all pills only need a full filter-bar rebuild when the
-            // count crosses the 0 boundary (pills appear or disappear). For any
-            // other transition we update counts in place to preserve focus on
-            // the star button the user just activated (WCAG 2.4.3).
-            const prevFavPlan = state.favouriteCountPlan;
-            const prevFavComp = state.favouriteCountCompetency;
+            // The line's star is updated in place, never rebuilt, so the focus stays on the card's
+            // star the user just activated (WCAG 2.4.3).
             updateFavouriteCounts(state);
-            const pillsToggleVisibility =
-                (prevFavPlan === 0) !== (state.favouriteCountPlan === 0) ||
-                (prevFavComp === 0) !== (state.favouriteCountCompetency === 0);
-            if (pillsToggleVisibility) {
-                state.filtersRendered = false;
-            } else {
-                updateFavouritePillCounts(container, state);
-            }
+            syncStar(container, state, itemtype);
 
             // If favourite filter is active and count dropped to 0, deactivate and load all.
             const typeFavCount = itemtype === 'plan' ? state.favouriteCountPlan : state.favouriteCountCompetency;
@@ -965,8 +1010,9 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         updateClearFilterButtons(container, state);
 
         if (focusKey) {
-            restoreFocus(container, focusKey, '.dims-block-search-input');
+            restoreFocus(container, focusKey, '.dims-line-input');
         }
+        syncLines(container, state);
 
         const token = String(++state.renderToken);
         container.dataset.renderToken = token;
@@ -996,6 +1042,8 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
 
             // Announce filtered results count via aria-live (WCAG 4.1.3).
             announceResults(container, state, options.labels);
+            // The cards are drawn now, so the suggestions can offer them.
+            syncLines(container, state);
             return null;
         }).catch(() => {
             showError(container, options.labels.loaderror);
@@ -1076,7 +1124,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         updateFavouriteCounts(state);
         state.favouriteFilterActive.plan = bucket === 'active'
             && state.favouritesEnabled
-            && !state.normalizedSearch
+            && !state.normalizedSearch.plan
             && state.favouriteCountPlan > 0
             && !state.fullDatasetLoaded.plan
             && state.hasnonfavouriteplans;
@@ -1127,7 +1175,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
             tag1: state.activeFilters.plan_tag1,
             tag2: state.activeFilters.plan_tag2
         };
-        const previousSearch = state.normalizedSearch;
+        const previousSearch = state.normalizedSearch.plan;
         state.statusCards[previous] = state.rawDataset.plancards;
         state.planStatus = bucket;
         state.favouriteFilterActive.plan = false;
@@ -1146,7 +1194,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                showBucketCards(). They are fetched under a search, as the search handler would,
                and while favourites are disabled; see loadWhatFavouritesLeftOut(). Plans already
                on their way are not asked for again; see loadGroupDataset(). */
-            if (state.normalizedSearch && searchNeedsPlans(state)) {
+            if (state.normalizedSearch.plan && searchNeedsPlans(state)) {
                 loadGroupDataset(container, state, options, 'plan');
             } else {
                 loadWhatFavouritesLeftOut(container, state, options);
@@ -1202,7 +1250,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                of the bucket on screen, so the plans this bucket is missing are fetched below. The
                favourites filter also stays off when a response disabled favourites meanwhile; see
                state.applySharedMetadata(). */
-            const searched = state.normalizedSearch !== '' && state.normalizedSearch !== previousSearch;
+            const searched = state.normalizedSearch.plan !== '' && state.normalizedSearch.plan !== previousSearch;
             const filters = searched ? {favourite: false, tag1: '', tag2: ''} : previousFilters;
             state.favouriteFilterActive.plan = filters.favourite && state.favouritesEnabled;
             /* eslint-disable camelcase */
@@ -1414,80 +1462,219 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         loadGroupDataset(container, state, options, groupToLoad);
     }
 
-    function bindEvents(container, state, options) {
-        const searchInput = container.querySelector('.dims-block-search-input');
-        const clearButton = container.querySelector('.dims-block-search-clear');
-        let debounceTimer = null;
+    /**
+     * Read each section's search field into the state; a section without a field searches nothing.
+     *
+     * @param {HTMLElement} container Block container.
+     * @param {Object} state Application state.
+     */
+    function readSearch(container, state) {
+        TYPES.forEach((type) => {
+            const field = searchField(container, type);
+            state.searchTerm[type] = field ? field.value.trim() : '';
+            state.normalizedSearch[type] = normalizeText(state.searchTerm[type]);
+        });
+    }
 
-        // A value the browser puts back in the input fires no input event; loadData() reads it.
-        if (searchInput && clearButton) {
-            clearButton.style.display = searchInput.value.length ? 'flex' : 'none';
-        }
+    /**
+     * Apply what the two search fields hold: each section's search runs over that section's cards.
+     *
+     * A section whose search changed to a text drops its favourites filter, so the search reaches
+     * every card of the section (the two-phase load's rule), and whatever of those the
+     * favourites-only first request left out is fetched first. Only the active bucket can be missing
+     * plans; the competency cards can be missing some whichever bucket is on screen. A bucket switch
+     * that fails applies the same rule to the bucket it returns to; see pickStatus().
+     *
+     * @param {HTMLElement} container Block container.
+     * @param {Object} state Application state.
+     * @param {Object} options Init options.
+     * @return {Promise|null}
+     */
+    function runSearch(container, state, options) {
+        const before = Object.assign({}, state.normalizedSearch);
+        readSearch(container, state);
+        TYPES.forEach((type) => {
+            if (state.normalizedSearch[type] && state.normalizedSearch[type] !== before[type]) {
+                state.favouriteFilterActive[type] = false;
+            }
+        });
 
-        if (searchInput) {
-            searchInput.addEventListener('input', () => {
-                if (clearButton) {
-                    clearButton.style.display = searchInput.value.length ? 'flex' : 'none';
-                }
-
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
-                    state.searchTerm = searchInput.value.trim();
-                    state.normalizedSearch = normalizeText(state.searchTerm);
-
-                    // Search always deactivates favourite filter to search across all items.
-                    if (state.normalizedSearch) {
-                        state.favouriteFilterActive.plan = false;
-                        state.favouriteFilterActive.competency = false;
-                        // Reset all tag filters so search shows everything.
-                        // Keys are the snake_case data-filter-field contract.
-                        /* eslint-disable camelcase */
-                        state.activeFilters.plan_tag1 = '';
-                        state.activeFilters.plan_tag2 = '';
-                        state.activeFilters.competency_tag1 = '';
-                        state.activeFilters.competency_tag2 = '';
-                        /* eslint-enable camelcase */
-                        state.filtersRendered = false;
-                    }
-
-                    /* The search reaches the plan bucket on screen and every competency card, so
-                       fetch first whatever of those the favourites-only first request left out.
-                       Only the active bucket can be missing plans; the competency cards can be
-                       missing some whichever bucket is on screen. A bucket switch that fails
-                       applies the same rule to the bucket it returns to; see pickStatus(). */
-                    const needPlans = searchNeedsPlans(state);
-                    const needCompetencies = !state.fullDatasetLoaded.competency && state.hasnonfavouritecompetencies;
-                    if (state.normalizedSearch && (needPlans || needCompetencies)) {
-                        const group = loadGroupFor(needPlans, needCompetencies);
-                        return loadGroupDataset(container, state, options, group).then(() => {
-                            state.searchTerm = searchInput.value.trim();
-                            state.normalizedSearch = normalizeText(state.searchTerm);
-                            rerender(container, state, options);
-                            return null;
-                        });
-                    }
-                    rerender(container, state, options);
-                    return null;
-                }, 120);
-            });
-        }
-
-        if (clearButton) {
-            clearButton.addEventListener('click', () => {
-                if (searchInput) {
-                    searchInput.value = '';
-                    searchInput.focus();
-                }
-                clearButton.style.display = 'none';
-                state.searchTerm = '';
-                state.normalizedSearch = '';
+        const needPlans = !!state.normalizedSearch.plan && searchNeedsPlans(state);
+        const needCompetencies = !!state.normalizedSearch.competency
+            && !state.fullDatasetLoaded.competency && state.hasnonfavouritecompetencies;
+        if (needPlans || needCompetencies) {
+            const group = loadGroupFor(needPlans, needCompetencies);
+            return loadGroupDataset(container, state, options, group).then(() => {
+                readSearch(container, state);
                 rerender(container, state, options);
+                return null;
             });
         }
+        rerender(container, state, options);
+        return null;
+    }
 
-        // One delegated click handler for the cards and the filter bar; its branch count is over
-        // eslint's complexity limit.
-        // eslint-disable-next-line complexity
+    /**
+     * Press a section's favourites star: show its favourites alone, or every card again.
+     *
+     * Releasing it while the favourites-only first request left cards out fetches them; otherwise
+     * the grid is filtered in place, without a full render.
+     *
+     * @param {HTMLElement} container Block container.
+     * @param {Object} state Application state.
+     * @param {Object} options Init options.
+     * @param {string} favType 'plan' or 'competency'.
+     */
+    function pressStar(container, state, options, favType) {
+        state.favouriteFilterActive[favType] = !state.favouriteFilterActive[favType];
+
+        const favTypeHasNonFavs = favType === 'plan'
+            ? state.hasnonfavouriteplans : state.hasnonfavouritecompetencies;
+        if (!state.favouriteFilterActive[favType] && !state.fullDatasetLoaded[favType] && favTypeHasNonFavs) {
+            // Releasing the star: this group's dataset is needed.
+            showAllItems(container, state, options, favType);
+            return;
+        }
+
+        applyFilters(state);
+        syncFilterActiveState(container, state);
+        applyVisibility(container, favType,
+            favType === 'plan' ? state.filteredDataset.plancards : state.filteredDataset.competencycards);
+        updateClearFilterButtons(container, state);
+        renderGhostCards(container, state, options.labels);
+        updateEmptyState(container, state, options.labels);
+        syncLines(container, state);
+    }
+
+    /**
+     * Release every tag filter of a section: the panel's "Clear filters", "Clear all" and the chips.
+     *
+     * @param {Object} state Application state.
+     * @param {string} type 'plan' or 'competency'.
+     */
+    function clearTags(state, type) {
+        state.activeFilters[type + '_tag1'] = '';
+        state.activeFilters[type + '_tag2'] = '';
+    }
+
+    /**
+     * Arm the filter line of each section (block_dimensions/filter_line), with the hooks it applies
+     * filters through.
+     *
+     * Every count a suggestion offers is taken without the section's typed text, since choosing it
+     * empties the field first; a bucket offers the server's count of its plan cards. A filter in
+     * force, or one that would leave nothing, is not offered.
+     *
+     * @param {HTMLElement} container Block container.
+     * @param {Object} state Application state.
+     * @param {Object} options Init options.
+     */
+    function armLines(container, state, options) {
+        const lines = {};
+        TYPES.forEach((type) => {
+            const toolbar = lineToolbar(container, type);
+            if (!toolbar) {
+                return;
+            }
+            const labels = options.labels || {};
+            const cards = (filtered) => {
+                const dataset = filtered ? state.filteredDataset : state.rawDataset;
+                return type === 'plan' ? dataset.plancards : dataset.competencycards;
+            };
+            lines[type] = FilterLine.create(toolbar, {
+                filters: () => {
+                    const found = [];
+                    toolbar.querySelectorAll('.dims-status-filter-btn[data-status-filter]').forEach((pill) => {
+                        if (!pill.hidden && pill.getAttribute('aria-checked') !== 'true' && !state.statusLoading) {
+                            const count = state.planCounts[pill.dataset.statusFilter] || 0;
+                            found.push({
+                                label: labels['status' + pill.dataset.statusFilter] || pill.textContent.trim(),
+                                group: labels.statusfilter || '',
+                                count: count > 0 ? count : null,
+                                apply: () => pickStatus(container, state, options, pill.dataset.statusFilter)
+                            });
+                        }
+                    });
+                    const star = toolbar.querySelector('[data-region="dims-line-star"]');
+                    if (star && !star.hidden && star.getAttribute('aria-pressed') !== 'true') {
+                        const count = countWith(state, type, {favourite: true}, false);
+                        if (count > 0) {
+                            found.push({label: star.title, group: '', count: count, apply: () => star.click()});
+                        }
+                    }
+                    tagGroups(state, type, cards(false)).forEach((group) => {
+                        const words = tagLabel(state, type, group.tag, labels);
+                        group.values.forEach((value) => {
+                            if (state.activeFilters[group.field] === value) {
+                                return;
+                            }
+                            const changes = {};
+                            changes[group.field] = value;
+                            const count = countWith(state, type, changes, false);
+                            if (count > 0) {
+                                found.push({label: value, group: words, count: count, apply: () => {
+                                    state.activeFilters[group.field] = value;
+                                    rerender(container, state, options);
+                                }});
+                            }
+                        });
+                    });
+                    return found;
+                },
+                chips: () => tagGroups(state, type, cards(false))
+                    .filter((group) => !!state.activeFilters[group.field])
+                    .map((group) => ({
+                        label: state.activeFilters[group.field],
+                        release: () => {
+                            state.activeFilters[group.field] = '';
+                            rerender(container, state, options);
+                        }
+                    })),
+                items: () => {
+                    const list = container.querySelector('[data-cards-type="' + type + '"]');
+                    return cards(true).map((card) => ({
+                        label: card.name || '',
+                        element: list ? list.querySelector('li[data-card-id="' + selectorValue(String(card.id)) + '"]') : null
+                    })).filter((item) => !!item.element);
+                },
+                openItem: (element) => {
+                    const link = element.querySelector('.plan-card-link, .competency-card-link') || element.querySelector('a[href]');
+                    if (link) {
+                        link.focus();
+                    }
+                    element.scrollIntoView({block: 'nearest'});
+                },
+                dropTerm: () => {
+                    clearTimeout(searchTimers.get(container));
+                    runSearch(container, state, options);
+                },
+                clearAll: () => {
+                    clearTags(state, type);
+                    rerender(container, state, options);
+                },
+                shown: () => cards(true).length
+            });
+        });
+        LINES.set(container, lines);
+    }
+
+    /** Each block's pending search, keyed by its container: both fields share one debounce. */
+    const searchTimers = new WeakMap();
+
+    function bindEvents(container, state, options) {
+        // Both sections' fields share one debounce, so a text typed in each at once is one fetch.
+        TYPES.forEach((type) => {
+            const field = searchField(container, type);
+            if (!field) {
+                return;
+            }
+            field.addEventListener('input', () => {
+                clearTimeout(searchTimers.get(container));
+                searchTimers.set(container, setTimeout(() => runSearch(container, state, options), 120));
+            });
+        });
+
+        // One delegated click handler for the cards and the filter lines.
         container.addEventListener('click', (e) => {
             // Trail items are real links, so the keyboard reaches and follows them natively
             // (WCAG 2.1.1). A link carrying a plan id is intercepted only to call the
@@ -1525,24 +1712,12 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                 return;
             }
 
-            // Handle "Clear filters" button click (scoped to one section).
+            // Handle "Clear filters" in a section's panel: its tag filters, not its star.
             const clearBtn = e.target.closest('.dims-clear-filters-btn');
             if (clearBtn) {
                 e.preventDefault();
-                const clearType = clearBtn.dataset.clearType;
-                state.activeFilters[clearType + '_tag1'] = '';
-                state.activeFilters[clearType + '_tag2'] = '';
-                state.favouriteFilterActive[clearType] = false;
+                clearTags(state, clearBtn.dataset.clearType);
                 state.filtersRendered = false;
-
-                // If full dataset not loaded and needed, load it.
-                const typeHasNonFavs = clearType === 'plan'
-                    ? state.hasnonfavouriteplans && state.planStatus === 'active'
-                    : state.hasnonfavouritecompetencies;
-                if (!state.fullDatasetLoaded[clearType] && typeHasNonFavs) {
-                    loadGroupDataset(container, state, options, clearType);
-                    return;
-                }
                 rerender(container, state, options);
                 return;
             }
@@ -1565,44 +1740,17 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                 return;
             }
 
-            // Handle a "Show all" pill click.
-            const allFilterBtn = e.target.closest('.dims-all-filter-btn');
-            if (allFilterBtn) {
+            // Handle a section's favourites star.
+            const star = e.target.closest('[data-fav-star]');
+            if (star) {
                 e.preventDefault();
-                const allType = allFilterBtn.dataset.allFilterType;
-                showAllItems(container, state, options, allType);
-                return;
-            }
-
-            // Handle favourite filter button clicks.
-            const favFilterBtn = e.target.closest('.dims-fav-filter-btn');
-            if (favFilterBtn) {
-                e.preventDefault();
-                const favType = favFilterBtn.dataset.favFilterType;
-                state.favouriteFilterActive[favType] = !state.favouriteFilterActive[favType];
-
-                const favTypeHasNonFavs = favType === 'plan'
-                    ? state.hasnonfavouriteplans : state.hasnonfavouritecompetencies;
-                if (!state.favouriteFilterActive[favType] && !state.fullDatasetLoaded[favType] && favTypeHasNonFavs) {
-                    // Deactivating favourite filter: need this group's dataset.
-                    showAllItems(container, state, options, favType);
-                    return;
-                }
-
-                syncFilterActiveState(container, state);
-                applyFilters(state);
-                applyVisibility(container, favType,
-                    favType === 'plan' ? state.filteredDataset.plancards : state.filteredDataset.competencycards);
-                updateClearFilterButtons(container, state);
-                renderGhostCards(container, state, options.labels);
-                updateEmptyState(container, state, options.labels);
+                pressStar(container, state, options, star.dataset.favStar);
                 return;
             }
 
             // Handle tag filter tab clicks.
-            const tab = e.target.closest('.dims-filter-tab');
-            if (!tab || tab.classList.contains('dims-fav-filter-btn') || tab.classList.contains('dims-all-filter-btn')
-                    || tab.classList.contains('dims-status-filter-btn')) {
+            const tab = e.target.closest('.dims-filter-tab.dims-tag-filter-btn');
+            if (!tab) {
                 return;
             }
 
@@ -1629,24 +1777,6 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                     focusBlock(container);
                 }
                 loadData(container, state, options);
-            });
-        }
-
-        // Filter toggle button (mobile only — desktop keeps filters always visible via CSS).
-        const toggleBtn = container.querySelector('.dims-filter-toggle-btn');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', function() {
-                const isOpen = container.classList.toggle('dims-filters-open');
-                toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-            });
-
-            // On resize to desktop width: collapse the panel and reset button state.
-            const mq = globalThis.matchMedia('(max-width: 575.98px)');
-            mq.addEventListener('change', function(e) {
-                if (!e.matches) {
-                    container.classList.remove('dims-filters-open');
-                    toggleBtn.setAttribute('aria-expanded', 'false');
-                }
             });
         }
     }
@@ -1686,9 +1816,10 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
     /**
      * Put the block's markup back to the shell the page served, for a new session.
      *
-     * Bumping the render token stops a card list still being rendered in batches. The filter bars
-     * go with the dataset they were built from, so nothing left on screen can start a request for
-     * the session being replaced.
+     * Bumping the render token stops a card list still being rendered in batches. The status pills
+     * and the panels' tag groups go with the dataset they were built from, and the lines are hidden
+     * until the new dataset lands, so nothing left on screen can start a request for the session
+     * being replaced.
      *
      * @param {HTMLElement} container Block container.
      * @param {Object} state Application state, already reset by resetSession().
@@ -1696,10 +1827,11 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
      */
     function resetView(container, state, labels) {
         container.dataset.renderToken = String(++state.renderToken);
-        container.querySelectorAll('.dims-filters-host').forEach((host) => {
+        container.querySelectorAll('.dims-filters-host, [data-region="dims-line-scope"]').forEach((host) => {
             FilterTabsNav.destroyAll(host);
             host.innerHTML = '';
         });
+        syncLines(container, state);
         clearStatusSkeleton(container, state, labels);
         resetRenderedState(container, state);
         container.querySelectorAll('.dims-section-header, .dims-empty-state').forEach((element) => {
@@ -1724,11 +1856,7 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         resetView(container, state, options.labels);
         clearError(container);
 
-        const searchInput = container.querySelector('.dims-block-search-input');
-        if (searchInput) {
-            state.searchTerm = searchInput.value.trim();
-            state.normalizedSearch = normalizeText(state.searchTerm);
-        }
+        readSearch(container, state);
 
         // Phase 1: if favourites are enabled, load only favourites first.
         const useFavouritesFirst = state.favouritesEnabled;
@@ -1771,12 +1899,24 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
                 // The group whose full list is fetched next ('plan', 'competency', '' for both), or
                 // null when this dataset is all there is to show for now.
                 let group = null;
-                if (useFavouritesFirst && hasAnyNonFavourites && state.normalizedSearch) {
-                    /* A search reaches every card, as in the search handler: the favourites filter
-                       stays off, and whatever the favourites-only request left out of the plan
-                       bucket on screen and of the competency cards is fetched. */
-                    const needPlans = state.planStatus === 'active' && state.hasnonfavouriteplans;
-                    const needCompetencies = state.hasnonfavouritecompetencies;
+                const planSearch = !!state.normalizedSearch.plan;
+                const competencySearch = !!state.normalizedSearch.competency;
+                if (useFavouritesFirst && hasAnyNonFavourites && (planSearch || competencySearch)) {
+                    /* A search reaches every card of its section, as in the search handler: that
+                       section's favourites filter stays off, and whatever the favourites-only
+                       request left out of it - of the plan bucket on screen, or of the competency
+                       cards - is fetched. A section with no search keeps the favourites-first view
+                       of the branch below. */
+                    const needPlans = planSearch
+                        ? state.planStatus === 'active' && state.hasnonfavouriteplans
+                        : state.totalplans > 0 && state.favouriteCountPlan === 0 && state.hasnonfavouriteplans;
+                    const needCompetencies = competencySearch
+                        ? state.hasnonfavouritecompetencies
+                        : state.totalcompetencies > 0 && state.favouriteCountCompetency === 0
+                            && state.hasnonfavouritecompetencies;
+                    state.favouriteFilterActive.plan = !planSearch && state.favouriteCountPlan > 0 && state.hasnonfavouriteplans;
+                    state.favouriteFilterActive.competency = !competencySearch && state.favouriteCountCompetency > 0
+                        && state.hasnonfavouritecompetencies;
                     if (needPlans || needCompetencies) {
                         group = loadGroupFor(needPlans, needCompetencies);
                     }
@@ -1837,7 +1977,9 @@ define(['core/ajax', 'core/templates', 'block_dimensions/filter_tabs_nav', 'bloc
         }
 
         const state = createState(safeOptions);
+        safeOptions.labels = safeOptions.labels || {};
         bindEvents(container, state, safeOptions);
+        armLines(container, state, safeOptions);
         loadData(container, state, safeOptions);
     }
 

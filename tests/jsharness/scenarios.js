@@ -12,27 +12,53 @@ const L = {
     filterall: 'All', filterbyplan: 'Filter plans', filterbycompetency: 'Filter comps',
     noactiveplans: 'NOACTIVE', nocompetencies: 'NOCOMPS', resultsnonefound: 'NONEFOUND',
     resultsfound: 'P={$a->plans} C={$a->competencies}', loaderror: 'LOADERROR',
-    ghostcardtitle: 'More', ghostcardsubtitle: 'sub', myfavourites: 'Favs', showallitems: 'All items',
+    ghostcardtitle: 'More', ghostcardsubtitle: 'sub',
     clearfilters: 'Clear', statusfilter: 'Status', statusactive: 'Active', statusreview: 'In review',
     statuscomplete: 'Completed', statusloadingactive: 'LOADING-ACTIVE', statusloadingreview: 'LOADING-REVIEW',
     statusloadingcomplete: 'LOADING-COMPLETE',
     favouriteerror: 'FAVERR', paddleleft: 'L', paddleright: 'R'
 };
 
+// One section's filter line, with the hooks templates/filter_line.mustache writes.
+function line(id, type) {
+    const lid = id + '-' + type;
+    return '<div class="dims-line-toolbar" data-region="dims-line-toolbar" data-line-type="' + type + '" hidden>'
+        + '<div class="dims-line" data-region="dims-line">'
+        + (type === 'plan' ? '<div class="dims-line-scope" data-region="dims-line-scope" hidden></div>' : '')
+        + '<div class="dims-line-search" data-region="dims-line-search"><label for="' + lid + '-search">Search</label>'
+        + '<input type="search" id="' + lid + '-search" class="dims-line-input" data-search-type="' + type + '">'
+        + '<button type="button" class="dims-line-eraser" data-action="dims-search-clear" hidden></button></div>'
+        + '<button type="button" class="dims-line-searchopen" data-action="dims-search-open" aria-expanded="false"></button>'
+        + '<button type="button" class="dims-line-star" data-region="dims-line-star" data-fav-star="' + type + '" aria-pressed="false" title="Favourites" hidden>'
+        + '<i class="fa fa-star-o"></i><span><span data-fav-count></span></span></button>'
+        + '<div class="dims-line-filters" data-region="dims-line-filters" hidden>'
+        + '<button type="button" class="dims-line-filterstoggle" data-action="dims-filters-toggle" aria-expanded="false">Filters'
+        + ' <span data-region="dims-line-badge" hidden></span></button>'
+        + '<div class="dims-line-panel" id="' + lid + '-panel" data-region="dims-line-panel" hidden>'
+        + '<div class="dims-filters-host" data-filters-type="' + type + '"></div>'
+        + '<button type="button" class="dims-clear-filters-btn" data-clear-type="' + type + '" style="display:none">Clear</button>'
+        + '<button type="button" data-action="dims-panel-show">Show <span data-region="dims-panel-count">0</span></button>'
+        + '</div></div>'
+        + '<button type="button" class="dims-line-searchclose" data-action="dims-search-close"></button>'
+        + '<div class="dims-line-suggest" id="' + lid + '-suggest" data-region="dims-line-suggest" data-label-filters="FILTERS"'
+        + ' data-label-start="START" data-label-items="ITEMS" hidden></div>'
+        + '</div>'
+        + '<div class="dims-line-chips" data-region="dims-line-chips" data-label-remove="Remove" hidden>'
+        + '<div data-region="dims-line-chiplist"></div>'
+        + '<button type="button" data-action="dims-clear-all" hidden>Clear all</button></div>'
+        + '</div>';
+}
+
 function shell(id) {
     return '<div id="' + id + '" class="block-dimensions-content">'
-        + '<div class="dims-block-header"><div class="dims-search-row"><div class="dims-block-search-wrapper">'
-        + '<input type="text" class="dims-block-search-input">'
-        + '<button type="button" class="dims-block-search-clear" style="display:none;"></button></div>'
-        + '<button type="button" class="dims-filter-toggle-btn" aria-expanded="false"></button></div></div>'
         + '<div class="dims-loading-state" role="status">Loading...</div>'
         + '<div class="dims-error-message" role="alert" style="display:none;"><span class="dims-error-text"></span>'
         + '<button type="button" class="dims-error-retry">Retry</button></div>'
         + '<h3 class="dims-section-header" data-section-header="plan" style="display:none">Plans</h3>'
-        + '<div class="dims-filters-host" data-filters-type="plan"></div>'
+        + line(id, 'plan')
         + '<nav><ul data-cards-type="plan"></ul></nav>'
         + '<h3 class="dims-section-header" data-section-header="competency" style="display:none">Comps</h3>'
-        + '<div class="dims-filters-host" data-filters-type="competency"></div>'
+        + line(id, 'competency')
         + '<nav><ul data-cards-type="competency"></ul></nav>'
         + '<p class="dims-empty-state" style="display:none;"></p>'
         + '<span data-results-status></span><span data-fav-status></span>'
@@ -60,8 +86,10 @@ function mount(opts, preset) {
     wrap.innerHTML = shell(id);
     document.getElementById('host').appendChild(wrap);
     if (preset) {
-        // A value the browser put back in the input before the module ran.
-        wrap.querySelector('.dims-block-search-input').value = preset;
+        // A value the browser put back in both inputs before the module ran.
+        wrap.querySelectorAll('.dims-line-input').forEach((input) => {
+            input.value = preset;
+        });
     }
     const base = __calls.length;
     __mods['block_dimensions/filters'].init(Object.assign({
@@ -89,15 +117,35 @@ const loadText = (c) => c.querySelector('.dims-loading-state').textContent.trim(
 const region = (c) => c.querySelector('[data-results-status]').textContent;
 const errorShown = (c) => vis(c.querySelector('.dims-error-message'));
 const empty = (c) => vis(c.querySelector('.dims-empty-state')) ? c.querySelector('.dims-empty-state').textContent : '';
-const pill = (c, key) => c.querySelector('.dims-status-filter-btn[data-status-filter="' + key + '"]');
+// A status pill drawn: the scope writes every bucket, the ones that are not a choice hidden, and is
+// itself hidden while fewer than two are.
+const pill = (c, key) => { const p = c.querySelector('.dims-status-filter-btn[data-status-filter="' + key + '"]:not([hidden])');
+    return p && !p.closest('[data-region="dims-line-scope"]').hidden ? p : null; };
 const checked = (c) => { const p = c.querySelector('.dims-status-filter-btn[aria-checked="true"]'); return p ? p.dataset.statusFilter : null; };
 const busy = (c) => { const p = c.querySelector('.dims-status-filter-btn[aria-busy="true"]'); return p ? p.dataset.statusFilter : null; };
 const focused = () => document.activeElement && document.activeElement.dataset
     ? (document.activeElement.dataset.statusFilter || document.activeElement.className) : null;
 const tagPills = (c) => c.querySelectorAll('[data-filter-field="plan_tag1"]').length;
-const favChecked = (c, type) => { const b = c.querySelector('.dims-fav-filter-btn[data-fav-filter-type="' + type + '"]'); return b ? b.getAttribute('aria-checked') : 'none'; };
+// A section's star: 'true' pressed, 'false' released, 'none' when it is not drawn.
+const star = (c, type) => c.querySelector('[data-fav-star="' + type + '"]');
+const favChecked = (c, type) => { const b = star(c, type); return b && !b.hidden ? b.getAttribute('aria-pressed') : 'none'; };
+// Release a section's star, as the "Show all" pill did: every card of the section.
+function showAll(c, type) {
+    const b = star(c, type);
+    if (b && b.getAttribute('aria-pressed') === 'true') {
+        b.click();
+    }
+}
+// Type the same text into both sections' search fields, which share one debounce.
 function typeSearch(c, v) {
-    const i = c.querySelector('.dims-block-search-input');
+    c.querySelectorAll('.dims-line-input').forEach((i) => {
+        i.value = v;
+        i.dispatchEvent(new Event('input', {bubbles: true}));
+    });
+}
+// Type into one section's search field alone.
+function typeSearchIn(c, type, v) {
+    const i = c.querySelector('.dims-line-input[data-search-type="' + type + '"]');
     i.value = v;
     i.dispatchEvent(new Event('input', {bubbles: true}));
 }
@@ -213,7 +261,7 @@ async function retryDropsAStaleBucket() {
     await settle();
     pill(b.c, 'review').click(); // Call 1, left pending.
     await settle();
-    b.c.querySelector('.dims-all-filter-btn[data-all-filter-type="competency"]').click(); // Call 2.
+    showAll(b.c, 'competency'); // Call 2.
     await settle();
     b.fail(2);
     await settle();
@@ -237,7 +285,7 @@ async function retryDropsAStaleGroup() {
     b.respond(0, base({plancards: [card(1, 'Alpha', {isfavourite: true})], competencycards: [card(11, 'C', {isfavourite: true})],
         totalplans: 2, totalcompetencies: 2, hasnonfavouriteplans: true, hasnonfavouritecompetencies: true, favouritesenabled: true}));
     await settle();
-    b.c.querySelector('.dims-all-filter-btn[data-all-filter-type="competency"]').click(); // Call 1, pending.
+    showAll(b.c, 'competency'); // Call 1, pending.
     await settle();
     pill(b.c, 'review').click(); // Call 2.
     await settle();
@@ -462,7 +510,7 @@ async function loadingLine() {
     const g = mount({favouritesenabled: true});
     g.respond(0, competencyFavouritesOnly());
     await settle();
-    g.c.querySelector('.dims-all-filter-btn[data-all-filter-type="competency"]').click(); // Call 1, the group.
+    showAll(g.c, 'competency'); // Call 1, the group.
     await settle();
     check('loading line: a group load alone shows the page text', loading(g.c) && loadText(g.c) === 'Loading...', [loading(g.c), loadText(g.c)]);
     pill(g.c, 'review').click(); // Call 2, the bucket.
@@ -510,8 +558,8 @@ async function searchAtLoad() {
 
     // A value the browser put back in the input before init.
     const r = mount({favouritesenabled: true}, 'beta');
-    check('search at load: a value put back in the input shows the clear button', r.c.querySelector('.dims-block-search-clear').style.display === 'flex',
-        r.c.querySelector('.dims-block-search-clear').style.display);
+    check('search at load: a value put back in the input shows the eraser', !r.c.querySelector('.dims-line-eraser').hidden,
+        r.c.querySelector('.dims-line-eraser').hidden);
     r.respond(0, searchFavouritesOnly());
     await settle();
     check('search at load: a value put back in the input fetches the rest', r.ncalls() === 2 && r.call(1).args.loadgroup === '', r.ncalls());
@@ -585,7 +633,9 @@ async function retryFocus() {
     b.fail(0);
     await settle();
     const retry = b.c.querySelector('.dims-error-retry');
-    const input = b.c.querySelector('.dims-block-search-input');
+    // A field outside the block: the lines, and their search fields, are hidden until a dataset lands.
+    const input = document.createElement('input');
+    b.c.parentNode.appendChild(input);
     // Control: a retry activated while focus is elsewhere leaves focus alone.
     input.focus();
     retry.click(); // Call 1.
@@ -640,7 +690,7 @@ async function failedSwitchKeepsFilters() {
     f.respond(0, base({plancards: [card(1, 'Alpha', {isfavourite: true}), card(2, 'Beta')], competencycards: [card(11, 'C')],
         totalplans: 2, totalcompetencies: 1, favouritesenabled: true}));
     await settle();
-    f.c.querySelector('.dims-fav-filter-btn[data-fav-filter-type="plan"]').click();
+    star(f.c, 'plan').click();
     await settle();
     check('failed switch keeps filters: precondition: the favourites filter is applied', favChecked(f.c, 'plan') === 'true' && JSON.stringify(ids(f.c, 'plan')) === '[1]',
         [favChecked(f.c, 'plan'), ids(f.c, 'plan')]);
@@ -712,7 +762,7 @@ async function competencyLoadAsksActive() {
     b.respond(1, base({favouritesenabled: true, planstatus: 'complete', plancards: [card(41, 'Done')], totalplans: 1}));
     await settle();
     check('competency load bucket: precondition: switched to Completed', checked(b.c) === 'complete', checked(b.c));
-    b.c.querySelector('.dims-all-filter-btn[data-all-filter-type="competency"]').click();
+    showAll(b.c, 'competency');
     await settle();
     const args = b.call(2) && b.call(2).args;
     check('competency load bucket: a competency load from Completed asks for the active bucket',
@@ -771,7 +821,11 @@ async function quotedTagValue() {
     await settle();
     check('quoted tag value: precondition: its filter is applied', JSON.stringify(ids(b.c, 'competency')) === '[11]',
         ids(b.c, 'competency'));
+    // The pill lives in the competencies' Filters panel, which must be open for it to hold the focus.
+    b.c.querySelector('[data-line-type="competency"] [data-action="dims-filters-toggle"]').click();
     quotePill.focus();
+    check('quoted tag value: precondition: the pill holds the focus', document.activeElement === quotePill,
+        document.activeElement && document.activeElement.className);
     b.c.querySelector('.dims-clear-filters-btn[data-clear-type="plan"]').click();
     await settle();
     const focusedPill = document.activeElement;
@@ -909,7 +963,7 @@ async function failedSwitchUnderASearch() {
         c.respond(1, activeWhole());
         await settle();
     }
-    c.c.querySelector('.dims-fav-filter-btn[data-fav-filter-type="plan"]').click();
+    star(c.c, 'plan').click();
     await settle();
     check('failed switch under a search: control precondition: favourites picked over the search', favChecked(c.c, 'plan') === 'true'
         && JSON.stringify(ids(c.c, 'plan')) === '[1]', [favChecked(c.c, 'plan'), ids(c.c, 'plan')]);
@@ -977,7 +1031,7 @@ async function sharedMetadata() {
     await settle();
     check('shared metadata: group response precondition: the Active pill is drawn on Review', checked(g.c) === 'review' && !!pill(g.c, 'active'),
         [checked(g.c), !!pill(g.c, 'active')]);
-    g.c.querySelector('.dims-all-filter-btn[data-all-filter-type="competency"]').click(); // Call 2.
+    showAll(g.c, 'competency'); // Call 2.
     await settle();
     check('shared metadata: group response precondition: the competency group is fetched', g.ncalls() === 3 && g.call(2).args.loadgroup === 'competency',
         g.ncalls());
@@ -1010,8 +1064,11 @@ async function sharedMetadata() {
 }
 
 const ghostPlan = (c) => !!c.querySelector('.dims-ghost-card[data-ghost-type="plan"]');
-const favPills = (c) => c.querySelectorAll('.dims-fav-filter-btn, .dims-all-filter-btn').length;
-const clearShown = (c, type) => vis(c.querySelector('.dims-clear-filters-btn[data-clear-type="' + type + '"]'));
+// The stars drawn, and so the favourites filters the learner can see and undo.
+const favPills = (c) => Array.from(c.querySelectorAll('[data-fav-star]')).filter((b) => !b.hidden).length;
+// Whether a section's favourites filter is on, read off its star whether or not the star is drawn:
+// a filter on under a hidden star hides cards with nothing on screen to undo it.
+const favOn = (c, type) => star(c, type).getAttribute('aria-pressed') === 'true';
 const reviewBucket = (favouritesenabled) => base({favouritesenabled: favouritesenabled, planstatus: 'review',
     plancounts: {active: 2, review: 1, complete: 0}, plancards: [card(21, 'Rev')], totalplans: 1});
 // With favourites disabled the server marks no card a favourite.
@@ -1106,7 +1163,7 @@ async function favouritesDisabled() {
     pill(b.c, 'active').click();
     await settle();
     check('favourites disabled: back on Active, no favourites filter is left on', favPills(b.c) === 0 && !ghostPlan(b.c)
-        && !clearShown(b.c, 'plan'), [favPills(b.c), ghostPlan(b.c), clearShown(b.c, 'plan')]);
+        && !favOn(b.c, 'plan'), [favPills(b.c), ghostPlan(b.c), favOn(b.c, 'plan')]);
     check('favourites disabled: back on Active while that fetch is pending, no second request', b.ncalls() === 3 && loading(b.c),
         [b.ncalls(), loading(b.c)]);
     if (args) {
@@ -1122,7 +1179,7 @@ async function favouritesDisabled() {
         totalplans: 2, totalcompetencies: 2, hasnonfavouriteplans: true, hasnonfavouritecompetencies: true, favouritesenabled: true}));
     await settle();
     check('favourites disabled: group response precondition: the plans are under the favourites filter', favChecked(g.c, 'plan') === 'true', favChecked(g.c, 'plan'));
-    g.c.querySelector('.dims-all-filter-btn[data-all-filter-type="competency"]').click(); // Call 1.
+    showAll(g.c, 'competency'); // Call 1.
     await settle();
     g.respond(1, base({competencycards: [card(11, 'C'), card(12, 'D')], totalcompetencies: 2, favouritesenabled: false}));
     await settle();
@@ -1130,7 +1187,7 @@ async function favouritesDisabled() {
     check('favourites disabled: a group response disabling them fetches the plans they left out', !!gargs && gargs.loadgroup === 'plan'
         && gargs.planstatus === 'active' && gargs.favouritesonly === false && loading(g.c), gargs || g.ncalls());
     check('favourites disabled: a group response disabling them drops the plan favourites filter', favPills(g.c) === 0 && !ghostPlan(g.c)
-        && !clearShown(g.c, 'plan'), [favPills(g.c), ghostPlan(g.c), clearShown(g.c, 'plan')]);
+        && !favOn(g.c, 'plan'), [favPills(g.c), ghostPlan(g.c), favOn(g.c, 'plan')]);
     if (gargs) {
         g.respond(2, activeWholeFavouritesOff());
         await settle();
@@ -1173,7 +1230,7 @@ async function favouritesDisabled() {
     await settle();
     pill(d.c, 'review').click(); // Call 1.
     await settle();
-    d.c.querySelector('.dims-all-filter-btn[data-all-filter-type="competency"]').click(); // Call 2.
+    showAll(d.c, 'competency'); // Call 2.
     await settle();
     check('favourites disabled: failed switch precondition: the competencies are fetched during the switch', d.ncalls() === 3
         && d.call(2).args.loadgroup === 'competency', d.ncalls());
@@ -1191,8 +1248,8 @@ async function favouritesDisabled() {
     d.fail(1);
     await settle();
     check('favourites disabled: a failed switch comes back to the whole Active list, no favourites filter', checked(d.c) === 'active'
-        && JSON.stringify(ids(d.c, 'plan')) === '[1,2]' && !clearShown(d.c, 'plan') && errorShown(d.c),
-        [checked(d.c), ids(d.c, 'plan'), clearShown(d.c, 'plan'), errorShown(d.c)]);
+        && JSON.stringify(ids(d.c, 'plan')) === '[1,2]' && !favOn(d.c, 'plan') && errorShown(d.c),
+        [checked(d.c), ids(d.c, 'plan'), favOn(d.c, 'plan'), errorShown(d.c)]);
 
     // Control: a bucket response keeping favourites enabled leaves phase 1 alone, with no request.
     const e = mount({favouritesenabled: true});
@@ -1224,7 +1281,7 @@ async function favouritesDisabledAndFailures() {
     await settle();
     pill(a.c, 'review').click(); // Call 1.
     await settle();
-    a.c.querySelector('.dims-all-filter-btn[data-all-filter-type="competency"]').click(); // Call 2.
+    showAll(a.c, 'competency'); // Call 2.
     await settle();
     check('favourites disabled: both failing, precondition: the competencies are fetched during the switch', a.ncalls() === 3
         && a.call(2).args.loadgroup === 'competency', a.ncalls());
@@ -1264,7 +1321,7 @@ async function favouritesDisabledAndFailures() {
     await settle();
     pill(b.c, 'review').click(); // Call 1.
     await settle();
-    b.c.querySelector('.dims-all-filter-btn[data-all-filter-type="competency"]').click(); // Call 2.
+    showAll(b.c, 'competency'); // Call 2.
     await settle();
     if (b.ncalls() === 3) {
         b.respond(2, competenciesWholeFavouritesOff());
@@ -1500,9 +1557,9 @@ async function oneLoadPerCardType() {
     const t = mount({favouritesenabled: true});
     t.respond(0, bothFavouritesOnly());
     await settle();
-    t.c.querySelector('.dims-all-filter-btn[data-all-filter-type="plan"]').click(); // Call 1.
+    showAll(t.c, 'plan'); // Call 1.
     await settle();
-    t.c.querySelector('.dims-all-filter-btn[data-all-filter-type="competency"]').click(); // Call 2.
+    showAll(t.c, 'competency'); // Call 2.
     await settle();
     check('one load per card type: control: plans on their way do not hold back a competency load', t.ncalls() === 3
         && t.call(1).args.loadgroup === 'plan' && t.call(2).args.loadgroup === 'competency',
@@ -1522,9 +1579,9 @@ async function oneLoadPerCardType() {
     const e = mount({favouritesenabled: true});
     e.respond(0, bothFavouritesOnly());
     await settle();
-    e.c.querySelector('.dims-all-filter-btn[data-all-filter-type="plan"]').click(); // Call 1.
+    showAll(e.c, 'plan'); // Call 1.
     await settle();
-    e.c.querySelector('.dims-all-filter-btn[data-all-filter-type="competency"]').click(); // Call 2.
+    showAll(e.c, 'competency'); // Call 2.
     await settle();
     if (e.ncalls() === 3) {
         e.fail(1);
@@ -1588,6 +1645,95 @@ async function ghostCardHoldsNoResult() {
         region(n.c));
 }
 
+const toolbarOf = (c, type) => c.querySelector('[data-region="dims-line-toolbar"][data-line-type="' + type + '"]');
+const chipWords = (c, type) => Array.from(toolbarOf(c, type).querySelectorAll('.dims-line-chip'))
+    .map((chip) => chip.lastChild.previousSibling.textContent);
+
+async function sectionLines() {
+    // Each section's search searches that section alone.
+    const b = mount({favouritesenabled: true});
+    check('section line: precondition: both lines hidden before the first dataset', toolbarOf(b.c, 'plan').hidden
+        && toolbarOf(b.c, 'competency').hidden, [toolbarOf(b.c, 'plan').hidden, toolbarOf(b.c, 'competency').hidden]);
+    b.respond(0, fullActive());
+    await settle();
+    check('section line: both lines shown once the dataset lands', !toolbarOf(b.c, 'plan').hidden
+        && !toolbarOf(b.c, 'competency').hidden, [toolbarOf(b.c, 'plan').hidden, toolbarOf(b.c, 'competency').hidden]);
+    typeSearchIn(b.c, 'plan', 'alpha');
+    await sleep(200);
+    await settle();
+    check('section line: a plan search filters the plans', JSON.stringify(ids(b.c, 'plan')) === '[1]', ids(b.c, 'plan'));
+    check('section line: a plan search leaves the competencies alone', JSON.stringify(ids(b.c, 'competency')) === '[11,12]',
+        ids(b.c, 'competency'));
+    typeSearchIn(b.c, 'competency', 'two');
+    await sleep(200);
+    await settle();
+    check('section line: a competency search filters the competencies and keeps the plan search',
+        JSON.stringify(ids(b.c, 'competency')) === '[12]' && JSON.stringify(ids(b.c, 'plan')) === '[1]',
+        [ids(b.c, 'competency'), ids(b.c, 'plan')]);
+
+    // A section's new text drops that section's star alone.
+    const f = mount({favouritesenabled: true});
+    f.respond(0, searchFavouritesOnly());
+    await settle();
+    check('section line: precondition: both stars pressed on the favourites-only view', favChecked(f.c, 'plan') === 'true'
+        && favChecked(f.c, 'competency') === 'true', [favChecked(f.c, 'plan'), favChecked(f.c, 'competency')]);
+    typeSearchIn(f.c, 'plan', 'beta');
+    await sleep(200);
+    check('section line: a plan search fetches the plans alone', f.ncalls() === 2 && f.call(1).args.loadgroup === 'plan',
+        f.ncalls() === 2 ? f.call(1).args : f.ncalls());
+    if (f.ncalls() === 2) {
+        f.respond(1, activeWhole());
+        await settle();
+    }
+    check('section line: a plan search releases the plans\' star and keeps the competencies\'', favChecked(f.c, 'plan') === 'false'
+        && favChecked(f.c, 'competency') === 'true', [favChecked(f.c, 'plan'), favChecked(f.c, 'competency')]);
+    check('section line: control: the competencies keep their favourites view', JSON.stringify(ids(f.c, 'competency')) === '[11]',
+        ids(f.c, 'competency'));
+
+    // The panel: counts on the options, a zero option hidden, the badge, the chips, "Clear all".
+    const fs = {plan: {}, competency: {tag1enabled: true, tag1displaymode: 'tabs', tag2enabled: true, tag2displaymode: 'tabs'}};
+    const t = mount({filtersettings: fs});
+    t.respond(0, base({filtersettings: fs, plancards: [card(1, 'Alpha')], totalplans: 1,
+        competencycards: [card(11, 'C one', {tag1: 'A', tag2: 'X'}), card(12, 'C two', {tag1: 'A', tag2: 'Y'}),
+            card(13, 'C three', {tag1: 'B', tag2: 'Y'})], totalcompetencies: 3}));
+    await settle();
+    const opt = (field, value) => Array.from(t.c.querySelectorAll('[data-filter-field="' + field + '"]'))
+        .find((el) => el.dataset.filterValue === value);
+    const count = (el) => el ? el.querySelector('[data-filter-count]').textContent : null;
+    const badge = () => toolbarOf(t.c, 'competency').querySelector('[data-region="dims-line-badge"]');
+    check('section line: the Filters slot shows where tags have values', !toolbarOf(t.c, 'competency')
+        .querySelector('[data-region="dims-line-filters"]').hidden && toolbarOf(t.c, 'plan')
+        .querySelector('[data-region="dims-line-filters"]').hidden, 'slots');
+    check('section line: each option counts its cards', count(opt('competency_tag1', 'A')) === '2'
+        && count(opt('competency_tag1', '')) === '3', [count(opt('competency_tag1', 'A')), count(opt('competency_tag1', ''))]);
+    check('section line: precondition: no badge and no chip with nothing in force', badge().hidden
+        && toolbarOf(t.c, 'competency').querySelector('[data-region="dims-line-chips"]').hidden, badge().hidden);
+    opt('competency_tag1', 'B').click();
+    await settle();
+    check('section line: an option that would show nothing is hidden', opt('competency_tag2', 'X').hidden
+        && !opt('competency_tag2', 'Y').hidden, [opt('competency_tag2', 'X').hidden, opt('competency_tag2', 'Y').hidden]);
+    check('section line: one tag in force, one chip and the badge at 1', JSON.stringify(chipWords(t.c, 'competency')) === '["B"]'
+        && badge().textContent === '1' && !badge().hidden, [chipWords(t.c, 'competency'), badge().textContent]);
+    check('section line: "Clear all" waits for a second chip', toolbarOf(t.c, 'competency')
+        .querySelector('[data-action="dims-clear-all"]').hidden, 'clearall');
+    opt('competency_tag2', 'Y').click();
+    await settle();
+    const clearall = toolbarOf(t.c, 'competency').querySelector('[data-action="dims-clear-all"]');
+    check('section line: two tags in force, two chips and "Clear all"', chipWords(t.c, 'competency').length === 2
+        && !clearall.hidden && badge().textContent === '2', [chipWords(t.c, 'competency'), clearall.hidden]);
+    toolbarOf(t.c, 'competency').querySelector('.dims-line-chip').click();
+    await settle();
+    check('section line: a chip pressed releases its filter alone', JSON.stringify(chipWords(t.c, 'competency')) === '["Y"]'
+        && JSON.stringify(ids(t.c, 'competency')) === '[12,13]', [chipWords(t.c, 'competency'), ids(t.c, 'competency')]);
+    opt('competency_tag1', 'A').click();
+    await settle();
+    toolbarOf(t.c, 'competency').querySelector('[data-action="dims-clear-all"]').click();
+    await settle();
+    check('section line: "Clear all" releases every tag of the section', chipWords(t.c, 'competency').length === 0
+        && JSON.stringify(ids(t.c, 'competency')) === '[11,12,13]' && badge().hidden,
+        [chipWords(t.c, 'competency'), ids(t.c, 'competency'), badge().hidden]);
+}
+
 // In run order. Scenarios share the page, so each mounts its own blocks and settles what it started.
 const SCENARIOS = [
     basics,
@@ -1620,6 +1766,7 @@ const SCENARIOS = [
     pendingLoadHoldsNoResult,
     oneLoadPerCardType,
     ghostCardHoldsNoResult,
+    sectionLines,
 ];
 
 // The family of a check: its name up to the first ': '.
