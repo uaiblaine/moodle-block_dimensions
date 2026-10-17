@@ -32,11 +32,11 @@ MUTANTS = [
         'active-pill-needs-a-count', 'filters.js', ['active pill'],
         'The Active pill disappears once the grid leaves it while its count is 0.',
         lines(
-            "            || bucket.key === state.planStatus",
-            "            || (bucket.key === 'active' && state.rawDataset.hasactiveplans));",
+            "            || key === state.planStatus",
+            "            || (key === 'active' && state.rawDataset.hasactiveplans);",
         ),
         lines(
-            "            || bucket.key === state.planStatus);",
+            "            || key === state.planStatus;",
         ),
     ),
     mutant(
@@ -71,7 +71,7 @@ MUTANTS = [
         lines(
             "        state.favouriteFilterActive.plan = bucket === 'active'",
             "            && state.favouritesEnabled",
-            "            && !state.normalizedSearch",
+            "            && !state.normalizedSearch.plan",
             "            && state.favouriteCountPlan > 0",
             "            && !state.fullDatasetLoaded.plan",
             "            && state.hasnonfavouriteplans;",
@@ -313,32 +313,33 @@ MUTANTS = [
         'search-at-load-keeps-favourites-first', 'filters.js', ['search at load'],
         'A first load under a search stays favourites-only, so the search misses the other cards.',
         lines(
-            "                if (useFavouritesFirst && hasAnyNonFavourites && state.normalizedSearch) {",
+            "                if (useFavouritesFirst && hasAnyNonFavourites && (planSearch || competencySearch)) {",
         ),
         lines(
-            "                if (useFavouritesFirst && hasAnyNonFavourites && state.normalizedSearch && false) {",
+            "                if (useFavouritesFirst && hasAnyNonFavourites && (planSearch || competencySearch) && false) {",
         ),
     ),
     mutant(
-        'restored-value-hides-the-clear-button', 'filters.js', ['search at load'],
-        'A search value the browser put back in the input gets no clear button.',
+        'restored-value-hides-the-clear-button', 'filter_line.js', ['search at load'],
+        'A search value the browser put back in the input gets no eraser.',
         lines(
-            "        if (searchInput && clearButton) {",
-            "            clearButton.style.display = searchInput.value.length ? 'flex' : 'none';",
-            "        }",
+            "                parts.eraser.hidden = field.value === '';",
         ),
-        '',
+        lines(
+            "                parts.eraser.hidden = true;",
+        ),
     ),
     mutant(
         'load-ignores-the-input-value', 'filters.js', ['search at load'],
         'A load does not read the search term the input already holds.',
         lines(
-            "        if (searchInput) {",
-            "            state.searchTerm = searchInput.value.trim();",
-            "            state.normalizedSearch = normalizeText(state.searchTerm);",
-            "        }",
+            "        readSearch(container, state);",
+            "",
+            "        // Phase 1: if favourites are enabled, load only favourites first.",
         ),
-        '',
+        lines(
+            "        // Phase 1: if favourites are enabled, load only favourites first.",
+        ),
     ),
     mutant(
         'empty-line-before-the-first-dataset', 'filters.js', ['before the first dataset'],
@@ -425,10 +426,10 @@ MUTANTS = [
         'any-search-lifts-the-filters', 'filters.js', ['failed switch under a search'],
         'A search set before the switch lifts the filters the learner picked over it.',
         lines(
-            "            const searched = state.normalizedSearch !== '' && state.normalizedSearch !== previousSearch;",
+            "            const searched = state.normalizedSearch.plan !== '' && state.normalizedSearch.plan !== previousSearch;",
         ),
         lines(
-            "            const searched = state.normalizedSearch !== '';",
+            "            const searched = state.normalizedSearch.plan !== '';",
         ),
     ),
     mutant(
@@ -505,7 +506,7 @@ MUTANTS = [
         'The kept favourites-only Active list comes back under its filter although a search is set.',
         lines(
             "            && state.favouritesEnabled",
-            "            && !state.normalizedSearch",
+            "            && !state.normalizedSearch.plan",
         ),
         lines(
             "            && state.favouritesEnabled",
@@ -515,7 +516,7 @@ MUTANTS = [
         'back-on-active-fetches-nothing-under-a-search', 'filters.js', ['back on active under a search'],
         'Back on the kept Active list under a search, the plans it is missing are not fetched.',
         lines(
-            "            if (state.normalizedSearch && searchNeedsPlans(state)) {",
+            "            if (state.normalizedSearch.plan && searchNeedsPlans(state)) {",
             "                loadGroupDataset(container, state, options, 'plan');",
             "            } else {",
             "                loadWhatFavouritesLeftOut(container, state, options);",
@@ -531,7 +532,7 @@ MUTANTS = [
         'any-search-fetches-the-active-plans', 'filters.js', ['back on active under a search'],
         'Back on Active under a search, the plans are fetched even when the list is already whole.',
         lines(
-            "            if (state.normalizedSearch && searchNeedsPlans(state)) {",
+            "            if (state.normalizedSearch.plan && searchNeedsPlans(state)) {",
             "                loadGroupDataset(container, state, options, 'plan');",
             "            } else {",
             "                loadWhatFavouritesLeftOut(container, state, options);",
@@ -539,7 +540,7 @@ MUTANTS = [
             "            return Promise.resolve();",
         ),
         lines(
-            "            if (state.normalizedSearch) {",
+            "            if (state.normalizedSearch.plan) {",
             "                loadGroupDataset(container, state, options, 'plan');",
             "            } else {",
             "                loadWhatFavouritesLeftOut(container, state, options);",
@@ -608,7 +609,7 @@ MUTANTS = [
         'back-on-active-leaves-the-rest-unfetched', 'filters.js', ['favourites disabled'],
         'Back on the kept Active list with favourites disabled, the plans they left out are not fetched.',
         lines(
-            "            if (state.normalizedSearch && searchNeedsPlans(state)) {",
+            "            if (state.normalizedSearch.plan && searchNeedsPlans(state)) {",
             "                loadGroupDataset(container, state, options, 'plan');",
             "            } else {",
             "                loadWhatFavouritesLeftOut(container, state, options);",
@@ -616,7 +617,7 @@ MUTANTS = [
             "            return Promise.resolve();",
         ),
         lines(
-            "            if (state.normalizedSearch && searchNeedsPlans(state)) {",
+            "            if (state.normalizedSearch.plan && searchNeedsPlans(state)) {",
             "                loadGroupDataset(container, state, options, 'plan');",
             "            }",
             "            return Promise.resolve();",
@@ -854,6 +855,92 @@ MUTANTS = [
         lines(
             "        clearTimeout(resultsAnnounceTimers.get(resultsAnnounceTimers));",
             "        resultsAnnounceTimers.set(resultsAnnounceTimers, setTimeout(function() {",
+        ),
+    ),
+    # The line of each section (stage D2 of the filter line).
+    mutant(
+        'one-search-for-both-sections', 'state.js', ['section line'],
+        'Every card is searched with the plans\' text, so a plan search empties the competencies.',
+        lines(
+            "        const term = state.normalizedSearch[type];",
+        ),
+        lines(
+            "        const term = state.normalizedSearch.plan || state.normalizedSearch.competency;",
+        ),
+    ),
+    mutant(
+        'a-search-releases-every-star', 'filters.js', ['section line'],
+        'A text typed in one section releases the other section\'s star too.',
+        lines(
+            "            if (state.normalizedSearch[type] && state.normalizedSearch[type] !== before[type]) {",
+            "                state.favouriteFilterActive[type] = false;",
+        ),
+        lines(
+            "            if (state.normalizedSearch[type] && state.normalizedSearch[type] !== before[type]) {",
+            "                state.favouriteFilterActive.plan = false;",
+            "                state.favouriteFilterActive.competency = false;",
+        ),
+    ),
+    mutant(
+        'line-shown-before-the-dataset', 'filters.js', ['section line'],
+        'The lines show before the first dataset, with nothing to filter.',
+        lines(
+            "            toolbar.hidden = !state.datasetReady || !has;",
+        ),
+        lines(
+            "            toolbar.hidden = false;",
+        ),
+    ),
+    mutant(
+        'dead-tag-option-shown', 'filters.js', ['section line'],
+        'A tag option that would show no card is drawn.',
+        lines(
+            "            tab.hidden = value !== '' && count === 0 && !isActive;",
+        ),
+        lines(
+            "            tab.hidden = false;",
+        ),
+    ),
+    mutant(
+        'badge-never-shown', 'filters.js', ['section line'],
+        'The Filters badge never says how many tags are in force.',
+        lines(
+            "                badge.hidden = count === 0;",
+        ),
+        lines(
+            "                badge.hidden = true;",
+        ),
+    ),
+    mutant(
+        'chip-releases-nothing', 'filters.js', ['section line'],
+        'A chip pressed leaves its filter in force.',
+        lines(
+            "                        release: () => {",
+            "                            state.activeFilters[group.field] = '';",
+        ),
+        lines(
+            "                        release: () => {",
+        ),
+    ),
+    mutant(
+        'clear-all-keeps-the-tags', 'filters.js', ['section line'],
+        '"Clear all" leaves the section\'s tags in force.',
+        lines(
+            "                clearAll: () => {",
+            "                    clearTags(state, type);",
+        ),
+        lines(
+            "                clearAll: () => {",
+        ),
+    ),
+    mutant(
+        'clear-all-from-one-chip', 'filter_line.js', ['section line'],
+        '"Clear all" is offered beside a single chip.',
+        lines(
+            "                parts.clearall.hidden = chips.length < 2;",
+        ),
+        lines(
+            "                parts.clearall.hidden = chips.length < 1;",
         ),
     ),
 ]

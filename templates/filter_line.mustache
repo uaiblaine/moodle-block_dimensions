@@ -1,0 +1,100 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template block_dimensions/filter_line
+
+    The filter line of one section of the block, plans or competencies
+    (moodle-dev/docs/filter-line/CONTRACT.md): the line, in the contract's slot order, and the
+    row of chips under it. summary.mustache draws one per section, under its heading.
+
+    The server draws the frame and its words; amd/src/filters.js fills what depends on the
+    dataset and amd/src/filter_line.js folds the line and drives its search:
+    * the scope (plans only): the status pills, a radio group filters.js renders into
+      dims-line-scope, hidden while fewer than two buckets are a choice;
+    * the search: a pill field with its magnifier and its eraser, which is never a cross; the
+      search's icon (dims-search-open) stands for the field once the line folds it away, and the
+      close button (dims-search-close), the line's last control, closes the search grown over the
+      line. Neither is drawn until the module has folded the line into a step;
+    * the favourites star, aria-pressed, hidden while the section has no favourite to show;
+    * Filters, which opens the panel (aria-expanded, aria-controls) and carries a count badge of
+      the tag filters in force; filters.js renders the section's tag groups into the panel's
+      dims-filters-host, and the panel's foot is "Clear filters" and "Show N";
+    * the listbox of suggestions, given its role by the module, which carries its three headings
+      so the module composes no word of them.
+
+    Every control the search slides out of the way when it grows over the line carries
+    dims-line-slides. The whole toolbar is hidden until the section has something to show.
+
+    Context variables required:
+    * id (string) - Prefix of every id the line writes
+    * type (string) - The section: plan or competency
+    * hasscope (bool) - Whether the section has a scope (the plans' status buckets)
+    * hassearch (bool) - Whether the search is on (enable_search)
+    * searchlabel, searchplaceholder (string) - The field's name and placeholder
+    * itemslabel (string) - Heading of the matching cards in the suggestions
+    * panellabel (string) - Accessible name of the Filters panel
+
+    @copyright  2026 Anderson Blaine
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+        "id": "block-dimensions-1-plan",
+        "type": "plan",
+        "hasscope": true,
+        "hassearch": true,
+        "searchlabel": "Search plans",
+        "searchplaceholder": "Search plans…",
+        "itemslabel": "Learning plans",
+        "panellabel": "Filter learning plans"
+    }
+}}
+<div class="dims-line-toolbar" data-region="dims-line-toolbar" data-line-type="{{type}}" hidden>
+    <div class="dims-line" data-region="dims-line">
+        {{#hasscope}}
+        <div class="dims-line-scope" data-region="dims-line-scope" hidden></div>
+        {{/hasscope}}
+        {{#hassearch}}
+        <div class="dims-line-search" data-region="dims-line-search">
+            <label class="visually-hidden" for="{{id}}-search">{{searchlabel}}</label>
+            <i class="fa fa-search dims-line-searchicon" aria-hidden="true"></i>
+            <input type="search" id="{{id}}-search" class="dims-line-input" data-search-type="{{type}}" placeholder="{{searchplaceholder}}" autocomplete="off">
+            <button type="button" class="dims-line-eraser" data-action="dims-search-clear" aria-label="{{#str}}line_clear_text, block_dimensions{{/str}}" title="{{#str}}line_clear_text, block_dimensions{{/str}}" hidden><i class="fa fa-eraser" aria-hidden="true"></i></button>
+        </div>
+        <button type="button" class="dims-line-iconbtn dims-line-searchopen dims-line-slides" data-action="dims-search-open" aria-controls="{{id}}-search" aria-expanded="false" aria-label="{{searchlabel}}" title="{{searchlabel}}"><i class="fa fa-search" aria-hidden="true"></i></button>
+        {{/hassearch}}
+        <button type="button" class="dims-line-iconbtn dims-line-star dims-line-slides" data-region="dims-line-star" data-fav-star="{{type}}" aria-pressed="false" title="{{#str}}line_favourites, block_dimensions{{/str}}" hidden><i class="fa fa-star-o" aria-hidden="true"></i><span class="visually-hidden">{{#str}}line_favourites, block_dimensions{{/str}} <span data-fav-count></span></span></button>
+        <div class="dims-line-filters dims-line-slides" data-region="dims-line-filters" hidden>
+            <button type="button" class="dims-line-filterstoggle" data-action="dims-filters-toggle" aria-expanded="false" aria-controls="{{id}}-panel"><i class="fa fa-sliders" aria-hidden="true"></i> <span class="dims-line-label">{{#str}}line_filters, block_dimensions{{/str}}</span> <span class="dims-line-badge" data-region="dims-line-badge" hidden></span></button>
+            <div class="dims-line-panel" id="{{id}}-panel" data-region="dims-line-panel" role="group" aria-label="{{panellabel}}" hidden>
+                <div class="dims-filters-host" data-filters-type="{{type}}"></div>
+                <div class="dims-line-panelfoot">
+                    <button type="button" class="dims-clear-filters-btn" data-clear-type="{{type}}" style="display:none"><i class="fa fa-eraser" aria-hidden="true"></i> {{#str}}clearfilters, block_dimensions{{/str}}</button>
+                    <button type="button" class="dims-line-show" data-action="dims-panel-show">{{#str}}line_show, block_dimensions{{/str}} <span data-region="dims-panel-count">0</span></button>
+                </div>
+            </div>
+        </div>
+        {{#hassearch}}
+        <button type="button" class="dims-line-iconbtn dims-line-searchclose" data-action="dims-search-close" aria-label="{{#str}}line_close_search, block_dimensions{{/str}}" title="{{#str}}line_close_search, block_dimensions{{/str}}"><i class="fa fa-times" aria-hidden="true"></i></button>
+        <div class="dims-line-suggest" id="{{id}}-suggest" data-region="dims-line-suggest" data-label-filters="{{#str}}line_suggest_filters, block_dimensions{{/str}}" data-label-start="{{#str}}line_suggest_start, block_dimensions{{/str}}" data-label-items="{{itemslabel}}" hidden></div>
+        {{/hassearch}}
+    </div>
+    <div class="dims-line-chips" data-region="dims-line-chips" data-label-remove="{{#str}}line_remove_filter, block_dimensions{{/str}}" hidden>
+        <div class="dims-line-chiplist" data-region="dims-line-chiplist"></div>
+        <button type="button" class="dims-line-clearall" data-action="dims-clear-all" hidden>{{#str}}line_clear_all, block_dimensions{{/str}}</button>
+    </div>
+</div>

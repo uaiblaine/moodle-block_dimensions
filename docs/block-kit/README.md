@@ -25,8 +25,8 @@ shows a state matrix rather than a screen, and `responsive.html` pairs *mobile* 
 column* instead of light against dark.
 
 **The `.theme-dark` / `body.dark` skin this file used to cite is gone** — 77 + 77 rules keyed off
-selectors that nothing in Moodle 4.5, 5.0, 5.1, 5.2 or 5.3-dev, and nothing in `theme_boost_union` or
-`theme_boost_union_fundaseg`, has ever emitted. They were dead code and were deleted, not rewired.
+selectors that nothing in Moodle 4.5, 5.0, 5.1, 5.2 or 5.3-dev, and nothing in `theme_boost_union` has
+ever emitted. They were dead code and were deleted, not rewired.
 Moodle **5.3** core does write `data-bs-theme` on the `<html>` element, from `theme_boost\colour_mode`
 via `before_html_attributes`, gated behind `theme_boost/enablecolourmodes` and **off by default** —
 core's own comment gives the reason, that a plugin which has not been checked in dark mode can still
