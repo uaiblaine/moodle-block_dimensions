@@ -55,8 +55,9 @@ define([], function() {
                 plancards: [],
                 competencycards: []
             },
-            searchTerm: '',
-            normalizedSearch: '',
+            // Each section's search, from its own filter line: it searches that section's cards alone.
+            searchTerm: {plan: '', competency: ''},
+            normalizedSearch: {plan: '', competency: ''},
             activeFilters: {
                 // Keys are the data-filter-field values filters.js writes (type + '_' + tag)
                 // and are also built dynamically, so they stay snake_case.
@@ -121,7 +122,7 @@ define([], function() {
      * (their responses are dropped too), the flags saying the dataset arrived or a group or a card
      * list is complete, the favourites filter and the tag filters. A flag left set would make the
      * next load skip a fetch or a render it needs, and a fetch left recorded would make it wait
-     * for a response that is dropped. Kept are the search term, which its input still holds, the
+     * for a response that is dropped. Kept are the search terms, which their inputs still hold, the
      * settings the server sent last, and renderToken, which must never repeat. session goes up by
      * one, so a response to a request of the previous session can be told apart and dropped.
      *
@@ -132,8 +133,8 @@ define([], function() {
             favouritesenabled: state.favouritesEnabled,
             filtersettings: state.filterSettings
         });
-        fresh.searchTerm = state.searchTerm;
-        fresh.normalizedSearch = state.normalizedSearch;
+        fresh.searchTerm = Object.assign({}, state.searchTerm);
+        fresh.normalizedSearch = Object.assign({}, state.normalizedSearch);
         fresh.renderToken = state.renderToken;
         fresh.session = state.session + 1;
         Object.assign(state, fresh);
@@ -196,8 +197,9 @@ define([], function() {
         if (tag2filter && card.tag2 !== tag2filter) {
             return false;
         }
-        if (state.normalizedSearch) {
-            return normalizeText(card.name || '').includes(state.normalizedSearch);
+        const term = state.normalizedSearch[type];
+        if (term) {
+            return normalizeText(card.name || '').includes(term);
         }
 
         return true;
@@ -218,23 +220,45 @@ define([], function() {
     }
 
     /**
-     * Check whether the given type has any non-default filter active.
+     * How many tag filters of a section are in force: the Filters badge, and whether its panel offers
+     * "Clear filters". The favourites star is on the line itself and is not one of them.
      *
      * @param {Object} state Application state.
      * @param {string} type 'plan' or 'competency'.
-     * @return {boolean}
+     * @return {number}
      */
-    function hasActiveFiltersForType(state, type) {
-        if (state.favouriteFilterActive[type]) {
-            return true;
-        }
-        if (state.activeFilters[type + '_tag1']) {
-            return true;
-        }
-        if (state.activeFilters[type + '_tag2']) {
-            return true;
-        }
-        return false;
+    function activeTagCount(state, type) {
+        return (state.activeFilters[type + '_tag1'] ? 1 : 0) + (state.activeFilters[type + '_tag2'] ? 1 : 0);
+    }
+
+    /**
+     * How many of a section's loaded cards would show with some of its filters changed.
+     *
+     * The counts on the Filters panel's options keep the section's search (withSearch), and the
+     * counts the suggestions offer leave it out, since choosing a suggestion empties the field
+     * first. Nothing in the state changes.
+     *
+     * @param {Object} state Application state.
+     * @param {string} type 'plan' or 'competency'.
+     * @param {Object} changes Optional favourite (boolean) and tag fields (type + '_tag1'...) to override.
+     * @param {boolean} withSearch Whether the section's search applies.
+     * @return {number}
+     */
+    function countWith(state, type, changes, withSearch) {
+        const view = {
+            favouriteFilterActive: Object.assign({}, state.favouriteFilterActive),
+            activeFilters: Object.assign({}, state.activeFilters),
+            normalizedSearch: withSearch ? state.normalizedSearch : {plan: '', competency: ''}
+        };
+        Object.keys(changes || {}).forEach((key) => {
+            if (key === 'favourite') {
+                view.favouriteFilterActive[type] = !!changes.favourite;
+            } else {
+                view.activeFilters[key] = changes[key];
+            }
+        });
+        const cards = type === 'plan' ? state.rawDataset.plancards : state.rawDataset.competencycards;
+        return cards.filter((card) => isCardVisible(card, view, type)).length;
     }
 
     /**
@@ -254,7 +278,8 @@ define([], function() {
         applySharedMetadata,
         isCardVisible,
         applyFilters,
-        hasActiveFiltersForType,
+        activeTagCount,
+        countWith,
         updateFavouriteCounts
     };
 });

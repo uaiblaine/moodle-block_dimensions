@@ -1202,7 +1202,7 @@ final class colour_tokens_test extends \basic_testcase {
      *
      * A bare [data-bs-theme="dark"] matches through any ancestor at any depth, and CSS descendant
      * combinators have no nearest-ancestor-wins rule: a theme that marks only its navbar dark
-     * (theme_boost_union_fundaseg does) would switch the plugin's tokens for everything below it.
+     * (a Boost Union child theme can) would switch the plugin's tokens for everything below it.
      * With body as the subject the only possible ancestor is html. Class hooks such as .theme-dark
      * and body.dark are rejected because no supported Moodle branch emits them.
      *

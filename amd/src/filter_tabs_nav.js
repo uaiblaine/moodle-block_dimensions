@@ -216,11 +216,14 @@ define([], function() {
     };
 
     /**
-     * Get all tab buttons.
+     * Get the tab buttons drawn: a pill written hidden (a status bucket that is not a choice, a tag
+     * value that would show nothing) is neither reached by the keys nor scrolled to.
      * @return {HTMLElement[]}
      */
     FilterTabsNav.prototype._getAllTabs = function() {
-        return Array.prototype.slice.call(this.itemsEl.querySelectorAll('.dims-filter-tab'));
+        return Array.prototype.slice.call(this.itemsEl.querySelectorAll('.dims-filter-tab')).filter(function(tab) {
+            return !tab.hidden;
+        });
     };
 
     /**
