@@ -100,6 +100,12 @@ final class summary_test extends advanced_testcase {
         }
 
         // Control: the payload is the one the client reads, so an old label is still in it.
-        $this->assertArrayHasKey('myfavourites', $labels);
+        $this->assertArrayHasKey('filterall', $labels);
+
+        // The favourites pills and the phone's sliders toggle are gone: the line's star and its
+        // folding replaced them, and their words with them.
+        foreach (['myfavourites', 'showallitems', 'togglefilters'] as $gone) {
+            $this->assertArrayNotHasKey($gone, $labels);
+        }
     }
 }

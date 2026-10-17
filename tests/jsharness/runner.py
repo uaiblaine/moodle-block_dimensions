@@ -27,7 +27,7 @@ import urllib.parse
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(os.path.dirname(os.path.dirname(HERE)), 'amd', 'src')
 PAGE = 'file://' + os.path.join(HERE, 'harness.html')
-MODULES = ('state.js', 'filter_tabs_nav.js', 'filters.js')
+MODULES = ('state.js', 'filter_tabs_nav.js', 'filter_line.js', 'filters.js')
 # Virtual time the page may use: the scenarios sleep through debounces and announcement delays.
 VIRTUAL_TIME_MS = 120000
 # Real time one run may take before it counts as producing no verdict.

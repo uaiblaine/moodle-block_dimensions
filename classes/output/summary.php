@@ -73,13 +73,10 @@ class summary implements renderable, templatable {
             'noactiveplans' => get_string('noactiveplans', 'block_dimensions'),
             'nocompetencies' => get_string('nocompetencies', 'block_dimensions'),
             'loaderror' => get_string('loaderror', 'block_dimensions'),
-            'myfavourites' => get_string('myfavourites', 'block_dimensions'),
             'addtofavourites' => get_string('addtofavourites', 'block_dimensions'),
             'removefromfavourites' => get_string('removefromfavourites', 'block_dimensions'),
-            'showallitems' => get_string('showallitems', 'block_dimensions'),
             'ghostcardsubtitle' => get_string('ghostcardsubtitle', 'block_dimensions'),
             'ghostcardtitle' => get_string('ghostcardtitle', 'block_dimensions'),
-            'togglefilters' => get_string('togglefilters', 'block_dimensions'),
             'clearfilters' => get_string('clearfilters', 'block_dimensions'),
             'favouriteerror' => get_string('favouriteerror', 'block_dimensions'),
             'resultsfound' => get_string('resultsfound', 'block_dimensions'),
@@ -106,6 +103,41 @@ class summary implements renderable, templatable {
             'filtersettingsjson' => json_encode($uiconfig['filtersettings']),
             'labelsjson' => json_encode($labels),
             'favouritesenabled' => $uiconfig['favouritesenabled'] ? 'true' : 'false',
+            'planline' => $this->line_context($containerid, 'plan', $uiconfig['showsearch']),
+            'competencyline' => $this->line_context($containerid, 'competency', $uiconfig['showsearch']),
+        ];
+    }
+
+    /**
+     * The context of one section's filter line (templates/filter_line.mustache).
+     *
+     * Only the plans have a scope, the status buckets. The search is each section's own and
+     * searches that section's cards alone; enable_search takes it out of both lines.
+     *
+     * @param string $containerid The block's container id, the prefix of every id the line writes.
+     * @param string $type The section: plan or competency.
+     * @param bool $hassearch Whether the search is on.
+     * @return array
+     */
+    protected function line_context(string $containerid, string $type, bool $hassearch): array {
+        $isplan = $type === 'plan';
+        return [
+            'id' => $containerid . '-' . $type,
+            'type' => $type,
+            'hasscope' => $isplan,
+            'hassearch' => $hassearch,
+            'searchlabel' => $isplan
+                ? get_string('line_search_plans', 'block_dimensions')
+                : get_string('line_search_competencies', 'block_dimensions'),
+            'searchplaceholder' => $isplan
+                ? get_string('line_search_plans_placeholder', 'block_dimensions')
+                : get_string('line_search_competencies_placeholder', 'block_dimensions'),
+            'itemslabel' => $isplan
+                ? get_string('landmark_plans', 'block_dimensions')
+                : get_string('landmark_competencies', 'block_dimensions'),
+            'panellabel' => $isplan
+                ? get_string('filterbyplan', 'block_dimensions')
+                : get_string('filterbycompetency', 'block_dimensions'),
         ];
     }
 
