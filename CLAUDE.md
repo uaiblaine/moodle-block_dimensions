@@ -405,10 +405,12 @@ stylelint - they read syntax, and what broke was geometry - and both are now pin
 
 ### The screenshots in `docs/screenshots/` are real, and reproducible
 
-They are the running block on m502, captured headless over the DevTools protocol, not mockups: the
-learner is a seeded fixture (`alex.morgan`), the site is stock Boost in English, and the session
-came from a token-gated helper deleted right after. The seeding and capture scripts are not in the
-repo; what matters here is the rule: **a screenshot in the README is a claim about the plugin, so
+They are the running block on m503 (Moodle 5.3), captured headless over the DevTools protocol, not
+mockups: the learner is `demo.student` from local_dimensions' showcase seed
+(`moodle-local_dimensions/docs/screenshots/tools/`, which also builds the generated covers), the
+site is Boost in English with two views under theme_dimensions, and each session comes from
+`session.php` (never a typed password) and is destroyed afterwards. The rule:
+**a screenshot in the README is a claim about the plugin, so
 re-take the affected ones whenever a surface moves.** Every defect fixed in the 2026-09-22 round -
 the stretched card, the clipped tag strip, the missing tag pills, the pills drawing their own keys -
 was found by looking at those captures, not by a gate.
