@@ -12,3 +12,4 @@
 /phpcs.xml export-ignore
 /tests/jsharness export-ignore
 /.mdlshield          export-ignore
+/mutations export-ignore

@@ -74,14 +74,18 @@ Feature: The plan status filter keeps the competency cards within reach
       | enable_search | 1 | block_dimensions |
     And I log in as "student1"
     And I click on "Add to favourites" "button" in the "Safe lifting" "list_item"
-    And I should see "1" in the ".block_dimensions [data-fav-filter-type=competency] .dims-filter-count" "css_element"
+    # The competencies' star is drawn once the section holds a favourite.
+    And ".block_dimensions [data-fav-star=competency]" "css_element" should be visible
     And I reload the page
     And I should see "Safe lifting" in the ".block_dimensions [data-cards-type=competency]" "css_element"
+    And the "aria-pressed" attribute of ".block_dimensions [data-fav-star=competency]" "css_element" should contain "true"
     # The ghost card offers the cards the first request left out, so "Fire drill" is not loaded yet.
     And ".dims-ghost-card" "css_element" should exist in the ".block_dimensions [data-cards-type=competency]" "css_element"
     And I should not see "Fire drill"
     And I click on ".block_dimensions [data-status-filter=complete]" "css_element"
     And I should see "Induction 2025" in the ".block_dimensions [data-cards-type=plan]" "css_element"
-    When I set the field "Search cards" to "Fire"
+    # In the block drawer the competencies' line is folded: its search is an icon until pressed.
+    And I click on "Search competencies" "button" in the ".block_dimensions [data-line-type=competency]" "css_element"
+    When I set the field "Search competencies" to "Fire"
     Then I should see "Fire drill" in the ".block_dimensions [data-cards-type=competency]" "css_element"
     And I should not see "Safe lifting"
