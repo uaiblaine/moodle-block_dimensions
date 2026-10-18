@@ -50,6 +50,12 @@ class dataset_provider {
     /** @var array Template metadata this provider has already read, keyed by template id. */
     protected $templatemetadata = [];
 
+    /** @var array Framework context of each competency this provider has resolved, keyed by competency id. */
+    protected $competencycontexts = [];
+
+    /** @var array Context of each template this provider has resolved, keyed by template id. */
+    protected $templatecontexts = [];
+
     /**
      * Constructor.
      *
@@ -421,6 +427,124 @@ class dataset_provider {
     }
 
     /**
+     * Whether an item is one this provider builds its cards from: a plan core lists for the user,
+     * or a competency of one of those plans.
+     *
+     * toggle_favourite decides on this, not on the item existing, so a favourite can be created
+     * only for what the block can draw: another user's plan, a draft core does not list to its
+     * owner and a competency in none of the user's plans are refused like an id nobody holds.
+     *
+     * @param string $itemtype 'plan' or 'competency'.
+     * @param int $itemid Item id.
+     * @return bool
+     */
+    public function lists_item(string $itemtype, int $itemid): bool {
+        foreach ($this->plans as $plan) {
+            if ($itemtype === 'plan') {
+                if ((int) $plan->get('id') === $itemid) {
+                    return true;
+                }
+                continue;
+            }
+
+            try {
+                $competencies = $this->fetch_plan_competencies_api($plan);
+            } catch (\Exception $e) {
+                // A plan whose competencies cannot be read lists none of them, as in the dataset.
+                continue;
+            }
+            foreach ($competencies as $compdata) {
+                if ((int) $compdata->competency->get('id') === $itemid) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Format an admin- or learner-set name as plain text, for a consumer that escapes it once.
+     *
+     * Every name this provider returns is escaped by its consumer: Mustache's double stash in the
+     * card templates, escapeHtml() and textContent in filters.js, get_string() placeholders shown
+     * through a double stash. format_string()'s default escaping would make that a second pass
+     * ("R&D" drawn as "R&amp;D"), so it is turned off here. Tags are still stripped under the
+     * default formatstringstriptags, which PARAM_TEXT in get_block_dataset's returns relies on.
+     *
+     * @param string $text The stored name.
+     * @param \context $context The context the name belongs to, whose filters apply.
+     * @return string
+     */
+    protected function format_plain(string $text, \context $context): string {
+        return format_string($text, true, ['context' => $context, 'escape' => false]);
+    }
+
+    /**
+     * The framework context of each given competency, read in one query for the ones not yet known.
+     *
+     * A competency's name belongs to its framework's context ({@see \core_competency\competency::get_context()}),
+     * which is where core formats it; an id the database does not hold falls back to the system
+     * context.
+     *
+     * @param array $competencyids Competency ids.
+     * @return array<int, \context> Keyed by competency id.
+     */
+    protected function competency_contexts(array $competencyids): array {
+        global $DB;
+
+        $missing = [];
+        foreach ($competencyids as $competencyid) {
+            $competencyid = (int) $competencyid;
+            if (!isset($this->competencycontexts[$competencyid])) {
+                $missing[$competencyid] = $competencyid;
+            }
+        }
+
+        if (!empty($missing)) {
+            [$insql, $params] = $DB->get_in_or_equal(array_values($missing), SQL_PARAMS_NAMED);
+            $rows = $DB->get_records_sql_menu(
+                "SELECT c.id, f.contextid
+                   FROM {competency} c
+                   JOIN {competency_framework} f ON f.id = c.competencyframeworkid
+                  WHERE c.id {$insql}",
+                $params
+            );
+            foreach ($missing as $competencyid) {
+                $context = isset($rows[$competencyid])
+                    ? \context::instance_by_id((int) $rows[$competencyid], IGNORE_MISSING)
+                    : false;
+                $this->competencycontexts[$competencyid] = $context ?: \context_system::instance();
+            }
+        }
+
+        $contexts = [];
+        foreach ($competencyids as $competencyid) {
+            $contexts[(int) $competencyid] = $this->competencycontexts[(int) $competencyid];
+        }
+
+        return $contexts;
+    }
+
+    /**
+     * The context of a learning plan template, where its custom type name is formatted.
+     *
+     * @param int $templateid Template id.
+     * @return \context The template's context, or the system context for an id the database does not hold.
+     */
+    protected function template_context(int $templateid): \context {
+        global $DB;
+
+        if (!isset($this->templatecontexts[$templateid])) {
+            $contextid = $DB->get_field('competency_template', 'contextid', ['id' => $templateid]);
+            $context = $contextid ? \context::instance_by_id((int) $contextid, IGNORE_MISSING) : false;
+            $this->templatecontexts[$templateid] = $context ?: \context_system::instance();
+        }
+
+        return $this->templatecontexts[$templateid];
+    }
+
+    /**
      * Build plan card payload for dataset considering favourites-only mode.
      *
      * @param \core_competency\plan $plan Plan object.
@@ -533,6 +657,8 @@ class dataset_provider {
         $eligibleids = $this->get_eligible_competency_ids($competencies, $seencompetencies, $competencieswithcourses);
         $idstoprocess = $this->get_ids_to_process($eligibleids, $favouritesonly, $compfavids);
         $bulkmetadata = !empty($idstoprocess) ? $this->fetch_bulk_competency_metadata($idstoprocess) : [];
+        // One query for the contexts every card below formats its name in.
+        $this->competency_contexts($idstoprocess);
 
         $counted = 0;
         $cards = [];
@@ -745,7 +871,8 @@ class dataset_provider {
      *
      * @param string $shortname Custom field shortname.
      * @param string $area Custom field area ('lp' for plan templates, 'competency' for competencies).
-     * @return string|null format_string'd display name, or null if not found.
+     * @return string|null Plain-text display name (format_string() with escaping off, as
+     *     {@see format_plain()} explains), or null if not found.
      */
     public static function get_customfield_name(string $shortname, string $area): ?string {
         global $DB;
@@ -763,7 +890,7 @@ class dataset_provider {
         ]);
 
         return ($name !== false && $name !== null && $name !== '')
-            ? format_string($name, true, ['context' => \context_system::instance()])
+            ? format_string($name, true, ['context' => \context_system::instance(), 'escape' => false])
             : null;
     }
 
@@ -843,7 +970,7 @@ class dataset_provider {
         if ($templateid) {
             $customtype = $templatemetadata['type'] ?? null;
             if (!empty($customtype)) {
-                $competencytypesuffix = format_string(trim($customtype), true, ['context' => \context_system::instance()]);
+                $competencytypesuffix = $this->format_plain(trim($customtype), $this->template_context($templateid));
             }
         }
 
@@ -873,7 +1000,7 @@ class dataset_provider {
 
         $haspartialtrail = $this->has_partial_trail($competencytrail);
 
-        $planname = format_string($plan->get('name'), true, ['context' => \context_system::instance()]);
+        $planname = $this->format_plain($plan->get('name'), $plan->get_context());
         $buttondata = $this->get_plan_button_data($planname, $haspartialtrail, $bucket);
         $statuslabel = $this->get_plan_status_label($plan, $status);
         $buttonlabel = $buttondata['buttonlabel'];
@@ -1012,6 +1139,7 @@ class dataset_provider {
         $competencydata = [];
         $lastcompletedindex = -1;
         $index = 0;
+        $contexts = $this->competency_contexts(array_column($trailcompetencies, 'id'));
 
         foreach ($trailcompetencies as $row) {
             $competencyid = (int)$row['id'];
@@ -1024,7 +1152,7 @@ class dataset_provider {
             $competencydata[] = [
                 'id' => $competencyid,
                 'planid' => $planid,
-                'shortname' => format_string($row['shortname'], true, ['context' => \context_system::instance()]),
+                'shortname' => $this->format_plain($row['shortname'], $contexts[$competencyid]),
                 'iscompleted' => $isproficient,
                 'index' => $index,
                 'url' => (new moodle_url('/local/dimensions/view-competency.php', [
@@ -1063,7 +1191,7 @@ class dataset_provider {
     /**
      * Get button labels for plan card according to trail state.
      *
-     * @param string $planname Formatted plan name.
+     * @param string $planname Plain-text plan name, from {@see format_plain()}.
      * @param bool $haspartialtrail Whether trail is partially completed.
      * @param string|null $bucket The plan's status bucket, or null for the active wording.
      * @return array
@@ -1127,7 +1255,8 @@ class dataset_provider {
             }
         }
 
-        $compname = format_string($competency->get('shortname'), true, ['context' => \context_system::instance()]);
+        $compcontext = $this->competency_contexts([$competencyid])[$competencyid];
+        $compname = $this->format_plain($competency->get('shortname'), $compcontext);
 
         return [
             'id' => $competencyid,

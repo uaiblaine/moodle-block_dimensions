@@ -606,8 +606,11 @@ check AND, for a plan card, the active bucket; both templates gate the button on
 it, and `get_block_dataset` declares it for both card types. With the setting
 off, a star used to render on every card while the WS refused every click. The
 web service also ignores `favouritesonly` while favourites are disabled.
-`toggle_favourite` validates ownership (plan must belong to the user;
-competency must exist) before writing — keep that guard.
+`toggle_favourite` adds a favourite only for an item the block lists
+(`dataset_provider::lists_item()`: a plan `api::list_user_plans()` returns, or a
+competency of one of those plans), with one message for a missing and a hidden
+id, so the call reveals no ids; removing needs no check, so a favourite the
+block stopped listing stays removable — keep both halves.
 
 ### External functions
 `validate_parameters()` → `require_login()` + guest rejection →
