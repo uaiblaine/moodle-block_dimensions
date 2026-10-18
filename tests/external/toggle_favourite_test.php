@@ -17,6 +17,7 @@
 namespace block_dimensions\external;
 
 use advanced_testcase;
+use core_competency\plan;
 use core_external\external_api;
 
 /**
@@ -25,10 +26,10 @@ use core_external\external_api;
  * Every negative case is built so that the guard under test is the only one able to throw: an
  * itemid that already owns a plan for the acting user, favourites left enabled, and a valid
  * itemtype, except for the one input the test deliberately breaks. Without that, an earlier test
- * user with no plan of their own always falls through to the final ownership/existence check
- * (toggle_favourite.php:94-98), which throws {@see \invalid_parameter_exception} regardless of
- * which specific guard the test meant to pin, and a bare exception-class assertion cannot tell the
- * two apart.
+ * user with no plan of their own always falls through to the final listing check (the item must be
+ * one {@see \block_dimensions\local\dataset_provider::lists_item()} lists), which throws
+ * {@see \invalid_parameter_exception} regardless of which specific guard the test meant to pin, and
+ * a bare exception-class assertion cannot tell the two apart.
  *
  * @package    block_dimensions
  * @category   test
@@ -62,14 +63,31 @@ final class toggle_favourite_test extends advanced_testcase {
     /**
      * Create a learning plan owned by the given user.
      *
+     * Active by default, not the generator's draft: api::list_user_plans() lists a draft only to a
+     * holder of moodle/competency:planviewowndraft, which no archetype has, so a draft would be
+     * refused by the listing check even for its owner.
+     *
      * @param int $userid The owner.
+     * @param int $status The plan status.
      * @return int The plan id.
      */
-    private function create_owned_plan(int $userid): int {
+    private function create_owned_plan(int $userid, int $status = plan::STATUS_ACTIVE): int {
         $plan = $this->getDataGenerator()->get_plugin_generator('core_competency')->create_plan([
             'userid' => $userid,
+            'status' => $status,
         ]);
         return (int) $plan->get('id');
+    }
+
+    /**
+     * Create a competency in a new framework.
+     *
+     * @return int The competency id.
+     */
+    private function create_competency(): int {
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $generator->create_framework();
+        return (int) $generator->create_competency(['competencyframeworkid' => $framework->get('id')])->get('id');
     }
 
     /**
@@ -90,9 +108,8 @@ final class toggle_favourite_test extends advanced_testcase {
      * Invalid itemtype must be what stops the call, not the ownership check further down.
      *
      * The fixture owns a plan, so if the itemtype guard were deleted the call would reach the
-     * ownership/existence check instead — which, for an itemtype other than 'plan', looks the
-     * itemid up in the competency table and throws a differently worded exception. Asserting the
-     * exact debuginfo text is what tells the two apart.
+     * listing check instead, which throws a differently worded exception. Asserting the exact
+     * debuginfo text is what tells the two apart.
      */
     public function test_execute_rejects_invalid_itemtype(): void {
         $this->resetAfterTest();
@@ -113,7 +130,7 @@ final class toggle_favourite_test extends advanced_testcase {
     /**
      * A zero itemid must be what stops the call, not the ownership check further down.
      *
-     * Without the itemid <= 0 guard, execution reaches the ownership check with itemid 0, which
+     * Without the itemid <= 0 guard, execution reaches the listing check with itemid 0, which
      * throws its own, differently worded, invalid_parameter_exception — so the exact debuginfo
      * text, not just the exception class, is what proves this guard fired.
      */
@@ -193,33 +210,116 @@ final class toggle_favourite_test extends advanced_testcase {
     }
 
     /**
-     * A 'competency' itemtype is checked against the competency table, not the plan table.
+     * A competency is favourited only when it is in one of the caller's plans; one that exists
+     * elsewhere is refused with the same message as an id nobody holds.
      *
-     * Without the competency branch of the existence check in execute(), an arbitrary or
-     * non-existent competency id could be favourited, or a real one wrongly refused.
+     * The same message is the point: a distinct one for a missing id told any caller which
+     * competency ids exist. The control adds the same competency to the caller's own plan, and the
+     * same call then succeeds.
      */
-    public function test_execute_rejects_unknown_competency(): void {
+    public function test_execute_refuses_a_competency_outside_the_callers_plans(): void {
+        global $DB;
         $this->resetAfterTest();
         set_debugging(DEBUG_DEVELOPER, true);
 
         $user = $this->getDataGenerator()->create_user();
         $this->setUser($user);
         set_config('enable_favourites', 1, 'block_dimensions');
+        $planid = $this->create_owned_plan((int) $user->id);
+        $compid = $this->create_competency();
+        // The caller's plan holds another competency, so the check must compare ids, not count rows.
+        $this->getDataGenerator()->get_plugin_generator('core_competency')->create_plan_competency([
+            'planid' => $planid,
+            'competencyid' => $this->create_competency(),
+        ]);
+        $missingid = (int) $DB->get_field_sql('SELECT MAX(id) FROM {competency}') + 1000;
 
-        $response = $this->call('competency', 999999);
+        $elsewhere = $this->call('competency', $compid);
+        $this->assertTrue($elsewhere['error']);
+        $this->assertSame('invalidparameter', $elsewhere['exception']->errorcode);
+        $this->assertStringContainsString('Unknown or inaccessible competency: ' . $compid, $this->debuginfo($elsewhere));
 
-        $this->assertTrue($response['error']);
-        $this->assertSame('invalidparameter', $response['exception']->errorcode);
-        $this->assertStringContainsString('Unknown competency: 999999', $this->debuginfo($response));
+        $missing = $this->call('competency', $missingid);
+        $this->assertTrue($missing['error']);
+        $this->assertSame('invalidparameter', $missing['exception']->errorcode);
+        $this->assertStringContainsString('Unknown or inaccessible competency: ' . $missingid, $this->debuginfo($missing));
 
-        // Control: a real competency id succeeds for the same guard.
-        $competency = $this->getDataGenerator()->get_plugin_generator('core_competency');
-        $framework = $competency->create_framework();
-        $compid = (int) $competency->create_competency(['competencyframeworkid' => $framework->get('id')])->get('id');
-
+        // Control: in the caller's own plan, the same competency can be favourited.
+        $this->getDataGenerator()->get_plugin_generator('core_competency')->create_plan_competency([
+            'planid' => $planid,
+            'competencyid' => $compid,
+        ]);
         $control = $this->call('competency', $compid);
         $this->assertFalse($control['error'], $control['exception']->message ?? '');
         $this->assertTrue($control['data']['isfavourite']);
+    }
+
+    /**
+     * An own draft plan is refused while core does not list drafts to their owner, and accepted
+     * once it does (the control): the check follows the plan list the block is built from, not
+     * the plan's owner column.
+     */
+    public function test_execute_follows_core_listing_for_an_own_draft_plan(): void {
+        global $CFG;
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+        set_config('enable_favourites', 1, 'block_dimensions');
+        $planid = $this->create_owned_plan((int) $user->id, plan::STATUS_DRAFT);
+
+        $refused = $this->call('plan', $planid);
+        $this->assertTrue($refused['error']);
+        $this->assertSame('invalidparameter', $refused['exception']->errorcode);
+
+        assign_capability(
+            'moodle/competency:planviewowndraft',
+            CAP_ALLOW,
+            $CFG->defaultuserroleid,
+            \context_system::instance()->id,
+            true
+        );
+        accesslib_clear_all_caches_for_unit_testing();
+
+        $control = $this->call('plan', $planid);
+        $this->assertFalse($control['error'], $control['exception']->message ?? '');
+        $this->assertTrue($control['data']['isfavourite']);
+    }
+
+    /**
+     * A favourite whose competency the block no longer lists can still be removed.
+     *
+     * The row is written straight through core_favourites, as one left behind by a plan that has
+     * since lost the competency would be. The precondition proves adding the same item is refused,
+     * so the removal succeeds although the listing check would refuse it.
+     */
+    public function test_execute_removes_a_favourite_the_block_no_longer_lists(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+        set_config('enable_favourites', 1, 'block_dimensions');
+        $compid = $this->create_competency();
+        $usercontext = \context_user::instance((int) $user->id);
+        $favourite = [
+            'component' => 'block_dimensions',
+            'itemtype' => 'competency',
+            'itemid' => $compid,
+            'userid' => (int) $user->id,
+        ];
+
+        // Precondition: the listing check refuses this competency.
+        $this->assertTrue($this->call('competency', $compid)['error']);
+
+        \core_favourites\service_factory::get_service_for_user_context($usercontext)
+            ->create_favourite('block_dimensions', 'competency', $compid, $usercontext);
+        $this->assertTrue($DB->record_exists('favourite', $favourite));
+
+        $removed = $this->call('competency', $compid);
+        $this->assertFalse($removed['error'], $removed['exception']->message ?? '');
+        $this->assertFalse($removed['data']['isfavourite']);
+        $this->assertFalse($DB->record_exists('favourite', $favourite));
     }
 
     /**
@@ -257,7 +357,7 @@ final class toggle_favourite_test extends advanced_testcase {
     /**
      * A user cannot favourite another user's plan; the plan's own owner still can (the control).
      *
-     * The plan ownership check in execute() is the only one standing between an arbitrary logged-in user and a
+     * The listing check in execute() is the only one standing between an arbitrary logged-in user and a
      * favourite row for a plan they do not own. Running the owner through the same itemid in the
      * same test proves the guard rejects the attacker specifically, not every plan of that id.
      */
@@ -268,6 +368,8 @@ final class toggle_favourite_test extends advanced_testcase {
         $owner = $this->getDataGenerator()->create_user();
         $attacker = $this->getDataGenerator()->create_user();
         $planid = $this->create_owned_plan((int) $owner->id);
+        // The attacker has a plan of their own, so the check must compare ids, not find any plan.
+        $this->create_owned_plan((int) $attacker->id);
 
         $this->setUser($attacker);
         $response = $this->call('plan', $planid);

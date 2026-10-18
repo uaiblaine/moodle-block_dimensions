@@ -55,6 +55,7 @@ class toggle_favourite extends external_api {
      * @param string $itemtype Item type (plan or competency).
      * @param int $itemid Item ID.
      * @return array<string, bool>
+     * @throws \invalid_parameter_exception When adding a plan or competency the block does not list.
      */
     public static function execute(string $itemtype, int $itemid) {
         global $USER;
@@ -86,26 +87,23 @@ class toggle_favourite extends external_api {
             throw new \moodle_exception('favouritesdisabled', 'block_dimensions');
         }
 
-        // Only allow favouriting items the user can actually have: a learning
-        // plan that belongs to them, or an existing competency. Without this a
-        // user could create favourite rows for arbitrary or non-existent ids.
-        global $DB;
-        if ($itemtype === 'plan') {
-            if (!$DB->record_exists('competency_plan', ['id' => $itemid, 'userid' => $USER->id])) {
-                throw new \invalid_parameter_exception('Unknown or inaccessible plan: ' . $itemid);
-            }
-        } else if (!$DB->record_exists('competency', ['id' => $itemid])) {
-            throw new \invalid_parameter_exception('Unknown competency: ' . $itemid);
-        }
-
         $usercontext = \context_user::instance($USER->id);
         self::validate_context($usercontext);
 
         $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
 
+        // Removing needs no check: it drops only the caller's own row, and a favourite whose plan
+        // or competency the block no longer lists must stay removable.
         if ($ufservice->favourite_exists('block_dimensions', $itemtype, $itemid, $usercontext)) {
             $ufservice->delete_favourite('block_dimensions', $itemtype, $itemid, $usercontext);
             return ['isfavourite' => false];
+        }
+
+        // Create only for what the block can draw, from the plan list the dataset is built from.
+        // One message for a missing id and a hidden one, so the call reveals no ids.
+        $provider = new \block_dimensions\local\dataset_provider((int) $USER->id);
+        if (!$provider->lists_item($itemtype, $itemid)) {
+            throw new \invalid_parameter_exception('Unknown or inaccessible ' . $itemtype . ': ' . $itemid);
         }
 
         $ufservice->create_favourite('block_dimensions', $itemtype, $itemid, $usercontext);
