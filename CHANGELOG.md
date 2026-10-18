@@ -78,6 +78,25 @@ All notable changes to this project will be documented in this file.
   URL-type home and the redirect would loop; the directory form (`/blocks/dimensions/`, with or
   without the slash) counts as this page. The web service keeps refusing guests.
 
+### Fixed
+- **Names with an ampersand no longer show as "&amp;".** Plan names, competency names in the
+  cards and the trail, the template's type suffix and the tag field labels went through
+  `format_string()` with its default escaping, and every consumer (the card templates, `filters.js`)
+  escaped them again, so "R&D" read "R&amp;D" on the card, in its accessible names and in the
+  search. The provider now returns plain text (`escape => false`), escaped once where it is drawn,
+  and formats each name in its own context (the plan's user context, the competency framework's,
+  the template's) instead of the system context, so filters enabled there apply. Pinned by
+  `tests/external/card_names_test.php`. Found by an MDL Shield review.
+- **A favourite is added only for what the block lists.** `toggle_favourite` accepted any
+  competency id that existed, and its distinct message for a missing id told any caller which ids
+  exist. Adding now needs a plan `api::list_user_plans()` returns for the caller, or a competency
+  of one of those plans, with one message for every refusal; removing needs no check, so a favourite
+  the block stopped listing stays removable. Found by an MDL Shield review.
+- **The return-to-plan context takes only a course the plan reaches.** `set_return_context` stored
+  any positive `courseid`; it now refuses one outside `template_course_cache::get_courses_for_plan()`,
+  the set the `courseid` 0 branch already used. The block's own client always sends 0. Found by an
+  MDL Shield review.
+
 ### Added
 - **Family colour tokens.** Under `theme_dimensions` the plugin reads the theme's family tokens
   (`--dimensions-*`, contract in `theme_dimensions/docs/tokens.md`) first, in the light and the dark
