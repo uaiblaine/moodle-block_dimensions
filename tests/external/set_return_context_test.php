@@ -26,9 +26,9 @@ use PHPUnit\Framework\Attributes\CoversClass;
 /**
  * PHPUnit tests for set_return_context external endpoint.
  *
- * Covers the guard order (guest, plan ownership, feature flag) and both storage shapes: a single
- * course when courseid is given, and every course the plan's template reaches through its
- * competencies when it is not. The template/competency seeding mirrors
+ * Covers the guard order (guest, plan ownership, feature flag, a courseid the plan reaches) and
+ * both storage shapes: a single course when courseid is given, and every course the plan's template
+ * reaches through its competencies when it is not. The template/competency seeding mirrors
  * template_course_cache::fetch_courses_for_template() (competency_templatecomp joined to
  * competency_coursecomp), which is what {@see \local_dimensions\template_course_cache::get_courses_for_plan()}
  * resolves for the courseid 0 branch.
@@ -142,7 +142,8 @@ final class set_return_context_test extends advanced_testcase {
         $owner = $this->getDataGenerator()->create_user();
         $attacker = $this->getDataGenerator()->create_user();
         $course = $this->getDataGenerator()->create_course();
-        $planid = $this->create_owned_plan((int) $owner->id);
+        $templateid = $this->create_template_with_linked_courses([(int) $course->id]);
+        $planid = $this->create_owned_plan((int) $owner->id, $templateid);
 
         $this->setUser($attacker);
         $response = $this->call($planid, (int) $course->id);
@@ -169,7 +170,8 @@ final class set_return_context_test extends advanced_testcase {
         $user = $this->getDataGenerator()->create_user();
         $course = $this->getDataGenerator()->create_course();
         $this->setUser($user);
-        $planid = $this->create_owned_plan((int) $user->id);
+        $templateid = $this->create_template_with_linked_courses([(int) $course->id]);
+        $planid = $this->create_owned_plan((int) $user->id, $templateid);
 
         set_config('enablereturnbutton', 0, 'local_dimensions');
         $off = $this->call($planid, (int) $course->id);
@@ -186,7 +188,8 @@ final class set_return_context_test extends advanced_testcase {
     }
 
     /**
-     * A positive courseid stores the plan's view URL for that course only.
+     * A positive courseid stores the plan's view URL for that course only, though the plan reaches
+     * the other course too.
      */
     public function test_execute_with_positive_courseid_stores_for_that_course_only(): void {
         $this->resetAfterTest();
@@ -196,7 +199,8 @@ final class set_return_context_test extends advanced_testcase {
         $this->setUser($user);
         $targetcourse = $this->getDataGenerator()->create_course();
         $othercourse = $this->getDataGenerator()->create_course();
-        $planid = $this->create_owned_plan((int) $user->id);
+        $templateid = $this->create_template_with_linked_courses([(int) $targetcourse->id, (int) $othercourse->id]);
+        $planid = $this->create_owned_plan((int) $user->id, $templateid);
 
         $response = $this->call($planid, (int) $targetcourse->id);
 
@@ -208,8 +212,41 @@ final class set_return_context_test extends advanced_testcase {
         $this->assertNotNull($stored);
         $this->assertSame($expected, $stored['url']);
 
-        // The unrelated course never carried by this call must stay unset.
+        // The plan's other course, which this call did not name, must stay unset.
         $this->assertNull(helper::get_return_context_for_course((int) $othercourse->id));
+    }
+
+    /**
+     * A positive courseid the plan does not reach is refused and nothing is stored; a course the
+     * plan does reach, in the same call shape, is stored (the control).
+     *
+     * The block's own client always sends 0, so only a direct caller reaches this branch; without
+     * the check it stored the plan's return button for any course.
+     */
+    public function test_execute_refuses_a_course_the_plan_does_not_reach(): void {
+        $this->resetAfterTest();
+        set_config('enablereturnbutton', 1, 'local_dimensions');
+        set_debugging(DEBUG_DEVELOPER, true);
+
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+        $linkedcourse = $this->getDataGenerator()->create_course();
+        $unlinkedcourse = $this->getDataGenerator()->create_course();
+        $templateid = $this->create_template_with_linked_courses([(int) $linkedcourse->id]);
+        $planid = $this->create_owned_plan((int) $user->id, $templateid);
+
+        $refused = $this->call($planid, (int) $unlinkedcourse->id);
+        $this->assertTrue($refused['error']);
+        $this->assertSame('invalidparameter', $refused['exception']->errorcode);
+        $debuginfo = (string) ($refused['exception']->debuginfo ?? $refused['exception']->message);
+        $this->assertStringContainsString('is not linked to plan ' . $planid, $debuginfo);
+        $this->assertNull(helper::get_return_context_for_course((int) $unlinkedcourse->id));
+
+        // Control: the course the plan reaches is accepted and stored.
+        $control = $this->call($planid, (int) $linkedcourse->id);
+        $this->assertFalse($control['error'], $control['exception']->message ?? '');
+        $this->assertTrue($control['data']['success']);
+        $this->assertNotNull(helper::get_return_context_for_course((int) $linkedcourse->id));
     }
 
     /**
@@ -260,7 +297,8 @@ final class set_return_context_test extends advanced_testcase {
         $user = $this->getDataGenerator()->create_user();
         $this->setUser($user);
         $course = $this->getDataGenerator()->create_course();
-        $planid = $this->create_owned_plan((int) $user->id);
+        $templateid = $this->create_template_with_linked_courses([(int) $course->id]);
+        $planid = $this->create_owned_plan((int) $user->id, $templateid);
 
         $raw = set_return_context::execute($planid, (int) $course->id);
         $cleaned = \core_external\external_api::clean_returnvalue(

@@ -30,13 +30,17 @@ database tables of its own**; the only rows it writes are core favourites.
   - `block_dimensions_get_block_dataset` (read): builds the cards. `loadgroup` and
     `planstatus` are checked against fixed vocabularies; it returns an empty dataset while
     core competencies are disabled.
-  - `block_dimensions_toggle_favourite` (write): `itemtype` is `plan` or `competency`. A plan
-    must belong to the caller; a competency must exist. It writes through core's favourites
-    service in the caller's own user context.
+  - `block_dimensions_toggle_favourite` (write): `itemtype` is `plan` or `competency`. Adding
+    needs an item the block lists (`dataset_provider::lists_item()`): a plan
+    `api::list_user_plans()` returns for the caller, or a competency of one of those plans, with
+    one message for a missing id and a hidden one. Removing needs no check, since it drops only
+    the caller's own row. It writes through core's favourites service in the caller's own user
+    context.
   - `block_dimensions_set_return_context` (write): stores a return-to-plan URL in a session
     cache for the floating button of `local_dimensions`. The plan is read with
     `api::read_plan()`, which enforces core's plan permission, and the feature is gated by a
-    `local_dimensions` setting.
+    `local_dimensions` setting. A non-zero `courseid` must be one of the plan's courses
+    (`template_course_cache::get_courses_for_plan()`), the set the `courseid` 0 branch stores.
 - One page script, `index.php`, behind the `enable_page` setting (off by default) and core
   competencies being enabled (`output\page::is_enabled()`): `require_login(null, false)`, a guest
   refused with `noguest`, then the block's own shell for `$USER` in the system context on the
@@ -57,8 +61,11 @@ database tables of its own**; the only rows it writes are core favourites.
   `PARAM_URL` plus percent-encoding of quotes, parentheses and whitespace
   (`sanitize_image_url()`), because Mustache escaping does not protect a CSS context. A new
   style-bound field without one of these is a finding.
-- **The favourite guard checks existence, not visibility, for a competency.** The effect is a
-  row owned by the caller, and nothing about the competency is returned.
+- **Card names are plain text, escaped once by their consumer.** `dataset_provider::format_plain()`
+  calls `format_string()` with `escape => false` in the name's own context (the plan's user
+  context, the competency's framework context, the template's context), and the templates and
+  `filters.js` escape the result with `{{...}}`, `escapeHtml()` or `textContent`. A double stash
+  over these names is therefore correct; a triple stash would be a finding.
 - **Competency cards appear only for competencies of the user's own plans that link to at
   least one course with `visible = 1`** (a plain visibility test, not an enrolment test).
 - **`summary::has_content()` fails open.** If the plan read throws, it logs with `error_log()`
@@ -70,6 +77,10 @@ database tables of its own**; the only rows it writes are core favourites.
   in `get_block_dataset::execute_returns()`.
 - **`styles.css` ends with a Bootstrap 4 polyfill** scoped to the block's content root, and
   colours come from theme tokens with fallbacks. Neither is a security matter.
+- **The plugin ships a Brazilian Portuguese pack (`lang/pt_br/`) beside the English one, on
+  purpose.** The plugin is distributed from its own repository, not the Plugins directory, and the
+  owner maintains both packs in lockstep (`tests/lang_strings_test.php`). Moving the translation to
+  AMOS is a decision for a Plugins directory submission, not a finding.
 - **Each branch serves one Moodle version, and 4.5 through 5.2 carry the code of the 5.3
   `main` from before its 4.5 compatibility code was dropped**, so code that branches on version
   or checks for a helper before calling it may still be there, deliberately.
