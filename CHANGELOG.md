@@ -7,16 +7,22 @@ All notable changes to this project will be documented in this file.
 ### Upgrading
 
 - **One branch per Moodle version.** This is `MOODLE_501_STABLE`, for Moodle 5.1 only
-  (`$plugin->supported = [501, 501]`, version `2025100600`), and it requires local_dimensions from its
-  own `MOODLE_501_STABLE` branch (`2025100600`). The other Moodle versions are served by
-  `MOODLE_405_STABLE`, `MOODLE_502_STABLE`, `MOODLE_503_STABLE`. Each branch numbers its releases inside its Moodle version's namespace, as
-  moodle.org expects, so every number is below the date-numbered releases that came before (the
-  last was `2026101300`, v2.0). Moodle 5.0 is no longer supported.
-- **Switching a site from a date-numbered release**: replace the files of both plugins with the
-  branch for the site's Moodle, then
-  `php admin/cli/cfg.php --component=block_dimensions --name=version --set=2025100599` and the same
-  for local_dimensions, then `php admin/cli/upgrade.php`. Without the version reset Moodle
-  refuses the new files as a downgrade. The block has no upgrade steps.
+  (`$plugin->supported = [501, 501]`, version `2025100600`), and it requires local_dimensions from
+  its own `MOODLE_501_STABLE` branch (`2025100600`). The other Moodle versions are served by
+  `MOODLE_405_STABLE`, `MOODLE_502_STABLE`, `MOODLE_503_STABLE`. Each branch numbers its releases
+  inside its Moodle version's namespace, as moodle.org expects, so every number is below the
+  date-numbered releases that came before (the last was `2026101300`, v2.0). Moodle 5.0 is no longer
+  supported.
+- **Switching a site from a date-numbered release** (any of them; no intermediate release is
+  needed):
+  1. Replace the files of both plugins with the branch for the site's Moodle.
+  2. `php admin/cli/cfg.php --component=block_dimensions --name=version --set=2025100599`
+     (do the same for local_dimensions, with its own branch).
+  3. `php admin/cli/upgrade.php`.
+
+  Step 2 comes after step 1; without it Moodle refuses the new files as a downgrade.
+- **No upgrade steps.** The block has none, so the version reset and the upgrade are all a switch
+  needs.
 
 ### Changed
 - **The section headings are one string each** ("Advance in your learning plans", "Find courses
