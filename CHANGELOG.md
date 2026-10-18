@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v5.1-r1] - Unreleased
+## [v5.1-r1] - 2026-10-18
 
 ### Upgrading
 
