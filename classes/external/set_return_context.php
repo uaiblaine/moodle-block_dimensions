@@ -65,14 +65,15 @@ class set_return_context extends external_api {
     /**
      * Store the return context for the "Return to Plan" button.
      *
-     * When courseid is provided, stores the context for that specific course.
+     * When courseid is provided, stores the context for that course, which must be one the plan reaches.
      * When courseid is 0, resolves all courses linked to the plan's competencies
      * and stores the context for each one, as local/dimensions/view-plan.php does.
      *
      * @param int $planid The learning plan ID.
      * @param int $courseid The target course ID (0 to resolve all from the plan).
      * @return array ['success' => bool]; false when local_dimensions' enablereturnbutton setting is off.
-     * @throws \moodle_exception For a guest, or when the user cannot read the plan.
+     * @throws \moodle_exception For a guest, when the user cannot read the plan, or for a courseid the
+     *     plan's competencies do not link.
      */
     public static function execute(int $planid, int $courseid = 0): array {
         global $USER;
@@ -102,12 +103,15 @@ class set_return_context extends external_api {
 
         $returnurl = new moodle_url('/local/dimensions/view-plan.php', ['id' => $planid]);
 
+        $validcourseids = \local_dimensions\template_course_cache::get_courses_for_plan($plan);
+
         if ($courseid > 0) {
-            // Store context for a single specific course.
+            // A single course, which must be one the plan reaches, as the courseid 0 branch stores.
+            if (!in_array($courseid, $validcourseids, true)) {
+                throw new \invalid_parameter_exception('Course ' . $courseid . ' is not linked to plan ' . $planid);
+            }
             \local_dimensions\helper::set_return_context_for_course($courseid, $returnurl);
         } else {
-            // Resolve all courses from the plan and store context for each.
-            $validcourseids = \local_dimensions\template_course_cache::get_courses_for_plan($plan);
             \local_dimensions\helper::set_return_context($returnurl, $validcourseids);
         }
 
