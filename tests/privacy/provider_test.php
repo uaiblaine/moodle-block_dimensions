@@ -206,6 +206,31 @@ final class provider_test extends provider_testcase {
     }
 
     /**
+     * The export reads the request's subject, never the user running it.
+     *
+     * Neither the privacy manager nor tool_dataprivacy's task switches $USER to the subject, so the
+     * export runs here as another user who holds favourites of their own: an export keyed on $USER
+     * would write that user's competency 909 into the subject's context and lose the subject's plan.
+     */
+    public function test_export_user_data_reads_the_subject_not_the_current_user(): void {
+        $this->resetAfterTest();
+        $subject = $this->getDataGenerator()->create_user();
+        $officer = $this->getDataGenerator()->create_user();
+        $subjectcontext = context_user::instance($subject->id);
+        $this->create_favourite((int) $subject->id, 'plan', 101);
+        $this->create_favourite((int) $officer->id, 'competency', 909);
+        $this->setUser($officer);
+
+        provider::export_user_data(new approved_contextlist($subject, 'block_dimensions', [$subjectcontext->id]));
+
+        $root = get_string('pluginname', 'block_dimensions');
+        $writer = writer::with_context($subjectcontext);
+        $this->assertSame(101, $writer->get_data([$root, 'plan'])->favourites[0]->itemid);
+        $this->assertEmpty($writer->get_data([$root, 'competency']));
+        $this->assertFalse(writer::with_context(context_user::instance($officer->id))->has_any_data());
+    }
+
+    /**
      * Test that all user data in a context is deleted correctly.
      */
     public function test_delete_data_for_all_users_in_context(): void {
