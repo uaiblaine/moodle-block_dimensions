@@ -1,165 +1,270 @@
-moodle-block_dimensions
-=======================
+Dimensions (block_dimensions)
+=============================
 
 [![Moodle Plugin CI](https://github.com/uaiblaine/moodle-block_dimensions/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/uaiblaine/moodle-block_dimensions/actions/workflows/ci.yml?query=branch%3Amain)
 
 Your learning path, one glance away.
 
-A Moodle block plugin that turns the learner's active learning plans into a dashboard of visual cards: **learning plan cards** with a competency progress trail, and **competency cards** giving direct access to each competency's courses. Tag filters, instant search and per-user favourites keep even large sets of plans manageable. The block is the companion of the [Competency Dimensions](https://moodle.org/plugins/local_dimensions) plugin (`local_dimensions`) — cards carry the images, colours, tags and display modes managed there — and it creates no database tables of its own.
+A block that turns a learner's learning plans into cards: **plan cards** with a trail of the
+plan's competencies, and **competency cards** that lead straight to each competency's courses.
+Cards carry the covers, colours, tags and display modes managed in
+[Competency Dimensions](https://github.com/uaiblaine/moodle-local_dimensions) (`local_dimensions`),
+and each section has a filter line of its own: status, search, favourites and filter chips.
 
-![The Dimensions block on a learner's Dashboard, showing the status filter, the favourites pills and a learning plan card with its competency trail](docs/screenshots/01-dashboard.png)
+![The Dimensions page: the plans section with its status pills, search, favourites star and Filters, three favourite plan cards with covers, tags and competency trails, a ghost card counting the remaining plans, and the competencies section below](https://raw.githubusercontent.com/uaiblaine/moodle-block_dimensions/main/docs/screenshots/01-block-page.png)
+
+Moodle gives every learner a learning plan, but no fast way back into it: plans sit several clicks
+deep in the profile, and the Dashboard, the page learners actually open every session, says
+nothing about them. This block is that front door. It answers three questions the moment the page
+loads: *where am I* (the trail on each plan card), *what's next* (the Continue or Access button,
+which lands on the right view), and *what matters to me* (the favourites each learner keeps).
+
+It follows its companion's philosophy: no tables of its own, core subsystems wherever one exists
+(favourites, web services, caching), and a thin presentation layer over what Moodle already knows.
+
+- **Plan cards and competency cards**, with covers and colours from `local_dimensions`.
+- **A status scope** for plans: *Active*, *In review* and *Completed*, each loaded when first asked
+  for.
+- **A filter line per section**: search, a favourites star and a Filters panel with counts, active
+  filters as chips, folding down to a phone with the panel as a bottom sheet.
+- **Favourites first**: the first paint asks only for the starred cards; the rest load on demand.
+- **A page of its own** that can be offered as the start page.
 
 
-Requirements
+Plan cards
+----------
+
+![Six plan cards in the Active bucket, each with its cover or colour, tags, competency count with the plan's own label, a Continue or Access button, a star and a trail of competencies](https://raw.githubusercontent.com/uaiblaine/moodle-block_dimensions/main/docs/screenshots/02-plan-cards.png)
+
+Templates set (in `local_dimensions`) to the *plan* display mode render as one card per plan: cover
+image or colour identity, tag chips, the competency count with the template's own label ("8
+Levels", "9 Stages"), and an **Access** button that reads **Continue** once the plan is under way.
+Each card carries a **trail**: a five-step window centred on the last completed competency, with an
+indicator when more steps lie before or after it. Trail steps can be links; opening one first arms
+`local_dimensions`' *Return to plan* button, so the learner can come back from the course.
+
+Cards come in a vertical or a horizontal layout (`plancard_layout`). The pictures show the
+horizontal one, which gives the trail a column of its own.
+
+
+Competency cards
+----------------
+
+![Six competency cards with their covers, tags, stars and Access buttons, under the section's filter line](https://raw.githubusercontent.com/uaiblaine/moodle-block_dimensions/main/docs/screenshots/03-competency-cards.png)
+
+Templates in the *competencies* display mode expand into one card per competency, showing only
+competencies linked to at least one visible course, and once even when several plans share them.
+Each card opens the competency in `local_dimensions`' learner views.
+
+
+Status scope
 ------------
 
-- Moodle 5.2 (branch `MOODLE_502_STABLE`; each Moodle version has its own branch:
-  `MOODLE_405_STABLE`, `MOODLE_501_STABLE`, `MOODLE_502_STABLE`, `MOODLE_503_STABLE` = `main`)
-- Core competencies enabled (`core_competency`)
-- [local_dimensions](https://moodle.org/plugins/local_dimensions) v2.0 or later — the block reads all card metadata through its caches
+Plans do not stop existing when they are finished. The plans section groups them in three
+buckets, **Active**, **In review** and **Completed**, as the scope of its filter line. Only the
+opening bucket is loaded with the page; the others are fetched the first time the learner picks
+them, and kept. A bucket with no plans is not drawn.
+
+![The Completed bucket: each card with a green Completed on chip, its trail and a View plan button](https://raw.githubusercontent.com/uaiblaine/moodle-block_dimensions/main/docs/screenshots/04-status-completed.png)
+
+A completed plan shows the ratings Moodle froze when it was completed, not the learner's current
+ones, so the card always agrees with core's plan page. Plans waiting for review, or under review,
+carry their own chip:
+
+![The In review bucket, with cards marked Waiting for review and In review](https://raw.githubusercontent.com/uaiblaine/moodle-block_dimensions/main/docs/screenshots/05-status-review.png)
+
+A learner needs `moodle/competency:planviewowndraft` to see their own plan while it is under
+review. That is core's rule, not the block's, and no role holds it by default: without it the
+*In review* bucket stays empty and its pill is not drawn.
 
 
-Documentation / Documentação
------------------------------
+The filter line
+---------------
 
-Full user and administrator documentation is available online in English and Portuguese:
-👉 **[Competency Dimensions Documentation (GitHub Pages)](https://uaiblaine.github.io/moodle-local_dimensions-docs/)**
+Plans and competencies each get one line under their heading: the status pills (plans only), a
+search, a favourites star and **Filters**.
 
+![The competencies section's Filters panel: Focus area and Type pills, each value with a count, a scroll arrow for the values that overflow, and Show 27](https://raw.githubusercontent.com/uaiblaine/moodle-block_dimensions/main/docs/screenshots/06-filter-panel.png)
 
-Motivation for this plugin
+**Filters** opens a panel with the section's tag filters (the custom fields managed in
+`local_dimensions`, labelled with their names), a count on every value and *Show N* at its foot. A
+filter can be a row of pills or a native dropdown (`*_displaymode`). Each active filter becomes a
+chip under the line, with *Clear all* from two chips up, and the button carries a count badge.
 
---------------------------
+![Two active filters, Digital and Elective, as chips under the competencies line with Clear all, the Filters button showing 2, and the six matching competency cards](https://raw.githubusercontent.com/uaiblaine/moodle-block_dimensions/main/docs/screenshots/07-filter-chips.png)
 
-Moodle's competency system gives every learner a learning plan — but no fast way back into it. Day to day, plans sit several clicks deep in the profile area, and the Dashboard, the one page learners actually open every session, says nothing about them.
+Each section's search reaches only that section's cards, accent- and case-insensitively ("lingua"
+finds "língua"), and combines with the filters. Its suggestions list the matching filters first,
+with the number of cards each would leave, then the matching cards; `/` opens the search.
 
-This block is that missing front door. It answers three questions the moment the Dashboard loads: *where am I* (the progress trail on each plan card), *what's next* (the Access/Continue button that lands on the right view), and *what matters to me* (favourites each learner curates). It follows the same philosophy as its companion plugin: no own tables, core subsystems wherever one exists — favourites, web services, caching — and a thin presentation layer over what Moodle already knows. Less plugin, more Moodle.
+![The competencies search with comm typed: the suggestion list offers the Community filter with its count, then two matching competencies](https://raw.githubusercontent.com/uaiblaine/moodle-block_dimensions/main/docs/screenshots/08-search-suggestions.png)
 
-
-Installation
-------------
-
-Install the plugin like any other plugin to folder `/blocks/dimensions`.
-
-See http://docs.moodle.org/en/Installing_plugins for details on installing Moodle plugins.
-
-After installation the block works without any configuration: add the "Dimensions" block to the Dashboard (or any page that accepts blocks) and it renders cards from the user's active learning plans.
-
-
-What learners see
------------------
-
-### Learning plan cards
-
-Templates configured (in `local_dimensions`) with the *plan* display mode render as a single card per plan: cover image or colour identity, tag chips, competency count with the template's type label, and an **Access/Continue** button — the label switches to *Continue* once the plan is under way. Each card carries a **competency progress trail**: a five-step window centred on the last completed competency, with indicators when more steps exist before or after the window. Trail steps can optionally be real links; opening one first arms the "Return to plan" context so `local_dimensions`' floating button can bring the learner back from the course.
-
-![Four learning plan cards in the vertical layout, each with its tags, competency count and progress trail](docs/screenshots/02-plan-cards.png)
-
-Cards come in a vertical or horizontal layout, chosen by the administrator. The horizontal layout gives the trail a column of its own, so every competency name is readable at a glance:
-
-![The same plans in the horizontal layout, with the progress trail listed down the right-hand side of each card](docs/screenshots/03-plan-card-horizontal.png)
-
-### Competency cards
-
-Templates in *competencies* display mode expand into one card per competency, showing only competencies linked to at least one visible course and deduplicating competencies that appear in several plans. Each card links straight into the `local_dimensions` learner views.
-
-![Six competency cards, each with its colour identity, tags and Access button](docs/screenshots/04-competency-cards.png)
-
-### Plan status filter
-
-Learning plans do not stop existing when they are finished. The block groups them in three buckets — **Active**, **In review** and **Completed** — and only the active one is loaded with the page; the others are fetched the first time the learner asks for them, and kept afterwards. A bucket with no plans is not drawn at all.
-
-![The Completed bucket, each card carrying a green "Completed on" chip and a View plan button](docs/screenshots/05-status-completed.png)
-
-A completed plan shows the ratings Moodle froze when the plan was completed, not the learner's current ones, so the card always agrees with the core plan page. Plans waiting for a review, or already under review, carry their own chip:
-
-![The In review bucket, with cards marked "Waiting for review" and "In review"](docs/screenshots/06-status-review.png)
-
-Note that a learner needs the `moodle/competency:planviewowndraft` capability to see their own plan while it is under review — that is core's rule, not the block's, and no role holds it by default. Without it the *In review* bucket stays empty and its pill is not drawn.
-
-### Filters and search
-
-Each card group can offer up to two tag filters (the same tag custom fields managed in `local_dimensions`), rendered either as accessible pill radiogroups — with an animated indicator and scroll paddles when they overflow — or as native dropdowns. Filter labels reuse the admin-configured custom field names. An optional search field matches card names with a 120 ms debounce, accent- and case-insensitively ("lingua" finds "língua"). A clear-filters button appears whenever a filter is active.
-
-![The filter bar: status pills, favourites pills, two tag filters and a clear-filters button](docs/screenshots/07-filters.png)
-
-On a phone the block keeps one card per row and collapses the whole filter bar behind a toggle, status pills included, so the cards get the screen. One tap opens it:
+Each line measures its own width and folds: Filters loses its word, the search becomes an icon,
+then the line splits in two. From the third step the search grows over the line, with a close
+button; at the two-line step the panel is a bottom sheet. So the block works on a wide page, in a
+narrow column and on a phone.
 
 <p>
-<img src="docs/screenshots/09-mobile.png" alt="The block on a phone: one card per row, with the filter bar behind a toggle" width="330">
+<img src="https://raw.githubusercontent.com/uaiblaine/moodle-block_dimensions/main/docs/screenshots/09-mobile.png" alt="The block on a phone: search, star and Filters on the first line, the status pills on the second, and one card per row" width="250">
 &nbsp;&nbsp;
-<img src="docs/screenshots/10-mobile-filters.png" alt="The same phone view with the filter bar open, showing the status pills, the favourites pills and both tag filters" width="330">
+<img src="https://raw.githubusercontent.com/uaiblaine/moodle-block_dimensions/main/docs/screenshots/10-mobile-sheet.png" alt="On a phone: the plans section's Filters panel as a bottom sheet, with the Focus area and Career stage filters as dropdowns and a Show 6 button" width="250">
+&nbsp;&nbsp;
+<img src="https://raw.githubusercontent.com/uaiblaine/moodle-block_dimensions/main/docs/screenshots/11-mobile-search.png" alt="On a phone: the plans search grown over the line with lead typed, suggesting the Leadership filter and one matching plan, with a close button" width="250">
 </p>
+
+Nothing on the line is remembered between visits.
 
 
 Favourites
 ----------
 
-Learners can star any card, and favourites are more than a filter — they drive how the block loads:
+Learners star any card, and favourites drive how the block loads:
 
-- On first paint the block requests **favourites only**, so the cards a learner actually cares about render immediately; the rest of each group is fetched on demand ("Show all" pill, a ghost card inviting to load the remaining items, or a search).
-- Per-group pills show live counts — *My favourites (3)* / *Show all (24)*.
-- Favourites are stored through Moodle's **core Favourites subsystem** in the user's own context — no custom tables — and the star toggle validates ownership server-side before writing.
+- On first paint the block asks for **favourites only**, so the cards a learner cares about render
+  at once; a ghost card counts the rest ("View more items (3)") and loads them on demand, as does
+  releasing the section's star or typing a search.
+- Each section has its own star on its line.
+- Favourites are stored through Moodle's **core Favourites subsystem** in the user's own context,
+  and the server stars only a plan or competency the block lists to that learner.
 
-Favourites can be disabled with a single setting, which removes the stars, the pills and the favourites-first loading in one go.
+Favourites can be switched off with one setting, which removes the stars and the favourites-first
+loading together.
 
 
-Built for performance
----------------------
+Dark mode and the family theme
+------------------------------
 
-A Dashboard block has no excuse to be slow, so the block is deliberately engineered around a fast first paint:
+![The Dimensions page in Moodle's dark mode: the section headings, filter lines and card bodies on the dark palette, the covers unchanged](https://raw.githubusercontent.com/uaiblaine/moodle-block_dimensions/main/docs/screenshots/12-dark.png)
 
-- **Server ships a shell, the browser renders the cards**: the page carries only labels and configuration; one AJAX web service returns the whole dataset and cards are rendered client-side from Mustache templates.
-- **Two-phase loading**: favourites first, remaining card groups only when the learner asks for them.
-- **Cache-backed metadata**: every image, colour and tag comes from `local_dimensions`' MUC caches — the block performs no per-card custom field or file queries; competency metadata is fetched in one bulk call per plan and course linkage resolved with a single query per plan.
-- **Incremental rendering**: cards enter the DOM in batches of 24 per animation frame, and a render token cancels stale renders when a newer one supersedes them.
-- **Filtering never re-renders**: search and filters only toggle the visibility of already-rendered cards through pure state functions, and favourite counts update in place.
+Every colour comes from the theme's tokens, so the block follows Moodle's dark mode; the covers and
+colours set on a plan stay as the administrator chose them.
+
+![The same page under theme_dimensions, with the theme's navigation bar](https://raw.githubusercontent.com/uaiblaine/moodle-block_dimensions/main/docs/screenshots/13-theme-dimensions.png)
+
+Under `theme_dimensions`, the family's theme, the block reads the theme's family tokens first;
+without it nothing changes.
+
+
+Requirements
+------------
+
+One branch per Moodle version, each declaring `$plugin->supported` for exactly that version and
+requiring `local_dimensions` from its branch for the same version:
+
+| Branch | Moodle | Version | Release | Requires `local_dimensions` |
+|---|---|---|---|---|
+| `MOODLE_405_STABLE` | 4.5 LTS | 2024100701 | v4.5-r1 | 2024100700 |
+| `MOODLE_501_STABLE` | 5.1 | 2025100601 | v5.1-r1 | 2025100600 |
+| `MOODLE_502_STABLE` | 5.2 | 2026042001 | v5.2-r1 | 2026042000 |
+| `main` (= `MOODLE_503_STABLE`) | 5.3 | 2026100504 | v5.3-r1 | 2026100500 |
+
+The 5.3 line (`main`) takes new work first and uses PHP 8.3 syntax; the other branches carry the
+same features. This README is the same on every branch, and its pictures show `main` on Moodle 5.3.
+Moodle 5.0 has no branch.
+
+- Core competencies enabled (`core_competency`, with `tool_lp`).
+- [local_dimensions](https://github.com/uaiblaine/moodle-local_dimensions), from the branch for your
+  Moodle version: the block reads all card metadata through its caches.
+
+
+Installation
+------------
+
+Install the plugin like any other plugin to folder `/blocks/dimensions`, from the branch for your
+Moodle version, after `local_dimensions`. See
+[Installing plugins](https://docs.moodle.org/en/Installing_plugins).
+
+**Switching a site from a date-numbered release**: replace the files of both plugins with the
+branch for the site's Moodle, then
+`php admin/cli/cfg.php --component=block_dimensions --name=version --set=<N>` and the same for
+`local_dimensions`, then `php admin/cli/upgrade.php`, where `<N>` is `2024100699` on Moodle 4.5,
+`2025100599` on 5.1, `2026041999` on 5.2 and `2026100499` on 5.3. Without the version reset Moodle
+refuses the new files as a downgrade. The block has no upgrade steps.
+
+The block works without configuration: add the "Dimensions" block to the Dashboard (or any page
+that accepts blocks) and it renders cards from the user's learning plans. It shows only for a
+learner holding a plan it can show.
 
 
 Settings
 --------
 
-All settings live under *Site administration → Plugins → Blocks → Dimensions*:
+![The block's settings page: display settings, competency filters, learning plan filters and the plan card layout](https://raw.githubusercontent.com/uaiblaine/moodle-block_dimensions/main/docs/screenshots/14-settings.png)
 
-![The block's settings page, grouped into display settings, competency filters, learning plan filters and favourites](docs/screenshots/08-settings.png)
+All settings live under *Site administration > Plugins > Blocks > Dimensions*:
 
-- **Appearance**: show the "My competencies" heading (`show_heading`), hide the block title bar (`hide_block_title`), show a customisable heading above each card group (`enable_section_headers`), and choose the plan card layout (`plancard_layout`, vertical or horizontal).
-- **Search**: enable the search field (`enable_search`).
-- **Filters**: enable each of the four tag filters independently (`enable_plan_tag1_filter`, `enable_plan_tag2_filter`, `enable_competency_tag1_filter`, `enable_competency_tag2_filter`) and pick each one's control style (`*_displaymode`, pills or dropdown).
-- **Favourites**: enable the favourites feature (`enable_favourites`, on by default).
-- **Trail**: make trail steps clickable links with return-to-plan integration (`enable_trail_links`).
-- **Own page**: serve the block's content on a page of its own (`enable_page`, off by default) — see below.
+- **Appearance**: show the "My competencies" heading (`show_heading`), hide the block title bar
+  (`hide_block_title`), show a heading above each card group (`enable_section_headers`), and choose
+  the plan card layout (`plancard_layout`, vertical or horizontal).
+- **Search**: a search field in each section's filter line (`enable_search`).
+- **Filters**: enable each of the four tag filters independently (`enable_plan_tag1_filter`,
+  `enable_plan_tag2_filter`, `enable_competency_tag1_filter`, `enable_competency_tag2_filter`) and
+  choose how each one shows in the Filters panel (`*_displaymode`, pills or dropdown).
+- **Favourites**: the stars and the favourites-first loading (`enable_favourites`, on by default).
+- **Trail**: trail steps as links with the return-to-plan integration (`enable_trail_links`).
+- **Own page**: the block's content on a page of its own (`enable_page`, off by default).
 
 ### The Dimensions page and the start page
 
-With `enable_page` on, `/blocks/dimensions/index.php` shows the block's content and nothing else: the theme's navigation bar, the page heading ("Dimensions") and the footer around it, on the `base` layout — no block regions, so no block drawer, no other blocks and no "Add a block" in editing mode. Every logged-in user other than a guest can open it; the cards are the viewer's own, exactly as the block shows them, and a learner without a plan sees the "no active plans" notice instead of an empty page.
+With `enable_page` on, `/blocks/dimensions/index.php` shows the block's content and nothing else:
+the theme's navigation bar, the page heading ("Dimensions") and the footer around it, on the `base`
+layout, so no block drawer, no other blocks and no "Add a block" in editing mode. Every logged-in
+user other than a guest can open it, and a guest is sent to the site home (or refused, when the
+site home is this page); the cards are the viewer's own, and a learner without a plan sees the "no
+active plans" notice instead of an empty page. The first picture of this README is that page.
 
-While the page is enabled, **"Dimensions" is offered as a choice for *Start page for users*** (*Site administration → Appearance → Navigation*), through core's `extend_default_homepage` hook. Chosen there, the site root and every login land on the page; when that setting is *User preference*, each user finds "Dimensions" among their own start page choices. Everything after the choice is core's: the Dashboard stays reachable at `/my/`, and the navigation bar keeps its Home, Dashboard and My courses items (hiding the Dashboard item is a theme setting, not this plugin's).
+While the page is enabled, **"Dimensions" is offered as a choice for *Start page for users***
+(*Site administration > Appearance > Navigation*), through core's `extend_default_homepage` hook.
+Chosen there, the site root and every login land on the page; when that setting is *User
+preference*, each user finds "Dimensions" among their own start page choices. The Dashboard stays
+reachable at `/my/`.
 
-Off — the default, so an upgrade changes nothing — or while core competencies are disabled, the option is withdrawn and the page redirects to the Dashboard, so a start page stored earlier still lands somewhere.
+Off (the default, so an upgrade changes nothing), or while core competencies are disabled, the
+option is withdrawn and the page redirects to the Dashboard, so a start page stored earlier still
+lands somewhere.
+
+
+Built for performance
+---------------------
+
+- **The server ships a shell, the browser renders the cards**: the page carries only labels and
+  configuration; one AJAX web service returns the dataset and cards are rendered client-side from
+  Mustache templates.
+- **Loaded in phases**: favourites first, the rest of a section and the other status buckets only
+  when the learner asks for them.
+- **Cache-backed metadata**: every image, colour and tag comes from `local_dimensions`' MUC caches;
+  the block performs no per-card custom field or file queries.
+- **Incremental rendering**: cards enter the DOM in batches of 24 per animation frame, and a newer
+  render cancels a stale one.
+- **Filtering never re-renders**: search and filters toggle the visibility of cards already drawn.
+- **No session lock**: the dataset service declares `readonlysession`, so on a site that enables
+  read-only sessions the block's loads no longer wait for the page's other requests.
 
 
 Capabilities
 ------------
 
-This plugin introduces these additional capabilities:
+- `block/dimensions:addinstance`: add a Dimensions block to a page. Default: copied at install
+  from `moodle/site:manageblocks`, so manager and editing teacher on a standard site.
+- `block/dimensions:myaddinstance`: add a Dimensions block to one's own Dashboard. Default:
+  authenticated user.
 
-### block/dimensions:addinstance
-
-Allows adding a new Dimensions block to a page. By default granted to managers.
-
-### block/dimensions:myaddinstance
-
-Allows adding a new Dimensions block to the user's Dashboard. By default granted to all authenticated users.
+The block's content and its page need no capability of their own: they show the viewer's own
+plans, as far as core's `moodle/competency:planview*` capabilities let the viewer read them.
 
 
 Web services
 ------------
 
-Three AJAX-only external functions back the block (all require login, reject guests and validate the user context):
+Three AJAX-only external functions back the block (all require login, reject guests and validate
+the user context):
 
-- `block_dimensions_get_block_dataset` — returns the card dataset; supports favourites-only loading, per-group loading and one plan status bucket at a time, plus the per-bucket counts every pill needs.
-- `block_dimensions_toggle_favourite` — stars/unstars a plan or competency after validating ownership.
-- `block_dimensions_set_return_context` — arms `local_dimensions`' "Return to plan" button before trail navigation.
+- `block_dimensions_get_block_dataset`: the card dataset; supports favourites-only loading,
+  per-section loading and one plan status bucket at a time, plus the counts every pill needs.
+- `block_dimensions_toggle_favourite`: stars a plan or competency only when the block lists it to
+  the caller, and unstars any of the caller's own favourites.
+- `block_dimensions_set_return_context`: arms `local_dimensions`' *Return to plan* button before
+  trail navigation.
 
 
 Accessibility
@@ -167,25 +272,31 @@ Accessibility
 
 The block aims at WCAG 2.1 AA:
 
-- Cards use the stretched-link pattern — one real link per card, no nested interactive elements; favourite stars are native buttons with `aria-pressed` semantics.
-- Filter pills are exposed as radiogroups with roving tabindex and full keyboard support (arrows, Home/End); every control has a meaningful accessible name.
-- Live regions announce result counts, loading, empty states and favourite errors; focus is preserved when the filter bar re-renders.
-- Trail completion is conveyed in text for screen readers, not by colour alone; decorative imagery is hidden from assistive technology.
+- Cards use the stretched-link pattern: one real link per card, no nested interactive elements;
+  stars are native buttons with `aria-pressed`.
+- Status pills and filter pills are radio groups with roving tabindex and full keyboard support
+  (arrows, Home/End); every control has an accessible name, and the line's controls are 44px.
+- Live regions announce result counts, loading, empty states and favourite errors.
+- Trail completion is conveyed in text for screen readers, not by colour alone; decorative imagery
+  is hidden from assistive technology.
 - `prefers-reduced-motion`, `prefers-contrast: more` and print styles are honoured.
 
 
 Theme support
 -------------
 
-This plugin is developed and tested on Moodle Core's Boost theme. It should also work with Boost child themes, including Moodle Core's Classic theme. However, we can't support any other theme than Boost.
+This plugin is developed and tested on Moodle core's Boost theme and should work with Boost child
+themes. Under `theme_dimensions` it reads the family tokens first. We can't support any other theme.
 
 
 Companion plugin
 ----------------
 
-**Competency Dimensions** (`local_dimensions`) is required and does the heavy lifting: it manages the custom fields that give plans and competencies their visual identity (images, colours, tags, type labels, display modes), owns the caches this block reads, renders the learner views the cards link into, and hosts the "Return to plan" button the block's trail links arm.
+**Competency Dimensions** (`local_dimensions`) is required and does the heavy lifting: it manages
+the custom fields that give plans and competencies their visual identity, owns the caches this
+block reads, renders the learner views the cards link into, and hosts the *Return to plan* button
+the trail links arm. Its own README shows the Competency hub where all of it is managed.
 
-Directory: https://moodle.org/plugins/local_dimensions \
 Repository: https://github.com/uaiblaine/moodle-local_dimensions
 
 
@@ -207,7 +318,8 @@ This plugin is carefully developed and thoroughly tested, but bugs and problems 
 Please report bugs and problems on GitHub:
 https://github.com/uaiblaine/moodle-block_dimensions/issues
 
-We will do our best to solve your problems, but please note that due to limited resources we can't always provide per-case support.
+We will do our best to solve your problems, but please note that due to limited resources we can't
+always provide per-case support.
 
 
 Feature proposals
@@ -220,33 +332,48 @@ Please create pull requests on GitHub:
 https://github.com/uaiblaine/moodle-block_dimensions/pulls
 
 
-Moodle release support
-----------------------
+Translations
+------------
 
-This plugin is maintained for the most recent major release of Moodle as well as the most recent LTS release. Bugfixes are backported to the LTS release; new features are not necessarily. If you can confirm this plugin works — or doesn't — with a new major release of Moodle, please let us know on GitHub.
-
-
-Translating this plugin
------------------------
-
-This Moodle plugin is shipped with English and Brazilian Portuguese language packs. All translations into other languages must be managed through AMOS (https://lang.moodle.org) by what they will become part of Moodle's official language pack.
+The English strings ship in the package. The Brazilian Portuguese translation is maintained in this
+repository (`lang/pt_br`) and reaches sites through [AMOS](https://lang.moodle.org/), as the plugins
+directory requires; it is left out of the release package. Every other translation goes through
+AMOS too.
 
 
 Right-to-left support
 ---------------------
 
 This plugin has not been tested with Moodle's support for right-to-left (RTL) languages.
-If you want to use this plugin with an RTL language and it doesn't work as-is, you are free to send us a pull request on GitHub with modifications.
+If you want to use this plugin with an RTL language and it doesn't work as-is, you are free to send
+us a pull request on GitHub with modifications.
 
 
-Privacy
--------
+Data stored
+-----------
 
-The block stores one kind of personal data: **favourites**. When a user stars a card, a row is written through Moodle's core Favourites subsystem into the `favourite` table (component `block_dimensions`, item type `plan` or `competency`), always in that user's own user context.
+The block has no database tables of its own (it ships no `db/install.xml`). It keeps one kind of
+personal data, **favourites**, in core's `favourite` table:
 
-The plugin implements the Moodle Privacy API in full: favourites are exported on data-subject requests under the block's name, and removed by every core deletion path (single user, selected users, whole context). Uninstalling the plugin purges all of its favourite rows — core's uninstall routine does not do this by itself, so the plugin ships its own cleanup.
+- One row per card a learner stars: the learner, the item type (`plan` or `competency`), the plan
+  or competency id and the time, with component `block_dimensions`, always in the learner's own
+  user context. The rows are written through Moodle's core Favourites subsystem.
+- A row is kept until the learner unstars the card, a privacy deletion request removes it, or the
+  plugin is uninstalled. Deleting a user account does not touch the table by itself, but core's data
+  privacy tool files a deletion request for every deleted user while
+  `tool_dataprivacy/automaticdeletionrequests` is on (the default). Uninstalling purges every row
+  with the block's component; core's uninstall routine does not, so the plugin ships its own
+  `db/uninstall.php`. Switching favourites off (`enable_favourites`) hides the stars but keeps the
+  rows.
 
-Everything else is presentation: the card dataset is computed per request from core competency data and `local_dimensions` caches, and the optional "return to plan" context lives only in the user's session cache. The block creates no database tables of its own.
+The block also arms `local_dimensions`' *Return to plan* button through that plugin's session cache,
+which lasts as long as the login session, four hours at most. Everything else is
+computed per request from core competency data and `local_dimensions` caches.
+
+All of it is covered by the Privacy API, through a link to the core Favourites subsystem: a data
+request exports the learner's favourites under the block's name, one list per item type, and a
+deletion request removes them, for one learner, for selected learners or for a whole user context.
+The block reads no other user's data and shows no user profile fields.
 
 
 Scheduled tasks

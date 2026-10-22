@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Added
+
+- **`LICENSE`** beside `COPYING.txt`, both the GPL v3 text, so the package carries the licence file
+  the Moodle plugins directory asks for.
+- **`tests/marketplace_readiness_test.php`**, the fleet's plugins directory readiness test: licence
+  files, English-only package, data-only language files, a README that names every capability and
+  dependency, settings stored per plugin, scoped CSS, boilerplate, and the privacy cover of the
+  core favourites the block writes. A rule that declares only `--block-dimensions-*` properties may
+  sit on `body`, where the colour tokens live on purpose.
+- **A privacy test that exports as another user**: the export reads the request's subject, never
+  `$USER`, which neither the privacy manager nor the data privacy tool switches.
+
+### Changed
+
+- **Only English ships.** `lang/pt_br` stays in the repository and goes to sites through AMOS; the
+  release package leaves it out (`.gitattributes`).
+- **README**: the same text as `main`, which this branch's code matches. The previous one still
+  described the filter bar the filter line replaced (the favourites pills, the clear-filters button,
+  the mobile toggle). It gains a *Data stored* section (the core `favourite` rows, how long they
+  stay, what removes them, what a data request exports and a deletion removes), a *Translations*
+  section, and the `block/dimensions:addinstance` default as installed (cloned from
+  `moodle/site:manageblocks`, so manager and editing teacher); its pictures are `main`'s, on
+  Moodle 5.3.
+
 ## [v5.2-r1] - 2026-10-18
 
 ### Upgrading
