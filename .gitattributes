@@ -13,3 +13,4 @@
 /tests/jsharness export-ignore
 /.mdlshield          export-ignore
 /mutations export-ignore
+/lang/pt_br export-ignore
