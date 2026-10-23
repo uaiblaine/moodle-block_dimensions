@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2026100504;
+$plugin->version = 2026100505;
 $plugin->requires = 2026100500;
 $plugin->supported = [503, 503];
 $plugin->component = 'block_dimensions';

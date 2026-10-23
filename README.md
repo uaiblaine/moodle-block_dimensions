@@ -125,7 +125,7 @@ Learners star any card, and favourites drive how the block loads:
   releasing the section's star or typing a search.
 - Each section has its own star on its line.
 - Favourites are stored through Moodle's **core Favourites subsystem** in the user's own context,
-  and the star validates ownership server-side before writing.
+  and the server stars only a plan or competency the block lists to that learner.
 
 Favourites can be switched off with one setting, which removes the stars and the favourites-first
 loading together.
@@ -153,13 +153,14 @@ requiring `local_dimensions` from its branch for the same version:
 
 | Branch | Moodle | Version | Release | Requires `local_dimensions` |
 |---|---|---|---|---|
-| `MOODLE_405_STABLE` | 4.5 LTS | 2024100700 | v4.5-r1 | 2024100700 |
-| `MOODLE_501_STABLE` | 5.1 | 2025100600 | v5.1-r1 | 2025100600 |
-| `MOODLE_502_STABLE` | 5.2 | 2026042000 | v5.2-r1 | 2026042000 |
+| `MOODLE_405_STABLE` | 4.5 LTS | 2024100701 | v4.5-r1 | 2024100700 |
+| `MOODLE_501_STABLE` | 5.1 | 2025100601 | v5.1-r1 | 2025100600 |
+| `MOODLE_502_STABLE` | 5.2 | 2026042001 | v5.2-r1 | 2026042000 |
 | `main` (= `MOODLE_503_STABLE`) | 5.3 | 2026100504 | v5.3-r1 | 2026100500 |
 
-The 5.3 line (`main`) takes new work first and uses PHP 8.3 syntax; this README and its pictures
-describe `main` on Moodle 5.3. Moodle 5.0 has no branch.
+The 5.3 line (`main`) takes new work first and uses PHP 8.3 syntax; the other branches carry the
+same features. This README is the same on every branch, and its pictures show `main` on Moodle 5.3.
+Moodle 5.0 has no branch.
 
 - Core competencies enabled (`core_competency`, with `tool_lp`).
 - [local_dimensions](https://github.com/uaiblaine/moodle-local_dimensions), from the branch for your
@@ -175,9 +176,10 @@ Moodle version, after `local_dimensions`. See
 
 **Switching a site from a date-numbered release**: replace the files of both plugins with the
 branch for the site's Moodle, then
-`php admin/cli/cfg.php --component=block_dimensions --name=version --set=2026100499` and the same
-for `local_dimensions`, then `php admin/cli/upgrade.php`. Without the version reset Moodle refuses
-the new files as a downgrade. The block has no upgrade steps.
+`php admin/cli/cfg.php --component=block_dimensions --name=version --set=<N>` and the same for
+`local_dimensions`, then `php admin/cli/upgrade.php`, where `<N>` is `2024100699` on Moodle 4.5,
+`2025100599` on 5.1, `2026041999` on 5.2 and `2026100499` on 5.3. Without the version reset Moodle
+refuses the new files as a downgrade. The block has no upgrade steps.
 
 The block works without configuration: add the "Dimensions" block to the Dashboard (or any page
 that accepts blocks) and it renders cards from the user's learning plans. It shows only for a
@@ -207,9 +209,9 @@ All settings live under *Site administration > Plugins > Blocks > Dimensions*:
 With `enable_page` on, `/blocks/dimensions/index.php` shows the block's content and nothing else:
 the theme's navigation bar, the page heading ("Dimensions") and the footer around it, on the `base`
 layout, so no block drawer, no other blocks and no "Add a block" in editing mode. Every logged-in
-user other than a guest can open it, and a guest is sent to the site home; the cards are the
-viewer's own, and a learner without a plan sees the "no active plans" notice instead of an empty
-page. The first picture of this README is that page.
+user other than a guest can open it, and a guest is sent to the site home (or refused, when the
+site home is this page); the cards are the viewer's own, and a learner without a plan sees the "no
+active plans" notice instead of an empty page. The first picture of this README is that page.
 
 While the page is enabled, **"Dimensions" is offered as a choice for *Start page for users***
 (*Site administration > Appearance > Navigation*), through core's `extend_default_homepage` hook.
@@ -242,9 +244,13 @@ Built for performance
 Capabilities
 ------------
 
-- `block/dimensions:addinstance`: add a Dimensions block to a page. Default: manager.
+- `block/dimensions:addinstance`: add a Dimensions block to a page. Default: copied at install
+  from `moodle/site:manageblocks`, so manager and editing teacher on a standard site.
 - `block/dimensions:myaddinstance`: add a Dimensions block to one's own Dashboard. Default:
   authenticated user.
+
+The block's content and its page need no capability of their own: they show the viewer's own
+plans, as far as core's `moodle/competency:planview*` capabilities let the viewer read them.
 
 
 Web services
@@ -255,8 +261,8 @@ the user context):
 
 - `block_dimensions_get_block_dataset`: the card dataset; supports favourites-only loading,
   per-section loading and one plan status bucket at a time, plus the counts every pill needs.
-- `block_dimensions_toggle_favourite`: stars or unstars a plan or competency after validating
-  ownership.
+- `block_dimensions_toggle_favourite`: stars a plan or competency only when the block lists it to
+  the caller, and unstars any of the caller's own favourites.
 - `block_dimensions_set_return_context`: arms `local_dimensions`' *Return to plan* button before
   trail navigation.
 
@@ -326,12 +332,13 @@ Please create pull requests on GitHub:
 https://github.com/uaiblaine/moodle-block_dimensions/pulls
 
 
-Translating this plugin
------------------------
+Translations
+------------
 
-This Moodle plugin is shipped with English and Brazilian Portuguese language packs. All
-translations into other languages must be managed through AMOS (https://lang.moodle.org) by what
-they will become part of Moodle's official language pack.
+The English strings ship in the package. The Brazilian Portuguese translation is maintained in this
+repository (`lang/pt_br`) and reaches sites through [AMOS](https://lang.moodle.org/), as the plugins
+directory requires; it is left out of the release package. Every other translation goes through
+AMOS too.
 
 
 Right-to-left support
@@ -342,21 +349,31 @@ If you want to use this plugin with an RTL language and it doesn't work as-is, y
 us a pull request on GitHub with modifications.
 
 
-Privacy
--------
+Data stored
+-----------
 
-The block stores one kind of personal data: **favourites**. When a user stars a card, a row is
-written through Moodle's core Favourites subsystem into the `favourite` table (component
-`block_dimensions`, item type `plan` or `competency`), always in that user's own user context.
+The block has no database tables of its own (it ships no `db/install.xml`). It keeps one kind of
+personal data, **favourites**, in core's `favourite` table:
 
-The plugin implements the Moodle Privacy API in full: favourites are exported on data-subject
-requests under the block's name, and removed by every core deletion path (single user, selected
-users, whole context). Uninstalling the plugin purges all of its favourite rows; core's uninstall
-routine does not do this by itself, so the plugin ships its own cleanup.
+- One row per card a learner stars: the learner, the item type (`plan` or `competency`), the plan
+  or competency id and the time, with component `block_dimensions`, always in the learner's own
+  user context. The rows are written through Moodle's core Favourites subsystem.
+- A row is kept until the learner unstars the card, a privacy deletion request removes it, or the
+  plugin is uninstalled. Deleting a user account does not touch the table by itself, but core's data
+  privacy tool files a deletion request for every deleted user while
+  `tool_dataprivacy/automaticdeletionrequests` is on (the default). Uninstalling purges every row
+  with the block's component; core's uninstall routine does not, so the plugin ships its own
+  `db/uninstall.php`. Switching favourites off (`enable_favourites`) hides the stars but keeps the
+  rows.
 
-Everything else is presentation: the card dataset is computed per request from core competency
-data and `local_dimensions` caches, and the optional return-to-plan context lives only in the
-user's session cache. The block creates no database tables of its own.
+The block also arms `local_dimensions`' *Return to plan* button through that plugin's session cache,
+which lasts as long as the login session, four hours at most. Everything else is
+computed per request from core competency data and `local_dimensions` caches.
+
+All of it is covered by the Privacy API, through a link to the core Favourites subsystem: a data
+request exports the learner's favourites under the block's name, one list per item type, and a
+deletion request removes them, for one learner, for selected learners or for a whole user context.
+The block reads no other user's data and shows no user profile fields.
 
 
 Scheduled tasks
