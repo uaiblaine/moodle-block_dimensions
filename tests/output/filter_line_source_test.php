@@ -542,6 +542,36 @@ final class filter_line_source_test extends \basic_testcase {
     }
 
     /**
+     * The eraser is a 24px square at radius xs with the contract's colours, and its tooltip stands in for a title.
+     *
+     * Changes that must make it fail: the 32px disc back; the hover ground on surface-inset; the tooltip
+     * balloon gone; the browser's own clear button drawn beside the eraser.
+     *
+     * @return void
+     */
+    public function test_the_eraser_is_a_small_square_with_a_tooltip(): void {
+        $css = (string) preg_replace('~/\*.*?\*/~s', '', (string) file_get_contents($this->plugin_root() . '/styles.css'));
+        $rule = function (string $selector) use ($css): string {
+            $found = preg_match('~(?:^|\})\s*' . preg_quote($selector, '~') . '\s*\{([^}]*)\}~', $css, $matches);
+            $this->assertSame(1, $found, "No rule for {$selector}.");
+            return $matches[1];
+        };
+        $eraser = $rule('.block_dimensions .dims-line-eraser');
+        $this->assertStringContainsString('width: 1.5rem;', $eraser);
+        $this->assertStringContainsString('height: 1.5rem;', $eraser);
+        $this->assertStringContainsString('border-radius: 0.25rem;', $eraser);
+        $this->assertStringContainsString('background: transparent;', $eraser);
+        $hover = $rule('.block_dimensions .dims-line-eraser:hover');
+        $this->assertStringContainsString('background: var(--block-dimensions-surface-alt);', $hover);
+        $this->assertStringContainsString('color: var(--block-dimensions-ink);', $hover);
+        $this->assertStringContainsString('content: attr(data-dims-tip);', $rule('.block_dimensions .dims-line-eraser::after'));
+        $this->assertStringContainsString(
+            'display: none;',
+            $rule('.block_dimensions .dims-line-search .dims-line-input::-webkit-search-cancel-button')
+        );
+    }
+
+    /**
      * The committed build of every module the line touches was made from the committed source.
      *
      * Changes that must make it fail: an edit of amd/src left unbuilt; a module imported across plugins.
