@@ -254,10 +254,14 @@ final class filter_line_markup_test extends advanced_testcase {
             );
             $eraser = $this->one($xpath, ".//button[@data-action='dims-search-clear']", $toolbar);
             $this->assertSame(get_string('line_clear_text', 'block_dimensions'), $eraser->getAttribute('aria-label'));
+            $this->assertSame(get_string('line_clear_text', 'block_dimensions'), $eraser->getAttribute('data-dims-tip'));
+            $this->assertFalse($eraser->hasAttribute('title'), 'The eraser has a tooltip of its own, not a title.');
             $close = $this->one($xpath, ".//button[@data-action='dims-search-close']", $toolbar);
             $this->assertSame(get_string('line_close_search', 'block_dimensions'), $close->getAttribute('aria-label'));
             $toggle = $this->one($xpath, ".//button[@data-action='dims-filters-toggle']", $toolbar);
             $this->assertStringContainsString(get_string('line_filters', 'block_dimensions'), $toggle->textContent);
+            $this->one($xpath, ".//i[" . $this->hasclass('fa-filter') . "]", $toggle);
+            $this->assertSame(0, $xpath->query(".//i[" . $this->hasclass('fa-sliders') . "]", $toggle)->length);
             $star = $this->one($xpath, ".//button[@data-region='dims-line-star']", $toolbar);
             $this->assertSame(get_string('line_favourites', 'block_dimensions'), $star->getAttribute('title'));
             $listbox = $this->one($xpath, ".//div[@data-region='dims-line-suggest']", $toolbar);
