@@ -73,13 +73,13 @@
             <label class="visually-hidden" for="{{id}}-search">{{searchlabel}}</label>
             <i class="fa fa-search dims-line-searchicon" aria-hidden="true"></i>
             <input type="search" id="{{id}}-search" class="dims-line-input" data-search-type="{{type}}" placeholder="{{searchplaceholder}}" autocomplete="off">
-            <button type="button" class="dims-line-eraser" data-action="dims-search-clear" aria-label="{{#str}}line_clear_text, block_dimensions{{/str}}" title="{{#str}}line_clear_text, block_dimensions{{/str}}" hidden><i class="fa fa-eraser" aria-hidden="true"></i></button>
+            <button type="button" class="dims-line-eraser" data-action="dims-search-clear" data-dims-tip="{{#str}}line_clear_text, block_dimensions{{/str}}" aria-label="{{#str}}line_clear_text, block_dimensions{{/str}}" hidden><i class="fa fa-eraser" aria-hidden="true"></i></button>
         </div>
         <button type="button" class="dims-line-iconbtn dims-line-searchopen dims-line-slides" data-action="dims-search-open" aria-controls="{{id}}-search" aria-expanded="false" aria-label="{{searchlabel}}" title="{{searchlabel}}"><i class="fa fa-search" aria-hidden="true"></i></button>
         {{/hassearch}}
         <button type="button" class="dims-line-iconbtn dims-line-star dims-line-slides" data-region="dims-line-star" data-fav-star="{{type}}" aria-pressed="false" title="{{#str}}line_favourites, block_dimensions{{/str}}" hidden><i class="fa fa-star-o" aria-hidden="true"></i><span class="visually-hidden">{{#str}}line_favourites, block_dimensions{{/str}} <span data-fav-count></span></span></button>
         <div class="dims-line-filters dims-line-slides" data-region="dims-line-filters" hidden>
-            <button type="button" class="dims-line-filterstoggle" data-action="dims-filters-toggle" aria-expanded="false" aria-controls="{{id}}-panel"><i class="fa fa-sliders" aria-hidden="true"></i> <span class="dims-line-label">{{#str}}line_filters, block_dimensions{{/str}}</span> <span class="dims-line-badge" data-region="dims-line-badge" hidden></span></button>
+            <button type="button" class="dims-line-filterstoggle" data-action="dims-filters-toggle" aria-expanded="false" aria-controls="{{id}}-panel"><i class="fa fa-filter" aria-hidden="true"></i> <span class="dims-line-label">{{#str}}line_filters, block_dimensions{{/str}}</span> <span class="dims-line-badge" data-region="dims-line-badge" hidden></span></button>
             <div class="dims-line-panel" id="{{id}}-panel" data-region="dims-line-panel" role="group" aria-label="{{panellabel}}" hidden>
                 <div class="dims-filters-host" data-filters-type="{{type}}"></div>
                 <div class="dims-line-panelfoot">

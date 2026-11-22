@@ -1234,33 +1234,74 @@ body[data-bs-theme="dark"],
     display: none;
 }
 
-/* surface-inset on hover, not surface-alt: the eraser sits on the field, whose
-   rest background is surface-alt. */
+/* The eraser: a 24px square at the field's end, radius xs, shown only while there is text. The
+   field's own ground is surface-alt, so the hover ground is the same colour the contract names;
+   the eraser's focus ring is the icon buttons'. */
 .block_dimensions .dims-line-eraser {
     position: absolute;
-    top: 6px;
-    right: 6px;
+    top: 10px;
+    right: 12px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 1.5rem;
+    height: 1.5rem;
     padding: 0;
     border: 0;
-    border-radius: 999px;
+    border-radius: 0.25rem;
     background: transparent;
     color: var(--block-dimensions-ink-muted);
     cursor: pointer;
 }
 
 .block_dimensions .dims-line-eraser:hover {
-    background: var(--block-dimensions-surface-inset);
+    background: var(--block-dimensions-surface-alt);
     color: var(--block-dimensions-ink);
 }
 
 .block_dimensions .dims-line-eraser:focus-visible {
     outline: 2px solid var(--block-dimensions-focus-ring);
     outline-offset: 2px;
+}
+
+/* The eraser's tooltip: CSS only, after 100ms of rest, in place of a title attribute. It hangs above
+   the eraser with its end on the eraser's end, so the field's edge never clips it. */
+.block_dimensions .dims-line-eraser::after {
+    content: attr(data-dims-tip);
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 0.5rem);
+    z-index: 20;
+    width: max-content;
+    max-width: 16.25rem;
+    padding: 0.35rem 0.55rem;
+    border-radius: 0.375rem;
+    background: var(--block-dimensions-ink);
+    color: var(--block-dimensions-surface);
+    font-size: 0.75rem;
+    line-height: 1.35;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.block_dimensions .dims-line-eraser:hover::after,
+.block_dimensions .dims-line-eraser:focus-visible::after {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .block_dimensions .dims-line-eraser {
+        transition: background-color 150ms ease, color 150ms ease;
+    }
+
+    .block_dimensions .dims-line-eraser::after {
+        transition: opacity 150ms ease;
+    }
+
+    .block_dimensions .dims-line-eraser:hover::after,
+    .block_dimensions .dims-line-eraser:focus-visible::after {
+        transition-delay: 100ms;
+    }
 }
 
 /* The line's icon buttons - the search's icon and its close button, the star -
@@ -1306,7 +1347,7 @@ body[data-bs-theme="dark"],
     color: var(--block-dimensions-favourite);
 }
 
-/* Filters: the sliders glyph, the word and the count badge. Its wrapper is no
+/* Filters: the funnel glyph, the word and the count badge. Its wrapper is no
    positioned box, so the panel opens under the line. */
 .block_dimensions .dims-line-filters {
     flex: 0 0 auto;
