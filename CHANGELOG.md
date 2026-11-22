@@ -18,6 +18,10 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- **The filter line follows the Design System's twelfth round** (D107, D109, D110): the Filters button draws
+  the funnel (`fa-filter`) in place of the sliders, and the open search's eraser is a 24 px square at radius
+  xs (ink-muted at rest, `surface-alt` ground and `ink` on hover, the icon buttons' focus ring), named "Clear
+  text" by a tooltip of its own after 100 ms instead of a `title` attribute.
 - **Only English ships.** `lang/pt_br` stays in the repository and goes to sites through AMOS; the
   release package leaves it out (`.gitattributes`).
 - **README**: the same text as `main`, which this branch's code matches. The previous one still
