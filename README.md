@@ -382,6 +382,38 @@ Scheduled tasks
 This plugin adds no scheduled tasks and queues no background (ad-hoc) tasks.
 
 
+Plan cards for other plugins
+----------------------------
+
+`block_dimensions\plan_cards` gives another plugin the plan cards of one user. Access is core's: the
+cards come from `\core_competency\api::list_user_plans()` run against the current user, so a draft
+appears only to a viewer core lets read it, and a viewer core refuses gets an empty answer. No card
+carries the favourite star.
+
+* `plan_cards::for_user(int $userid, string $layout = ''): array` returns the cards keyed by plan id, in
+  core's order. `$layout` is `''` for the site setting, or `plan_cards::LAYOUT_VERTICAL` or
+  `plan_cards::LAYOUT_HORIZONTAL` for this call; anything else throws a coding exception.
+* `plan_cards::site_layout(): string` is the layout the site setting asks for.
+* `plan_cards::item_classes(string $layout): string` is the class list of a card's list item.
+* `plan_cards::TEMPLATE` is the card's template, rendered from PHP with one card as its context, and
+  `plan_cards::HOST_CLASS` is the class an element around the cards carries so the block's stylesheet
+  draws them.
+
+```php
+use block_dimensions\plan_cards;
+
+$items = [];
+foreach (plan_cards::for_user($userid, plan_cards::LAYOUT_HORIZONTAL) as $planid => $card) {
+    $items[] = [
+        'planid' => $planid,
+        'classes' => plan_cards::item_classes(plan_cards::LAYOUT_HORIZONTAL),
+        'card' => $OUTPUT->render_from_template(plan_cards::TEMPLATE, $card),
+    ];
+}
+// The caller's own template prints each item inside an element with the class plan_cards::HOST_CLASS.
+```
+
+
 Maintainers
 -----------
 

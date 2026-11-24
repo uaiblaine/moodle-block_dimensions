@@ -107,6 +107,7 @@ $string['plancardlayoutheading_desc'] = 'Configure the visual layout of learning
 $string['planfiltersheading'] = 'Learning plan filters';
 $string['planfiltersheading_desc'] = 'Enable and configure filters based on learning plan template custom fields (tag1 and tag2). These filters allow users to filter plan cards within the block.';
 $string['planstatuscompleted'] = 'Completed on {$a}';
+$string['planstatusdraft'] = 'Draft';
 $string['planstatusinreview'] = 'In review';
 $string['planstatuswaitingreview'] = 'Waiting for review';
 $string['pluginname'] = 'Dimensions';
