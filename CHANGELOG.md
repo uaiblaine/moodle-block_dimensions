@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **`block_dimensions\plan_cards`**, the plugin's API for another plugin: `for_user()` gives the plan cards of
+  a user, one per plan core lets the viewer read (drafts included, whatever the template's display mode),
+  in the layout the caller asks for and without the favourite star, with `plan_cards::TEMPLATE` and
+  `plan_cards::HOST_CLASS` to draw them. A draft's chip reads "Draft".
 - **`LICENSE`** beside `COPYING.txt`, both the GPL v3 text, so the package carries the licence file
   the Moodle plugins directory asks for.
 - **`tests/marketplace_readiness_test.php`**, the fleet's plugins directory readiness test: licence

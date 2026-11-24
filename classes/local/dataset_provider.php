@@ -24,6 +24,7 @@
 
 namespace block_dimensions\local;
 
+use block_dimensions\plan_cards;
 use core_competency\api;
 use core_competency\plan;
 use local_dimensions\constants;
@@ -377,6 +378,54 @@ class dataset_provider {
         }
 
         return [$planfavids, $compfavids];
+    }
+
+    /**
+     * One plan card for every plan core lets the current viewer read, whatever its status or its
+     * template's display mode, for a page that is not the block.
+     *
+     * The cards are keyed by plan id, in the order core listed the plans, and carry the keys
+     * {@see build_plan_dataset_card()} produces. None offers the favourite star: the star is the
+     * block's own filter, and on another person's list it would show that person's favourites to the
+     * viewer, so the favourites service is never read here. A plan that is not the viewer's own, and
+     * every draft, opens with the "view" wording; only the viewer's own active plans keep "Continue".
+     *
+     * @param string $layout 'vertical' or 'horizontal' (the {@see \block_dimensions\plan_cards}
+     *     constants), or '' for the site's setting. The caller validates it.
+     * @return array<int, array<string, mixed>>
+     */
+    public function get_plan_cards(string $layout = ''): array {
+        global $USER;
+
+        if ($layout === '') {
+            $layout = plan_cards::site_layout();
+        }
+        $ishorizontal = $layout === plan_cards::LAYOUT_HORIZONTAL;
+        $viewonly = $this->userid !== (int) $USER->id;
+        $this->prefetch_template_metadata($this->plans);
+
+        $cards = [];
+        foreach ($this->plans as $plan) {
+            $planid = (int) $plan->get('id');
+            $templateid = $plan->get('templateid') ? (int) $plan->get('templateid') : null;
+            [$templatemetadata] = $this->resolve_plan_display_context($templateid);
+
+            $card = $this->build_plan_card($plan, $templateid, $planid, $templatemetadata);
+            $card['ishorizontal'] = $ishorizontal;
+            $card['isvertical'] = !$ishorizontal;
+
+            // A draft is read, not continued, whoever holds it.
+            if ($viewonly || (int) $plan->get('status') === plan::STATUS_DRAFT) {
+                $card = array_merge($card, [
+                    'buttonlabel' => get_string('viewplancard', 'block_dimensions'),
+                    'buttonarialabel' => get_string('viewplancardaria', 'block_dimensions', $card['name']),
+                ]);
+            }
+
+            $cards[$planid] = array_merge($card, $this->favourite_fields(false, false));
+        }
+
+        return $cards;
     }
 
     /**
@@ -1059,6 +1108,8 @@ class dataset_provider {
             case plan::STATUS_COMPLETE:
                 $completedon = userdate((int) $plan->get('timemodified'), get_string('strftimedatefullshort'));
                 return get_string('planstatuscompleted', 'block_dimensions', $completedon);
+            case plan::STATUS_DRAFT:
+                return get_string('planstatusdraft', 'block_dimensions');
             case plan::STATUS_WAITING_FOR_REVIEW:
                 return get_string('planstatuswaitingreview', 'block_dimensions');
             case plan::STATUS_IN_REVIEW:
