@@ -107,6 +107,7 @@ $string['plancardlayoutheading_desc'] = 'Configure o layout visual dos cartões 
 $string['planfiltersheading'] = 'Filtros de planos de aprendizagem';
 $string['planfiltersheading_desc'] = 'Habilite e configure filtros baseados nos campos customizados de templates de planos de aprendizagem (tag1 e tag2). Estes filtros permitem ao usuário filtrar os cartões de planos dentro do bloco.';
 $string['planstatuscompleted'] = 'Concluído em {$a}';
+$string['planstatusdraft'] = 'Rascunho';
 $string['planstatusinreview'] = 'Em revisão';
 $string['planstatuswaitingreview'] = 'Aguardando revisão';
 $string['pluginname'] = 'Dimensões';

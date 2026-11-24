@@ -161,6 +161,14 @@ classes/
   local/dataset_provider.php Builds the whole dataset: plan cards, competency
                              cards, trail windowing, favourites, UI config.
                              Owns sanitize_color()/sanitize_image_url()
+  plan_cards.php             The plugin's public API for other plugins (the theme's learning
+                             plans page): for_user(), site_layout(), item_classes() and the
+                             constants LAYOUT_VERTICAL, LAYOUT_HORIZONTAL, HOST_CLASS, TEMPLATE
+                             are a contract another plugin compiles against: change none lightly.
+                             get_plan_cards() adds no card key the WS allowlist lacks, never
+                             reads favourites (no star on anyone's list), shows "view" wording on
+                             another user's plans and on drafts; item_classes() and filters.js
+                             spell the same classes (plan_cards_test holds it)
   local/colour_mode.php      Constants only: the attribute names in the family's
                              dark-mode activation contract. No is_dark() helper,
                              deliberately — see below
