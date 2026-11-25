@@ -29,11 +29,13 @@ use core\exception\coding_exception;
 use core_competency\api;
 
 /**
- * The plugin's API for other plugins: the plan cards of one user, the layout and the list item classes.
+ * The plugin's API for other plugins: the plan cards of one user, the layout, the list item classes,
+ * the plan tag filters and the favourite star's module.
  *
- * The three methods and the four constants are a contract other plugins compile against. A card is
- * drawn by rendering {@see self::TEMPLATE} from PHP with one element of {@see self::for_user()} as its
- * context, inside an element that carries {@see self::HOST_CLASS}.
+ * The methods and the constants are a contract other plugins compile against. A card is drawn by
+ * rendering {@see self::TEMPLATE} from PHP with one element of {@see self::for_user()} as its context,
+ * inside an element that carries {@see self::HOST_CLASS}. A page that asks for the star calls
+ * {@see self::STAR_MODULE}'s init() once.
  *
  * @package    block_dimensions
  * @copyright  2026 Anderson Blaine
@@ -52,25 +54,63 @@ final class plan_cards {
     /** @var string The card's template; its context is one element of for_user()'s answer. */
     public const string TEMPLATE = 'block_dimensions/plan_card';
 
+    /** @var string The AMD module that makes the star of a card drawn outside the block work. */
+    public const string STAR_MODULE = 'block_dimensions/favourite_star';
+
     /**
      * The plan cards of a user, one per plan core lets the current viewer read.
      *
      * Access is core's: {@see \core_competency\api::list_user_plans()} runs against the current user, so
      * drafts appear only to a viewer core lets read them, and a viewer core refuses gets an empty
-     * answer. No card offers the favourite star.
+     * answer.
+     *
+     * The favourite star (showfavourite, isfavourite, favouritearialabel, favouritetitle) is offered
+     * only when $favourites is true, $userid is the session's user and the block's favourites are
+     * enabled; then every card carries it, since toggle_favourite accepts every plan of this list.
+     * Otherwise no card offers it and no card says it is a favourite: a person's favourites are never
+     * read for someone else's list. tag1 and tag2 are the plain option text of the template's tag
+     * fields, not escaped: a consumer escapes them once.
      *
      * @param int $userid The user whose plans to list.
      * @param string $layout '' for the site's setting, or one of the LAYOUT_* constants for this call.
+     * @param bool $favourites Whether to offer the favourite star on one's own list.
      * @return array The cards keyed by plan id, in the order core lists the plans.
      * @throws coding_exception When $layout is none of the above.
      */
-    public static function for_user(int $userid, string $layout = ''): array {
+    public static function for_user(int $userid, string $layout = '', bool $favourites = false): array {
         $layout = self::resolve_layout($layout);
         if (!api::is_enabled()) {
             return [];
         }
 
-        return (new dataset_provider($userid))->get_plan_cards($layout);
+        return (new dataset_provider($userid))->get_plan_cards($layout, $favourites);
+    }
+
+    /**
+     * The tag fields the block's own Filters panel offers for plans, in the block's order.
+     *
+     * Read from the settings enable_plan_tag1_filter and enable_plan_tag2_filter, through
+     * {@see dataset_provider::get_ui_config()}, the source the block's panel is built from. Each label
+     * is the name the panel gives the group: the plan template's custom field name, or "Filter
+     * learning plans" (filterbyplan) when the field has none. Labels are plain text, not escaped.
+     *
+     * @return array A list of ['key' => 'tag1'|'tag2', 'label' => string]; empty when the block offers none.
+     */
+    public static function tag_filters(): array {
+        $settings = dataset_provider::get_ui_config()['filtersettings']['plan'];
+        $filters = [];
+        foreach (['tag1', 'tag2'] as $key) {
+            if (empty($settings[$key . 'enabled'])) {
+                continue;
+            }
+            $label = (string) ($settings[$key . 'label'] ?? '');
+            $filters[] = [
+                'key' => $key,
+                'label' => $label !== '' ? $label : get_string('filterbyplan', 'block_dimensions'),
+            ];
+        }
+
+        return $filters;
     }
 
     /**

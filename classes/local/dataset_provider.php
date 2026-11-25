@@ -361,23 +361,29 @@ class dataset_provider {
      * @return array{0: array<int, bool>, 1: array<int, bool>}
      */
     protected function preload_favourite_ids(int $userid): array {
-        $planfavids = [];
-        $compfavids = [];
+        return [
+            $this->favourite_ids($userid, 'plan'),
+            $this->favourite_ids($userid, 'competency'),
+        ];
+    }
 
+    /**
+     * The ids of one type of a user's block favourites, in one read of core's favourites service.
+     *
+     * @param int $userid User id.
+     * @param string $itemtype 'plan' or 'competency'.
+     * @return array<int, bool> Keyed by item id.
+     */
+    protected function favourite_ids(int $userid, string $itemtype): array {
         $usercontext = \context_user::instance($userid);
         $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
 
-        $planfavs = $ufservice->find_favourites_by_type('block_dimensions', 'plan');
-        foreach ($planfavs as $fav) {
-            $planfavids[$fav->itemid] = true;
+        $ids = [];
+        foreach ($ufservice->find_favourites_by_type('block_dimensions', $itemtype) as $fav) {
+            $ids[(int) $fav->itemid] = true;
         }
 
-        $compfavs = $ufservice->find_favourites_by_type('block_dimensions', 'competency');
-        foreach ($compfavs as $fav) {
-            $compfavids[$fav->itemid] = true;
-        }
-
-        return [$planfavids, $compfavids];
+        return $ids;
     }
 
     /**
@@ -385,16 +391,22 @@ class dataset_provider {
      * template's display mode, for a page that is not the block.
      *
      * The cards are keyed by plan id, in the order core listed the plans, and carry the keys
-     * {@see build_plan_dataset_card()} produces. None offers the favourite star: the star is the
-     * block's own filter, and on another person's list it would show that person's favourites to the
-     * viewer, so the favourites service is never read here. A plan that is not the viewer's own, and
-     * every draft, opens with the "view" wording; only the viewer's own active plans keep "Continue".
+     * {@see build_plan_dataset_card()} produces. A plan that is not the viewer's own, and every draft,
+     * opens with the "view" wording; only the viewer's own active plans keep "Continue".
+     *
+     * The favourite star is offered only when the caller asks for it, the list is the session user's
+     * own and favourites are enabled. Then every card carries it, because every card is a plan of
+     * this list and toggle_favourite accepts exactly those ({@see lists_item()}), and the favourites
+     * are read once, for the session user, whose favourites the service writes. Otherwise the
+     * favourites service is not read at all: on another person's list the star would show that
+     * person's favourites to the viewer.
      *
      * @param string $layout 'vertical' or 'horizontal' (the {@see \block_dimensions\plan_cards}
      *     constants), or '' for the site's setting. The caller validates it.
+     * @param bool $favourites Whether to offer the favourite star, under the rule above.
      * @return array<int, array<string, mixed>>
      */
-    public function get_plan_cards(string $layout = ''): array {
+    public function get_plan_cards(string $layout = '', bool $favourites = false): array {
         global $USER;
 
         if ($layout === '') {
@@ -402,6 +414,8 @@ class dataset_provider {
         }
         $ishorizontal = $layout === plan_cards::LAYOUT_HORIZONTAL;
         $viewonly = $this->userid !== (int) $USER->id;
+        $offerstar = $favourites && !$viewonly && self::is_favourites_enabled();
+        $planfavids = $offerstar ? $this->favourite_ids((int) $USER->id, 'plan') : [];
         $this->prefetch_template_metadata($this->plans);
 
         $cards = [];
@@ -422,7 +436,7 @@ class dataset_provider {
                 ]);
             }
 
-            $cards[$planid] = array_merge($card, $this->favourite_fields(false, false));
+            $cards[$planid] = array_merge($card, $this->favourite_fields($offerstar, isset($planfavids[$planid])));
         }
 
         return $cards;
