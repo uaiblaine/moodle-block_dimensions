@@ -1,2 +1,2 @@
-# Offer the favourite star on a card that is not the block's own.
-s/favourite_fields\(false, false\)/favourite_fields(true, false)/;
+# Offer the favourite star on every card, whatever the flag, the list's owner or the setting decided.
+s/favourite_fields\(\$offerstar, /favourite_fields(true, /;
