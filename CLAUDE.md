@@ -162,13 +162,17 @@ classes/
                              cards, trail windowing, favourites, UI config.
                              Owns sanitize_color()/sanitize_image_url()
   plan_cards.php             The plugin's public API for other plugins (the theme's learning
-                             plans page): for_user(), site_layout(), item_classes() and the
-                             constants LAYOUT_VERTICAL, LAYOUT_HORIZONTAL, HOST_CLASS, TEMPLATE
-                             are a contract another plugin compiles against: change none lightly.
-                             get_plan_cards() adds no card key the WS allowlist lacks, never
-                             reads favourites (no star on anyone's list), shows "view" wording on
-                             another user's plans and on drafts; item_classes() and filters.js
-                             spell the same classes (plan_cards_test holds it)
+                             plans page): for_user(), site_layout(), item_classes(),
+                             tag_filters() and the constants LAYOUT_VERTICAL, LAYOUT_HORIZONTAL,
+                             HOST_CLASS, TEMPLATE, STAR_MODULE are a contract another plugin
+                             compiles against: change none lightly. get_plan_cards() adds no card
+                             key the WS allowlist lacks, shows "view" wording on another user's
+                             plans and on drafts, and offers the star only for the flag AND the
+                             session user's own list AND favourites enabled, reading the session
+                             user's favourites once; otherwise it never reads favourites.
+                             tag_filters() reads get_ui_config()'s plan filtersettings, as the
+                             panel does. item_classes() and filters.js spell the same classes
+                             (plan_cards_test holds it)
   local/colour_mode.php      Constants only: the attribute names in the family's
                              dark-mode activation contract. No is_dark() helper,
                              deliberately — see below
@@ -192,7 +196,11 @@ templates/                   summary (server-rendered shell), page (the
                              filter line per section)
 amd/src/                     filters.js (fetch + render), state.js (pure state
                              fns), filter_tabs_nav.js, filter_line.js (the
-                             line's presentation) — plain AMD, NOT ESM here
+                             line's presentation) — plain AMD, NOT ESM here;
+                             favourite_star.js is the one ES module: the star of a
+                             card outside the block, one document listener that
+                             skips .block-dimensions-content (filters.js owns those),
+                             EVENT 'block_dimensions/favourite:changed' spelled once
 amd/build/                   Committed minified output (grunt) — keep in sync
 lang/{en,pt_br}/             Both kept in sync, alphabetically sorted
 tests/                       PHPUnit: dataset_provider (double pattern),

@@ -387,12 +387,23 @@ Plan cards for other plugins
 
 `block_dimensions\plan_cards` gives another plugin the plan cards of one user. Access is core's: the
 cards come from `\core_competency\api::list_user_plans()` run against the current user, so a draft
-appears only to a viewer core lets read it, and a viewer core refuses gets an empty answer. No card
-carries the favourite star.
+appears only to a viewer core lets read it, and a viewer core refuses gets an empty answer.
 
-* `plan_cards::for_user(int $userid, string $layout = ''): array` returns the cards keyed by plan id, in
-  core's order. `$layout` is `''` for the site setting, or `plan_cards::LAYOUT_VERTICAL` or
-  `plan_cards::LAYOUT_HORIZONTAL` for this call; anything else throws a coding exception.
+* `plan_cards::for_user(int $userid, string $layout = '', bool $favourites = false): array` returns the
+  cards keyed by plan id, in core's order. `$layout` is `''` for the site setting, or
+  `plan_cards::LAYOUT_VERTICAL` or `plan_cards::LAYOUT_HORIZONTAL` for this call; anything else throws a
+  coding exception. With `$favourites` true, and only when `$userid` is the logged-in user and the
+  block's favourites are enabled, every card carries the favourite star in its state. On anyone else's
+  list no card carries it and their favourites are never read. `tag1` and `tag2` are plain text: escape
+  them once.
+* `plan_cards::tag_filters(): array` lists the tag fields the block offers as plan filters (the settings
+  *Enable plan tag1 filter (Year)* and *Enable plan tag2 filter (Category)*), in order, each `['key' => 'tag1'|'tag2',
+  'label' => ...]` with the plain name the block's Filters panel shows. It is empty when the block offers
+  none.
+* `plan_cards::STAR_MODULE` is the AMD module that makes the stars work outside the block. Call its
+  `init()` once on the page: a press toggles the favourite through `block_dimensions_toggle_favourite`,
+  redraws the button from the answer and dispatches `block_dimensions/favourite:changed` on it, bubbling,
+  with `detail` `{type, id, isfavourite}`. Stars inside the block itself are left to the block.
 * `plan_cards::site_layout(): string` is the layout the site setting asks for.
 * `plan_cards::item_classes(string $layout): string` is the class list of a card's list item.
 * `plan_cards::TEMPLATE` is the card's template, rendered from PHP with one card as its context, and
@@ -411,6 +422,22 @@ foreach (plan_cards::for_user($userid, plan_cards::LAYOUT_HORIZONTAL) as $planid
     ];
 }
 // The caller's own template prints each item inside an element with the class plan_cards::HOST_CLASS.
+```
+
+The same list with the star, on the logged-in user's own plans page:
+
+```php
+use block_dimensions\plan_cards;
+
+$cards = plan_cards::for_user((int) $USER->id, '', true);
+$filters = plan_cards::tag_filters();
+$PAGE->requires->js_call_amd(plan_cards::STAR_MODULE, 'init');
+```
+
+```js
+document.addEventListener('block_dimensions/favourite:changed', (event) => {
+    // The event carries event.detail.type, event.detail.id and event.detail.isfavourite.
+});
 ```
 
 
