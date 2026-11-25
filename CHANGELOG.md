@@ -10,6 +10,13 @@ All notable changes to this project will be documented in this file.
   a user, one per plan core lets the viewer read (drafts included, whatever the template's display mode),
   in the layout the caller asks for and without the favourite star, with `plan_cards::TEMPLATE` and
   `plan_cards::HOST_CLASS` to draw them. A draft's chip reads "Draft".
+- **The favourite star on plan cards drawn outside the block** (2026100508): `plan_cards::for_user()` takes a
+  third argument, `$favourites`; with it, the session user's own list carries the star on every card, in its
+  state, while favourites are enabled. Another person's list never carries it and their favourites are never
+  read. `plan_cards::STAR_MODULE` names the new `block_dimensions/favourite_star` module, which makes those
+  stars work through `block_dimensions_toggle_favourite` and dispatches `block_dimensions/favourite:changed`
+  on the button after each toggle. `plan_cards::tag_filters()` gives the plan tag fields the block's Filters
+  panel offers, with the names it shows.
 - **`LICENSE`** beside `COPYING.txt`, both the GPL v3 text, so the package carries the licence file
   the Moodle plugins directory asks for.
 - **`tests/marketplace_readiness_test.php`**, the fleet's plugins directory readiness test: licence

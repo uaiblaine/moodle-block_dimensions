@@ -99,6 +99,199 @@ final class plan_cards_test extends advanced_testcase {
     }
 
     /**
+     * Make a plan id one of a user's block favourites, written straight through core's service.
+     *
+     * @param int $userid The user whose favourite it becomes.
+     * @param int $planid The plan id.
+     * @return void
+     */
+    protected function favourite(int $userid, int $planid): void {
+        $usercontext = \context_user::instance($userid);
+        \core_favourites\service_factory::get_service_for_user_context($usercontext)
+            ->create_favourite('block_dimensions', 'plan', $planid, $usercontext);
+    }
+
+    /**
+     * Assert that no card of a list offers the star or says it is a favourite.
+     *
+     * @param array $cards Cards keyed by plan id.
+     * @return void
+     */
+    protected function assert_no_star(array $cards): void {
+        $this->assertNotEmpty($cards, 'An empty list proves nothing about the star.');
+        foreach ($cards as $planid => $card) {
+            $this->assertFalse($card['showfavourite'], 'Star offered on plan ' . $planid);
+            $this->assertFalse($card['isfavourite'], 'A favourite surfaced on plan ' . $planid);
+        }
+    }
+
+    /**
+     * Without the favourites flag nothing changes: no star, even for a favourite plan.
+     */
+    public function test_the_flag_off_offers_no_star(): void {
+        $this->resetAfterTest();
+        $seed = $this->seed_plans();
+        $userid = (int) $seed['user']->id;
+        set_config('enable_favourites', 1, 'block_dimensions');
+        $this->favourite($userid, $seed['plans']['active']);
+        $this->setUser($seed['user']);
+
+        $this->assert_no_star(plan_cards::for_user($userid));
+        $this->assert_no_star(plan_cards::for_user($userid, '', false));
+
+        // Control: the same list with the flag on carries the star, pressed on the favourite.
+        $cards = plan_cards::for_user($userid, '', true);
+        $this->assertTrue($cards[$seed['plans']['active']]['showfavourite']);
+        $this->assertTrue($cards[$seed['plans']['active']]['isfavourite']);
+    }
+
+    /**
+     * On one's own list the flag offers the star on every card the service accepts, with its state.
+     *
+     * Every card comes from the plan list toggle_favourite decides on (dataset_provider::lists_item()),
+     * so every card is one the service accepts; the loop asserts it rather than assuming it.
+     */
+    public function test_own_list_with_the_flag_offers_the_star_with_its_state(): void {
+        global $PAGE;
+        $this->resetAfterTest();
+        $seed = $this->seed_plans();
+        $userid = (int) $seed['user']->id;
+        $plans = $seed['plans'];
+        set_config('enable_favourites', 1, 'block_dimensions');
+        $this->favourite($userid, $plans['active']);
+        $this->setUser($seed['user']);
+
+        $cards = plan_cards::for_user($userid, plan_cards::LAYOUT_VERTICAL, true);
+        $this->assertCount(5, $cards);
+        $provider = new dataset_provider($userid);
+        foreach ($cards as $planid => $card) {
+            $this->assertTrue($provider->lists_item('plan', (int) $planid), 'The service would refuse plan ' . $planid);
+            $this->assertTrue($card['showfavourite'], 'No star on plan ' . $planid);
+        }
+
+        $favourite = $cards[$plans['active']];
+        $this->assertTrue($favourite['isfavourite']);
+        $this->assertSame(get_string('removefromfavourites', 'block_dimensions'), $favourite['favouritearialabel']);
+        $this->assertSame(get_string('removefromfavourites', 'block_dimensions'), $favourite['favouritetitle']);
+        $other = $cards[$plans['complete']];
+        $this->assertFalse($other['isfavourite']);
+        $this->assertSame(get_string('addtofavourites', 'block_dimensions'), $other['favouritearialabel']);
+        $this->assertSame(get_string('addtofavourites', 'block_dimensions'), $other['favouritetitle']);
+
+        // The star is drawn by the card's own template, pressed for the favourite.
+        $html = $PAGE->get_renderer('core')->render_from_template(plan_cards::TEMPLATE, $favourite);
+        $this->assertStringContainsString('data-fav-id="' . $plans['active'] . '"', $html);
+        $this->assertStringContainsString('aria-pressed="true"', $html);
+
+        // The keys stay inside the web service's allowlist with the star on.
+        $allowed = array_keys(get_block_dataset::execute_returns()->keys['plancards']->content->keys);
+        foreach ($cards as $planid => $card) {
+            $this->assertSame([], array_diff(array_keys($card), $allowed), 'Keys of plan ' . $planid);
+        }
+    }
+
+    /**
+     * Another person's list never shows a favourite, the owner's or the viewer's, whatever the flag.
+     */
+    public function test_another_users_list_never_shows_a_favourite(): void {
+        $this->resetAfterTest();
+        $seed = $this->seed_plans();
+        $learnerid = (int) $seed['user']->id;
+        $planid = $seed['plans']['active'];
+        set_config('enable_favourites', 1, 'block_dimensions');
+        $this->favourite($learnerid, $planid);
+
+        // The viewer holds a favourite row under the same id too, so neither person's row may surface.
+        $viewer = $this->create_viewer($learnerid, ['moodle/competency:planview', 'moodle/competency:planviewdraft']);
+        $this->favourite((int) $viewer->id, $planid);
+        $this->setUser($viewer);
+        $cards = plan_cards::for_user($learnerid, '', true);
+        $this->assertArrayHasKey($planid, $cards, 'The viewer must read the plan, or this proves nothing.');
+        $this->assert_no_star($cards);
+
+        // Control: the owner's own call shows the star, pressed.
+        $this->setUser($seed['user']);
+        $own = plan_cards::for_user($learnerid, '', true)[$planid];
+        $this->assertTrue($own['showfavourite']);
+        $this->assertTrue($own['isfavourite']);
+    }
+
+    /**
+     * With favourites disabled the flag offers no star and reveals no favourite.
+     */
+    public function test_favourites_disabled_offers_no_star(): void {
+        $this->resetAfterTest();
+        $seed = $this->seed_plans();
+        $userid = (int) $seed['user']->id;
+        $planid = $seed['plans']['active'];
+        $this->favourite($userid, $planid);
+        $this->setUser($seed['user']);
+
+        set_config('enable_favourites', 0, 'block_dimensions');
+        $this->assertFalse(dataset_provider::is_favourites_enabled());
+        $this->assert_no_star(plan_cards::for_user($userid, '', true));
+
+        // Control: enabled again, the same call shows the star, pressed.
+        set_config('enable_favourites', 1, 'block_dimensions');
+        $card = plan_cards::for_user($userid, '', true)[$planid];
+        $this->assertTrue($card['showfavourite']);
+        $this->assertTrue($card['isfavourite']);
+    }
+
+    /**
+     * The tag filters follow the block's plan filter settings, in order, with the panel's plain names.
+     */
+    public function test_tag_filters_follow_the_plan_filter_settings(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        \local_dimensions\helper::ensure_custom_fields_exist(\local_dimensions\helper::AREA_LP);
+        $tag1 = \local_dimensions\helper::find_field_by_shortname(
+            \local_dimensions\constants::CFIELD_TAG1,
+            \local_dimensions\helper::AREA_LP
+        );
+        $tag2 = \local_dimensions\helper::find_field_by_shortname(
+            \local_dimensions\constants::CFIELD_TAG2,
+            \local_dimensions\helper::AREA_LP
+        );
+        $this->assertNotNull($tag1, 'The tag field must exist, or the name proves nothing.');
+        $this->assertNotNull($tag2, 'The tag field must exist, or the fallback proves nothing.');
+        $DB->set_field('customfield_field', 'name', 'R&D <b>year</b>', ['id' => $tag1->get('id')]);
+        $DB->delete_records('customfield_field', ['id' => $tag2->get('id')]);
+
+        // The competency filters are not plan filters.
+        set_config('enable_plan_tag1_filter', 0, 'block_dimensions');
+        set_config('enable_plan_tag2_filter', 0, 'block_dimensions');
+        set_config('enable_competency_tag1_filter', 1, 'block_dimensions');
+        set_config('enable_competency_tag2_filter', 1, 'block_dimensions');
+        $this->assertSame([], plan_cards::tag_filters());
+
+        set_config('enable_plan_tag2_filter', 1, 'block_dimensions');
+        $this->assertSame(
+            [['key' => 'tag2', 'label' => get_string('filterbyplan', 'block_dimensions')]],
+            plan_cards::tag_filters()
+        );
+
+        set_config('enable_plan_tag1_filter', 1, 'block_dimensions');
+        $this->assertSame(
+            [
+                ['key' => 'tag1', 'label' => 'R&D year'],
+                ['key' => 'tag2', 'label' => get_string('filterbyplan', 'block_dimensions')],
+            ],
+            plan_cards::tag_filters()
+        );
+
+        // The names are the ones the block's own Filters panel is given.
+        $settings = dataset_provider::get_ui_config()['filtersettings']['plan'];
+        $this->assertSame('R&D year', $settings['tag1label']);
+        $this->assertNull($settings['tag2label']);
+
+        set_config('enable_plan_tag1_filter', 0, 'block_dimensions');
+        $this->assertSame(['tag2'], array_column(plan_cards::tag_filters(), 'key'));
+    }
+
+    /**
      * A viewer core refuses gets nothing and no exception.
      */
     public function test_a_viewer_core_refuses_gets_nothing(): void {
@@ -228,7 +421,7 @@ final class plan_cards_test extends advanced_testcase {
     }
 
     /**
-     * No card offers the star, even for a favourite plan.
+     * Without the favourites flag no card offers the star, even for a favourite plan.
      */
     public function test_no_card_offers_the_favourite_star(): void {
         $this->resetAfterTest();
